@@ -8,7 +8,7 @@ const solicitud_prestamoModel = db.define('solicitud_prestamos', {
     fecha_inicio: { type: DataTypes.DATE }, 
     fecha_fin: { type: DataTypes.DATE },
     estado_solicitud: { 
-        type: DataTypes.ENUM('pendiente', 'aprobada', 'rechazada') 
+        type: DataTypes.ENUM('ENTREGADO', 'PROCESO', 'CANCELADO') 
     },
     id_persona_solicitante: { type: DataTypes.INTEGER }
     }, {

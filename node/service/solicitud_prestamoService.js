@@ -19,14 +19,13 @@ async getById(id_solicitud){
         
         const updated = result[0]
 
-        if (updated === 0) throw new Error('')
-
+        if (updated === 0) throw new Error('No se encontró la solicitud para actualizar')
             return true
     }
 
     async delete(id) {
         const deleted = await solicitud_prestamoModel.destroy({where: {id_solicitud : id }})
-        if(!deleted) throw new Error('')
+        if (!deleted) throw new Error('No se encontró la solicitud para eliminar')
             return true
     }
 
