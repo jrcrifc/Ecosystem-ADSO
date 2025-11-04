@@ -33,7 +33,7 @@ try{
 }
 
 app.get('/', (req, res) => {
-    res.send('solicitud de prestamo a registrar')
+    res.send('Bienvenidos a mi proyecto Ecosystem-ADSO')
 })
 
 dotenv.config() //cargar .env
