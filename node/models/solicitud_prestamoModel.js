@@ -2,9 +2,8 @@ import db from '../database/db.js';
 import { DataTypes } from 'sequelize';
 
 const solicitud_prestamoModel = db.define('solicitud_prestamos', { 
-    id_solicitud: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-    fecha_hora_registro: { type: DataTypes.DATE }, 
-    id_equipo: { type: DataTypes.INTEGER },
+    id_solicitud: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true }, 
+    id_equipo: { type: DataTypes.NUMBER },
     fecha_inicio: { type: DataTypes.DATE }, 
     fecha_fin: { type: DataTypes.DATE },
     estado_solicitud: { 

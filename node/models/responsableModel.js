@@ -3,11 +3,11 @@ import { DataTypes } from "sequelize";
 
 const responsableModel = db.define('responsable',{
     id_responsable:{type:DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
-    documento: { type: DataTypes.INTEGER },
-    nombre: { type: DataTypes.CHAR },
-    apellido: { type: DataTypes.CHAR },
+    documento: { type: DataTypes.NUMBER },
+    nombre: { type: DataTypes.CHAR},
+    apellido: { type: DataTypes.CHAR},
     numero_telefono: { type: DataTypes.INTEGER },
-    correo_responsable: { type: DataTypes.CHAR },
+    correo_responsable: { type: DataTypes.CHAR},
     
     
 
