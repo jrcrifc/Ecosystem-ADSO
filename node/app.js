@@ -1,13 +1,13 @@
 import express from 'express'
 import cors from 'cors'
 import db from './database/db.js'
-import solicitud_prestamoRoutes from './routes/solicitud_prestamosRoutes.js'
 import dotenv from 'dotenv'
 
-import personaSolicitanteRoutes from './routes/personaSolicitanteRoutes.js'
-import devolucionRoutes from './routes/devolucionRoutes.js'
-import reclamosRoutes from './routes/reclamosRoutes.js'
-import responsableRoutes from './routes/responsableRoutes.js'
+
+import consumosreactivosRoutes from './routes/consumosreactivosRoutes.js'
+import ingresoreactivoRoutes from './routes/ingresoreactivoRoutes.js'
+import solicitudxequipoRoutes from './routes/solicitudxequipoRoutes.js'
+import estadosolicitudRoutes from './routes/estadosolicitudRoutes.js'
 
 const app = express()
 
@@ -16,12 +16,11 @@ app.use(express.json())//para leer json en req.body
 app.use(cors()) //habilitar CORS
 
 //Rutas
-app.use('/api/solicitud_prestamos', solicitud_prestamoRoutes)
-app.use('/api/personaSolicitante', personaSolicitanteRoutes)
-app.use('/api/devolucion', devolucionRoutes)
-app.use('/api/reclamos', reclamosRoutes)
-app.use('/api/responsable', responsableRoutes)
 
+app.use('/api/estadosolicitud', estadosolicitudRoutes)
+app.use('/api/consumoreactivo', consumosreactivosRoutes)
+app.use('/api/ingresoreactivo', ingresoreactivoRoutes)
+app.use('/api/solicitudxequipo', solicitudxequipoRoutes)
 
 //conexion a la base de datos
 try{
@@ -33,7 +32,7 @@ try{
 }
 
 app.get('/', (req, res) => {
-    res.send('solicitud de prestamo a registrar')
+    res.send('Bienvenidos a Ecosystem')
 })
 
 dotenv.config() //cargar .env
