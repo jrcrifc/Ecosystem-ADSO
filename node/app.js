@@ -7,7 +7,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use("/estadoxequipo", estadoxequipoRoutes);
+app.use("/api/estadoxequipo", estadoxequipoRoutes);
 
 try {
   await db.authenticate();
