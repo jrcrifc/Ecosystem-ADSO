@@ -1,8 +1,10 @@
-import axios from "axios";
+import apiAxios from "../api/axiosConfig";
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3001/api",
-  headers: { "Content-Type": "application/json" }
-});
+const equipoService = {
+  getEquipos: async () => {
+    const res = await apiAxios.get("/equipos");
+    return res.data; // <-- debe ser un array
+  }
+};
 
-export default api;
+export default equipoService;
