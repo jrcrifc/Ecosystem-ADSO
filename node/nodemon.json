@@ -1,0 +1,6 @@
+{
+  "watch": ["app.js", "controllers", "models", "routes", "database"],
+  "ignore": ["node_modules", "*.log"],
+  "ext": "js",
+  "delay": 500
+}

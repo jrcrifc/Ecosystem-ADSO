@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import api from '../api/axiosConfig';
+import api from '../src/api/axiosConfig';
 
 export default function HistoralBySolicitud({ idSolicitud }) {
   const [hist, setHist] = useState([]);
