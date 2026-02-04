@@ -1,3 +1,7 @@
+:root {
+  --primary: #0d6efd;
+}
+
 .cell-box {
   display: inline-block;
   background: #f1f5f9;
@@ -11,6 +15,11 @@
   text-transform: uppercase;
   font-size: 12px;
   letter-spacing: 0.4px;
+  border-left: 4px solid var(--primary);
+}
+
+h1.text-center {
+  color: var(--primary) !important;
 }
 
 .table-light th {
@@ -22,9 +31,25 @@
   padding-bottom: 8px;
 }
 
-/* keep buttons as-is but make them slightly smaller to match screenshot */
-.table td .btn {
-  padding: 4px 8px;
-  font-size: 12px;
-  border-radius: 6px;
+/* Buttons are intentionally left unchanged; any button appearance is handled by Bootstrap to keep original look */
+
+.badge-active {
+  background: var(--primary) !important;
+  color: white !important;
+  border-radius: 8px;
+  padding: 3px 8px;
 }
+
+.badge-inactive {
+  background: #ef4444 !important;
+  color: white !important;
+  border-radius: 8px;
+  padding: 3px 8px;
+}
+
+/* Pagination accent */
+.text-muted {
+  color: rgba(0,0,0,0.6);
+}
+
+/* Do not override outline buttons; keep default Bootstrap styles to preserve button appearance */
