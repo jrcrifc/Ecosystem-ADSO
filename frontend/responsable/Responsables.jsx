@@ -44,10 +44,15 @@ export default function Responsables() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const payload = {
+        nombre: formData.nombre,
+        correo: formData.correo,
+        telefono: formData.telefono
+      };
       if (editingId) {
-        await updateResponsable(editingId, formData);
+        await updateResponsable(editingId, payload);
       } else {
-        await createResponsable(formData);
+        await createResponsable(payload);
       }
       setFormData({
         nombre: "",
@@ -55,7 +60,7 @@ export default function Responsables() {
         correo: "",
         telefono: "",
         cargo: "",
-        estado: "Activo"
+        estado: ""
       });
       setEditingId(null);
       setShowForm(false);
@@ -243,12 +248,32 @@ export default function Responsables() {
               {filteredResponsables.slice(page * rowsPerPage, (page + 1) * rowsPerPage).map((resp) => (
                 <tr key={resp.id}>
                   <td><span className="px-2 py-1" style={{ background: '#f1f5f9', color: '#374151', borderRadius: 6, display: 'inline-block', minWidth: 40, textAlign: 'center' }}>{resp.id}</span></td>
-                  <td><span className="px-2 py-1" style={{ background: '#f1f5f9', color: '#111827', borderRadius: 6, display: 'inline-block' }}>{resp.nombre}</span></td>
-                  <td><span className="px-2 py-1" style={{ background: '#f1f5f9', color: '#111827', borderRadius: 6, display: 'inline-block' }}>{resp.apellido}</span></td>
-                  <td><span className="px-2 py-1" style={{ background: '#f1f5f9', color: '#111827', borderRadius: 6, display: 'inline-block' }}>{resp.telefono}</span></td>
-                  <td><span className="px-2 py-1" style={{ background: '#f1f5f9', color: '#111827', borderRadius: 6, display: 'inline-block' }}>{resp.correo}</span></td>
-                  <td><span className="px-2 py-1" style={{ background: '#f1f5f9', color: '#111827', borderRadius: 6, display: 'inline-block' }}>{resp.cargo}</span></td>
-                  <td>{resp.estado === 'Inactivo' ? <span className="badge" style={{ background: '#ef4444', color: 'white', borderRadius: 8 }}>Inactivo</span> : <span className="badge" style={{ background: '#10b981', color: 'white', borderRadius: 8 }}>Activo</span>}</td>
+                  <td>
+                    <div className="cell-box" title={resp.nombre || ''}>
+                      {resp.nombre}
+                    </div>
+                  </td>
+                  <td>
+                    <div className="cell-box" title={resp.apellido || ''}>
+                      {resp.apellido}
+                    </div>
+                  </td>
+                  <td>
+                    <div className="cell-box" title={resp.telefono || ''}>
+                      {resp.telefono}
+                    </div>
+                  </td>
+                  <td>
+                    <div className="cell-box" title={resp.correo || ''}>
+                      {resp.correo}
+                    </div>
+                  </td>
+                  <td>
+                    <div className="cell-box" title={resp.cargo || ''}>
+                      {resp.cargo}
+                    </div>
+                  </td>
+                  <td>{resp.estado ? (resp.estado === 'Inactivo' ? <span className="badge" style={{ background: '#ef4444', color: 'white', borderRadius: 8 }}>Inactivo</span> : <span className="badge" style={{ background: '#10b981', color: 'white', borderRadius: 8 }}>Activo</span>) : <span className="text-muted small">—</span>}</td>
                   <td>
                     <button
                       className="btn btn-sm btn-info me-2"
