@@ -1,27 +1,24 @@
 import express from 'express'
-import { getAllestadosolicitud, getestadosolicitud, createestadosolicitud, updateestadosolicitud, deleteestadosolicitud } from '../controller/estadosolicitudController.js'
-import estadoSolicitudModel from '../models/estadosolicitudModel.js';
+import { getAllinventarioreactivo, getinventarioreactivo, createinventarioreactivo, updateinventarioreactivo, deleteinventarioreactivo } from '../controller/inventarioreactivosController.js'
 
 
 
 const router = express.Router()
 
-router.get('/', getAllestadosolicitud);
-router.get('/:id', getestadosolicitud);
-router.post('/', createestadosolicitud);
-router.put('/:id', updateestadosolicitud);
-router.delete('/:id', deleteestadosolicitud);
+router.get('/', getAllinventarioreactivo);
+router.get('/:id', getinventarioreactivo);
+router.post('/', createinventarioreactivo);
+router.put('/:id', updateinventarioreactivo);
+router.delete('/:id', deleteinventarioreactivo);
 router.put("/estado/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    const relacion = await solicitudxequipoModel.findByPk(id);
-    if (!relacion) {
+    const inventario = await inventarioreactivosModel.findByPk(id);
+    if (!inventario) {
       return res.status(404).json({ message: "Relación no encontrada" });
     }
 
-    const nuevoEstado = relacion.estado === 1 ? 0 : 1;
-    await relacion.update({ estado: nuevoEstado });
 
     // RESPUESTA CLARA Y SIN ERROR
     return res.status(200).json({

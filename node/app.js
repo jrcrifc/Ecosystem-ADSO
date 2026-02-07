@@ -4,10 +4,11 @@ import db from './database/db.js'
 import dotenv from 'dotenv'
 
 
-import consumosreactivosRoutes from './routes/consumosreactivosRoutes.js'
-import ingresoreactivoRoutes from './routes/ingresoreactivoRoutes.js'
+import inventarioreactivosRoutes from './routes/inventarioreactivosRoutes.js'
+import reactivosRoutes from './routes/reactivosRoutes.js'
+import salidasRoutes from './routes/salidasRoutes.js'
+import solicitudRoutes from './routes/solicitudRoutes.js'
 import solicitudxequipoRoutes from './routes/solicitudxequipoRoutes.js'
-import estadosolicitudRoutes from './routes/estadosolicitudRoutes.js'
 
 const app = express()
 
@@ -17,10 +18,13 @@ app.use(cors()) //habilitar CORS
 
 //Rutas
 
-app.use('/api/estadosolicitud', estadosolicitudRoutes)
-app.use('/api/consumoreactivo', consumosreactivosRoutes)
-app.use('/api/ingresoreactivo', ingresoreactivoRoutes)
-app.use('/api/solicitudxequipo', solicitudxequipoRoutes)
+app.use('/api/solicitud', solicitudRoutes)
+app.use('/api/entradareactivo', inventarioreactivosRoutes)
+app.use('/api/reactivo', reactivosRoutes)
+app.use('/api/salidas', salidasRoutes)
+app.use('/api/solicitud', solicitudxequipoRoutes)
+
+
 
 //conexion a la base de datos
 try{

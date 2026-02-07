@@ -2,47 +2,59 @@ import apiAxios from "../api/axiosConfig.js";
 import { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
 import Swal from "sweetalert2";
-import IngresoReactivoForm from "./IngresoReactivoForm.jsx";
+import IngresoReactivoForm from "./inventarioreactivoform.jsx";
 
-const CrudIngresoReactivo = () => {
-  const [ingresos, setIngresos] = useState([]);
+const Crudinventarioreactivo = () => {
+  const [inventarioreactivo, setinventarioreactivo] = useState([]);
   const [filterText, setFilterText] = useState("");
   const [selectedIngreso, setSelectedIngreso] = useState(null);
 
   const columns = [
     {
-      name: "ID Ingreso",
-      selector: (row) => row.id_ingreso_reactivo,
+      name: "Id entrada",
+      selector: (row) => row.id_inventario_reactivo,
       sortable: true,
       width: "120px",
     },
     {
-      name: "Fecha Ingreso",
-      selector: (row) => new Date(row.fech_ingreso).toLocaleDateString("es-ES"),
+      name: "Id reactivo",
+      selector: (row) => row.id_reactivo,
       sortable: true,
       width: "140px",
     },
     {
-      name: "Cantidad",
-      selector: (row) => row.cantidad_ingreso,
+      name: "Cantidad inicial",
+      selector: (row) => row.cantidad_inicial,
       sortable: true,
       width: "110px",
     },
     {
-      name: "ID Reactivo",
-      selector: (row) => row.id_reactivo,
+      name: "Lote",
+      selector: (row) => row.lote,
       sortable: true,
       width: "120px",
     },
     {
-      name: "ID Lote",
-      selector: (row) => row.id_lote,
+      name: "Id Proveedor",
+      selector: (row) => row.id_proveedor,
       sortable: true,
       width: "100px",
     },
     {
-      name: "ID Responsable",
-      selector: (row) => row.id_responsable,
+      name: "Cantidad salida",
+      selector: (row) => row.cantidad_salida,
+      sortable: true,
+      width: "140px",
+    },
+    {
+      name: "Fecha Ingreso",
+      selector: (row) => row.fecha_ingreso,
+      sortable: true,
+      width: "140px",
+    },
+    {
+      name: "Estado del inventario",
+      selector: (row) => row.estado_inventario,
       sortable: true,
       width: "140px",
     },
@@ -68,23 +80,23 @@ const CrudIngresoReactivo = () => {
       width: "130px",
       cell: (row) => (
         <div className="d-flex gap-1 justify-content-center">
-          {/* EDITAR */}
           <button
             className="btn btn-sm btn-warning"
             data-bs-toggle="modal"
             data-bs-target="#modalIngreso"
             onClick={() => setSelectedIngreso(row)}
-            title="Editar ingreso"
+            title="Editar inventario"
           >
             <i className="fa-solid fa-pencil"></i>
           </button>
 
-          {/* ACTIVAR / INACTIVAR */}
           <button
             className={`btn btn-sm ${
               row.estado === 1 ? "btn-outline-danger" : "btn-outline-success"
             }`}
-            onClick={() => toggleEstado(row.id_ingreso_reactivo, row.estado)}
+            onClick={() =>
+              toggleEstado(row.id_inventario_reactivo, row.estado)
+            }
             title={row.estado === 1 ? "Inactivar" : "Activar"}
           >
             <i className={`fas ${row.estado === 1 ? "fa-ban" : "fa-check"}`}></i>
@@ -95,15 +107,15 @@ const CrudIngresoReactivo = () => {
   ];
 
   useEffect(() => {
-    cargarIngresos();
+    cargarinventarioreactivo();
   }, []);
 
-  const cargarIngresos = async () => {
+  const cargarinventarioreactivo = async () => {
     try {
-      const res = await apiAxios.get("api/ingresoreactivo");
-      setIngresos(res.data);
+      const res = await apiAxios.get("api/entradareactivo");
+      setinventarioreactivo(res.data);
     } catch (error) {
-      console.error("Error al cargar ingresos:", error);
+      console.error("Error al cargar inventario:", error);
     }
   };
 
@@ -112,7 +124,9 @@ const CrudIngresoReactivo = () => {
 
     const result = await Swal.fire({
       title: "¿Cambiar estado?",
-      text: `Este ingreso pasará a estar ${nuevoEstado === 1 ? "ACTIVO" : "INACTIVO"}`,
+      text: `El inventario pasará a ${
+        nuevoEstado === 1 ? "ACTIVO" : "INACTIVO"
+      }`,
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: nuevoEstado === 1 ? "#28a745" : "#dc3545",
@@ -123,18 +137,24 @@ const CrudIngresoReactivo = () => {
     if (!result.isConfirmed) return;
 
     try {
-      await apiAxios.put(`api/ingresoreactivo/estado/${id}`, { estado: nuevoEstado });
+      await apiAxios.put(`api/entradareactivo/estado/${id}`, {
+        estado: nuevoEstado,
+      });
 
-      setIngresos((prev) =>
+      setinventarioreactivo((prev) =>
         prev.map((item) =>
-          item.id_ingreso_reactivo === id ? { ...item, estado: nuevoEstado } : item
+          item.id_inventario_reactivo === id
+            ? { ...item, estado: nuevoEstado }
+            : item
         )
       );
 
       Swal.fire({
         icon: "success",
         title: "¡Listo!",
-        text: `Ingreso ahora está ${nuevoEstado === 1 ? "ACTIVO" : "INACTIVO"}`,
+        text: `Inventario ahora está ${
+          nuevoEstado === 1 ? "ACTIVO" : "INACTIVO"
+        }`,
         timer: 1800,
         showConfirmButton: false,
       });
@@ -143,16 +163,16 @@ const CrudIngresoReactivo = () => {
     }
   };
 
-  const filtered = ingresos.filter((item) =>
-    item.id_ingreso_reactivo.toString().includes(filterText) ||
-    item.id_reactivo.toString().includes(filterText) ||
-    item.id_lote.toString().includes(filterText)
+  const filtered = inventarioreactivo.filter((item) =>
+    String(item.id_inventario_reactivo || "").includes(filterText) ||
+    String(item.id_reactivo || "").includes(filterText) ||
+    String(item.lote || "").includes(filterText)
   );
 
   return (
     <div className="container mt-4">
       <h2 className="text-center mb-4 text-primary fw-bold">
-        Ingresos de Reactivos
+        Inventario de Reactivos
       </h2>
 
       <div className="row mb-3 align-items-center">
@@ -172,7 +192,7 @@ const CrudIngresoReactivo = () => {
             data-bs-target="#modalIngreso"
             onClick={() => setSelectedIngreso(null)}
           >
-            + Nuevo Ingreso
+            + Nuevo Inventario
           </button>
         </div>
       </div>
@@ -184,17 +204,16 @@ const CrudIngresoReactivo = () => {
         highlightOnHover
         striped
         responsive
-        noDataComponent="No hay ingresos registrados"
+        noDataComponent="No hay inventario registrado"
         paginationPerPage={10}
       />
 
-      {/* MODAL */}
       <div className="modal fade" id="modalIngreso" tabIndex="-1">
         <div className="modal-dialog modal-lg">
           <div className="modal-content">
             <div className="modal-header bg-primary text-white">
               <h5 className="modal-title">
-                {selectedIngreso ? "Editar" : "Nuevo"} Ingreso de Reactivo
+                {selectedIngreso ? "Editar" : "Nuevo"} Inventario Reactivo
               </h5>
               <button
                 type="button"
@@ -205,8 +224,7 @@ const CrudIngresoReactivo = () => {
             <div className="modal-body">
               <IngresoReactivoForm
                 selectedIngreso={selectedIngreso}
-                refreshData={cargarIngresos}
-                hideModal={() => document.querySelector("#modalIngreso").modal?.("hide")}
+                refreshData={cargarinventarioreactivo}
               />
             </div>
           </div>
@@ -216,4 +234,4 @@ const CrudIngresoReactivo = () => {
   );
 };
 
-export default CrudIngresoReactivo;
+export default Crudinventarioreactivo;
