@@ -22,7 +22,7 @@ app.use('/api/solicitud', solicitudRoutes)
 app.use('/api/entradareactivo', inventarioreactivosRoutes)
 app.use('/api/reactivo', reactivosRoutes)
 app.use('/api/salidas', salidasRoutes)
-app.use('/api/solicitud', solicitudxequipoRoutes)
+app.use('/api/solicitudxequipo', solicitudxequipoRoutes)
 
 
 
