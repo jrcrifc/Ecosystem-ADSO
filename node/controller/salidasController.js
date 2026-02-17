@@ -39,7 +39,7 @@ export const updatesalidas = async (req, res) => {
 export const deletesalidas = async (req, res) => {
     try {
         await salidasService.delete(req.params.id);
-        res.status(204).send(); // 204 No Content
+        res.status(200).json({ message: "salida del reactivo ha sido eliminada correctamente" });
     } catch (error) {
         res.status(400).json({ message: error.message }); // 400 Bad Request
     }

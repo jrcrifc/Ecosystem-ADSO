@@ -14,13 +14,13 @@ const CrudReactivos = () => {
       name: "ID",
       selector: (row) => row.id_reactivo,
       sortable: true,
-      width: "80px",
+      width: "120px",
     },
     {
       name: "Nombre",
       selector: (row) => row.nom_reactivo,
       sortable: true,
-      width: "220px",
+      width: "200px",
     },
     {
       name: "Presentación",
@@ -29,22 +29,22 @@ const CrudReactivos = () => {
       width: "130px",
     },
     {
-      name: "Cantidad pres.",
+      name: "Cantidad presentacion",
       selector: (row) => row.cantidad_presentacion,
       sortable: true,
-      width: "120px",
+      width: "180px",
     },
     {
       name: "Stand / Col / Fila",
       selector: (row) => `${row.stand || "-"} / ${row.columna || "-"} / ${row.fila || "-"}`,
       sortable: false,
-      width: "160px",
+      width: "180px",
     },
     {
       name: "Color Stand",
       selector: (row) => row.color_stand,
       sortable: true,
-      width: "110px",
+      width: "160px",
     },
     {
       name: "Existencia",

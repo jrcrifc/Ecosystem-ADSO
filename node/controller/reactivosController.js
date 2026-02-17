@@ -39,7 +39,7 @@ export const updatereactivos = async (req, res) => {
 export const deletereactivos = async (req, res) => {
     try {
         await reactivosService.delete(req.params.id);
-        res.status(204).send(); // 204 No Content
+       res.status(200).json({ message: "reactivo eliminado correctamente" }); // 200 OK
     } catch (error) {
         res.status(400).json({ message: error.message }); // 400 Bad Request
     }

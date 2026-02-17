@@ -1,5 +1,5 @@
 import express from 'express'
-import { getAllinventarioreactivo, getinventarioreactivo, createinventarioreactivo, updateinventarioreactivo, deleteinventarioreactivo } from '../controller/inventarioreactivosController.js'
+import { getAllinventarioreactivo, getinventarioreactivo, createinventarioreactivo, updateinventarioreactivo, deleteinventarioreactivo } from '../controller/movimientoreactivosController.js'
 
 
 

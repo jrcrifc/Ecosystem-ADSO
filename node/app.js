@@ -4,13 +4,22 @@ import db from './database/db.js'
 import dotenv from 'dotenv'
 
 
-import inventarioreactivosRoutes from './routes/inventarioreactivosRoutes.js'
+import movimientoreactivoRoutes from './routes/movimientoreactivosRoutes.js'
 import reactivosRoutes from './routes/reactivosRoutes.js'
 import salidasRoutes from './routes/salidasRoutes.js'
-import solicitudRoutes from './routes/solicitudRoutes.js'
-import solicitudxequipoRoutes from './routes/solicitudxequipoRoutes.js'
+import proveedoresRoutes from'./routes/proveedoresRoutes.js'
+
+import equiposRoutes from'./routes/EquiposRoutes.js'
 
 const app = express()
+
+app.use(express.static('public'));           // sirve todo lo que esté en /public
+// o más específico y seguro:
+app.use('/uploads', express.static('public/uploads'));
+
+// Middleware
+app.use(express.json())
+app.use(cors())
 
 //Middleware
 app.use(express.json())//para leer json en req.body
@@ -18,11 +27,11 @@ app.use(cors()) //habilitar CORS
 
 //Rutas
 
-app.use('/api/solicitud', solicitudRoutes)
-app.use('/api/entradareactivo', inventarioreactivosRoutes)
+app.use('/api/movimientoreactivo', movimientoreactivoRoutes)
 app.use('/api/reactivo', reactivosRoutes)
 app.use('/api/salidas', salidasRoutes)
-app.use('/api/solicitudxequipo', solicitudxequipoRoutes)
+app.use('/api/proveedores', proveedoresRoutes)
+app.use('/api/equipos', equiposRoutes)
 
 
 

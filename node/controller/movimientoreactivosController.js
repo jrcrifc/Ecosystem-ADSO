@@ -1,4 +1,4 @@
-import inventarioreactivoService from "../service/inventarioreactivosService.js";
+import inventarioreactivoService from "../service/movimientoreactivosService.js";
 
 export const getAllinventarioreactivo = async (req, res) => {
     try {
@@ -21,7 +21,7 @@ export const getinventarioreactivo = async (req, res) => {
 export const createinventarioreactivo = async (req, res) => {
     try {
         const inventarioreactivo = await inventarioreactivoService.create(req.body);
-        res.status(201).json({ message: "el inventario del reactivo ha sido creada correctamente", inventarioreactivo }); // 201 Created
+        res.status(201).json({ message: "el movimiento del reactivo ha sido creada correctamente", inventarioreactivo }); // 201 Created
     } catch (error) {
         res.status(400).json({ message: error.message }); // 400 Bad Request
     }
@@ -30,7 +30,7 @@ export const createinventarioreactivo = async (req, res) => {
 export const updateinventarioreactivo = async (req, res) => {
     try {
         await inventarioreactivoService.update(req.params.id, req.body);
-        res.status(200).json({ message: "el inventario del reactivo ha sido actualizada correctamente" }); // 200 OK
+        res.status(200).json({ message: "el movimiento del reactivo ha sido actualizada correctamente" }); // 200 OK
     } catch (error) {
         res.status(400).json({ message: error.message }); // 400 Bad Request
     }

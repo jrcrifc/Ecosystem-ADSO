@@ -1,8 +1,8 @@
 import db from "../database/db.js";
 import { DataTypes } from "sequelize";
 
-const estadoSolicitudModel = db.define('inventario_reactivo', {
-    id_inventario_reactivo: { 
+const estadoSolicitudModel = db.define('movimientos_reactivos', {
+    id_movimiento_reactivo: { 
         type: DataTypes.INTEGER, 
         primaryKey: true, 
         autoIncrement: true 
@@ -14,7 +14,7 @@ const estadoSolicitudModel = db.define('inventario_reactivo', {
         type: DataTypes.DECIMAL(10,3) 
     },
     lote: { 
-        type: DataTypes.INTEGER
+        type: DataTypes.STRING
     },
     id_proveedor: { 
         type: DataTypes.INTEGER,  
@@ -30,11 +30,7 @@ const estadoSolicitudModel = db.define('inventario_reactivo', {
         type: DataTypes.ENUM("en stock","agotado"),
         allowNull: false
     },
-    estado: { 
-        type: DataTypes.TINYINT, 
-        defaultValue: 1,
-        allowNull: false 
-    },
+    
 }, {
     freezeTableName: true,
     timestamps: true       // ← si no tienes createdAt/updatedAt
