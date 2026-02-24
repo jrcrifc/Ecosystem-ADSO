@@ -9,7 +9,11 @@ const proveedoresModel = db.define('proveedor', {
     apel_proveedor: {type: DataTypes.STRING},
     tel_proveedor: {type: DataTypes.STRING},
     dir_proveedor: {type: DataTypes.STRING},
-   
+    estado: { 
+        type: DataTypes.TINYINT, 
+        defaultValue: 1,
+        allowNull: false 
+    },
 }, {
     freezeTableName: true,
 });

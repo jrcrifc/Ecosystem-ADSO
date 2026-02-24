@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllProveedores, getProveedores, createProveedores, updateProveedores, deleteProveedores } from '../controllers/proveedoresController.js'
+import { getAllProveedores, getProveedores, createProveedores, updateProveedores, deleteProveedores } from '../controller/proveedoresController.js'
 
 
 const router = express.Router();
