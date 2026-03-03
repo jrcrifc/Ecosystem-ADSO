@@ -5,7 +5,7 @@ import Swal from "sweetalert2";
 const EstadoEquipoForm = ({ selectedEstado, refreshData, hideModal }) => {
   const [estado, setEstado] = useState("");
 
-  const opciones = ["disponible", "en_uso", "mantenimiento", "dañado", "descartado"];
+  const opciones = ['disponible','no disponible','mantenimiento'];
 
   useEffect(() => {
     if (selectedEstado) {

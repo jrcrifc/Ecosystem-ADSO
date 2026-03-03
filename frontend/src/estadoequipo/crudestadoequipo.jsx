@@ -4,10 +4,26 @@ import DataTable from "react-data-table-component";
 import Swal from "sweetalert2";
 import EstadoEquipoForm from "./estadoequipoform.jsx";
 
+// decodificador de JWT (local) — usado para sacar userType/admin
+const parseToken = (token) => {
+  try {
+    const base64Url = token.split('.')[1]
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+    }).join(''))
+    return JSON.parse(jsonPayload)
+  } catch (err) {
+    return null
+  }
+}
+
 const CrudEstadoEquipo = () => {
   const [estados, setEstados] = useState([]);
   const [filterText, setFilterText] = useState("");
   const [selectedEstado, setSelectedEstado] = useState(null);
+  const [isAuthorized, setIsAuthorized] = useState(null); // null = loading, false = no autorizado, true = autorizado
+  const [canEdit, setCanEdit] = useState(false); // control de permisos (aprendiz = solo ver)
 
   const customStyles = {
     table: {
@@ -48,23 +64,29 @@ const CrudEstadoEquipo = () => {
       width: "180px",
       cell: (row) => (
         <div className="d-flex gap-2 justify-content-center">
-          <button
-            className="btn btn-sm btn-primary"
-            data-bs-toggle="modal"
-            data-bs-target="#modalEstadoEquipo"
-            onClick={() => setSelectedEstado(row)}
-            title="Editar"
-          >
-            <i className="fa-solid fa-pencil"></i>
-          </button>
+          {canEdit ? (
+            <>
+              <button
+                className="btn btn-sm btn-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#modalEstadoEquipo"
+                onClick={() => setSelectedEstado(row)}
+                title="Editar"
+              >
+                <i className="fa-solid fa-pencil"></i>
+              </button>
 
-          <button
-            className="btn btn-sm btn-danger"
-            onClick={() => eliminarEstadoEquipo(row.id_estado_equipo)}
-            title="Eliminar"
-          >
-            <i className="fa-solid fa-trash"></i>
-          </button>
+              <button
+                className="btn btn-sm btn-danger"
+                onClick={() => eliminarEstadoEquipo(row.id_estado_equipo)}
+                title="Eliminar"
+              >
+                <i className="fa-solid fa-trash"></i>
+              </button>
+            </>
+          ) : (
+            <span className="text-muted">—</span>
+          )}
         </div>
       ),
     },
@@ -97,14 +119,42 @@ const CrudEstadoEquipo = () => {
   */
 
   useEffect(() => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      setIsAuthorized(false)
+      setCanEdit(false)
+      return
+    }
+    const payload = parseToken(token)
+    const role = (payload?.userType || '').toString().toLowerCase()
+    const allowedEdit = ['gestor','instructor','intructor']
+    setCanEdit(Boolean(payload?.admin || allowedEdit.includes(role)))
     cargarEstados();
+
+    const handleTokenUpdate = () => {
+      const t = localStorage.getItem('token')
+      const p = parseToken(t)
+      const r = (p?.userType || '').toString().toLowerCase()
+      setCanEdit(Boolean(p?.admin || allowedEdit.includes(r)))
+      setIsAuthorized(Boolean(t))
+      if (t) cargarEstados()
+    }
+    window.addEventListener('tokenUpdated', handleTokenUpdate)
+    return () => window.removeEventListener('tokenUpdated', handleTokenUpdate)
   }, []);
 
   const cargarEstados = async () => {
     try {
       const res = await apiAxios.get("/api/estadoequipo");
       setEstados(res.data);
+      setIsAuthorized(true)
     } catch (error) {
+      // si el backend responde 401 -> usuario no existe o token inválido
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token')
+        setIsAuthorized(false)
+        return
+      }
       console.error(error);
     }
   };
@@ -151,6 +201,26 @@ const CrudEstadoEquipo = () => {
     }
   };
 
+  if (isAuthorized === false) {
+    return (
+      <div className="container mt-4">
+        <h2 className="text-center mb-4 text-primary fw-bold">Estados del Equipo</h2>
+        <div className="alert alert-warning text-center">
+          Acceso denegado — debes iniciar sesión para ver esta tabla. <a href="/login">Iniciar sesión</a>
+        </div>
+      </div>
+    )
+  }
+
+  if (isAuthorized === null) {
+    return (
+      <div className="container mt-4">
+        <h2 className="text-center mb-4 text-primary fw-bold">Estados del Equipo</h2>
+        <div className="text-center">Cargando...</div>
+      </div>
+    )
+  }
+
   return (
     <div className="container mt-4">
       <h2 className="text-center mb-4 text-primary fw-bold">Estados del Equipo</h2>
@@ -166,14 +236,20 @@ const CrudEstadoEquipo = () => {
           />
         </div>
         <div className="col-md-7 text-end">
-          <button
-            className="btn btn-primary"
-            data-bs-toggle="modal"
-            data-bs-target="#modalEstadoEquipo"
-            onClick={() => setSelectedEstado(null)}
-          >
-            + Nuevo Estado
-          </button>
+          {canEdit ? (
+            <button
+              className="btn btn-primary"
+              data-bs-toggle="modal"
+              data-bs-target="#modalEstadoEquipo"
+              onClick={() => setSelectedEstado(null)}
+            >
+              + Nuevo Estado
+            </button>
+          ) : (
+            <button className="btn btn-secondary" disabled title="No tienes permisos para crear">
+              + Nuevo Estado
+            </button>
+          )}
         </div>
       </div>
 

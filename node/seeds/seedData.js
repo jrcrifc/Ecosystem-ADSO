@@ -1,10 +1,7 @@
 import estadoSolicitudModel from '../models/estadoSolicitudModel.js';
 import estadoEquipoModel from '../models/estadoEquipoModel.js';
-import responsableModel from '../models/responsableModel.js';
-import proveedoresModel from '../models/proveedoresModel.js';
-import personaSolicitanteModel from '../models/personaSolicitanteModel.js';
-import consumoreactivoModel from '../models/consumoreactivoModel.js';
-import ingresoreactivoModel from '../models/ingresoreactivoModel.js';
+import userModel from '../models/userModel.js';
+import bcrypt from 'bcrypt'
 
 export const seedDatabase = async () => {
     try {
@@ -40,48 +37,35 @@ export const seedDatabase = async () => {
             console.log('Estado_equipo ya contiene datos');
         }
 
-        // Insertar datos en responsables
-        const countResponsables = await responsableModel.count();
-        if (countResponsables === 0) {
-            console.log('Insertando datos en responsables...');
-            await responsableModel.bulkCreate([
-                { nombre: 'Juan', apellido: 'Pérez', correo: 'juan@example.com', numero_telefono: '3001234567', cargo: 'instructor', estado: 1 },
-                { nombre: 'María', apellido: 'García', correo: 'maria@example.com', numero_telefono: '3107654321', cargo: 'pasante', estado: 1 },
-                { nombre: 'Carlos', apellido: 'López', correo: 'carlos@example.com', numero_telefono: '3009876543', cargo: 'gestor', estado: 1 }
-            ]);
-            console.log('Datos de responsables insertados correctamente');
-        } else {
-            console.log('Responsables ya contiene datos');
-        }
+        // Insertar usuario(s) por defecto
+        const countUsuarios = await userModel.count();
+        if (countUsuarios === 0) {
+            console.log('Insertando usuarios por defecto...');
+            const adminHash = await bcrypt.hash('Admin1234', 10);
+            const userHash = await bcrypt.hash('User1234', 10);
 
-        // Insertar datos en proveedores
-        const countProveedores = await proveedoresModel.count();
-        if (countProveedores === 0) {
-            console.log('Insertando datos en proveedores...');
-            await proveedoresModel.bulkCreate([
-                { nom_proveedor: 'Distribuidora', apel_proveedor: 'Química', tel_proveedor: '6012345678', dir_proveedor: 'Calle 1 # 100' },
-                { nom_proveedor: 'Productos', apel_proveedor: 'Laboratorio', tel_proveedor: '6019876543', dir_proveedor: 'Carrera 2 # 200' },
-                { nom_proveedor: 'Equipos', apel_proveedor: 'Científicos', tel_proveedor: '6015555555', dir_proveedor: 'Avenida 3 # 300' }
+            // crear administrador y un usuario normal
+            await userModel.bulkCreate([
+                {
+                    userEmail: 'admin@example.com',
+                    password: adminHash,
+                    userType: 'gestor',          // clave administrativa
+                    admin: true
+                },
+                {
+                    userEmail: 'user@example.com',
+                    password: userHash,
+                    userType: 'aprendiz',        // usuario normal
+                    admin: false
+                }
             ]);
-            console.log('Datos de proveedores insertados correctamente');
+            console.log('Usuarios por defecto insertados correctamente:');
+            console.log(' - admin@example.com / Admin1234 (admin)');
+            console.log(' - user@example.com / User1234 (normal)');
         } else {
-            console.log('Proveedores ya contiene datos');
+            console.log('Usuarios ya contiene datos');
         }
-
-        // Insertar datos en persona solicitante
-        const countPersonaSolicitante = await personaSolicitanteModel.count();
-        if (countPersonaSolicitante === 0) {
-            console.log('Insertando datos en persona solicitante...');
-            await personaSolicitanteModel.bulkCreate([
-                { Documento: '1234567890', Nombres: 'Ana', Apellido: 'Martínez', Telefono: '3101111111', Correo: 'ana@example.com', Direccion: 'Calle A # 50' },
-                { Documento: '0987654321', Nombres: 'Pedro', Apellido: 'Rodríguez', Telefono: '3102222222', Correo: 'pedro@example.com', Direccion: 'Carrera B # 75' }
-            ]);
-            console.log('Datos de persona solicitante insertados correctamente');
-        } else {
-            console.log('Persona solicitante ya contiene datos');
-        }
-
     } catch (error) {
-        console.error('Error al hacer seed de datos:', error);
+        console.error('Error al ejecutar seedDatabase:', error);
     }
 };

@@ -9,7 +9,7 @@ const estadoSolicitudModel = db.define(
       primaryKey: true,
       autoIncrement: true,
     },
-    estado: { type: DataTypes.STRING },
+    estado: { type: DataTypes.ENUM('generado','aceptado','prestado','cancelado','entregado') },
   },
   {
     freezeTableName: true,

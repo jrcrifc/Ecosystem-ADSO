@@ -1,46 +1,66 @@
-import EstadoSolicitudService from "../service/estadoSolicitudService.js";
+import estadoSolicitudModel from '../models/estadoSolicitudModel.js'
 
 export const getAllEstadosSolicitud = async (req, res) => {
-  try {
-    const estados = await EstadoSolicitudService.getAll();
-    res.json(estados);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+    try {
+        const estados = await estadoSolicitudModel.findAll({ attributes: ['id_estado_solicitud','estado'] })
+        res.json(estados)
+    } catch (error) {
+        console.error('Error en getAllEstadosSolicitud:', error)
+        res.status(500).json({ msg: error.message })
+    }
+}
 
 export const getEstadoSolicitud = async (req, res) => {
-  try {
-    const estado = await EstadoSolicitudService.getById(req.params.id);
-    res.json(estado);
-  } catch (error) {
-    res.status(404).json({ message: error.message });
-  }
-};
+    try {
+        const { id } = req.params
+        const estado = await estadoSolicitudModel.findByPk(id, { attributes: ['id_estado_solicitud','estado'] })
+        if (!estado) return res.status(404).json({ msg: 'Estado no encontrado' })
+        res.json(estado)
+    } catch (error) {
+        console.error('Error en getEstadoSolicitud:', error)
+        res.status(500).json({ msg: error.message })
+    }
+}
 
 export const createEstadoSolicitud = async (req, res) => {
-  try {
-    const nuevo = await EstadoSolicitudService.create(req.body);
-    res.status(201).json(nuevo);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+    try {
+        const { estado, estados } = req.body
+        if (!estado) return res.status(400).json({ msg: 'El campo estado es requerido' })
+        
+        const nuevoEstado = await estadoSolicitudModel.create({ estado, estados: estados || 1 })
+        res.status(201).json(nuevoEstado)
+    } catch (error) {
+        console.error('Error en createEstadoSolicitud:', error)
+        res.status(500).json({ msg: error.message })
+    }
+}
 
 export const updateEstadoSolicitud = async (req, res) => {
-  try {
-    await EstadoSolicitudService.update(req.params.id, req.body);
-    res.json({ message: "Estado de solicitud actualizado correctamente" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+    try {
+        const { id } = req.params
+        const { estado, estados } = req.body
+        
+        const estadoExistente = await estadoSolicitudModel.findByPk(id)
+        if (!estadoExistente) return res.status(404).json({ msg: 'Estado no encontrado' })
+        
+        await estadoExistente.update({ estado, estados })
+        res.json(estadoExistente)
+    } catch (error) {
+        console.error('Error en updateEstadoSolicitud:', error)
+        res.status(500).json({ msg: error.message })
+    }
+}
 
 export const deleteEstadoSolicitud = async (req, res) => {
-  try {
-    await EstadoSolicitudService.delete(req.params.id);
-    res.json({ message: "Estado de solicitud eliminado correctamente" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+    try {
+        const { id } = req.params
+        const estado = await estadoSolicitudModel.findByPk(id, { attributes: ['id_estado_solicitud','estado'] })
+        if (!estado) return res.status(404).json({ msg: 'Estado no encontrado' })
+        
+        await estado.destroy()
+        res.json({ msg: 'Estado eliminado correctamente' })
+    } catch (error) {
+        console.error('Error en deleteEstadoSolicitud:', error)
+        res.status(500).json({ msg: error.message })
+    }
+}

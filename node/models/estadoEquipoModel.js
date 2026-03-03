@@ -9,7 +9,7 @@ const estadoEquipoModel = db.define(
       primaryKey: true,
       autoIncrement: true,
     },
-    estado: { type: DataTypes.STRING },
+    estado: { type: DataTypes.ENUM('disponible','no disponible','mantenimiento') },
   },
   {
     freezeTableName: true,

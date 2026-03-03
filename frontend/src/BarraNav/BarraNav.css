@@ -1,17 +1,93 @@
 .barra-navbar {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  /* deeper, friendlier blue gradient with gentle animation when there is a background */
+  background: linear-gradient(135deg, #1a1aff 0%, #00d4ff 50%, #0d84ff 100%);
+  box-shadow: 0 2px 8px rgba(0, 212, 255, 0.4);
   transition: all 0.3s ease;
+  position: relative;
+  overflow: visible;
 }
+
+/* transparent variant used when no user is logged; only login/register buttons remain visible */
+.barra-navbar.bg-transparent {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+
+/* subtle moving shine to make the blue feel alive */
+.barra-navbar::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.15), transparent 60%);
+  transform: translateX(-100%) rotate(30deg);
+  animation: shine 8s linear infinite;
+  pointer-events: none;
+  /* ensure pseudo-element doesn't clip dropdowns */
+  z-index: 0;
+}
+
+
+@keyframes shine {
+  to { transform: translateX(100%) rotate(30deg); }
+}
+
+/* optional scrolled state to add depth on page scroll */
+.barra-navbar.scrolled {
+  box-shadow: 0 4px 12px rgba(94, 111, 168, 0.5);
+  backdrop-filter: blur(6px);
+}
+
 
 .barra-navbar .navbar-brand {
   font-weight: 700;
   font-size: 1.5rem;
-  color: #fff !important;
+  color: #ffffff !important;
+  text-shadow: 0 0 12px rgba(0, 212, 255, 0.9);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.barra-navbar .navbar-brand img {
+  /* stronger blue glow and scale on hover */
+  filter: drop-shadow(0 0 12px #00d4ff);
+  transition: transform .3s ease, filter .3s ease;
+}
+
+.barra-navbar .navbar-brand:hover img {
+  transform: scale(1.15);
+  filter: drop-shadow(0 0 20px #0099cc) drop-shadow(0 0 30px #00d4ff);
+}
+
+.barra-navbar .navbar-brand:hover {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 12px #00d4ff) drop-shadow(0 0 20px #0099cc);
+}
+
+
+.barra-navbar .navbar-brand img {
+  height: 55px;
+  width: 55px;
+  object-fit: contain;
+  border-radius: 50%;
+  padding: 3px;
+  background: rgba(90, 185, 204, 0.05);
+  filter: drop-shadow(0 0 8px #00d4ff);
   transition: all 0.3s ease;
 }
 
 .barra-navbar .navbar-brand:hover {
   transform: scale(1.05);
+}
+
+.barra-navbar .navbar-brand:hover img {
+  filter: drop-shadow(0 0 12px #00d4ff) drop-shadow(0 0 20px #0099cc);
+  background: rgba(228, 238, 240, 0.15);
 }
 
 .barra-navbar .navbar-toggler {
@@ -21,7 +97,7 @@
 
 .barra-navbar .navbar-toggler:focus {
   outline: none;
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 257, 0.25);
 }
 
 .barra-navbar .navbar-toggler-icon {
@@ -29,17 +105,59 @@
 }
 
 .barra-navbar .nav-link {
-  color: #dcdcdc !important;
+  color: #c9ccd8 !important;
   transition: all 0.3s ease;
   margin: 0 0.5rem;
-  border-radius: 4px;
+  border-radius: 6px;
   padding: 0.5rem 0.75rem !important;
+  position: relative;
+  font-weight: 500;
 }
+
+/* animated underline effect on links */
+.barra-navbar .nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 0;
+  background: #00d4ff;
+  transition: width 0.3s ease;
+}
+
+.barra-navbar .nav-link:hover::after {
+  width: 100%;
+}
+
 
 .barra-navbar .nav-link:hover {
   color: #ffffff !important;
-  background-color: rgba(255, 255, 255, 0.1);
-  transform: translateY(-2px);
+  background-color: rgba(0, 212, 255, 0.25);
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 4px 12px rgba(0,212,255,0.3);
+}
+
+.barra-navbar .nav-link.active {
+  background-color: rgba(0,212,255,0.3) !important;
+  color: #ffffff !important;
+}
+
+/* dropdown adjustments */
+.barra-navbar .dropdown-menu {
+  top: 100%;
+  right: 0;
+  left: auto;
+  margin-top: 0.25rem;
+  z-index: 2000;
+  background: #ffffff;
+  border-radius: 6px;
+  min-width: 160px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+.barra-navbar .dropdown-item {
+  color: #1a1aff;
 }
 
 .barra-navbar .nav-link.active {
@@ -80,4 +198,34 @@
     margin: 0;
     padding: 0.5rem 0 !important;
   }
+}
+
+/* Hero / landing styles */
+.home-hero {
+  padding: 4rem 1rem;
+  color: #4b616e;
+  background: radial-gradient(circle at 10% 20%, rgba(0,212,255,0.06), transparent 25%), linear-gradient(135deg, #071428 0%, #0b2940 100%);
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(2,6,23,0.55);
+  margin-top: 1rem;
+}
+.home-hero .lead { color: rgba(195, 200, 247, 0.85); }
+.home-logo {
+  max-width: 220px;
+  width: 200px;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(2,6,23,0.45);
+  filter: drop-shadow(0 8px 30px rgba(232, 233, 241, 0.59));
+  transition: transform .35s ease, box-shadow .35s ease;
+}
+.home-logo:hover { transform: translateY(-6px) scale(1.02); box-shadow: 0 20px 60px rgba(0,212,255,0.14); }
+@media (prefers-color-scheme: light) {
+  .home-hero { color: #dde4e9; background: linear-gradient(135deg,#f7fbff 0%, #e9f6ff 100%); box-shadow: 0 6px 20px rgba(3,15,30,0.06); }
+  .home-logo { box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+  .home-hero .lead { color: rgba(216, 223, 228, 0.8); }
+}
+@media (max-width: 576px) {
+  .home-logo { width: 48%; max-width: 140px; }
+  .home-hero { padding: 2.5rem 0.5rem; }
 }
