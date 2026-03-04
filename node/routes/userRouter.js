@@ -1,5 +1,5 @@
 import express from 'express'
-import { login, register, listUsers, resetUsers } from '../controller/userController.js'
+import { login, register, listUsers, resetUsers, changePassword, deleteAccount } from '../controller/userController.js'
 import authMiddleware from '../middlewares/auth.js'
 
 const router = express.Router()
@@ -16,5 +16,11 @@ router.get('/list', authMiddleware, listUsers)
 
 // development only: wipe user table and recreate default admin
 router.post('/reset', resetUsers)
+
+// Cambiar contraseña - Protegido
+router.post('/change-password', authMiddleware, changePassword)
+
+// Eliminar cuenta - Protegido
+router.delete('/delete', authMiddleware, deleteAccount)
 
 export default router

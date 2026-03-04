@@ -88,28 +88,34 @@ const NavBar = () => {
                 Inicio 
               </NavLink>
             </li>
-            <li className="nav-item">
-              <NavLink className="nav-link text-white" activeClassName="fw-bold" to="/reactivos">
-                inventario de reactivos
-              </NavLink>
-            </li>
-            <li className="nav-item">
-              <NavLink className="nav-link text-white" activeClassName="fw-bold" to="/estadoSolicitud">
-                Estado de Solicitudes
-              </NavLink>
-            </li>
 
-            <li className="nav-item">
-              <NavLink className="nav-link text-white" activeClassName="fw-bold" to="/equipos">
-               Solicitud de Equipos
-              </NavLink>
-            </li>            
+            {/* Mostrar enlaces de datos solo si el usuario está logueado */}
+            {user && (
+              <>
+                <li className="nav-item">
+                  <NavLink className="nav-link text-white" activeClassName="fw-bold" to="/reactivos">
+                    inventario de reactivos
+                  </NavLink>
+                </li>
+                <li className="nav-item">
+                  <NavLink className="nav-link text-white" activeClassName="fw-bold" to="/estadoSolicitud">
+                    Estado de Solicitudes
+                  </NavLink>
+                </li>
 
-            <li className="nav-item">
-              <NavLink className="nav-link text-white" activeClassName="fw-bold" to="/proveedor">
-                Proveedores
-              </NavLink>
-            </li>
+                <li className="nav-item">
+                  <NavLink className="nav-link text-white" activeClassName="fw-bold" to="/equipos">
+                   Solicitud de Equipos
+                  </NavLink>
+                </li>            
+
+                <li className="nav-item">
+                  <NavLink className="nav-link text-white" activeClassName="fw-bold" to="/proveedor">
+                    Proveedores
+                  </NavLink>
+                </li>
+              </>
+            )}
 
             {/* User menu or login/register */}
             {user ? (

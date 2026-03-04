@@ -2,16 +2,28 @@ const Home = () => {
   return (
     <>
       {/* HERO */}
-      <section className="bg-dark text-white text-center py-5">
+      <section 
+        className="text-white text-center py-5" 
+        style={{
+          backgroundImage: 'linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url("https://images.unsplash.com/photo-1576091160550-112173e7f7db?w=1200&h=600&fit=crop")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed',
+          minHeight: '600px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
         <div className="container">
-          <h1 className="display-3 fw-bold text-success">
+          <h1 className="display-2 fw-bold text-success" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.7)' }}>
             Laboratorio Ambiental
           </h1>
-          <p className="lead mt-3">
+          <p className="lead mt-3 fs-5" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.7)' }}>
             Sistema de Gestión y Control Ambiental para análisis,
             monitoreo y evaluación ecológica.
           </p>
-          <div className="mt-4">
+          <div className="mt-5">
             <button className="btn btn-success btn-lg me-3">
               <i className="bi bi-search me-2"></i>
               Ver Servicios
@@ -48,9 +60,10 @@ const Home = () => {
             </div>
             <div className="col-md-6 text-center">
               <img
-                src="https://images.unsplash.com/photo-1581091870627-3c6c59e4a6e3"
+                src="https://images.unsplash.com/photo-1576086213369-97a306d36557?w=600&h=500&fit=crop"
                 alt="Laboratorio"
                 className="img-fluid rounded shadow-lg"
+                style={{ maxHeight: '400px', objectFit: 'cover' }}
               />
             </div>
           </div>

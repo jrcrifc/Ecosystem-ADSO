@@ -1,5 +1,6 @@
 import express from "express";
 import db from "../database/db.js";
+import authMiddleware from "../middlewares/auth.js";
 
 const router = express.Router();
 
@@ -28,7 +29,7 @@ router.put("/estado/:id", async (req, res) => {
 // 🔥 OBTENER TODOS LOS REACTIVOS
 // GET /api/reactivos
 // ======================================
-router.get("/", async (req, res) => {
+router.get("/", authMiddleware, async (req, res) => {
   try {
     const [reactivos] = await db.query(
       "SELECT * FROM reactivos ORDER BY id_reactivo DESC"
@@ -44,7 +45,7 @@ router.get("/", async (req, res) => {
 // 🔥 OBTENER REACTIVO POR ID
 // GET /api/reactivos/:id
 // ======================================
-router.get("/:id", async (req, res) => {
+router.get("/:id", authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -68,7 +69,7 @@ router.get("/:id", async (req, res) => {
 // 🔥 CREAR REACTIVO
 // POST /api/reactivos
 // ======================================
-router.post("/", async (req, res) => {
+router.post("/", authMiddleware, async (req, res) => {
   try {
     const {
       presentacion_reactivo,

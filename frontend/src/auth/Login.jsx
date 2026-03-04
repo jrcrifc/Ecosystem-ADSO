@@ -29,12 +29,36 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+
+  // Validar email
+  const validateEmail = (email) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return regex.test(email)
+  }
+
+  // Validar contraseña (mínimo 6 caracteres)
+  const validatePassword = (pwd) => {
+    return pwd.length >= 6
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setSuccess('')
+
+    // Validaciones
+    if (!validateEmail(userEmail)) {
+      setError('Ingresa un email válido')
+      return
+    }
+    if (!validatePassword(password)) {
+      setError('La contraseña debe tener mínimo 6 caracteres')
+      return
+    }
+
+    setLoading(true)
     try {
       const res = await apiAxios.post('/api/users/login', { userEmail, password })
       console.log('Login response:', res)
@@ -50,7 +74,12 @@ export default function Login() {
     } catch (err) {
       console.error('Login error:', err.response || err)
       setError(err.response?.data?.msg || 'Error en el login')
+      setLoading(false)
     }
+  }
+
+  const handleRegister = () => {
+    navigate('/register')
   }
 
   const resetDatabase = async () => {
@@ -74,15 +103,47 @@ export default function Login() {
             <form onSubmit={handleSubmit}>
           <div className="mb-3">
             <label className="form-label">Correo</label>
-            <input value={userEmail} onChange={e => setUserEmail(e.target.value)} type="email" className="form-control" required />
+            <input 
+              value={userEmail} 
+              onChange={e => setUserEmail(e.target.value)} 
+              type="email" 
+              className="form-control" 
+              disabled={loading}
+              required 
+            />
           </div>
           <div className="mb-3">
             <label className="form-label">Contraseña</label>
-            <input value={password} onChange={e => setPassword(e.target.value)} type="password" className="form-control" required />
+            <input 
+              value={password} 
+              onChange={e => setPassword(e.target.value)} 
+              type="password" 
+              className="form-control" 
+              disabled={loading}
+              required 
+            />
           </div>
-          <button className="btn btn-success w-100" type="submit" style={{fontWeight:'600'}}>Entrar</button>
+          <div className="d-grid gap-2">
+            <button 
+              className="btn btn-success" 
+              type="submit" 
+              style={{fontWeight:'600'}}
+              disabled={loading}
+            >
+              {loading ? 'Iniciando sesión...' : 'Entrar'}
+            </button>
+            <button 
+              className="btn btn-outline-success" 
+              type="button"
+              onClick={handleRegister}
+              disabled={loading}
+              style={{fontWeight:'600'}}
+            >
+              Crear cuenta
+            </button>
+          </div>
           {import.meta.env.DEV && (
-            <button type="button" className="btn btn-link text-danger mt-2" onClick={resetDatabase}>
+            <button type="button" className="btn btn-link text-danger mt-2 w-100" onClick={resetDatabase} disabled={loading}>
               ⚠️ Reset DB (dev only)
             </button>
           )}

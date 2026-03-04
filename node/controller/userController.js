@@ -1,5 +1,6 @@
 import { loginService, registerService, listUsersService } from '../services/userService.js'
 import userModel from '../models/userModel.js'
+import bcrypt from 'bcrypt'
 
 export const login = async (req, res) => {
     try {
@@ -59,5 +60,67 @@ export const resetUsers = async (req, res) => {
     } catch (error) {
         console.error('Error resetUsers:', error)
         res.status(500).json({ msg: error.message })
+    }
+}
+
+// Cambiar contraseña
+export const changePassword = async (req, res) => {
+    try {
+        const { userEmail, currentPassword, newPassword } = req.body
+
+        if (!userEmail || !currentPassword || !newPassword) {
+            return res.status(400).json({ msg: 'Faltan datos requeridos' })
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({ msg: 'La nueva contraseña debe tener mínimo 6 caracteres' })
+        }
+
+        // Buscar usuario
+        const user = await userModel.findOne({ where: { userEmail } })
+        if (!user) {
+            return res.status(404).json({ msg: 'Usuario no encontrado' })
+        }
+
+        // Verificar contraseña actual
+        const isPasswordValid = await bcrypt.compare(currentPassword, user.password)
+        if (!isPasswordValid) {
+            return res.status(401).json({ msg: 'Contraseña actual incorrecta' })
+        }
+
+        // Hashear nueva contraseña
+        const hashedPassword = await bcrypt.hash(newPassword, 10)
+
+        // Actualizar contraseña
+        await user.update({ password: hashedPassword })
+
+        res.json({ msg: 'Contraseña actualizada exitosamente' })
+    } catch (error) {
+        console.error('Error en changePassword:', error)
+        res.status(500).json({ msg: 'Error al cambiar contraseña' })
+    }
+}
+
+// Eliminar cuenta
+export const deleteAccount = async (req, res) => {
+    try {
+        const { userEmail } = req.body
+
+        if (!userEmail) {
+            return res.status(400).json({ msg: 'Email requerido' })
+        }
+
+        // Buscar y eliminar usuario
+        const user = await userModel.findOne({ where: { userEmail } })
+        if (!user) {
+            return res.status(404).json({ msg: 'Usuario no encontrado' })
+        }
+
+        await user.destroy()
+
+        res.json({ msg: 'Cuenta eliminada exitosamente' })
+    } catch (error) {
+        console.error('Error en deleteAccount:', error)
+        res.status(500).json({ msg: 'Error al eliminar cuenta' })
     }
 }
