@@ -1,66 +1,64 @@
-import estadoSolicitudModel from '../models/estadoSolicitudModel.js'
+import estadoSolicitud from "../models/Estadosolicitud.js";
 
-export const getAllEstadosSolicitud = async (req, res) => {
+// 🔹 Obtener todos
+export const getAllEstadoSolicitud = async (req, res) => {
     try {
-        const estados = await estadoSolicitudModel.findAll({ attributes: ['id_estado_solicitud','estado'] })
-        res.json(estados)
+        const registros = await estadoSolicitud.findAll();
+        res.json(registros);
     } catch (error) {
-        console.error('Error en getAllEstadosSolicitud:', error)
-        res.status(500).json({ msg: error.message })
+        res.status(500).json({ message: error.message });
     }
-}
+};
 
+// 🔹 Obtener uno
 export const getEstadoSolicitud = async (req, res) => {
     try {
-        const { id } = req.params
-        const estado = await estadoSolicitudModel.findByPk(id, { attributes: ['id_estado_solicitud','estado'] })
-        if (!estado) return res.status(404).json({ msg: 'Estado no encontrado' })
-        res.json(estado)
+        const registro = await estadoSolicitud.findByPk(req.params.id);
+        if (!registro) {
+            return res.status(404).json({ message: "Registro no encontrado" });
+        }
+        res.json(registro);
     } catch (error) {
-        console.error('Error en getEstadoSolicitud:', error)
-        res.status(500).json({ msg: error.message })
+        res.status(500).json({ message: error.message });
     }
-}
+};
 
+// 🔹 Crear
 export const createEstadoSolicitud = async (req, res) => {
     try {
-        const { estado, estados } = req.body
-        if (!estado) return res.status(400).json({ msg: 'El campo estado es requerido' })
-        
-        const nuevoEstado = await estadoSolicitudModel.create({ estado, estados: estados || 1 })
-        res.status(201).json(nuevoEstado)
+        await estadoSolicitud.create(req.body);
+        res.status(201).json({ message: "Registro creado correctamente" });
     } catch (error) {
-        console.error('Error en createEstadoSolicitud:', error)
-        res.status(500).json({ msg: error.message })
+        res.status(400).json({ message: error.message });
     }
-}
+};
 
+// 🔹 Actualizar
 export const updateEstadoSolicitud = async (req, res) => {
     try {
-        const { id } = req.params
-        const { estado, estados } = req.body
-        
-        const estadoExistente = await estadoSolicitudModel.findByPk(id)
-        if (!estadoExistente) return res.status(404).json({ msg: 'Estado no encontrado' })
-        
-        await estadoExistente.update({ estado, estados })
-        res.json(estadoExistente)
-    } catch (error) {
-        console.error('Error en updateEstadoSolicitud:', error)
-        res.status(500).json({ msg: error.message })
-    }
-}
+        const registro = await estadoSolicitud.findByPk(req.params.id);
+        if (!registro) {
+            return res.status(404).json({ message: "Registro no encontrado" });
+        }
 
+        await registro.update(req.body);
+        res.json({ message: "Registro actualizado correctamente" });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+// 🔹 Eliminar
 export const deleteEstadoSolicitud = async (req, res) => {
     try {
-        const { id } = req.params
-        const estado = await estadoSolicitudModel.findByPk(id, { attributes: ['id_estado_solicitud','estado'] })
-        if (!estado) return res.status(404).json({ msg: 'Estado no encontrado' })
-        
-        await estado.destroy()
-        res.json({ msg: 'Estado eliminado correctamente' })
+        const registro = await estadoSolicitud.findByPk(req.params.id);
+        if (!registro) {
+            return res.status(404).json({ message: "Registro no encontrado" });
+        }
+
+        await registro.destroy();
+        res.json({ message: "Registro eliminado correctamente" });
     } catch (error) {
-        console.error('Error en deleteEstadoSolicitud:', error)
-        res.status(500).json({ msg: error.message })
+        res.status(500).json({ message: error.message });
     }
-}
+};
