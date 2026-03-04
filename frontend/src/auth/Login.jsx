@@ -2,6 +2,28 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import apiAxios from '../api/axiosConfig'
 
+// animated background gradient
+const waveStyles = {
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  width: '100%',
+  height: '100%',
+  zIndex: -1,
+  background: 'linear-gradient(135deg, #28a745, #20c997, #17a2b8)',
+  backgroundSize: '200% 200%',
+  animation: 'waveBg 8s ease infinite'
+};
+
+const keyframes = `
+  @keyframes waveBg {
+    0% {background-position: 0% 50%;}
+    50% {background-position: 100% 50%;}
+    100% {background-position: 0% 50%;}
+  }
+`;
+
+
 export default function Login() {
   const [userEmail, setUserEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -44,10 +66,12 @@ export default function Login() {
   return (
     <div className="row justify-content-center">
       <div className="col-md-6">
-        <h3>Iniciar sesión</h3>
-        {error && <div className="alert alert-danger">{error}</div>}
-        {success && <div className="alert alert-success">{success}</div>}
-        <form onSubmit={handleSubmit}>
+        <div className="card shadow-sm" style={{ borderColor: '#28a745' }}>
+          <div className="card-body">
+            <h3 className="card-title text-center text-success">Iniciar sesión</h3>
+            {error && <div className="alert alert-danger" role="alert">{error}</div>}
+            {success && <div className="alert alert-success" role="alert">{success}</div>}
+            <form onSubmit={handleSubmit}>
           <div className="mb-3">
             <label className="form-label">Correo</label>
             <input value={userEmail} onChange={e => setUserEmail(e.target.value)} type="email" className="form-control" required />
@@ -56,13 +80,15 @@ export default function Login() {
             <label className="form-label">Contraseña</label>
             <input value={password} onChange={e => setPassword(e.target.value)} type="password" className="form-control" required />
           </div>
-          <button className="btn btn-primary" type="submit">Entrar</button>
+          <button className="btn btn-success w-100" type="submit" style={{fontWeight:'600'}}>Entrar</button>
           {import.meta.env.DEV && (
             <button type="button" className="btn btn-link text-danger mt-2" onClick={resetDatabase}>
               ⚠️ Reset DB (dev only)
             </button>
           )}
         </form>
+      </div>
+    </div>
       </div>
     </div>
   )

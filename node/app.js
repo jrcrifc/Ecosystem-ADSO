@@ -8,13 +8,6 @@ import dotenv from 'dotenv';
 import EstadoSolicitudRoutes from "./routes/EstadosolicitudRoutes.js";
 import EquiposRoutes from './routes/EquiposRoutes.js';
 import proveedoresRoutes from './routes/proveedoresRoutes.js';
-import reactivosRoutes from "./routes/reactivosRoutes.js";
-import solicitudPrestamosRoutes from './routes/solicitud_prestamosRoutes.js';
-import solicitudxEquipoRoutes from './routes/solicitudxequipoRoutes.js';
-import solicitudRoutes from './routes/solicitudRoutes.js';
-import salidasRoutes from './routes/salidasRoutes.js';
-import estadoxSolicitudRoutes from './routes/estadoxsolicitudRoutes.js';
-import estadoxEquipoRoutes from './routes/estadoxequipoRoutes.js';
 import estadoEquipoRoutes from './routes/estadoEquipoRoutes.js';
 import userRouter from './routes/userRouter.js';
 
@@ -41,15 +34,6 @@ app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 app.use("/api/estadoSolicitud", EstadoSolicitudRoutes);
 app.use('/api/equipos', EquiposRoutes);
 app.use('/api/proveedor', proveedoresRoutes);
-app.use("/api/reactivos", reactivosRoutes);
-
-// rutas adicionales
-app.use('/api/solicitud-prestamos', solicitudPrestamosRoutes);
-app.use('/api/solicitudxequipo', solicitudxEquipoRoutes);
-app.use('/api/solicitud', solicitudRoutes);
-app.use('/api/salidas', salidasRoutes);
-app.use('/api/estadoxsolicitud', estadoxSolicitudRoutes);
-app.use('/api/estadoxequipo', estadoxEquipoRoutes);
 app.use('/api/estadoequipo', estadoEquipoRoutes);
 app.use('/api/users', userRouter);
 
@@ -62,16 +46,9 @@ app.get('/', (req, res) => {
 // Esto asegura que Sequelize las registre antes de la sincronización.
 // =============================
 import './models/estadoSolicitudModel.js';
-import './models/estadoxequipoModel.js';
-import './models/Estadosolicitud.js';
-import './models/estadoxsolicitudModel.js';
 import './models/estadoEquipoModel.js';
 import './models/EquiposModel.js';
 import './models/userModel.js';
-import './models/solicitudxequipoModel.js';
-import './models/solicitudModel.js';
-import './models/salidasModel.js';
-import './models/reactivosModel.js';
 import './models/proveedoresModel.js';
 
 // =============================
@@ -80,11 +57,10 @@ import './models/proveedoresModel.js';
 try {
   await db.authenticate();
   console.log('✅ Conexión a la base de datos establecida');
-  // sincronizar con alter/force igual que antes
+  // sincronizar: sólo `force` recrea tablas si se solicita explícitamente; desactivar `alter`
   const force = process.env.FORCE_SYNC === 'true';
-  const alter = process.env.ALTER_SYNC === 'true' || process.env.NODE_ENV === 'development';
-  await db.sync({ alter, force });
-  console.log('Modelos sincronizados', force ? '(force)' : alter ? '(alter)' : '');
+  await db.sync({ force, alter: false });
+  console.log('Modelos sincronizados', force ? '(force)' : '');
 } catch (error) {
   console.error('❌ Error al conectar a la base de datos:', error);
   process.exit(1);
