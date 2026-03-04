@@ -4,34 +4,36 @@ import Swal from "sweetalert2";
 
 const EstadoSolicitudForm = ({ selectedEstado, refreshData, hideModal }) => {
   const [estado, setEstado] = useState("");
+  const [estados, setEstados] = useState(1);
 
   const opciones = ["generado", "aceptado", "prestado", "cancelado", "entregado"];
 
   useEffect(() => {
     if (selectedEstado) {
       setEstado(selectedEstado.estado || "");
+      setEstados(selectedEstado.estados ?? 1);
     } else {
       setEstado("");
+      setEstados(1);
     }
   }, [selectedEstado]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const data = { estado };
+    const data = { estado, estados };
 
     try {
       if (selectedEstado) {
-        await apiAxios.put(`/api/estadosolicitud/${selectedEstado.id_estado_solicitud}`, data);
+        await apiAxios.put(`api/estadosolicitud/${selectedEstado.id_estado_solicitud}`, data);
         Swal.fire("¡Éxito!", "Estado actualizado", "success");
       } else {
-        await apiAxios.post("/api/estadosolicitud", data);
+        await apiAxios.post("api/estadosolicitud", data);
         Swal.fire("¡Éxito!", "Estado creado", "success");
       }
       refreshData();
       hideModal();
     } catch (error) {
-        console.error('Error guardando estado solicitud:', error.response?.data || error);
-        Swal.fire("Error", error.response?.data?.message || "No se pudo guardar", "error");
+      Swal.fire("Error", "No se pudo guardar", "error");
     }
   };
 

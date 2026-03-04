@@ -4,25 +4,10 @@ import DataTable from "react-data-table-component";
 import Swal from "sweetalert2";
 import EstadoSolicitudForm from "./estadosolicitudform.jsx";
 
-const parseToken = (token) => {
-  try {
-    const base64Url = token.split('.')[1]
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-    }).join(''))
-    return JSON.parse(jsonPayload)
-  } catch (err) {
-    return null
-  }
-}
-
 const CrudEstadoSolicitud = () => {
   const [estados, setEstados] = useState([]);
   const [filterText, setFilterText] = useState("");
   const [selectedEstado, setSelectedEstado] = useState(null);
-  const [isAuthorized, setIsAuthorized] = useState(null); // controla acceso a la tabla (null = loading)
-  const [canEdit, setCanEdit] = useState(false); // permiso de edición (aprendiz = no)
 
   // ESTILOS MÍNIMOS PARA CENTRAR (sin cambiar tamaños)
   const customStyles = {
@@ -59,48 +44,51 @@ const CrudEstadoSolicitud = () => {
       center: true,
     },
     {
+      name: "Estatus",
+      width: "250px",
+      center: true,
+      cell: (row) => (
+        <span
+          className={`px-3 py-1 rounded-pill text-white fw-semibold ${
+            row.estados === 1 ? "bg-success" : "bg-danger"
+          }`}
+          style={{ fontSize: "0.75rem" }}
+        >
+          {row.estados === 1 ? "ACTIVO" : "INACTIVO"}
+        </span>
+      ),
+      sortable: true,
+    },
+    {
       name: "Acciones",
       center: true,
-      width: "180px",
+      width: "140px",
       cell: (row) => (
-        <div className="d-flex gap-2 justify-content-center">
-          {canEdit ? (
-            <>
-              <button
-                className="btn btn-sm btn-primary"
-                data-bs-toggle="modal"
-                data-bs-target="#modalEstado"
-                onClick={() => setSelectedEstado(row)}
-                title="Editar"
-              >
-                <i className="fa-solid fa-pencil"></i>
-              </button>
+        <div className="d-flex gap-1 justify-content-center">
+          <button
+            className="btn btn-sm btn-warning"
+            data-bs-toggle="modal"
+            data-bs-target="#modalEstado"
+            onClick={() => setSelectedEstado(row)}
+            title="Editar"
+          >
+            <i className="fa-solid fa-pencil"></i>
+          </button>
 
-              <button
-                className="btn btn-sm btn-danger"
-                onClick={() => eliminarEstado(row.id_estado_solicitud)}
-                title="Eliminar"
-              >
-                <i className="fa-solid fa-trash"></i>
-              </button>
-            </>
-          ) : (
-            <span className="text-muted">—</span>
-          )}
+          <button
+            className={`btn btn-sm ${
+              row.estados === 1 ? "btn-outline-danger" : "btn-outline-success"
+            }`}
+            onClick={() => toggleEstado(row.id_estado_solicitud, row.estados)}
+            title={row.estados === 1 ? "Inactivar" : "Activar"}
+          >
+            <i className={`fas ${row.estados === 1 ? "fa-ban" : "fa-check"}`}></i>
+          </button>
         </div>
       ),
     },
   ];
 
-  // Nota: Se fuerza el color negro para todas las etiquetas de estado
-  // porque el requerimiento fue que las etiquetas aparezcan en negro.
-  // Si en el futuro se desea restablecer el color por estado,
-  // descomentar la implementación original (ejemplo comentado abajo).
-  const getColorEstado = () => {
-    return "text-dark";
-  };
-
-  /* Implementación original por estado (comentada):
   const getColorEstado = (estado) => {
     switch (estado) {
       case "generado": return "text-primary";
@@ -111,76 +99,47 @@ const CrudEstadoSolicitud = () => {
       default: return "text-muted";
     }
   };
-  */
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      setIsAuthorized(false)
-      setCanEdit(false)
-      return
-    }
-    const payload = parseToken(token)
-    const role = (payload?.userType || '').toString().toLowerCase()
-    const allowedEdit = ['gestor','instructor','intructor']
-    setCanEdit(Boolean(payload?.admin || allowedEdit.includes(role)))
     cargarEstados();
-
-    const handleTokenUpdate = () => {
-      const t = localStorage.getItem('token')
-      const p = parseToken(t)
-      const r = (p?.userType || '').toString().toLowerCase()
-      setCanEdit(Boolean(p?.admin || allowedEdit.includes(r)))
-      setIsAuthorized(Boolean(t))
-      if (t) cargarEstados()
-    }
-    window.addEventListener('tokenUpdated', handleTokenUpdate)
-    return () => window.removeEventListener('tokenUpdated', handleTokenUpdate)
   }, []);
 
   const cargarEstados = async () => {
     try {
-      const res = await apiAxios.get("/api/estadosolicitud");
+      const res = await apiAxios.get("api/estadosolicitud");
       setEstados(res.data);
-      setIsAuthorized(true)
     } catch (error) {
-      if (error.response?.status === 401) {
-        localStorage.removeItem('token')
-        setIsAuthorized(false)
-        return
-      }
       console.error(error);
     }
-  };
+  };   // ← Aquí estaba la llave que faltaba!!!
 
-  // onSaved recibe el item creado/actualizado y actualiza el estado local
-  const onSaved = (item, isUpdate) => {
-    if (isUpdate) {
-      setEstados((prev) => prev.map((p) => (p.id_estado_solicitud === item.id_estado_solicitud ? item : p)));
-    } else {
-      setEstados((prev) => [item, ...prev]);
-    }
-  };
+  const toggleEstado = async (id, estadoActual) => {
+    const nuevoEstado = estadoActual === 1 ? 0 : 1;
 
-  const eliminarEstado = async (id) => {
     const result = await Swal.fire({
-      title: "¿Eliminar?",
-      text: "Esta acción no se puede deshacer",
-      icon: "warning",
+      title: "¿Cambiar estatus?",
+      text: `Este estado pasará a estar ${nuevoEstado === 1 ? "ACTIVO" : "INACTIVO"}`,
+      icon: "question",
       showCancelButton: true,
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
+      confirmButtonColor: nuevoEstado === 1 ? "#28a745" : "#dc3545",
+      confirmButtonText: "Sí",
+      cancelButtonText: "No",
     });
 
     if (!result.isConfirmed) return;
 
     try {
-      await apiAxios.delete(`/api/estadosolicitud/${id}`);
-      // Actualizar estado localmente sin recargar toda la lista
-      setEstados((prev) => prev.filter((p) => p.id_estado_solicitud !== id));
-      Swal.fire("Eliminado", "Elemento eliminado", "success");
+      await apiAxios.put(`api/estadosolicitud/estados/${id}`, { estados: nuevoEstado });
+
+      setEstados(prev =>
+        prev.map(item =>
+          item.id_estado_solicitud === id ? { ...item, estados: nuevoEstado } : item
+        )
+      );
+
+      Swal.fire("¡Listo!", `Estado ahora está ${nuevoEstado === 1 ? "ACTIVO" : "INACTIVO"}`, "success");
     } catch (error) {
-      Swal.fire("Error", "No se pudo eliminar", "error");
+      Swal.fire("Error", "No se pudo cambiar el estatus", "error");
     }
   };
 
@@ -188,35 +147,6 @@ const CrudEstadoSolicitud = () => {
     item.id_estado_solicitud.toString().includes(filterText) ||
     item.estado?.toLowerCase().includes(filterText.toLowerCase())
   );
-
-  const hideModal = () => {
-    document.getElementById("closeModalEstado").click();
-    cargarEstados();
-  };
-
-  if (isAuthorized === false) {
-    return (
-      <div className="container mt-4">
-        <h2 className="text-center mb-4 text-primary fw-bold">
-          Estados de Solicitud
-        </h2>
-        <div className="alert alert-warning text-center">
-          Acceso denegado — debes iniciar sesión para ver esta tabla. <a href="/login">Iniciar sesión</a>
-        </div>
-      </div>
-    )
-  }
-
-  if (isAuthorized === null) {
-    return (
-      <div className="container mt-4">
-        <h2 className="text-center mb-4 text-primary fw-bold">
-          Estados de Solicitud
-        </h2>
-        <div className="text-center">Cargando...</div>
-      </div>
-    )
-  }
 
   return (
     <div className="container mt-4">
@@ -235,20 +165,14 @@ const CrudEstadoSolicitud = () => {
           />
         </div>
         <div className="col-md-7 text-end">
-          {canEdit ? (
-            <button
-              className="btn btn-primary"
-              data-bs-toggle="modal"
-              data-bs-target="#modalEstado"
-              onClick={() => setSelectedEstado(null)}
-            >
-              + Nuevo Estado
-            </button>
-          ) : (
-            <button className="btn btn-secondary" disabled title="No tienes permisos para crear">
-              + Nuevo Estado
-            </button>
-          )}
+          <button
+            className="btn btn-success"
+            data-bs-toggle="modal"
+            data-bs-target="#modalEstado"
+            onClick={() => setSelectedEstado(null)}
+          >
+            + Nuevo Estado
+          </button>
         </div>
       </div>
 
@@ -281,15 +205,13 @@ const CrudEstadoSolicitud = () => {
             <div className="modal-body">
               <EstadoSolicitudForm
                 selectedEstado={selectedEstado}
-                // onSaved permite actualizar la lista localmente sin recargar
-                onSaved={onSaved}
-                hideModal={hideModal}
+                refreshData={cargarEstados}
+                hideModal={() => document.querySelector("#modalEstado")?.modal?.("hide")}
               />
             </div>
           </div>
         </div>
       </div>
-      <button type="button" id="closeModalEstado" className="btn btn-primary d-none" data-bs-dismiss="modal"></button>
     </div>
   );
 };
