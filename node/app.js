@@ -9,6 +9,14 @@ import EstadoSolicitudRoutes from "./routes/EstadosolicitudRoutes.js";
 import EquiposRoutes from './routes/EquiposRoutes.js';
 import proveedoresRoutes from './routes/proveedoresRoutes.js';
 import reactivosRoutes from "./routes/reactivosRoutes.js";
+import solicitudPrestamosRoutes from './routes/solicitud_prestamosRoutes.js';
+import solicitudxEquipoRoutes from './routes/solicitudxequipoRoutes.js';
+import solicitudRoutes from './routes/solicitudRoutes.js';
+import salidasRoutes from './routes/salidasRoutes.js';
+import estadoxSolicitudRoutes from './routes/estadoxsolicitudRoutes.js';
+import estadoxEquipoRoutes from './routes/estadoxequipoRoutes.js';
+import estadoEquipoRoutes from './routes/estadoEquipoRoutes.js';
+import userRouter from './routes/userRouter.js';
 
 dotenv.config();
 
@@ -35,9 +43,36 @@ app.use('/api/equipos', EquiposRoutes);
 app.use('/api/proveedor', proveedoresRoutes);
 app.use("/api/reactivos", reactivosRoutes);
 
+// rutas adicionales
+app.use('/api/solicitud-prestamos', solicitudPrestamosRoutes);
+app.use('/api/solicitudxequipo', solicitudxEquipoRoutes);
+app.use('/api/solicitud', solicitudRoutes);
+app.use('/api/salidas', salidasRoutes);
+app.use('/api/estadoxsolicitud', estadoxSolicitudRoutes);
+app.use('/api/estadoxequipo', estadoxEquipoRoutes);
+app.use('/api/estadoequipo', estadoEquipoRoutes);
+app.use('/api/users', userRouter);
+
 app.get('/', (req, res) => {
   res.send('Bienvenido a la API de Equipos');
 });
+
+// =============================
+// 🔥 IMPORT MODELS
+// Esto asegura que Sequelize las registre antes de la sincronización.
+// =============================
+import './models/estadoSolicitudModel.js';
+import './models/estadoxequipoModel.js';
+import './models/Estadosolicitud.js';
+import './models/estadoxsolicitudModel.js';
+import './models/estadoEquipoModel.js';
+import './models/EquiposModel.js';
+import './models/userModel.js';
+import './models/solicitudxequipoModel.js';
+import './models/solicitudModel.js';
+import './models/salidasModel.js';
+import './models/reactivosModel.js';
+import './models/proveedoresModel.js';
 
 // =============================
 // 🔥 CONEXIÓN BASE DE DATOS
@@ -45,6 +80,11 @@ app.get('/', (req, res) => {
 try {
   await db.authenticate();
   console.log('✅ Conexión a la base de datos establecida');
+  // sincronizar con alter/force igual que antes
+  const force = process.env.FORCE_SYNC === 'true';
+  const alter = process.env.ALTER_SYNC === 'true' || process.env.NODE_ENV === 'development';
+  await db.sync({ alter, force });
+  console.log('Modelos sincronizados', force ? '(force)' : alter ? '(alter)' : '');
 } catch (error) {
   console.error('❌ Error al conectar a la base de datos:', error);
   process.exit(1);
