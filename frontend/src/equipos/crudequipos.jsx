@@ -15,9 +15,16 @@ export default function CrudEquipo() {
     getAllEquipos();
   }, []);
 
+  const user = JSON.parse(localStorage.getItem("user"));
+
   const getAllEquipos = async () => {
     try {
-      const res = await apiAxios.get("/api/equipos");
+      const res = await apiAxios.get("/api/equipos", {
+        headers: {
+          Authorization: `Bearer ${user?.token}`,
+        },
+      });
+
       setEquipos(res.data);
     } catch (error) {
       console.error("Error al cargar equipos:", error);
@@ -132,9 +139,9 @@ export default function CrudEquipo() {
     {
       name: "Estado",
       center: true,
-      width: "120px", // ← más ancho para que quepa bien
+      width: "120px",
       cell: (row) => (
-         <span
+        <span
           className={`px-3 py-1 rounded-pill text-white fw-semibold ${
             row.estado === 1 ? "bg-success" : "bg-danger"
           }`}
@@ -214,15 +221,15 @@ export default function CrudEquipo() {
         noDataComponent="No hay equipos registrados"
       />
 
-      {/* MODAL PARA EDITAR / CREAR */}
-      <div className="modal fade" id="modalEquipo" tabIndex="-1" aria-labelledby="modalEquipoLabel" aria-hidden="true">
+      {/* MODAL EDITAR / CREAR */}
+      <div className="modal fade" id="modalEquipo" tabIndex="-1">
         <div className="modal-dialog modal-lg">
           <div className="modal-content">
             <div className="modal-header bg-primary text-white">
-              <h5 className="modal-title" id="modalEquipoLabel">
+              <h5 className="modal-title">
                 {selectedEquipo ? "Editar Equipo" : "Registrar Nuevo Equipo"}
               </h5>
-              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div className="modal-body">
               <EquipoForm
@@ -234,15 +241,13 @@ export default function CrudEquipo() {
         </div>
       </div>
 
-      {/* MODAL PARA VER FOTO GRANDE */}
-      <div className="modal fade" id="largePhotoModal" tabIndex="-1" aria-labelledby="largePhotoLabel" aria-hidden="true">
+      {/* MODAL FOTO GRANDE */}
+      <div className="modal fade" id="largePhotoModal" tabIndex="-1">
         <div className="modal-dialog modal-xl modal-dialog-centered">
           <div className="modal-content">
             <div className="modal-header">
-              <h5 className="modal-title" id="largePhotoLabel">
-                Foto del equipo
-              </h5>
-              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <h5 className="modal-title">Foto del equipo</h5>
+              <button type="button" className="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div className="modal-body text-center p-4">
               {largePhoto && (

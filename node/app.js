@@ -9,6 +9,7 @@ import EstadoSolicitudRoutes from "./routes/EstadosolicitudRoutes.js";
 import EquiposRoutes from './routes/EquiposRoutes.js';
 import proveedoresRoutes from './routes/proveedoresRoutes.js';
 import reactivosRoutes from "./routes/reactivosRoutes.js";
+import UserRoutes from './routes/userRoutes.js';
 
 dotenv.config();
 
@@ -34,6 +35,8 @@ app.use("/api/estadoSolicitud", EstadoSolicitudRoutes);
 app.use('/api/equipos', EquiposRoutes);
 app.use('/api/proveedor', proveedoresRoutes);
 app.use("/api/reactivos", reactivosRoutes);
+
+app.use('/api/auth', UserRoutes);
 
 app.get('/', (req, res) => {
   res.send('Bienvenido a la API de Equipos');
