@@ -1,64 +1,94 @@
-import estadoSolicitud from "../models/estadoSolicitudModel.js";
+// controller/solicitudController.js
+import solicitudService from '../service/solicitudService.js';  // ← ya está correcto
 
-// 🔹 Obtener todos
-export const getAllEstadoSolicitud = async (req, res) => {
-    try {
-        const registros = await estadoSolicitud.findAll();
-        res.json(registros);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+// GET /solicitudes - Obtener todas
+export const getAll = async (req, res) => {
+  try {
+    const solicitudes = await solicitudService.getAll();  // ← método del service
+    res.json(solicitudes);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error al obtener las solicitudes',
+      error: error.message 
+    });
+  }
 };
 
-// 🔹 Obtener uno
-export const getEstadoSolicitud = async (req, res) => {
-    try {
-        const registro = await estadoSolicitud.findByPk(req.params.id);
-        if (!registro) {
-            return res.status(404).json({ message: "Registro no encontrado" });
-        }
-        res.json(registro);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+// GET /solicitudes/:id - Obtener una
+export const getById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const solicitud = await solicitudService.getById(id);  // ← método del service
+
+    res.json(solicitud);
+  } catch (error) {
+    res.status(404).json({ 
+      success: false,
+      message: error.message || 'Solicitud no encontrada' 
+    });
+  }
 };
 
-// 🔹 Crear
-export const createEstadoSolicitud = async (req, res) => {
-    try {
-        await estadoSolicitud.create(req.body);
-        res.status(201).json({ message: "Registro creado correctamente" });
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
+// POST /solicitudes - Crear
+export const create = async (req, res) => {
+  try {
+    const nuevaSolicitud = await solicitudService.create(req.body);  // ← método del service
+
+    res.status(201).json({ 
+      success: true,
+      message: 'Solicitud creada correctamente',
+      data: nuevaSolicitud 
+    });
+  } catch (error) {
+    res.status(400).json({ 
+      success: false,
+      message: 'Error al crear la solicitud',
+      error: error.message 
+    });
+  }
 };
 
-// 🔹 Actualizar
-export const updateEstadoSolicitud = async (req, res) => {
-    try {
-        const registro = await estadoSolicitud.findByPk(req.params.id);
-        if (!registro) {
-            return res.status(404).json({ message: "Registro no encontrado" });
-        }
+// PUT /solicitudes/:id - Actualizar
+export const update = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Tu service no tiene update, así que lo implementamos aquí o agregamos al service
+    // Opción rápida: usar directamente el modelo (temporal)
+    const solicitud = await solicitudService.getById(id);  // reutilizamos getById
 
-        await registro.update(req.body);
-        res.json({ message: "Registro actualizado correctamente" });
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
+    const { id_solicitud, createdAt, updatedAt, ...datosActualizables } = req.body;
+    await solicitud.update(datosActualizables);
+
+    res.json({ 
+      success: true,
+      message: 'Solicitud actualizada correctamente',
+      data: solicitud 
+    });
+  } catch (error) {
+    res.status(400).json({ 
+      success: false,
+      message: error.message || 'Error al actualizar la solicitud'
+    });
+  }
 };
 
-// 🔹 Eliminar
-export const deleteEstadoSolicitud = async (req, res) => {
-    try {
-        const registro = await estadoSolicitud.findByPk(req.params.id);
-        if (!registro) {
-            return res.status(404).json({ message: "Registro no encontrado" });
-        }
+// DELETE /solicitudes/:id - Eliminar
+export const remove = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await solicitudService.delete(id);  // ← método del service
 
-        await registro.destroy();
-        res.json({ message: "Registro eliminado correctamente" });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+    res.json({ 
+      success: true,
+      message: 'Solicitud eliminada correctamente' 
+    });
+  } catch (error) {
+    res.status(404).json({ 
+      success: false,
+      message: error.message || 'Solicitud no encontrada' 
+    });
+  }
 };

@@ -1,32 +1,28 @@
-import db from '../database/db.js'
-import { DataTypes } from 'sequelize'
+import db from "../database/db.js";
+import { DataTypes } from "sequelize";
 
-const solicitudxequipoModel = db.define('solicitudxequipo', {
-  id_solicitudxequipo: {
+const solicitudxequipoModel = db.define('solicitudxequipo',{
+    id_solicitudxequipo:{type:DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
+    id_solicitud: {
     type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true
-  },
-  id_solicitud: {
-    type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,
+    references: {
+      model: 'solicitud',
+      key: 'id_solicitud'
+    },
+    onDelete: 'CASCADE'
   },
   id_equipo: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,
+    references: {
+      model: 'equipos',
+      key: 'id_equipo'
+    },
+    onDelete: 'CASCADE'
   },
-  cantidad_solicitada: {
-    type: DataTypes.INTEGER,
-    defaultValue: 1,
-    allowNull: false
-  },
-  observaciones: {
-    type: DataTypes.TEXT,
-    allowNull: true
-  }
-}, {
-  freezeTableName: true,
-  timestamps: true
-})
+    }, {
+        freezeTableName: true
+    })
 
-export default solicitudxequipoModel
+    export default solicitudxequipoModel;

@@ -8,9 +8,15 @@ import dotenv from 'dotenv';
 import EstadoSolicitudRoutes from "./routes/EstadosolicitudRoutes.js";
 import EquiposRoutes from './routes/EquiposRoutes.js';
 import proveedoresRoutes from './routes/proveedoresRoutes.js';
-import estadoEquipoRoutes from './routes/estadoEquipoRoutes.js';
+import estadoEquipoRoutes from './routes/estado_equipoRoutes.js';
 import userRouter from './routes/userRouter.js';
-
+import reactivosRoutes from './routes/reactivosRoutes.js';
+import movimientoreactivosRoutes from './routes/movimientoreactivosRoutes.js';
+import salidasRoutes from './routes/salidasRoutes.js';
+import solicitudRoutes from './routes/solicitudRoutes.js';
+import solicitudxequipoRoutes from './routes/solicitudxequipoRoutes.js';
+import estadoxequipoRoutes from './routes/EstadoxequipoRoutes.js';
+import estadoxsolicitudRoutes from './routes/estadoxsolicitudRoutes.js';
 dotenv.config();
 
 const app = express();
@@ -35,6 +41,13 @@ app.use("/api/estadoSolicitud", EstadoSolicitudRoutes);
 app.use('/api/equipos', EquiposRoutes);
 app.use('/api/proveedor', proveedoresRoutes);
 app.use('/api/estadoequipo', estadoEquipoRoutes);
+app.use('/api/reactivos', reactivosRoutes);
+app.use('/api/movimientoreactivos', movimientoreactivosRoutes);
+app.use('/api/salidas', salidasRoutes);
+app.use('/api/solicitud', solicitudRoutes);
+app.use('/api/solicitudxequipo', solicitudxequipoRoutes);
+app.use('/api/estadoxequipo', estadoxequipoRoutes);
+app.use('/api/estadoxsolicitud', estadoxsolicitudRoutes);
 app.use('/api/users', userRouter);
 
 app.get('/', (req, res) => {
@@ -45,11 +58,15 @@ app.get('/', (req, res) => {
 // 🔥 IMPORT MODELS
 // Esto asegura que Sequelize las registre antes de la sincronización.
 // =============================
-import './models/estadoSolicitudModel.js';
-import './models/estadoEquipoModel.js';
-import './models/EquiposModel.js';
-import './models/userModel.js';
-import './models/proveedoresModel.js';
+//import './models/Estado_equipoModel.js';
+//import './models/EquiposModel.js';
+//import './models/userModel.js';
+//import './models/proveedoresModel.js';
+//import './models/estadoxequipoModel.js';
+//import './models/estadoxsolicitudModel.js';
+//import './models/reactivosModel.js';
+//import './models/userModel.js';
+//import './models/movimientoreactivosModel.js';
 
 // =============================
 // 🔥 CONEXIÓN BASE DE DATOS

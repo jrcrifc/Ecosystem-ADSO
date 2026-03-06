@@ -1,40 +1,28 @@
-import db from '../database/db.js'
-import { DataTypes } from 'sequelize'
+import db from "../database/db.js";
+import { DataTypes } from "sequelize";
 
 const salidasModel = db.define('salidas_reactivos', {
-  id_salida: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true
-  },
-  id_reactivo: {
-    type: DataTypes.INTEGER,
-    allowNull: false
-  },
-  id_usuario: {
-    type: DataTypes.INTEGER,
-    allowNull: false
-  },
-  cantidad_salida: {
-    type: DataTypes.INTEGER,
-    allowNull: false
-  },
-  motivo_salida: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
-  observaciones: {
-    type: DataTypes.TEXT,
-    allowNull: true
-  },
-  fecha_salida: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
-    allowNull: false
-  }
+    id_salida: { 
+        type: DataTypes.INTEGER, 
+        primaryKey: true, 
+        autoIncrement: true 
+    },
+    id_movimiento_reactivo: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+        model: 'movimientos_reactivos',
+        key: 'id_movimiento_reactivo'
+    },
+  onDelete: 'CASCADE'
+},
+    
+   fecha_salida: { 
+        type: DataTypes.DATE 
+    },
 }, {
-  freezeTableName: true,
-  timestamps: true
-})
+    freezeTableName: true,
+    timestamps: true       // ← si no tienes createdAt/updatedAt
+});
 
-export default salidasModel
+export default salidasModel;

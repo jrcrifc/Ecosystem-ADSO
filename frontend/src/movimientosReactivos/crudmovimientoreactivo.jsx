@@ -1,169 +1,128 @@
-import { useEffect, useState } from "react";
-import apiAxios from "../api/axiosConfig";
+import apiAxios from "../api/axiosConfig.js";
+import { useState, useEffect } from "react";
+import DataTable from "react-data-table-component";
 import Swal from "sweetalert2";
-import * as bootstrap from "bootstrap";
-import MovimientoReactivoForm from "./movimientoreactivoform.jsx";
+import IngresoReactivoForm from "./movimientoreactivoform.jsx";
 
-const CrudMovimientoReactivo = () => {
+const CrudmovimientoReactivo = () => {
   const [movimientos, setMovimientos] = useState([]);
+  const [filterText, setFilterText] = useState("");
   const [selectedMovimiento, setSelectedMovimiento] = useState(null);
 
-  // 🔥 Obtener datos
-  const fetchMovimientos = async () => {
-    try {
-      const res = await apiAxios.get("/api/estadoSolicitud");
-      setMovimientos(res.data);
-    } catch (error) {
-      console.error(error);
-      Swal.fire("Error", "No se pudieron cargar los movimientos", "error");
-    }
-  };
+  const columns = [
+    { name: "ID",            selector: row => row.id_movimiento_reactivo,      sortable: true, width: "90px" },
+    { name: "Reactivo",      selector: row => row.id_reactivo,                 sortable: true, width: "110px" },
+    { name: "Cant. Inicial", selector: row => row.cantidad_inicial,            sortable: true, width: "130px" },
+    { name: "Lote",          selector: row => row.lote,                        sortable: true, width: "140px" },
+    { name: "Proveedor",     selector: row => row.id_proveedor,                sortable: true, width: "110px" },
+    { name: "Cant. Salida",  selector: row => row.cantidad_salida,             sortable: true, width: "130px" },
+    { name: "Fecha Ingreso", selector: row => row.fecha_ingreso?.slice(0, 10), sortable: true, width: "140px" },
+    {
+      name: "Estado",
+      selector: row => row.estado_inventario,
+      sortable: true,
+      width: "130px",
+      cell: row => (
+        <span
+          className={`badge ${row.estado_inventario === "en stock" ? "bg-success" : "bg-danger"}`}
+          style={{ fontSize: "0.75rem" }}
+        >
+          {row.estado_inventario}
+        </span>
+      )
+    },
+    {
+      name: "Acciones",
+      center: true,
+      width: "100px",
+      cell: (row) => (
+        <div className="d-flex gap-2 justify-content-center">
+          <button
+            className="btn btn-sm btn-warning"
+            data-bs-toggle="modal"
+            data-bs-target="#modalIngreso"
+            onClick={() => setSelectedMovimiento(row)}
+            title="Editar"
+          >
+            <i className="fa-solid fa-pencil"></i>
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   useEffect(() => {
-    fetchMovimientos();
+    cargarMovimientos();
   }, []);
 
-  // 🔥 Abrir modal nuevo
-  const handleNuevo = () => {
-    setSelectedMovimiento(null);
-    const modal = new bootstrap.Modal(
-      document.getElementById("modalIngreso")
-    );
-    modal.show();
-  };
-
-  // 🔥 Abrir modal editar
-  const handleEditar = (movimiento) => {
-    setSelectedMovimiento(movimiento);
-    const modal = new bootstrap.Modal(
-      document.getElementById("modalIngreso")
-    );
-    modal.show();
-  };
-
-  // 🔥 Eliminar
-  const handleEliminar = async (id) => {
-    const confirm = await Swal.fire({
-      title: "¿Eliminar?",
-      text: "Esta acción no se puede deshacer",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Sí, eliminar",
-    });
-
-    if (confirm.isConfirmed) {
-      try {
-        await apiAxios.delete(`/api/estadoSolicitud/${id}`);
-        Swal.fire("Eliminado", "Registro eliminado correctamente", "success");
-        fetchMovimientos();
-      } catch (error) {
-        console.error(error);
-        Swal.fire("Error", "No se pudo eliminar", "error");
-      }
+  const cargarMovimientos = async () => {
+    try {
+      const res = await apiAxios.get("/api/movimientoreactivos");
+      setMovimientos(res.data);
+    } catch (error) {
+      console.error("Error al cargar movimientos:", error);
+      Swal.fire("Error", "No se pudo cargar los movimientos de los reactivos", "error");
     }
   };
 
+  const filtered = movimientos.filter(item =>
+    `${item.id_movimiento_reactivo || ""}`.includes(filterText) ||
+    `${item.id_reactivo || ""}`.includes(filterText) ||
+    `${item.lote || ""}`.toLowerCase().includes(filterText.toLowerCase())
+  );
+
   return (
-    <div className="container mt-4">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4 className="fw-bold text-primary">Movimientos de Reactivos</h4>
-        <button className="btn btn-success" onClick={handleNuevo}>
-          + Nuevo Ingreso
-        </button>
+    <div className="mt-4" style={{ maxWidth: "960px", margin: "0 auto", padding: "0 16px" }}>
+      <h2 className="text-center mb-4 text-primary fw-bold">
+        Movimientos de Reactivos
+      </h2>
+
+      <div className="row mb-3 align-items-center">
+        <div className="col-md-5">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Buscar por ID, reactivo o lote..."
+            value={filterText}
+            onChange={e => setFilterText(e.target.value)}
+          />
+        </div>
+        <div className="col-md-7 text-end">
+          <button
+            className="btn btn-success"
+            data-bs-toggle="modal"
+            data-bs-target="#modalIngreso"
+            onClick={() => setSelectedMovimiento(null)}
+          >
+            + Nuevo Ingreso
+          </button>
+        </div>
       </div>
 
-      <div className="table-responsive">
-        <table className="table table-bordered table-striped table-sm align-middle">
-          <thead className="table-dark">
-            <tr>
-              <th>ID</th>
-              <th>Fecha</th>
-              <th>Cant. Inicial</th>
-              <th>Cant. Salida</th>
-              <th>Lote</th>
-              <th>Reactivo</th>
-              <th>Proveedor</th>
-              <th>Estado</th>
-              <th className="text-center">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {movimientos.length > 0 ? (
-              movimientos.map((mov) => (
-                <tr key={mov.id_movimiento_reactivo}>
-                  <td>{mov.id_movimiento_reactivo}</td>
-                  <td>{mov.fecha_ingreso?.slice(0, 10)}</td>
-                  <td>{mov.cantidad_inicial}</td>
-                  <td>{mov.cantidad_salida}</td>
-                  <td>{mov.lote}</td>
-                  <td>{mov.id_reactivo}</td>
-                  <td>{mov.id_proveedor || "-"}</td>
-                  <td>
-                    <span
-                      className={`badge ${
-                        mov.estado_inventario === "agotado"
-                          ? "bg-danger"
-                          : "bg-success"
-                      }`}
-                    >
-                      {mov.estado_inventario}
-                    </span>
-                  </td>
-                  <td className="text-center">
-                    <button
-                      className="btn btn-sm btn-warning me-2"
-                      onClick={() => handleEditar(mov)}
-                    >
-                      Editar
-                    </button>
-                    <button
-                      className="btn btn-sm btn-danger"
-                      onClick={() =>
-                        handleEliminar(mov.id_movimiento_reactivo)
-                      }
-                    >
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="9" className="text-center">
-                  No hay registros
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <DataTable
+        columns={columns}
+        data={filtered}
+        pagination
+        highlightOnHover
+        striped
+        responsive
+        noDataComponent="No hay movimientos registrados"
+        paginationPerPage={10}
+      />
 
-      {/* 🔥 MODAL */}
-      <div
-        className="modal fade"
-        id="modalIngreso"
-        tabIndex="-1"
-        aria-hidden="true"
-      >
+      <div className="modal fade" id="modalIngreso" tabIndex="-1">
         <div className="modal-dialog modal-lg">
           <div className="modal-content">
             <div className="modal-header bg-primary text-white">
               <h5 className="modal-title">
-                {selectedMovimiento
-                  ? "Editar Movimiento"
-                  : "Nuevo Movimiento"}
+                {selectedMovimiento ? "Editar" : "Nuevo"} Ingreso de Reactivo
               </h5>
-              <button
-                type="button"
-                className="btn-close btn-close-white"
-                data-bs-dismiss="modal"
-              ></button>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-
             <div className="modal-body">
-              <MovimientoReactivoForm
+              <IngresoReactivoForm
                 selectedMovimiento={selectedMovimiento}
-                refreshData={fetchMovimientos}
+                refreshData={cargarMovimientos}
               />
             </div>
           </div>
@@ -173,4 +132,4 @@ const CrudMovimientoReactivo = () => {
   );
 };
 
-export default CrudMovimientoReactivo;
+export default CrudmovimientoReactivo;

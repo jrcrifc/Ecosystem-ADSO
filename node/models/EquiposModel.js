@@ -25,8 +25,14 @@ const EquiposModel = db.define('equipos', {
     unique: true
   },
   id_usuario_cuentadante: { 
-    type: DataTypes.INTEGER,  // Correcto como INTEGER si es FK a usuarios
-    allowNull: true
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'usuarios',          // nombre de la tabla (tal como está en la BD)
+      key: 'id_usuario'           // campo PK de usuarios
+    },
+    onDelete: 'SET NULL',         // si borran usuario → null
+    onUpdate: 'CASCADE'
   },
   observaciones: { 
     type: DataTypes.TEXT,

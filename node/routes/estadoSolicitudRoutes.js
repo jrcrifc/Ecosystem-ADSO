@@ -1,5 +1,4 @@
 import express from "express";
-import authMiddleware from '../middlewares/auth.js'
 import {
     getAllEstadoSolicitud,
     getEstadoSolicitud,
@@ -10,10 +9,10 @@ import {
 
 const router = express.Router();
 
-router.get("/", authMiddleware, getAllEstadoSolicitud);
-router.get("/:id", authMiddleware, getEstadoSolicitud);
-router.post("/", authMiddleware, createEstadoSolicitud);
-router.put("/:id", authMiddleware, updateEstadoSolicitud);
-router.delete("/:id", authMiddleware, deleteEstadoSolicitud);
+router.get("/", getAllEstadoSolicitud);
+router.get("/:id", getEstadoSolicitud);
+router.post("/", createEstadoSolicitud);
+router.put("/:id", updateEstadoSolicitud);
+router.delete("/:id", deleteEstadoSolicitud);
 
 export default router;

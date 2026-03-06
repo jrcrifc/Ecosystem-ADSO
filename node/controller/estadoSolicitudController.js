@@ -1,9 +1,9 @@
-import estadoSolicitud from "../models/Estadosolicitud.js";
+import estadoSolicitudService from "../service/EstadosolicitudService.js";
 
 // 🔹 Obtener todos
 export const getAllEstadoSolicitud = async (req, res) => {
     try {
-        const registros = await estadoSolicitud.findAll();
+        const registros = await estadoSolicitudService.findAll();
         res.json(registros);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -13,7 +13,7 @@ export const getAllEstadoSolicitud = async (req, res) => {
 // 🔹 Obtener uno
 export const getEstadoSolicitud = async (req, res) => {
     try {
-        const registro = await estadoSolicitud.findByPk(req.params.id);
+        const registro = await estadoSolicitudService.findByPk(req.params.id);
         if (!registro) {
             return res.status(404).json({ message: "Registro no encontrado" });
         }
@@ -26,7 +26,7 @@ export const getEstadoSolicitud = async (req, res) => {
 // 🔹 Crear
 export const createEstadoSolicitud = async (req, res) => {
     try {
-        await estadoSolicitud.create(req.body);
+        await estadoSolicitudService.create(req.body);
         res.status(201).json({ message: "Registro creado correctamente" });
     } catch (error) {
         res.status(400).json({ message: error.message });
@@ -36,7 +36,7 @@ export const createEstadoSolicitud = async (req, res) => {
 // 🔹 Actualizar
 export const updateEstadoSolicitud = async (req, res) => {
     try {
-        const registro = await estadoSolicitud.findByPk(req.params.id);
+        const registro = await estadoSolicitudService.findByPk(req.params.id);
         if (!registro) {
             return res.status(404).json({ message: "Registro no encontrado" });
         }
@@ -51,7 +51,7 @@ export const updateEstadoSolicitud = async (req, res) => {
 // 🔹 Eliminar
 export const deleteEstadoSolicitud = async (req, res) => {
     try {
-        const registro = await estadoSolicitud.findByPk(req.params.id);
+        const registro = await estadoSolicitudService.findByPk(req.params.id);
         if (!registro) {
             return res.status(404).json({ message: "Registro no encontrado" });
         }

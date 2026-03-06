@@ -221,7 +221,7 @@ export default function EquipoForm({ selectedEquipo, refreshParent }) {
         disabled={loading}
         data-bs-dismiss="modal"
       >
-        {loading ? "Guardando..." : selectedEquipo ? "Actualizar Equipo" : "Actualizar Equipo"}
+        {loading ? "Guardando..." : selectedEquipo ? "Actualizar Equipo" : "Guardar Equipo"}
       </button>
     </form>
   );

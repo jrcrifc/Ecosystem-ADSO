@@ -1,33 +1,34 @@
-import { DataTypes } from "sequelize";
 import db from "../database/db.js";
+import { DataTypes } from "sequelize";
 
-const Estadoxequipo = db.define('estadoxequipo', {
-  id_estadoxequipo: {
-    type: DataTypes.INTEGER,
+const estadoxEquipoModel = db.define('estadoxequipo', {
+  id_estadoxequipo: { 
+    type: DataTypes.INTEGER, 
     primaryKey: true,
-    autoIncrement: true
+    autoIncrement: true,
+    allowNull: false   // buena práctica para PK
   },
-  id_equipo: {
+
+  id_equipo: { 
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,          // casi siempre es requerido en este tipo de tablas
+    // references: {
+    //   model: 'equipos',        // descomenta y ajusta si tienes el modelo de equipos
+    //   key: 'id'
+    // }
   },
-  id_estado_equipo: {
+
+  id_estado_equipo: {   
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,          // lo mismo, casi siempre requerido
+    // references: {
+    //   model: 'estado_equipo',  // ajusta el nombre real de la tabla de estados
+    //   key: 'id'
+    // }
   },
-  createdat: {
-    type: DataTypes.DATE,
-    allowNull: false,
-    defaultValue: DataTypes.NOW
-  },
-  updatedat: {
-    type: DataTypes.DATE,
-    allowNull: false,
-    defaultValue: DataTypes.NOW
-  }
 }, {
-  tableName: 'estadoxequipo',
-  timestamps: false
+  freezeTableName: true,       // tabla se llama exactamente 'estadoxequipo' (sin plural)
+  timestamps: true             // crea createdAt y updatedAt automáticamente
 });
 
-export default Estadoxequipo;
+export default estadoxEquipoModel;

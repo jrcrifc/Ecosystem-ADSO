@@ -2,6 +2,7 @@ import apiAxios from "../api/axiosConfig.js";
 import { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
 import Swal from "sweetalert2";
+import * as bootstrap from "bootstrap"; // ✅ FIX: faltaba este import
 import SalidaReactivoForm from "./salidareactivoform.jsx";
 
 const CrudSalidasReactivos = () => {
@@ -14,20 +15,13 @@ const CrudSalidasReactivos = () => {
       name: "ID Salida",
       selector: (row) => row.id_salida,
       sortable: true,
-      width: "100px",
+      width: "150px",
     },
     {
-      name: "ID Inventario",
-      selector: (row) => row.id_inventario_reactivo,
+      name: "ID Mov. Reactivo",
+      selector: (row) => row.id_movimiento_reactivo,
       sortable: true,
-      width: "130px",
-    },
-    {
-      name: "Cantidad salida",
-      selector: (row) => row.cantidad_salida?.toFixed(3) || "0.000",
-      sortable: true,
-      right: true,
-      width: "140px",
+      width: "180px",
     },
     {
       name: "Fecha salida",
@@ -53,7 +47,7 @@ const CrudSalidasReactivos = () => {
     {
       name: "Acciones",
       center: true,
-      width: "130px",
+      width: "140px",
       cell: (row) => (
         <div className="d-flex gap-1 justify-content-center">
           <button
@@ -86,7 +80,7 @@ const CrudSalidasReactivos = () => {
 
   const cargarSalidas = async () => {
     try {
-      const res = await apiAxios.get("/api/salidas_reactivos");
+      const res = await apiAxios.get("/api/salidas");
       setSalidas(res.data);
     } catch (error) {
       console.error("Error al cargar salidas:", error);
@@ -110,7 +104,7 @@ const CrudSalidasReactivos = () => {
     if (!result.isConfirmed) return;
 
     try {
-      await apiAxios.put(`/api/salidas_reactivos/estado/${id}`, { estado: nuevoEstado });
+      await apiAxios.put(`/api/salidas/estado/${id}`, { estado: nuevoEstado });
 
       setSalidas((prev) =>
         prev.map((item) =>
@@ -130,14 +124,20 @@ const CrudSalidasReactivos = () => {
     }
   };
 
+  const hideModal = () => {
+    const modal = document.getElementById("modalSalida");
+    const bsModal = bootstrap.Modal.getInstance(modal);
+    bsModal?.hide();
+  };
+
   const filtered = salidas.filter(
     (item) =>
       String(item.id_salida || "").includes(filterText) ||
-      String(item.id_inventario_reactivo || "").includes(filterText)
+      String(item.id_movimiento_reactivo || "").includes(filterText)
   );
 
   return (
-    <div className="container mt-4">
+    <div className="mt-4" style={{ maxWidth: "960px", margin: "0 auto", padding: "0 16px" }}>
       <h2 className="text-center mb-4 text-primary fw-bold">
         Salidas de Reactivos
       </h2>
@@ -147,7 +147,7 @@ const CrudSalidasReactivos = () => {
           <input
             type="text"
             className="form-control"
-            placeholder="Buscar por ID salida o ID inventario..."
+            placeholder="Buscar por ID salida o ID movimiento..."
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
           />
@@ -187,18 +187,13 @@ const CrudSalidasReactivos = () => {
                 type="button"
                 className="btn-close btn-close-white"
                 data-bs-dismiss="modal"
-                aria-label="Close"
               ></button>
             </div>
             <div className="modal-body">
               <SalidaReactivoForm
                 selectedSalida={selectedSalida}
                 refreshData={cargarSalidas}
-                hideModal={() => {
-                  const modal = document.getElementById("modalSalida");
-                  const bsModal = bootstrap.Modal.getInstance(modal);
-                  bsModal?.hide();
-                }}
+                hideModal={hideModal}
               />
             </div>
           </div>
