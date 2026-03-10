@@ -1,13 +1,12 @@
-// movimientoReactivoForm.jsx
 import apiAxios from "../api/axiosConfig";
 import { useState, useEffect } from "react";
+import * as bootstrap from "bootstrap"; // ✅ FIX: import faltaba
 import Swal from "sweetalert2";
 
-const movimientoReactivoForm = ({ selectedMovimiento, refreshData }) => {
+const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) => {
   const [form, setForm] = useState({
     fecha_ingreso: "",
     cantidad_inicial: "",
-    cantidad_salida: "0",
     lote: "",
     id_reactivo: "",
     id_proveedor: "",
@@ -17,9 +16,8 @@ const movimientoReactivoForm = ({ selectedMovimiento, refreshData }) => {
   useEffect(() => {
     if (selectedMovimiento) {
       setForm({
-        fecha_ingreso: selectedMovimiento.fecha_ingreso?.slice(0,10) || "",
+        fecha_ingreso: selectedMovimiento.fecha_ingreso?.slice(0, 10) || "",
         cantidad_inicial: selectedMovimiento.cantidad_inicial || "",
-        cantidad_salida: selectedMovimiento.cantidad_salida || "0",
         lote: selectedMovimiento.lote || "",
         id_reactivo: selectedMovimiento.id_reactivo || "",
         id_proveedor: selectedMovimiento.id_proveedor || "",
@@ -27,9 +25,8 @@ const movimientoReactivoForm = ({ selectedMovimiento, refreshData }) => {
       });
     } else {
       setForm({
-        fecha_ingreso: new Date().toISOString().slice(0,10),
+        fecha_ingreso: new Date().toISOString().slice(0, 10),
         cantidad_inicial: "",
-        cantidad_salida: "0",
         lote: "",
         id_reactivo: "",
         id_proveedor: "",
@@ -46,34 +43,36 @@ const movimientoReactivoForm = ({ selectedMovimiento, refreshData }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validaciones básicas
     if (!form.fecha_ingreso || !form.cantidad_inicial || !form.id_reactivo) {
       Swal.fire("Campos obligatorios", "Fecha, cantidad inicial y reactivo son requeridos", "warning");
       return;
     }
 
+    if (parseFloat(form.cantidad_inicial) <= 0) {
+      Swal.fire("⚠️ Atención", "La cantidad inicial debe ser mayor a 0", "warning");
+      return;
+    }
+
     const dataToSend = {
-      ...form,
+      fecha_ingreso: form.fecha_ingreso,
       cantidad_inicial: parseFloat(form.cantidad_inicial),
-      cantidad_salida: parseFloat(form.cantidad_salida || 0),
+      lote: form.lote,
       id_reactivo: parseInt(form.id_reactivo),
       id_proveedor: form.id_proveedor ? parseInt(form.id_proveedor) : null,
+      estado_inventario: form.estado_inventario,
     };
 
     try {
       if (selectedMovimiento) {
         await apiAxios.put(`/api/movimientoreactivos/${selectedMovimiento.id_movimiento_reactivo}`, dataToSend);
-        Swal.fire("Actualizado", "Movimiento modificado correctamente", "success");
+        Swal.fire("✅ Actualizado", "Movimiento modificado y stock ajustado", "success");
       } else {
         await apiAxios.post("/api/movimientoreactivos", dataToSend);
-        Swal.fire("Registrado", "Nuevo ingreso creado correctamente", "success");
+        Swal.fire("✅ Registrado", "Ingreso creado y stock actualizado", "success");
       }
 
       refreshData();
-      // Cierra modal (Bootstrap 5)
-      const modal = document.getElementById("modalIngreso");
-      const bsModal = bootstrap.Modal.getInstance(modal);
-      bsModal?.hide();
+      hideModal();
     } catch (err) {
       console.error(err);
       const msg = err.response?.data?.message || "No se pudo guardar el registro";
@@ -103,25 +102,14 @@ const movimientoReactivoForm = ({ selectedMovimiento, refreshData }) => {
             type="number"
             name="cantidad_inicial"
             step="0.001"
-            min="0"
+            min="0.001"
             className="form-control form-control-sm"
             value={form.cantidad_inicial}
             onChange={handleChange}
             required
+            placeholder="Ej: 5.000"
           />
-        </div>
-
-        <div className="col-md-6">
-          <label className="form-label fw-semibold text-muted">Cantidad salida</label>
-          <input
-            type="number"
-            name="cantidad_salida"
-            step="0.001"
-            min="0"
-            className="form-control form-control-sm"
-            value={form.cantidad_salida}
-            onChange={handleChange}
-          />
+          <div className="form-text text-muted small">Esta cantidad se sumará al inventario del reactivo</div>
         </div>
 
         <div className="col-md-6">
@@ -132,6 +120,7 @@ const movimientoReactivoForm = ({ selectedMovimiento, refreshData }) => {
             className="form-control form-control-sm"
             value={form.lote}
             onChange={handleChange}
+            placeholder="Número de lote"
           />
         </div>
 
@@ -144,6 +133,7 @@ const movimientoReactivoForm = ({ selectedMovimiento, refreshData }) => {
             value={form.id_reactivo}
             onChange={handleChange}
             required
+            placeholder="ID del reactivo"
           />
         </div>
 
@@ -155,10 +145,11 @@ const movimientoReactivoForm = ({ selectedMovimiento, refreshData }) => {
             className="form-control form-control-sm"
             value={form.id_proveedor}
             onChange={handleChange}
+            placeholder="Opcional"
           />
         </div>
 
-        <div className="col-12">
+        <div className="col-md-6">
           <label className="form-label fw-semibold text-muted">Estado inventario</label>
           <select
             name="estado_inventario"
@@ -176,9 +167,10 @@ const movimientoReactivoForm = ({ selectedMovimiento, refreshData }) => {
             {selectedMovimiento ? "Actualizar" : "Registrar Ingreso"}
           </button>
         </div>
+
       </div>
     </form>
   );
 };
 
-export default movimientoReactivoForm;
+export default MovimientoReactivoForm;

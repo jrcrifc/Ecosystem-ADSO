@@ -22,7 +22,7 @@ const Home = () => {
     const token = localStorage.getItem('token');
     if (!token) return setUser(null);
     const payload = parseToken(token);
-    setUser(payload ? { userEmail: payload.userEmail || payload.email } : null);
+    setUser(payload ? { userEmail: payload.userEmail || payload.email || '' } : null);
   }, []);
 
   useEffect(() => {
@@ -30,7 +30,7 @@ const Home = () => {
       const token = localStorage.getItem('token');
       if (!token) return setUser(null);
       const payload = parseToken(token);
-      setUser(payload ? { userEmail: payload.userEmail || payload.email } : null);
+      setUser(payload ? { userEmail: payload.userEmail || payload.email || '' } : null);
     };
     window.addEventListener('tokenUpdated', handle);
     return () => window.removeEventListener('tokenUpdated', handle);
@@ -510,11 +510,11 @@ const Home = () => {
               {/* Banner de bienvenida */}
               <div className="welcome-banner">
                 <div className="welcome-text">
-                  <h2>¡Bienvenido, <span>{user.userEmail.split('@')[0]}</span>! 👋</h2>
+                  <h2>¡Bienvenido, <span>{user.userEmail?.split('@')[0] || 'Usuario'}</span>! 👋</h2>
                   <p>¿Qué vas a gestionar hoy? Selecciona un módulo para comenzar.</p>
                 </div>
                 <div className="welcome-avatar">
-                  {user.userEmail.charAt(0).toUpperCase()}
+                  {user.userEmail?.charAt(0)?.toUpperCase() || '?'}
                 </div>
               </div>
 

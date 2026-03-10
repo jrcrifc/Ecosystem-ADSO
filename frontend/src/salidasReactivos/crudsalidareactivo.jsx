@@ -2,7 +2,7 @@ import apiAxios from "../api/axiosConfig.js";
 import { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
 import Swal from "sweetalert2";
-import * as bootstrap from "bootstrap"; // ✅ FIX: faltaba este import
+import * as bootstrap from "bootstrap";
 import SalidaReactivoForm from "./salidareactivoform.jsx";
 
 const CrudSalidasReactivos = () => {
@@ -18,13 +18,13 @@ const CrudSalidasReactivos = () => {
       width: "150px",
     },
     {
-      name: "ID Mov. Reactivo",
+      name: "ID Movimiento Reactivo",
       selector: (row) => row.id_movimiento_reactivo,
       sortable: true,
       width: "180px",
     },
     {
-      name: "Fecha salida",
+      name: "Fecha de salida",
       selector: (row) => (row.fecha_salida ? new Date(row.fecha_salida).toLocaleString() : "-"),
       sortable: true,
       width: "180px",
@@ -59,7 +59,6 @@ const CrudSalidasReactivos = () => {
           >
             <i className="fa-solid fa-pencil"></i>
           </button>
-
           <button
             className={`btn btn-sm ${
               row.estado === 1 ? "btn-outline-danger" : "btn-outline-success"
@@ -105,13 +104,11 @@ const CrudSalidasReactivos = () => {
 
     try {
       await apiAxios.put(`/api/salidas/estado/${id}`, { estado: nuevoEstado });
-
       setSalidas((prev) =>
         prev.map((item) =>
           item.id_salida === id ? { ...item, estado: nuevoEstado } : item
         )
       );
-
       Swal.fire({
         icon: "success",
         title: "¡Listo!",
@@ -124,10 +121,17 @@ const CrudSalidasReactivos = () => {
     }
   };
 
+  // ✅ FIX: usar getOrCreateInstance + limpiar backdrop manualmente
   const hideModal = () => {
     const modal = document.getElementById("modalSalida");
-    const bsModal = bootstrap.Modal.getInstance(modal);
-    bsModal?.hide();
+    if (modal) {
+      const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
+      bsModal.hide();
+      document.body.classList.remove("modal-open");
+      document.body.style.removeProperty("overflow");
+      document.body.style.removeProperty("padding-right");
+      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+    }
   };
 
   const filtered = salidas.filter(
@@ -138,9 +142,7 @@ const CrudSalidasReactivos = () => {
 
   return (
     <div className="mt-4" style={{ maxWidth: "960px", margin: "0 auto", padding: "0 16px" }}>
-      <h2 className="text-center mb-4 text-primary fw-bold">
-        Salidas de Reactivos
-      </h2>
+      <h2 className="text-center mb-4 text-primary fw-bold">Salidas de Reactivos</h2>
 
       <div className="row mb-3 align-items-center">
         <div className="col-md-5">
@@ -187,6 +189,7 @@ const CrudSalidasReactivos = () => {
                 type="button"
                 className="btn-close btn-close-white"
                 data-bs-dismiss="modal"
+                onClick={hideModal}
               ></button>
             </div>
             <div className="modal-body">

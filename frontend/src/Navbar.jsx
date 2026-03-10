@@ -23,7 +23,7 @@ const NavBar = () => {
     if (!token) return setUser(null);
     const payload = parseToken(token);
     if (!payload) return setUser(null);
-    setUser({ userEmail: payload.userEmail || payload.email });
+    setUser({ userEmail: payload.userEmail || payload.email || '' });
   }, []);
 
   useEffect(() => {
@@ -31,7 +31,7 @@ const NavBar = () => {
       const token = localStorage.getItem('token');
       if (!token) return setUser(null);
       const payload = parseToken(token);
-      setUser(payload ? { userEmail: payload.userEmail || payload.email } : null);
+      setUser(payload ? { userEmail: payload.userEmail || payload.email || '' } : null);
     };
     window.addEventListener('tokenUpdated', handle);
     return () => window.removeEventListener('tokenUpdated', handle);
@@ -43,7 +43,6 @@ const NavBar = () => {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClick = (e) => {
       if (!e.target.closest('.nav-user-menu')) setOpen(false);
@@ -154,18 +153,6 @@ const NavBar = () => {
           flex-shrink: 0;
         }
 
-        .eco-nav-home {
-          padding: 7px 13px;
-          border-radius: 8px;
-          font-size: 13px;
-          font-weight: 500;
-          color: rgba(255,255,255,0.55);
-          text-decoration: none;
-          transition: all 0.2s;
-        }
-        .eco-nav-home:hover { color: #fff; background: rgba(255,255,255,0.06); }
-        .eco-nav-home.active { color: #00c864; background: rgba(0,200,100,0.1); font-weight: 600; }
-
         .nav-login-btn {
           padding: 8px 18px;
           border-radius: 9px;
@@ -203,9 +190,7 @@ const NavBar = () => {
           color: #060d0a;
         }
 
-        .nav-user-menu {
-          position: relative;
-        }
+        .nav-user-menu { position: relative; }
         .nav-user-btn {
           display: flex;
           align-items: center;
@@ -285,7 +270,6 @@ const NavBar = () => {
         .nav-dropdown .logout-btn:hover { background: rgba(239,68,68,0.1); color: #ef4444; }
         .nav-dropdown hr { border-color: rgba(255,255,255,0.06); margin: 4px 0; }
 
-        /* Mobile */
         @media (max-width: 768px) {
           .eco-nav-links { display: none; }
           .nav-user-email { display: none; }
@@ -293,7 +277,6 @@ const NavBar = () => {
       `}</style>
 
       <nav className="eco-nav">
-        {/* BRAND */}
         <Link to="/home" className="eco-nav-brand">
           <div className="eco-nav-icon">ES</div>
           <div className="eco-nav-brand-text">
@@ -302,7 +285,6 @@ const NavBar = () => {
           </div>
         </Link>
 
-        {/* CENTER LINKS */}
         <ul className="eco-nav-links">
           <li>
             <NavLink to="/home" className={({ isActive }) => isActive ? 'active' : ''}>
@@ -318,15 +300,14 @@ const NavBar = () => {
           ))}
         </ul>
 
-        {/* RIGHT */}
         <div className="eco-nav-right">
           {user ? (
             <div className="nav-user-menu">
               <button className="nav-user-btn" onClick={() => setOpen(!open)}>
                 <div className="nav-avatar">
-                  {user.userEmail.charAt(0).toUpperCase()}
+                  {user.userEmail?.charAt(0)?.toUpperCase() || '?'}
                 </div>
-                <span className="nav-user-email">{user.userEmail}</span>
+                <span className="nav-user-email">{user.userEmail || ''}</span>
                 <span className={`nav-chevron ${open ? 'open' : ''}`}>▼</span>
               </button>
               {open && (
