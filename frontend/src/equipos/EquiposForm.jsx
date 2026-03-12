@@ -4,7 +4,6 @@ import Swal from "sweetalert2";
 import * as bootstrap from 'bootstrap';
 
 export default function EquipoForm({ selectedEquipo, refreshParent }) {
-
   const [form, setForm] = useState({
     grupo_equipo: "",
     nom_equipo: "",
@@ -47,14 +46,21 @@ export default function EquipoForm({ selectedEquipo, refreshParent }) {
         estado: 1
       });
     }
+    
+    return () => {
+      if (form.previewFoto && form.previewFoto.startsWith("blob:")) {
+        URL.revokeObjectURL(form.previewFoto);
+      }
+    };
   }, [selectedEquipo]);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-
     if (name === "foto_equipo" && files?.[0]) {
       const file = files[0];
-      console.log("Foto seleccionada:", file.name, file.size, file.type);
+      if (form.previewFoto && form.previewFoto.startsWith("blob:")) {
+        URL.revokeObjectURL(form.previewFoto);
+      }
       setForm(prev => ({
         ...prev,
         foto_equipo: file,
@@ -66,11 +72,22 @@ export default function EquipoForm({ selectedEquipo, refreshParent }) {
   };
 
   const saveData = async () => {
+    // RECUPERAR TOKEN
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const token = userData?.token;
+
+    if (!token) {
+      return Swal.fire("Error", "No se encontró un token de sesión válido", "error");
+    }
+
+    if (form.foto_equipo && form.foto_equipo.size > 2 * 1024 * 1024) {
+      return Swal.fire("Error", "La imagen es demasiado pesada (máx 2MB)", "error");
+    }
+
     setLoading(true);
 
     try {
       const data = new FormData();
-
       Object.keys(form).forEach(key => {
         if (key !== "foto_equipo" && key !== "previewFoto") {
           const val = form[key];
@@ -82,24 +99,20 @@ export default function EquipoForm({ selectedEquipo, refreshParent }) {
 
       if (form.foto_equipo instanceof File) {
         data.append("foto_equipo", form.foto_equipo);
-        console.log("Enviando foto nueva:", form.foto_equipo.name);
-      } else {
-        console.log("No se envía foto (sin archivo nuevo)");
       }
 
-      console.log("FormData enviada:");
-      for (let [key, value] of data.entries()) {
-        console.log(key, ':', value instanceof File ? value.name : value);
-      }
+      // CONFIGURACIÓN CON HEADERS DE AUTORIZACIÓN
+      const config = {
+        headers: { 
+          "Content-Type": "multipart/form-data",
+          "Authorization": `Bearer ${token}` 
+        }
+      };
 
       if (selectedEquipo) {
-        await apiAxios.put(`/api/equipos/${selectedEquipo.id_equipo}`, data, {
-          headers: { "Content-Type": "multipart/form-data" }
-        });
+        await apiAxios.put(`/api/equipos/${selectedEquipo.id_equipo}`, data, config);
       } else {
-        await apiAxios.post("/api/equipos", data, {
-          headers: { "Content-Type": "multipart/form-data" }
-        });
+        await apiAxios.post("/api/equipos", data, config);
       }
 
       Swal.fire({
@@ -112,17 +125,6 @@ export default function EquipoForm({ selectedEquipo, refreshParent }) {
 
       if (refreshParent) refreshParent();
 
-      // Limpiamos el file y mantenemos preview si se subió nueva foto
-      setForm(prev => ({
-        ...prev,
-        foto_equipo: null, // limpiamos el File (evita memory leak)
-        previewFoto: form.foto_equipo instanceof File 
-          ? URL.createObjectURL(form.foto_equipo) 
-          : prev.previewFoto
-      }));
-
-      document.activeElement?.blur();
-
       const modalElement = document.getElementById("modalEquipo");
       if (modalElement) {
         const modal = bootstrap.Modal.getInstance(modalElement);
@@ -131,16 +133,8 @@ export default function EquipoForm({ selectedEquipo, refreshParent }) {
 
     } catch (error) {
       console.error("Error al guardar:", error);
-
-      let msg = "No se pudo guardar";
-      if (error.response?.data?.message) msg = error.response.data.message;
-      if (error.response?.status === 500) msg = "Error 500 en backend – revisa terminal";
-
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: msg
-      });
+      let msg = error.response?.data?.message || "No se pudo guardar";
+      Swal.fire({ icon: "error", title: "Error", text: msg });
     } finally {
       setLoading(false);
     }
@@ -152,61 +146,48 @@ export default function EquipoForm({ selectedEquipo, refreshParent }) {
         <div className="mb-3 text-center">
           <img
             src={form.previewFoto}
-            alt="Vista previa del equipo"
+            alt="Vista previa"
             style={{ maxWidth: "250px", maxHeight: "180px", borderRadius: "8px", border: "1px solid #ddd" }}
-            onError={(e) => {
-              console.error("Error cargando foto:", form.previewFoto);
-              e.target.src = "/img/no-image.png";
-            }}
+            onError={(e) => { e.target.src = "/img/no-image.png"; }}
           />
-          <small style={{ display: 'block', color: '#666', marginTop: '5px' }}>
-            Ruta: {form.previewFoto.substring(0, 80)}...
-          </small>
         </div>
       )}
 
       <div className="row g-3">
         <div className="col-md-6">
-          <label>Grupo del equipo</label>
+          <label className="form-label">Grupo del equipo</label>
           <select className="form-select" name="grupo_equipo" value={form.grupo_equipo} onChange={handleChange} required>
             <option value="">Seleccione grupo...</option>
             <option value="Equipo de Laboratorio">Equipo de Laboratorio</option>
             <option value="Maquinaria, Equipos y Herramientas">Maquinaria, Equipos y Herramientas</option>
           </select>
         </div>
-
         <div className="col-md-6">
-          <label>Nombre del equipo</label>
+          <label className="form-label">Nombre del equipo</label>
           <input className="form-control" name="nom_equipo" value={form.nom_equipo} onChange={handleChange} required />
         </div>
-
         <div className="col-md-6">
-          <label>Marca</label>
+          <label className="form-label">Marca</label>
           <input className="form-control" name="marca_equipo" value={form.marca_equipo} onChange={handleChange} />
         </div>
-
         <div className="col-md-6">
-          <label>N° Placa / Serial</label>
+          <label className="form-label">N° Placa / Serial</label>
           <input className="form-control" name="no_placa" value={form.no_placa} onChange={handleChange} />
         </div>
-
         <div className="col-md-6">
-          <label>ID Cuentadante</label>
+          <label className="form-label">ID Cuentadante</label>
           <input className="form-control" name="id_usuario_cuentadante" value={form.id_usuario_cuentadante} onChange={handleChange} type="number" />
         </div>
-
         <div className="col-12">
-          <label>Observaciones</label>
+          <label className="form-label">Observaciones</label>
           <textarea className="form-control" name="observaciones" value={form.observaciones} onChange={handleChange} rows="3" />
         </div>
-
         <div className="col-12">
-          <label>Foto del equipo</label>
+          <label className="form-label">Foto del equipo</label>
           <input type="file" className="form-control" name="foto_equipo" accept="image/*" onChange={handleChange} />
         </div>
-
         <div className="col-12">
-          <label>Estado</label>
+          <label className="form-label">Estado</label>
           <select className="form-select" name="estado" value={form.estado} onChange={handleChange}>
             <option value={1}>Activo</option>
             <option value={0}>Inactivo</option>
@@ -219,9 +200,8 @@ export default function EquipoForm({ selectedEquipo, refreshParent }) {
         className="btn btn-success w-100 mt-4"
         onClick={saveData}
         disabled={loading}
-        data-bs-dismiss="modal"
       >
-        {loading ? "Guardando..." : selectedEquipo ? "Actualizar Equipo" : "Actualizar Equipo"}
+        {loading ? "Guardando..." : selectedEquipo ? "Actualizar Equipo" : "Guardar Equipo"}
       </button>
     </form>
   );

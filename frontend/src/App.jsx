@@ -8,13 +8,13 @@ import Crudproveedor from "./proveedores/Crudproveedor.jsx";
 import CrudEquipo from "./equipos/crudequipos.jsx";
 import Home from "./Home/home.jsx";
 import UserLogin from "./Home/userLogin.jsx";
-import Register from "./Home/Register.jsx"; // ✅ NUEVO
+import Register from "./Home/Register.jsx";
 
 // ===============================
 // ✅ RUTAS PRIVADAS
 // ===============================
 const PrivateRoute = ({ isAuth, children }) =>
-  isAuth ? children : <Navigate to="/UserLogin" />;
+  isAuth ? children : <Navigate to="/UserLogin" replace />;
 
 function App() {
   const [isAuth, setIsAuth] = useState(false);
@@ -57,30 +57,22 @@ function App() {
 
   return (
     <>
-      {/* ✅ Navbar solo si está autenticado */}
       {isAuth && <Navbar isAuth={isAuth} logOut={logOut} />}
 
       <div style={{ padding: "20px" }}>
         <Routes>
-
           {/* ================= LOGIN ================= */}
           <Route
             path="/UserLogin"
             element={
-              isAuth
-                ? <Navigate to="/home" />
-                : <UserLogin setIsAuth={setIsAuth} />
+              isAuth ? <Navigate to="/home" replace /> : <UserLogin setIsAuth={setIsAuth} />
             }
           />
 
           {/* ================= REGISTER ================= */}
           <Route
             path="/register"
-            element={
-              isAuth
-                ? <Navigate to="/home" />
-                : <Register />
-            }
+            element={isAuth ? <Navigate to="/home" replace /> : <Register />}
           />
 
           {/* ================= HOME ================= */}
@@ -136,11 +128,8 @@ function App() {
           {/* ================= DEFAULT ================= */}
           <Route
             path="*"
-            element={
-              <Navigate to={isAuth ? "/home" : "/UserLogin"} />
-            }
+            element={<Navigate to={isAuth ? "/home" : "/UserLogin"} replace />}
           />
-
         </Routes>
       </div>
     </>

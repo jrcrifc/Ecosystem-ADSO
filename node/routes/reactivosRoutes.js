@@ -3,31 +3,10 @@ import db from "../database/db.js";
 
 const router = express.Router();
 
-// ======================================
-// 🔥 CAMBIAR ESTADO
-// PUT /api/reactivos/estado/:id
-// ======================================
-router.put("/estado/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { estado } = req.body;
-
-    await db.query(
-      "UPDATE reactivos SET estado = ? WHERE id_reactivo = ?",
-      [estado, id]
-    );
-
-    res.json({ message: "Estado actualizado correctamente" });
-  } catch (error) {
-    console.error("Error al cambiar estado:", error);
-    res.status(500).json({ message: "Error al cambiar estado" });
-  }
-});
-
-// ======================================
-// 🔥 OBTENER TODOS LOS REACTIVOS
+// ==========================================
+// 1. OBTENER TODOS LOS REACTIVOS
 // GET /api/reactivos
-// ======================================
+// ==========================================
 router.get("/", async (req, res) => {
   try {
     const [reactivos] = await db.query(
@@ -40,14 +19,13 @@ router.get("/", async (req, res) => {
   }
 });
 
-// ======================================
-// 🔥 OBTENER REACTIVO POR ID
+// ==========================================
+// 2. OBTENER UN REACTIVO POR ID
 // GET /api/reactivos/:id
-// ======================================
+// ==========================================
 router.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-
     const [reactivo] = await db.query(
       "SELECT * FROM reactivos WHERE id_reactivo = ?",
       [id]
@@ -64,11 +42,8 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// ======================================
-// 🔥 CREAR REACTIVO
-// POST /api/reactivos
-// ======================================
-router.post("/", async (req, res) => {
+
+router.post("/api/reactivos", async (req, res) => {
   try {
     const {
       presentacion_reactivo,
@@ -116,14 +91,10 @@ router.post("/", async (req, res) => {
   }
 });
 
-// ======================================
-// 🔥 ACTUALIZAR REACTIVO
-// PUT /api/reactivos/:id
-// ======================================
-router.put("/:id", async (req, res) => {
+
+router.put("/api/reactivos/:id", async (req, res) => {
   try {
     const { id } = req.params;
-
     const {
       presentacion_reactivo,
       cantidad_presentacion,
@@ -181,11 +152,26 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// ======================================
-// 🔥 ELIMINAR REACTIVO
-// DELETE /api/reactivos/:id
-// ======================================
-router.delete("/:id", async (req, res) => {
+
+router.put("/api/reactivos/estado/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { estado } = req.body;
+
+    await db.query(
+      "UPDATE reactivos SET estado = ? WHERE id_reactivo = ?",
+      [estado, id]
+    );
+
+    res.json({ message: "Estado actualizado correctamente" });
+  } catch (error) {
+    console.error("Error al cambiar estado:", error);
+    res.status(500).json({ message: "Error al cambiar estado" });
+  }
+});
+
+
+router.delete("/api/reactivos/:id", async (req, res) => {
   try {
     const { id } = req.params;
 

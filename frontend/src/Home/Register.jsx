@@ -36,9 +36,9 @@ const Register = () => {
   const inputStyle = {
     borderRadius: "25px",
     padding: "12px 15px",
-    background: "rgba(247, 244, 244, 0.9)",
+    background: "rgba(255, 255, 255, 0.9)",
     border: "1px solid ",
-    color: "#fff",
+    color: "#080808",
     outline: "none",
   };
 
