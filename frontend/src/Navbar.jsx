@@ -1,14 +1,24 @@
-import React, { useRef } from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-const Navbar = ({ isAuth, logOut, user, updateUserPhoto }) => {
+const Navbar = ({ isAuth, logOut, users }) => {
   const navigate = useNavigate();
-  const fileInputRef = useRef(null);
 
-  // Mapeo directo a tu modelo de Sequelize: nombres
-  // Si user existe, usa user.nombres. Si no, muestra "Cargando..."
-const userName = user?.nombres ? user.nombres : "Cargando...";
-  const userPhoto = user?.photo || null; // Si luego añades campo 'photo' a tu modelo
+  // --- DEPURACIÓN ---
+  useEffect(() => {
+    if (isAuth) {
+      console.log("Revisando prop 'users' en consola:", users);
+    }
+  }, [users, isAuth]);
+
+  // --- EXTRACCIÓN DE TU BASE DE DATOS ---
+  // Buscamos dentro de 'users', 'users.user' o 'users.data' según cómo responda tu API
+  const userData = Array.isArray(users) ? users[0] : (users?.user || users?.data || users);
+
+  // Mapeo exacto a las columnas de tu tabla SQL
+  const userName = userData?.nombres;
+  const userEmail = userData?.email;
+  const userRol = userData?.rol;
 
   const handleClick = (path) => {
     if (!isAuth) {
@@ -16,17 +26,6 @@ const userName = user?.nombres ? user.nombres : "Cargando...";
       return;
     }
     navigate(path);
-  };
-
-  const handleAvatarClick = () => {
-    fileInputRef.current.click();
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file && updateUserPhoto) {
-      updateUserPhoto(file);
-    }
   };
 
   return (
@@ -46,49 +45,35 @@ const userName = user?.nombres ? user.nombres : "Cargando...";
           </div>
         </div>
 
-        {/* BOTON RESPONSIVE */}
         <button
           className="navbar-toggler"
           type="button"
           data-bs-toggle="collapse"
           data-bs-target="#navbarNav"
-          aria-controls="navbarNav"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
         >
           <span className="navbar-toggler-icon"></span>
         </button>
 
-        {/* LINKS */}
         <div className="collapse navbar-collapse" id="navbarNav">
+          {/* Si usas un componente estilizado aquí que reciba 'center', 
+              asegúrate de llamarlo como $center={true} */}
           <ul className="navbar-nav ms-auto gap-2 align-items-center">
             <li className="nav-item">
-              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/home")}>
-                Inicio
-              </span>
+              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/home")}>Inicio</span>
             </li>
             <li className="nav-item">
-              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/reactivos")}>
-                Inventario de Reactivos
-              </span>
+              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/reactivos")}>Inventario de Reactivos</span>
             </li>
             <li className="nav-item">
-              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/estadoSolicitud")}>
-                Estado de Solicitudes
-              </span>
+              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/estadoSolicitud")}>Estado de Solicitudes</span>
             </li>
             <li className="nav-item">
-              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/equipos")}>
-                Solicitud de Equipos
-              </span>
+              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/equipos")}>Solicitud de Equipos</span>
             </li>
             <li className="nav-item">
-              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/proveedor")}>
-                Proveedores
-              </span>
+              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/proveedor")}>Proveedores</span>
             </li>
 
-            {/* LOGIN / PERFIL DESPLEGABLE */}
             {isAuth ? (
               <li className="nav-item dropdown">
                 <a
@@ -100,57 +85,32 @@ const userName = user?.nombres ? user.nombres : "Cargando...";
                   aria-expanded="false"
                 >
                   <div 
-                    className="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white overflow-hidden" 
+                    className="rounded-circle bg-success d-flex align-items-center justify-content-center text-white fw-bold" 
                     style={{ width: "35px", height: "35px" }}
                   >
-                    {userPhoto ? (
-                      <img src={userPhoto} alt="profile" style={{width: '100%', height: '100%', objectFit: 'cover'}} />
-                    ) : (
-                      <span className="fw-bold">{userName.charAt(0).toUpperCase()}</span>
-                    )}
+                    {userName ? userName.charAt(0).toUpperCase() : "?"}
                   </div>
                 </a>
 
                 <ul 
                   className="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0" 
-                  style={{ minWidth: "220px", borderRadius: "12px", overflow: "hidden" }}
+                  style={{ minWidth: "250px", borderRadius: "12px", overflow: "hidden" }}
                 >
-                  {/* Header: Datos de la BD */}
-                  <li className="p-3 bg-light border-bottom text-center">
-                    <div className="position-relative d-inline-block mb-2">
-                      <div 
-                        className="rounded-circle bg-secondary bg-opacity-25 d-flex align-items-center justify-content-center overflow-hidden" 
-                        style={{ width: 60, height: 60, cursor: 'pointer', border: '2px solid #0d6efd' }}
-                        onClick={handleAvatarClick}
-                      >
-                        {userPhoto ? (
-                          <img src={userPhoto} alt="profile" style={{width: '100%', height: '100%', objectFit: 'cover'}} />
-                        ) : (
-                          <span className="text-primary fw-bold fs-4">{userName.charAt(0).toUpperCase()}</span>
-                        )}
-                      </div>
-                      <input 
-                        type="file" 
-                        ref={fileInputRef} 
-                        style={{ display: 'none' }} 
-                        accept="image/*" 
-                        onChange={handleFileChange} 
-                      />
-                    </div>
+                  <li className="p-4 bg-light border-bottom text-center">
                     <div>
-                      {/* Aquí aparece el nombre exacto de la columna 'nombres' */}
-                      <p className="m-0 fw-bold text-dark" style={{ lineHeight: 1.2 }}>
-                        {userName}
-                      </p>
-                      <small className="text-muted" style={{ fontSize: '0.8rem' }}>
-                        ID: {user?.documentos || 'Usuario'}
-                      </small>
+                      {/* SOLO DATOS DE LA DB */}
+                      {userName && <h6 className="m-0 fw-bold text-dark text-capitalize">{userName}</h6>}
+                      {userEmail && <p className="text-muted mb-1 small">{userEmail}</p>}
+                      {userRol && (
+                        <span className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3">
+                          {userRol}
+                        </span>
+                      )}
                     </div>
                   </li>
 
-                  {/* Footer: Logout */}
-                  <li className="border-top">
-                    <button className="dropdown-item py-2 fw-semibold text-danger" onClick={logOut}>
+                  <li>
+                    <button className="dropdown-item py-3 text-center fw-bold text-danger" onClick={logOut}>
                       Cerrar sesión
                     </button>
                   </li>
@@ -158,13 +118,7 @@ const userName = user?.nombres ? user.nombres : "Cargando...";
               </li>
             ) : (
               <li className="nav-item">
-                <span
-                  className="nav-link"
-                  style={{ cursor: "pointer" }}
-                  onClick={() => navigate("/UserLogin")}
-                >
-                  Login
-                </span>
+                <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => navigate("/UserLogin")}>Login</span>
               </li>
             )}
           </ul>

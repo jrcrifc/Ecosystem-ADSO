@@ -1,15 +1,15 @@
 import UserModel from "../models/userModel.js";
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import { v4 as uuidv4 } from 'uuid';
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import { v4 as uuidv4 } from "uuid";
 
 class UserService {
 
     async register(data) {
-        const { documentos, nombres, email, password } = data;
+        const { documentos, nombres, email, password, rol } = data;
 
         const userExist = await UserModel.findOne({
-            where: { email: email }
+            where: { email }
         });
 
         if (userExist) {
@@ -24,7 +24,8 @@ class UserService {
             nombres,
             email,
             password: hashedPassword,
-            uuid: userUuid
+            uuid: userUuid,
+            rol
         });
 
         return user;
@@ -34,7 +35,7 @@ class UserService {
         const { email, password } = data;
 
         const user = await UserModel.findOne({
-            where: { email: email }
+            where: { email }
         });
 
         if (!user) {
@@ -48,9 +49,9 @@ class UserService {
         }
 
         const token = jwt.sign(
-            { id: user.id, uuid: user.uuid },
+            { id: user.id, uuid: user.uuid, rol: user.rol },
             process.env.JWT_SECRET,
-            { expiresIn: '1h' }
+            { expiresIn: "1h" }
         );
 
         user.token = token;
@@ -58,7 +59,10 @@ class UserService {
 
         const { password: _, ...userSinPassword } = user.toJSON();
 
-        return { user: userSinPassword };
+        return {
+            token,
+            user: userSinPassword
+        };
     }
 }
 

@@ -1,4 +1,3 @@
-// App.jsx
 import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./Navbar";
@@ -10,22 +9,16 @@ import Home from "./Home/home.jsx";
 import UserLogin from "./Home/userLogin.jsx";
 import Register from "./Home/Register.jsx";
 
-// ===============================
-// ✅ RUTAS PRIVADAS
-// ===============================
 const PrivateRoute = ({ isAuth, children }) =>
   isAuth ? children : <Navigate to="/UserLogin" replace />;
 
 function App() {
   const [isAuth, setIsAuth] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [userData, setUserData] = useState(null);
 
-  // ===============================
-  // ✅ VALIDAR SESIÓN AL RECARGAR
-  // ===============================
   useEffect(() => {
     const stored = localStorage.getItem("user");
-
     if (!stored) {
       setIsAuth(false);
       setIsLoading(false);
@@ -34,22 +27,24 @@ function App() {
 
     try {
       const user = JSON.parse(stored);
-      setIsAuth(!!user?.token);
+      if (user?.token || user) {
+        setIsAuth(true);
+        setUserData(user); 
+      } else {
+        setIsAuth(false);
+      }
     } catch {
       localStorage.removeItem("user");
       setIsAuth(false);
     }
-
     setIsLoading(false);
   }, []);
 
-  // ===============================
-  // ✅ LOGOUT
-  // ===============================
   const logOut = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     setIsAuth(false);
+    setUserData(null);
   };
 
   if (isLoading)
@@ -57,25 +52,26 @@ function App() {
 
   return (
     <>
-      {isAuth && <Navbar isAuth={isAuth} logOut={logOut} />}
+      {isAuth && <Navbar isAuth={isAuth} logOut={logOut} users={userData} />}
 
       <div style={{ padding: "20px" }}>
         <Routes>
-          {/* ================= LOGIN ================= */}
           <Route
             path="/UserLogin"
             element={
-              isAuth ? <Navigate to="/home" replace /> : <UserLogin setIsAuth={setIsAuth} />
+              isAuth ? (
+                <Navigate to="/home" replace />
+              ) : (
+                <UserLogin setIsAuth={setIsAuth} setUserData={setUserData} />
+              )
             }
           />
 
-          {/* ================= REGISTER ================= */}
           <Route
             path="/register"
             element={isAuth ? <Navigate to="/home" replace /> : <Register />}
           />
 
-          {/* ================= HOME ================= */}
           <Route
             path="/home"
             element={
@@ -85,7 +81,6 @@ function App() {
             }
           />
 
-          {/* ================= REACTIVOS ================= */}
           <Route
             path="/reactivos"
             element={
@@ -95,7 +90,6 @@ function App() {
             }
           />
 
-          {/* ================= MOVIMIENTOS ================= */}
           <Route
             path="/estadoSolicitud"
             element={
@@ -105,7 +99,6 @@ function App() {
             }
           />
 
-          {/* ================= EQUIPOS ================= */}
           <Route
             path="/equipos"
             element={
@@ -115,7 +108,6 @@ function App() {
             }
           />
 
-          {/* ================= PROVEEDORES ================= */}
           <Route
             path="/proveedor"
             element={
@@ -125,7 +117,6 @@ function App() {
             }
           />
 
-          {/* ================= DEFAULT ================= */}
           <Route
             path="*"
             element={<Navigate to={isAuth ? "/home" : "/UserLogin"} replace />}

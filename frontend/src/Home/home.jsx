@@ -1,114 +1,108 @@
+import React from "react";
+
 const Home = () => {
   return (
-    <>
+    <div
+      style={{
+        fontFamily: "Arial, sans-serif",
+        minHeight: "100vh",
+        background: "#f0fdf4",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+      }}
+    >
       {/* HERO */}
-      <section className="bg-dark text-white text-center py-5">
-        <div className="container">
-          <h1 className="display-3 fw-bold text-success">
-            Laboratorio Ambiental
+      <div
+        style={{
+          width: "100%",
+          height: "60vh",
+          backgroundImage:
+            "url('https://images.unsplash.com/photo-1501785888041-af3ef285b470')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          color: "white",
+          textAlign: "center",
+        }}
+      >
+        <div
+          style={{
+            background: "rgba(0,0,0,0.5)",
+            padding: "30px",
+            borderRadius: "20px",
+          }}
+        >
+          <h1 style={{ fontSize: "40px", marginBottom: "10px" }}>
+            🌍 Cuidemos el Planeta
           </h1>
-          <p className="lead mt-3">
-            Sistema de Gestión y Control Ambiental para análisis,
-            monitoreo y evaluación ecológica.
-          </p>
-          <div className="mt-4">
-            <button className="btn btn-success btn-lg me-3">
-              <i className="bi bi-search me-2"></i>
-              Ver Servicios
-            </button>
-            <button className="btn btn-outline-light btn-lg">
-              <i className="bi bi-envelope me-2"></i>
-              Contactar
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* SOBRE NOSOTROS */}
-      <section className="py-5">
-        <div className="container">
-          <div className="row align-items-center">
-            <div className="col-md-6">
-              <h2 className="fw-bold text-success mb-3">
-                <i className="bi bi-building me-2"></i>
-                ¿Quiénes Somos?
-              </h2>
-              <p className="text-muted">
-                Somos un laboratorio especializado en análisis físico-químicos,
-                microbiológicos y monitoreo ambiental. Nuestro objetivo es
-                garantizar el cumplimiento de normativas ambientales y
-                proteger los recursos naturales.
-              </p>
-              <ul className="list-unstyled">
-                <li><i className="bi bi-check-circle-fill text-success me-2"></i>Control de calidad del agua</li>
-                <li><i className="bi bi-check-circle-fill text-success me-2"></i>Análisis de suelos</li>
-                <li><i className="bi bi-check-circle-fill text-success me-2"></i>Monitoreo de aire</li>
-                <li><i className="bi bi-check-circle-fill text-success me-2"></i>Gestión ambiental empresarial</li>
-              </ul>
-            </div>
-            <div className="col-md-6 text-center">
-              <img
-                src="https://images.unsplash.com/photo-1581091870627-3c6c59e4a6e3"
-                alt="Laboratorio"
-                className="img-fluid rounded shadow-lg"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* SERVICIOS */}
-      <section className="bg-light py-5">
-        <div className="container">
-          <h2 className="text-center fw-bold text-success mb-5">
-            <i className="bi bi-flask me-2"></i>
-            Nuestros Servicios
-          </h2>
-
-          <div className="row text-center">
-            <div className="col-md-4">
-              <div className="card border-0 shadow-sm p-4">
-                <i className="bi bi-droplet-half display-4 text-success"></i>
-                <h5 className="mt-3">Análisis de Agua</h5>
-                <p className="text-muted">
-                  Evaluación de calidad para consumo humano e industrial.
-                </p>
-              </div>
-            </div>
-
-            <div className="col-md-4">
-              <div className="card border-0 shadow-sm p-4">
-                <i className="bi bi-tree display-4 text-success"></i>
-                <h5 className="mt-3">Estudio de Suelos</h5>
-                <p className="text-muted">
-                  Diagnóstico ambiental para agricultura y construcción.
-                </p>
-              </div>
-            </div>
-
-            <div className="col-md-4">
-              <div className="card border-0 shadow-sm p-4">
-                <i className="bi bi-wind display-4 text-success"></i>
-                <h5 className="mt-3">Monitoreo Ambiental</h5>
-                <p className="text-muted">
-                  Control de contaminación del aire y evaluación sonora.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="bg-success text-white text-center py-3">
-        <div className="container">
-          <p className="mb-0">
-            © 2026 Laboratorio Ambiental | Sistema de Gestión Ambiental
+          <p style={{ fontSize: "18px" }}>
+            Juntos podemos proteger el medio ambiente
           </p>
         </div>
-      </footer>
-    </>
+      </div>
+
+      {/* SECCIÓN IMÁGENES */}
+      <div
+        style={{
+          width: "90%",
+          marginTop: "40px",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+          gap: "20px",
+        }}
+      >
+        <img
+          src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee"
+          alt="Bosque"
+          style={imgStyle}
+        />
+        <img
+          src="https://images.unsplash.com/photo-1472214103451-9374bd1c798e"
+          alt="Naturaleza"
+          style={imgStyle}
+        />
+        <img
+          src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e"
+          alt="Océano"
+          style={imgStyle}
+        />
+        <img
+          src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e"
+          alt="Árboles"
+          style={imgStyle}
+        />
+      </div>
+
+      {/* TEXTO */}
+      <div
+        style={{
+          marginTop: "40px",
+          padding: "20px",
+          maxWidth: "800px",
+          textAlign: "center",
+          color: "#14532d",
+        }}
+      >
+        <h2>🌱 Nuestro Compromiso</h2>
+        <p>
+          Promovemos el cuidado del medio ambiente a través de la educación,
+          la conciencia ecológica y acciones sostenibles. Cada pequeño cambio
+          cuenta para proteger nuestro planeta.
+        </p>
+      </div>
+    </div>
   );
+};
+
+const imgStyle = {
+  width: "100%",
+  height: "200px",
+  objectFit: "cover",
+  borderRadius: "15px",
+  boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
 };
 
 export default Home;

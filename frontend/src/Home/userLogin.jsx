@@ -3,42 +3,82 @@ import { useNavigate } from "react-router-dom";
 import apiAxios from "../api/axiosConfig.js";
 import { FaEnvelope, FaLock } from "react-icons/fa";
 import fondoLaboratorio from "../Home/fondo.jpeg";
+import logo from "../Home/logotipo.jpeg";
 
-const UserLogin = ({ setIsAuth }) => {
+// ✅ Se agregó setUserData como prop
+const UserLogin = ({ setIsAuth, setUserData }) => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
+
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const handleChange = (e) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
+  };
+
   const gestionarLogin = async (e) => {
     e.preventDefault();
+
     setError("");
     setLoading(true);
 
     try {
-      const response = await apiAxios.post("/api/auth/login", {
-        email,
-        password,
-      });
+      const data = {
+        email: form.email.trim(),
+        password: form.password.trim(),
+      };
 
-      const { user } = response.data;
+      if (!data.email || !data.password) {
+        setError("Todos los campos son obligatorios");
+        setLoading(false);
+        return;
+      }
 
-      // ✅ GUARDAR USUARIO COMPLETO
+      const response = await apiAxios.post("/api/auth/login", data);
+      const { token, user } = response.data;
+
+      if (!token || !user) {
+        throw new Error("Respuesta inválida del servidor");
+      }
+
+      // ✅ GUARDAR EN STORAGE
+      localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
 
-      // ✅ GUARDAR TOKEN POR SEPARADO (opcional pero recomendado)
-      localStorage.setItem("token", user.token);
-
-      // ✅ ACTIVAR AUTENTICACIÓN
+      // 🔥 CAMBIO CLAVE: Actualiza el estado global al instante
+      setUserData(user); 
       setIsAuth(true);
 
-      // ✅ REDIRECCIÓN CORRECTA (minúscula)
-      navigate("/home");
+      setForm({ email: "", password: "" });
+
+      // REDIRECCIÓN POR ROL
+      switch (user.rol) {
+        case "Instructor":
+          navigate("/dashboardInstructor");
+          break;
+        case "Aprendiz":
+          navigate("/dashboardAprendiz");
+          break;
+        case "Pasante":
+          navigate("/dashboardPasante");
+          break;
+        default:
+          navigate("/home");
+      }
 
     } catch (err) {
       setError(
-        err.response?.data?.message || "Email o contraseña incorrectos"
+        err.response?.data?.message ||
+        err.message ||
+        "Email o contraseña incorrectos"
       );
     } finally {
       setLoading(false);
@@ -63,8 +103,6 @@ const UserLogin = ({ setIsAuth }) => {
         left: 0,
         minHeight: "100vh",
         width: "100vw",
-        margin: 0,
-        padding: 0,
         backgroundImage: `url(${fondoLaboratorio})`,
         backgroundPosition: "center",
         backgroundSize: "cover",
@@ -80,27 +118,22 @@ const UserLogin = ({ setIsAuth }) => {
           maxWidth: "380px",
           width: "90%",
           textAlign: "center",
-          background: "rgba(255,255,255,0.85)",
-          border: "1px solid rgba(255,255,255,0.3)",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
-          animation: "slideFade 0.8s ease forwards",
+          background: "rgba(255,255,255,0.9)",
           backdropFilter: "blur(10px)",
         }}
       >
         <div className="mb-4">
           <img
-            src="./src/Home/logotipo.jpeg"
+            src={logo}
             alt="Logo"
             style={{
               width: "80px",
               height: "80px",
-              objectFit: "cover",
               borderRadius: "50%",
-              marginBottom: "10px",
               border: "3px solid #00796b",
             }}
           />
-          <h2 style={{ fontSize: "1.5rem", color: "#333", fontWeight: 700 }}>
+          <h2 className="mt-2" style={{ color: "#333", fontWeight: "bold" }}>
             Laboratorio Ambiental
           </h2>
         </div>
@@ -109,19 +142,12 @@ const UserLogin = ({ setIsAuth }) => {
 
         <form onSubmit={gestionarLogin}>
           <div className="mb-3 position-relative">
-            <FaEnvelope
-              style={{
-                position: "absolute",
-                top: "12px",
-                left: "15px",
-                color: "#00796b",
-                zIndex: 10,
-              }}
-            />
+            <FaEnvelope style={{ position: "absolute", top: "12px", left: "15px", color: "#00796b" }} />
             <input
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              name="email"
+              value={form.email}
+              onChange={handleChange}
               className="form-control ps-5"
               placeholder="Email"
               required
@@ -130,19 +156,12 @@ const UserLogin = ({ setIsAuth }) => {
           </div>
 
           <div className="mb-3 position-relative">
-            <FaLock
-              style={{
-                position: "absolute",
-                top: "12px",
-                left: "15px",
-                color: "#00796b",
-                zIndex: 10,
-              }}
-            />
+            <FaLock style={{ position: "absolute", top: "12px", left: "15px", color: "#00796b" }} />
             <input
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              name="password"
+              value={form.password}
+              onChange={handleChange}
               className="form-control ps-5"
               placeholder="Contraseña"
               required
@@ -154,14 +173,7 @@ const UserLogin = ({ setIsAuth }) => {
             type="submit"
             className="btn w-100 fw-bold mt-2"
             disabled={loading}
-            style={{
-              backgroundColor: "#00796b",
-              borderRadius: "20px",
-              padding: "12px",
-              color: "#fff",
-              border: "none",
-              transition: "0.3s",
-            }}
+            style={{ backgroundColor: "#00796b", borderRadius: "20px", padding: "12px", color: "#fff" }}
           >
             {loading ? "Ingresando..." : "Iniciar Sesión"}
           </button>
@@ -170,11 +182,7 @@ const UserLogin = ({ setIsAuth }) => {
             ¿No tienes cuenta?{" "}
             <span
               onClick={() => navigate("/register")}
-              style={{
-                color: "#00796b",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
+              style={{ color: "#00796b", fontWeight: "bold", cursor: "pointer" }}
             >
               Registrarse
             </span>
@@ -184,32 +192,9 @@ const UserLogin = ({ setIsAuth }) => {
 
       <style>
         {`
-          * {
-            margin: 0 !important;
-            padding: 0;
-            box-sizing: border-box;
-          }
-
-          html, body {
-            height: 100% !important;
-            width: 100% !important;
-            overflow: hidden !important;
-          }
-
-          @keyframes slideFade {
-            0% { opacity: 0; transform: translateY(-20px);}
-            100% { opacity: 1; transform: translateY(0);}
-          }
-
-          .form-control:focus { 
-            border-color: #00796b !important;
-            box-shadow: 0 0 8px rgba(0,121,107,0.4) !important;
-          }
-
-          .btn:hover {
-            background-color: #004d40 !important;
-            transform: scale(1.02);
-          }
+          html, body { margin: 0; height: 100%; overflow: hidden; }
+          .form-control:focus { border-color: #00796b !important; box-shadow: 0 0 8px rgba(0,121,107,0.4) !important; }
+          .btn:hover { background-color: #004d40 !important; transform: scale(1.02); }
         `}
       </style>
     </div>
