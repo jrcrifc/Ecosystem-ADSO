@@ -8,6 +8,12 @@ import Crudproveedor from "./proveedores/Crudproveedor.jsx";
 import CrudEquipo from "./equipos/crudequipos.jsx";
 import Crudestadoequipo from "./estadoequipo/crudestadoequipo.jsx";
 import Crudestadosolicitud from "./estadosolicitud/crudestadosolicitud.jsx";
+import Crudestadoxequipo from "./reactivos/crudreactivos.jsx";
+import Crudeestadoxsolicitud from "./movimientosReactivos/crudmovimientoreactivo.jsx";
+import Crudsolcitudxequipo from "./proveedores/Crudproveedor.jsx";
+import Crudsalidas from "./salidasReactivos/crudsalidareactivo.jsx";
+import Crudcuentadantes from "./cuentadante/crudcuentadante.jsx";
+import Crudsolicitud from "./Solicitud/crudsolicitud.jsx";
 
 import Home from "./Home/home.jsx";
 import UserLogin from "./Home/userLogin.jsx";
@@ -113,6 +119,16 @@ function App() {
             }
           />
 
+          {/* CUENTADANTE */}
+          <Route
+            path="/cuentadante"
+            element={
+              <PrivateRoute isAuth={isAuth}>
+                <Crudcuentadantes />
+              </PrivateRoute>
+            }
+          />
+
           {/* REACTIVOS */}
           <Route
             path="/reactivos"
@@ -152,6 +168,16 @@ function App() {
               </PrivateRoute>
             }
           />
+          
+          {/* SALIDAS */}
+          <Route
+            path="/salidas"
+            element={
+              <PrivateRoute isAuth={isAuth}>
+                <Crudsalidas />
+              </PrivateRoute>
+            }
+          />
 
           {/* ESTADO EQUIPOS */}
           <Route
@@ -169,6 +195,16 @@ function App() {
             element={
               <PrivateRoute isAuth={isAuth}>
                 <Crudestadosolicitud />
+              </PrivateRoute>
+            }
+          />
+          
+          {/* SOLICITUD DE PRESTAMO */}
+          <Route
+            path="/solicitud"
+            element={
+              <PrivateRoute isAuth={isAuth}>
+                <Crudsolicitud />
               </PrivateRoute>
             }
           />

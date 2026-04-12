@@ -16,7 +16,7 @@ const Navbar = ({ isAuth, logOut, users }) => {
   const userData = Array.isArray(users) ? users[0] : (users?.user || users?.data || users);
 
   // Mapeo exacto a las columnas de tu tabla SQL
-  const userName = userData?.nombres;
+  const userName = userData?.nombres_apellidos;
   const userEmail = userData?.email;
   const userRol = userData?.rol;
 
@@ -84,6 +84,9 @@ const Navbar = ({ isAuth, logOut, users }) => {
             </li>
             <li className="nav-item">
               <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/equipos")}>equipos</span>
+            </li>
+            <li className="nav-item">
+              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/cuentadante")}>cuentadantes</span>
             </li>
             {isAuth ? (
               <li className="nav-item dropdown">

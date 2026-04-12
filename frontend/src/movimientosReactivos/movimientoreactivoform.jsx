@@ -64,10 +64,10 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
 
     try {
       if (selectedMovimiento) {
-        await apiAxios.put(`/api/movimientoreactivos/${selectedMovimiento.id_movimiento_reactivo}`, dataToSend);
+        await apiAxios.put(`/api/movimientos/${selectedMovimiento.id_movimiento_reactivo}`, dataToSend);
         Swal.fire("✅ Actualizado", "Movimiento modificado y stock ajustado", "success");
       } else {
-        await apiAxios.post("/api/movimientoreactivos", dataToSend);
+        await apiAxios.post("/api/movimientos", dataToSend);
         Swal.fire("✅ Registrado", "Ingreso creado y stock actualizado", "success");
       }
 

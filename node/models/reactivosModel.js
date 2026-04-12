@@ -24,12 +24,6 @@ const reactivosModel = db.define('reactivos', {
         type: DataTypes.ENUM('Peligro de contacto', 'Peligro de reactividad', 'Peligro de inflamabilidad', 'Riesgo minimo', 'Peligro para salud', 'Evalué el almacenamiento individualmente')
     },
     existencia_reactivo: { type: DataTypes.ENUM("SI", "NO") },
-    // ✅ NUEVO: campo de stock numérico
-    cantidad_inventario: {
-        type: DataTypes.DECIMAL(10, 3),
-        defaultValue: 0,
-        allowNull: false
-    },
     estado: {
         type: DataTypes.TINYINT,
         defaultValue: 1,

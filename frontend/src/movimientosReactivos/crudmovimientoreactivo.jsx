@@ -42,7 +42,7 @@ const CrudmovimientoReactivo = () => {
 
   const cargarMovimientos = async () => {
     try {
-      const res = await apiAxios.get("/api/movimientoreactivos");
+      const res = await apiAxios.get("/api/movimientos");
       setMovimientos(res.data);
     } catch (error) {
       console.error("Error al cargar movimientos:", error);

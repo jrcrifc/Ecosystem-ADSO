@@ -1,8 +1,15 @@
 import EquiposModel from '../models/EquiposModel.js';
+import cuentadanteModel from '../models/cuentadanteModel.js';
 
 class EquiposService {
     async getAll() {
-        return await EquiposModel.findAll()
+        return await EquiposModel.findAll({
+            include: [{
+                model: cuentadanteModel,
+                as: 'cuentadante',
+                attributes: ['nom_cuentadante', 'apell_cuentadante']
+            }]
+        });
     }
 
     async getById(id_equipo) {

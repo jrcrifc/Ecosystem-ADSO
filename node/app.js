@@ -1,4 +1,5 @@
 // app.js
+import './models/associations.js'; // ← PRIMERA LÍNEA
 import express from 'express';
 import cors from 'cors';
 import db from './database/db.js';
@@ -7,11 +8,22 @@ import path from 'path';
 import dotenv from 'dotenv';
 
 // Rutas
-import EstadoSolicitudRoutes from "./routes/EstadosolicitudRoutes.js";
-import EquiposRoutes from './routes/EquiposRoutes.js';
+import estadosolicitudRoutes from "./routes/EstadosolicitudRoutes.js";
+import equiposRoutes from './routes/EquiposRoutes.js';
 import proveedoresRoutes from './routes/proveedoresRoutes.js';
 import reactivosRoutes from "./routes/reactivosRoutes.js";
 import UserRoutes from './routes/userRoutes.js';
+import estadoequipoRoutes from "./routes/EstadosolicitudRoutes.js";
+import solicitudRoutes from './routes/solicitudRoutes.js';
+import movimientosRoutes from './routes/movimientoreactivosRoutes.js';
+import solicitudxequipoRoutes from "./routes/solicitudxequipoRoutes.js";
+import estadoxsolicitudRoutes from './routes/estadoxsolicitudRoutes.js';
+import salidasRoutes from './routes/salidasRoutes.js';
+import estadoxequipoRoutes from './routes/estadoxequipoRoutes.js';
+import cuentadanteRoutes from './routes/cuentandanteRoutes.js';
+
+
+
 
 // =============================
 // 🔥 CARGAR VARIABLES DE ENTORNO (CORREGIDO)
@@ -44,10 +56,18 @@ app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 // =============================
 // 🔥 RUTAS
 // =============================
-app.use("/api/estadoSolicitud", EstadoSolicitudRoutes);
-app.use('/api/equipos', EquiposRoutes);
+app.use("/api/estadosolicitud", estadosolicitudRoutes);
+app.use('/api/equipos', equiposRoutes);
 app.use('/api/proveedor', proveedoresRoutes);
 app.use("/api/reactivos", reactivosRoutes);
+app.use("/api/estadoxsolicitud", estadoxsolicitudRoutes);
+app.use('/api/estadoxequipo', estadoxequipoRoutes);
+app.use('/api/estadoequipo', estadoequipoRoutes);
+app.use("/api/solicitudxequipo", solicitudxequipoRoutes);
+app.use("/api/solicitud", solicitudRoutes);
+app.use("/api/salidas", salidasRoutes);
+app.use("/api/movimientos", movimientosRoutes);
+app.use("/api/cuentadante", cuentadanteRoutes);
 app.use('/api/auth', UserRoutes);
 
 app.get('/', (req, res) => {
