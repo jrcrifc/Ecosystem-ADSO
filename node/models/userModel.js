@@ -1,15 +1,15 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../database/db.js';
 
-const UserModel = sequelize.define('users', {
-  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+const UserModel = sequelize.define('usuarios', {
+  id_usuario: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
 
-  documentos: { 
+  documento: { 
     type: DataTypes.STRING,
     allowNull: false
   },
 
-  nombres: { 
+  nombres_apellidos: { 
     type: DataTypes.STRING,
     allowNull: false
   },
@@ -30,7 +30,7 @@ const UserModel = sequelize.define('users', {
   token: { type: DataTypes.STRING },
 
   rol: {
-    type: DataTypes.ENUM('Aprendiz', 'Pasante', 'Instructor'),
+    type: DataTypes.ENUM('Aprendiz', 'Pasante', 'Gestor', 'Instructor'),
     allowNull: false,
     defaultValue: 'Aprendiz'
   }

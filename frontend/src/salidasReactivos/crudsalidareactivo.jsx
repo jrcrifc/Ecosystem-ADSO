@@ -2,6 +2,7 @@ import apiAxios from "../api/axiosConfig.js";
 import { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
 import Swal from "sweetalert2";
+import * as bootstrap from "bootstrap";
 import SalidaReactivoForm from "./salidareactivoform.jsx";
 
 const CrudSalidasReactivos = () => {
@@ -14,23 +15,16 @@ const CrudSalidasReactivos = () => {
       name: "ID Salida",
       selector: (row) => row.id_salida,
       sortable: true,
-      width: "100px",
+      width: "150px",
     },
     {
-      name: "ID Inventario",
-      selector: (row) => row.id_inventario_reactivo,
+      name: "ID Movimiento Reactivo",
+      selector: (row) => row.id_movimiento_reactivo,
       sortable: true,
-      width: "130px",
+      width: "180px",
     },
     {
-      name: "Cantidad salida",
-      selector: (row) => row.cantidad_salida?.toFixed(3) || "0.000",
-      sortable: true,
-      right: true,
-      width: "140px",
-    },
-    {
-      name: "Fecha salida",
+      name: "Fecha de salida",
       selector: (row) => (row.fecha_salida ? new Date(row.fecha_salida).toLocaleString() : "-"),
       sortable: true,
       width: "180px",
@@ -53,7 +47,7 @@ const CrudSalidasReactivos = () => {
     {
       name: "Acciones",
       center: true,
-      width: "130px",
+      width: "140px",
       cell: (row) => (
         <div className="d-flex gap-1 justify-content-center">
           <button
@@ -65,7 +59,6 @@ const CrudSalidasReactivos = () => {
           >
             <i className="fa-solid fa-pencil"></i>
           </button>
-
           <button
             className={`btn btn-sm ${
               row.estado === 1 ? "btn-outline-danger" : "btn-outline-success"
@@ -86,7 +79,7 @@ const CrudSalidasReactivos = () => {
 
   const cargarSalidas = async () => {
     try {
-      const res = await apiAxios.get("/api/salidas_reactivos");
+      const res = await apiAxios.get("/api/salidas");
       setSalidas(res.data);
     } catch (error) {
       console.error("Error al cargar salidas:", error);
@@ -110,14 +103,12 @@ const CrudSalidasReactivos = () => {
     if (!result.isConfirmed) return;
 
     try {
-      await apiAxios.put(`/api/salidas_reactivos/estado/${id}`, { estado: nuevoEstado });
-
+      await apiAxios.put(`/api/salidas/estado/${id}`, { estado: nuevoEstado });
       setSalidas((prev) =>
         prev.map((item) =>
           item.id_salida === id ? { ...item, estado: nuevoEstado } : item
         )
       );
-
       Swal.fire({
         icon: "success",
         title: "¡Listo!",
@@ -130,24 +121,35 @@ const CrudSalidasReactivos = () => {
     }
   };
 
+  // ✅ FIX: usar getOrCreateInstance + limpiar backdrop manualmente
+  const hideModal = () => {
+    const modal = document.getElementById("modalSalida");
+    if (modal) {
+      const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
+      bsModal.hide();
+      document.body.classList.remove("modal-open");
+      document.body.style.removeProperty("overflow");
+      document.body.style.removeProperty("padding-right");
+      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+    }
+  };
+
   const filtered = salidas.filter(
     (item) =>
       String(item.id_salida || "").includes(filterText) ||
-      String(item.id_inventario_reactivo || "").includes(filterText)
+      String(item.id_movimiento_reactivo || "").includes(filterText)
   );
 
   return (
-    <div className="container mt-4">
-      <h2 className="text-center mb-4 text-primary fw-bold">
-        Salidas de Reactivos
-      </h2>
+    <div className="mt-4" style={{ maxWidth: "960px", margin: "0 auto", padding: "0 16px" }}>
+      <h2 className="text-center mb-4 text-primary fw-bold">Salidas de Reactivos</h2>
 
       <div className="row mb-3 align-items-center">
         <div className="col-md-5">
           <input
             type="text"
             className="form-control"
-            placeholder="Buscar por ID salida o ID inventario..."
+            placeholder="Buscar por ID salida o ID movimiento..."
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
           />
@@ -187,18 +189,14 @@ const CrudSalidasReactivos = () => {
                 type="button"
                 className="btn-close btn-close-white"
                 data-bs-dismiss="modal"
-                aria-label="Close"
+                onClick={hideModal}
               ></button>
             </div>
             <div className="modal-body">
               <SalidaReactivoForm
                 selectedSalida={selectedSalida}
                 refreshData={cargarSalidas}
-                hideModal={() => {
-                  const modal = document.getElementById("modalSalida");
-                  const bsModal = bootstrap.Modal.getInstance(modal);
-                  bsModal?.hide();
-                }}
+                hideModal={hideModal}
               />
             </div>
           </div>

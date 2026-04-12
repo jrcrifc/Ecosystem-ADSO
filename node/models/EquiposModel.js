@@ -12,34 +12,37 @@ const EquiposModel = db.define('equipos', {
     allowNull: false
   },
   nom_equipo: { 
-    type: DataTypes.STRING(255),
+    type: DataTypes.STRING,
     allowNull: false
   },
   marca_equipo: { 
-    type: DataTypes.STRING(100),
+    type: DataTypes.STRING,
     allowNull: true
   },
   no_placa: { 
-    type: DataTypes.STRING(100),
+    type: DataTypes.STRING,
     allowNull: true,
     unique: true
   },
   id_usuario_cuentadante: { 
-    type: DataTypes.INTEGER, 
-    allowNull: true
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'usuarios',          // nombre de la tabla (tal como está en la BD)
+      key: 'id_usuario'           // campo PK de usuarios
+    },
+    onDelete: 'SET NULL',         // si borran usuario → null
+    onUpdate: 'CASCADE'
   },
   observaciones: { 
     type: DataTypes.TEXT,
     allowNull: true
   },
-  // --- CONFIGURACIÓN PARA EL FRONTEND ---
   foto_equipo: { 
-    type: DataTypes.STRING(255), 
-    allowNull: true,
-    defaultValue: null,
-    // Este campo guardará el nombre del archivo (ej: imagen-123.jpg)
+  type: DataTypes.STRING(1000),  // ← Cambia a 255 (o más si quieres)
+  allowNull: true,
+  defaultValue: null
   },
-  // ---------------------------------------
   estado: { 
     type: DataTypes.TINYINT,
     defaultValue: 1,

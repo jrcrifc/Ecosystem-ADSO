@@ -5,7 +5,6 @@ import { FaEnvelope, FaLock } from "react-icons/fa";
 import fondoLaboratorio from "../Home/fondo.jpeg";
 import logo from "../Home/logotipo.jpeg";
 
-// ✅ Se agregó setUserData como prop
 const UserLogin = ({ setIsAuth, setUserData }) => {
   const navigate = useNavigate();
 
@@ -26,7 +25,6 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
 
   const gestionarLogin = async (e) => {
     e.preventDefault();
-
     setError("");
     setLoading(true);
 
@@ -42,6 +40,8 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
         return;
       }
 
+      console.log("📤 Enviando login:", data); // ← Para debug
+
       const response = await apiAxios.post("/api/auth/login", data);
       const { token, user } = response.data;
 
@@ -49,17 +49,17 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
         throw new Error("Respuesta inválida del servidor");
       }
 
-      // ✅ GUARDAR EN STORAGE
+      // Guardar en localStorage
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
 
-      // 🔥 CAMBIO CLAVE: Actualiza el estado global al instante
-      setUserData(user); 
+      // Actualizar estado global
+      setUserData(user);
       setIsAuth(true);
 
-      setForm({ email: "", password: "" });
+      console.log("✅ Login exitoso - Rol:", user.rol);
 
-      // REDIRECCIÓN POR ROL
+      // Redirección según el rol
       switch (user.rol) {
         case "Instructor":
           navigate("/dashboardInstructor");
@@ -74,7 +74,9 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
           navigate("/home");
       }
 
+      setForm({ email: "", password: "" });
     } catch (err) {
+      console.error("❌ Error en login:", err.response?.data || err.message);
       setError(
         err.response?.data?.message ||
         err.message ||
@@ -173,7 +175,12 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
             type="submit"
             className="btn w-100 fw-bold mt-2"
             disabled={loading}
-            style={{ backgroundColor: "#00796b", borderRadius: "20px", padding: "12px", color: "#fff" }}
+            style={{ 
+              backgroundColor: "#00796b", 
+              borderRadius: "20px", 
+              padding: "12px", 
+              color: "#fff" 
+            }}
           >
             {loading ? "Ingresando..." : "Iniciar Sesión"}
           </button>
@@ -189,14 +196,6 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
           </p>
         </form>
       </div>
-
-      <style>
-        {`
-          html, body { margin: 0; height: 100%; overflow: hidden; }
-          .form-control:focus { border-color: #00796b !important; box-shadow: 0 0 8px rgba(0,121,107,0.4) !important; }
-          .btn:hover { background-color: #004d40 !important; transform: scale(1.02); }
-        `}
-      </style>
     </div>
   );
 };

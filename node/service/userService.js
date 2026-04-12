@@ -5,65 +5,78 @@ import { v4 as uuidv4 } from "uuid";
 
 class UserService {
 
-    async register(data) {
-        const { documentos, nombres, email, password, rol } = data;
+async registerUser(data){
 
-        const userExist = await UserModel.findOne({
-            where: { email }
-        });
+    const { documento, nombres_apellidos, email, password, rol } = data;
 
-        if (userExist) {
-            throw new Error("El usuario ya existe");
-        }
+    const existUser = await UserModel.findOne({
+        where:{ email }
+    });
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const userUuid = uuidv4();
-
-        const user = await UserModel.create({
-            documentos,
-            nombres,
-            email,
-            password: hashedPassword,
-            uuid: userUuid,
-            rol
-        });
-
-        return user;
+    if(existUser){
+        throw new Error("El usuario ya existe");
     }
 
-    async loginUser(data) {
-        const { email, password } = data;
+    const hashedPassword = await bcrypt.hash(password,10);
 
-        const user = await UserModel.findOne({
-            where: { email }
-        });
+    const user = await UserModel.create({
+        uuid: uuidv4(),
+        documento,
+        nombres_apellidos,
+        email,
+        password: hashedPassword,
+        rol
+    });
 
-        if (!user) {
-            throw new Error("Usuario y contraseña incorrectos");
-        }
+    const { password: _, ...userSinPassword } = user.toJSON();
 
-        const isValid = await bcrypt.compare(password, user.password);
+    return userSinPassword;
+}
 
-        if (!isValid) {
-            throw new Error("Usuario y contraseña incorrectos");
-        }
 
-        const token = jwt.sign(
-            { id: user.id, uuid: user.uuid, rol: user.rol },
-            process.env.JWT_SECRET,
-            { expiresIn: "1h" }
-        );
+async loginUser(data) {
+    const { email, password } = data;
 
-        user.token = token;
-        await user.save();
+    console.log("🔑 JWT_SECRET en login:", process.env.JWT_SECRET || "❌ UNDEFINED");
 
-        const { password: _, ...userSinPassword } = user.toJSON();
-
-        return {
-            token,
-            user: userSinPassword
-        };
+    if (!process.env.JWT_SECRET) {
+        throw new Error("JWT_SECRET no está configurado. Revisa tu archivo .env");
     }
+
+    const user = await UserModel.findOne({
+        where: { email }
+    });
+
+    if (!user) {
+        throw new Error("Usuario y contraseña incorrectos");
+    }
+
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) {
+        throw new Error("Usuario y contraseña incorrectos");
+    }
+
+    const token = jwt.sign(
+        { 
+            id: user.id_usuario,
+            uuid: user.uuid, 
+            rol: user.rol 
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: "8h" }
+    );
+
+    user.token = token;
+    await user.save();
+
+    const { password: _, ...userSinPassword } = user.toJSON();
+
+    return {
+        token,
+        user: userSinPassword
+    };
+}
+
 }
 
 export default new UserService();

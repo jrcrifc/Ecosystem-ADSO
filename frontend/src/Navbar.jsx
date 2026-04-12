@@ -40,7 +40,7 @@ const Navbar = ({ isAuth, logOut, users }) => {
             ES
           </div>
           <div className="text-white">
-            <h5 className="m-0 fw-semibold">SYSTEM</h5>
+            <h5 className="m-0 fw-semibold">ECOSYSTEM</h5>
             <small className="opacity-75">Laboratorio Ambiental</small>
           </div>
         </div>
@@ -62,18 +62,29 @@ const Navbar = ({ isAuth, logOut, users }) => {
               <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/home")}>Inicio</span>
             </li>
             <li className="nav-item">
-              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/reactivos")}>Inventario de Reactivos</span>
+              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/movimientoreactivo")}>Movimientos Reactivos</span>
+            </li>
+            <li className="nav-item">
+              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/reactivos")}>Reactivos</span>
             </li>
             <li className="nav-item">
               <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/estadoSolicitud")}>Estado de Solicitudes</span>
             </li>
             <li className="nav-item">
-              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/equipos")}>Solicitud de Equipos</span>
-            </li>
-            <li className="nav-item">
               <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/proveedor")}>Proveedores</span>
             </li>
-
+            <li className="nav-item">
+              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/estadoxsolicitud")}>Reporte de los estados de las solcitudes</span>
+            </li>
+            <li className="nav-item">
+              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/estadoxequipo")}>Reporte de los estados de los equipos</span>
+            </li>
+            <li className="nav-item">
+              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/solicitud")}>Solicitudes de prestamo de equipos</span>
+            </li>
+            <li className="nav-item">
+              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/equipos")}>equipos</span>
+            </li>
             {isAuth ? (
               <li className="nav-item dropdown">
                 <a

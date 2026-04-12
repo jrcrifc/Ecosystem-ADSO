@@ -5,7 +5,7 @@ import {
   createEstadoxequipo,
   updateEstadoxequipo,
   deleteEstadoxequipo
-} from '../controller/estadoxequipoControllers.js';
+} from '../controller/EstadoxequipoController.js';
 
 const router = express.Router();
 
