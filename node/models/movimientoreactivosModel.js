@@ -10,42 +10,44 @@ const movimientoreactivoModel = db.define('movimientos_reactivos', {
     id_reactivo: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        references: {
-            model: 'reactivos',
-            key: 'id_reactivo'
-        },
-        onDelete: 'RESTRICT'   // no dejes borrar reactivo si tiene movimientos
+        references: { model: 'reactivos', key: 'id_reactivo' },
+        onDelete: 'RESTRICT'
     },
+
+    // ✅ Campos nuevos
+    lote: {
+    type: DataTypes.STRING,
+    allowNull: true  // ← verifica que esté en true
+},
+fecha_ingreso: {
+    type: DataTypes.DATEONLY,
+    allowNull: true  // ← igual este
+},
+
     cantidad_inicial: { 
-        type: DataTypes.DECIMAL(10,3) 
-    },
-    lote: { 
-        type: DataTypes.STRING
+        type: DataTypes.DECIMAL(10,3),
+        allowNull: true,
+        defaultValue: 0
     },
     id_proveedor: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        references: {
-            model: 'proveedor',
-            key: 'id_proveedor'
-        },
-        onDelete: 'SET NULL'
-    },
+    type: DataTypes.INTEGER,
+    allowNull: true,  // ← que esté en true
+    references: { model: 'proveedor', key: 'id_proveedor' },
+    onDelete: 'SET NULL'
+},
     cantidad_salida: { 
-        type: DataTypes.DECIMAL(10,3) 
+        type: DataTypes.DECIMAL(10,3),
+        allowNull: true,
+        defaultValue: 0
     },
-    fecha_ingreso: { 
-        type: DataTypes.DATE 
-    },
-
     estado_inventario: { 
-        type: DataTypes.ENUM("en stock","agotado"),
+        type: DataTypes.ENUM("en stock", "agotado"),
         allowNull: false
     },
-    
+
 }, {
     freezeTableName: true,
-    timestamps: true       // ← si no tienes createdAt/updatedAt
+    timestamps: true
 });
 
-export default movimientoreactivoModel;
+export default movimientoreactivoModel; // ← ¿está esta línea?

@@ -15,22 +15,16 @@ export default function CrudEquipo() {
     getAllEquipos();
   }, []);
 
-  // ✅ Función corregida con token
   const getAllEquipos = async () => {
     try {
       const token = localStorage.getItem("token");
-
       if (!token) {
         Swal.fire("Error", "No se encontró token de autenticación", "warning");
         return;
       }
-
       const res = await apiAxios.get("/api/equipos", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
-
       setEquipos(res.data);
     } catch (error) {
       console.error("Error al cargar equipos:", error);
@@ -38,10 +32,8 @@ export default function CrudEquipo() {
     }
   };
 
-  // ✅ Función cambiarEstado también corregida con token
   const cambiarEstado = async (equipo) => {
     const nuevoEstado = equipo.estado === 1 ? 0 : 1;
-
     const result = await Swal.fire({
       title: "¿Cambiar estado?",
       text: `El equipo pasará a ${nuevoEstado === 1 ? "ACTIVO" : "INACTIVO"}`,
@@ -56,37 +48,28 @@ export default function CrudEquipo() {
 
     try {
       const token = localStorage.getItem("token");
-
       if (!token) {
         Swal.fire("Error", "No se encontró token de autenticación", "warning");
         return;
       }
-
       await apiAxios.put(
         `/api/equipos/${equipo.id_equipo}`,
         { estado: nuevoEstado },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
       Swal.fire({
         icon: "success",
         title: nuevoEstado === 1 ? "Activado" : "Inactivado",
         timer: 1500,
         showConfirmButton: false,
       });
-
-      getAllEquipos(); // Recargar la tabla
+      getAllEquipos();
     } catch (error) {
       console.error("Error al cambiar estado:", error);
       Swal.fire("Error", "No se pudo cambiar el estado", "error");
     }
   };
 
-  // ✅ FIX: getOrCreateInstance + limpiar backdrop
   const hideModal = (modalId) => {
     const modal = document.getElementById(modalId);
     if (modal) {
@@ -105,7 +88,17 @@ export default function CrudEquipo() {
     { name: "Nombre", selector: (row) => row.nom_equipo, sortable: true, wrap: true, width: "200px" },
     { name: "Marca", selector: (row) => row.marca_equipo || "-", sortable: true, width: "140px" },
     { name: "Placa/Serial", selector: (row) => row.no_placa || "-", sortable: true, width: "130px" },
-    { name: "Cuentadante", selector: (row) => row.id_cuentadante || "-", width: "120px" },
+
+    // ✅ COLUMNA CORREGIDA
+    {
+      name: "Cuentadante",
+      selector: (row) => row.cuentadante
+        ? `${row.cuentadante.nom_cuentadante} ${row.cuentadante.apell_cuentadante}`
+        : "-",
+      sortable: true,
+      width: "180px"
+    },
+
     {
       name: "Foto",
       width: "120px",
@@ -182,10 +175,14 @@ export default function CrudEquipo() {
     },
   ];
 
-  const filteredEquipos = equipos.filter((row) =>
-    [row.nom_equipo, row.grupo_equipo, row.marca_equipo, row.no_placa, row.id_cuentadante]
-      .some((field) => field?.toString().toLowerCase().includes(filterText.toLowerCase()))
-  );
+  // ✅ FILTRO CORREGIDO
+  const filteredEquipos = equipos.filter((row) => {
+    const nombreCuentadante = row.cuentadante
+      ? `${row.cuentadante.nom_cuentadante} ${row.cuentadante.apell_cuentadante}`
+      : "";
+    return [row.nom_equipo, row.grupo_equipo, row.marca_equipo, row.no_placa, nombreCuentadante]
+      .some((field) => field?.toString().toLowerCase().includes(filterText.toLowerCase()));
+  });
 
   return (
     <div className="container mt-4">

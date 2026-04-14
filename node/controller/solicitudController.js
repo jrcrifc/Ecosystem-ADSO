@@ -1,94 +1,59 @@
-// controller/solicitudController.js
-import solicitudService from '../service/solicitudService.js';  // ← ya está correcto
+import solicitudService from '../service/solicitudService.js';
 
-// GET /solicitudes - Obtener todas
 export const getAll = async (req, res) => {
-  try {
-    const solicitudes = await solicitudService.getAll();  // ← método del service
-    res.json(solicitudes);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ 
-      success: false,
-      message: 'Error al obtener las solicitudes',
-      error: error.message 
-    });
-  }
+    try {
+        const solicitudes = await solicitudService.getAll();
+        res.json(solicitudes);
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
 };
 
-// GET /solicitudes/:id - Obtener una
 export const getById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const solicitud = await solicitudService.getById(id);  // ← método del service
-
-    res.json(solicitud);
-  } catch (error) {
-    res.status(404).json({ 
-      success: false,
-      message: error.message || 'Solicitud no encontrada' 
-    });
-  }
+    try {
+        const solicitud = await solicitudService.getById(req.params.id);
+        res.json(solicitud);
+    } catch (error) {
+        res.status(404).json({ success: false, message: error.message });
+    }
 };
 
-// POST /solicitudes - Crear
 export const create = async (req, res) => {
-  try {
-    const nuevaSolicitud = await solicitudService.create(req.body);  // ← método del service
-
-    res.status(201).json({ 
-      success: true,
-      message: 'Solicitud creada correctamente',
-      data: nuevaSolicitud 
-    });
-  } catch (error) {
-    res.status(400).json({ 
-      success: false,
-      message: 'Error al crear la solicitud',
-      error: error.message 
-    });
-  }
+    try {
+        // ← saca el id del usuario del token JWT
+        const userId = req.user.id;
+        const nuevaSolicitud = await solicitudService.create(req.body, userId);
+        res.status(201).json({ success: true, message: 'Solicitud creada correctamente', data: nuevaSolicitud });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
 };
 
-// PUT /solicitudes/:id - Actualizar
 export const update = async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    // Tu service no tiene update, así que lo implementamos aquí o agregamos al service
-    // Opción rápida: usar directamente el modelo (temporal)
-    const solicitud = await solicitudService.getById(id);  // reutilizamos getById
-
-    const { id_solicitud, createdAt, updatedAt, ...datosActualizables } = req.body;
-    await solicitud.update(datosActualizables);
-
-    res.json({ 
-      success: true,
-      message: 'Solicitud actualizada correctamente',
-      data: solicitud 
-    });
-  } catch (error) {
-    res.status(400).json({ 
-      success: false,
-      message: error.message || 'Error al actualizar la solicitud'
-    });
-  }
+    try {
+        await solicitudService.update(req.params.id, req.body);
+        res.json({ success: true, message: 'Solicitud actualizada correctamente' });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
 };
 
-// DELETE /solicitudes/:id - Eliminar
-export const remove = async (req, res) => {
-  try {
-    const { id } = req.params;
-    await solicitudService.delete(id);  // ← método del service
+// ← nuevo endpoint solo para admin
+export const cambiarEstado = async (req, res) => {
+    try {
+        const { id_estado_solicitud } = req.body;
+        await solicitudService.cambiarEstado(req.params.id, id_estado_solicitud);
+        res.json({ success: true, message: 'Estado cambiado correctamente' });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
 
-    res.json({ 
-      success: true,
-      message: 'Solicitud eliminada correctamente' 
-    });
-  } catch (error) {
-    res.status(404).json({ 
-      success: false,
-      message: error.message || 'Solicitud no encontrada' 
-    });
-  }
+export const remove = async (req, res) => {
+    try {
+        await solicitudService.delete(req.params.id);
+        res.json({ success: true, message: 'Solicitud eliminada correctamente' });
+    } catch (error) {
+        res.status(404).json({ success: false, message: error.message });
+    }
 };

@@ -69,6 +69,7 @@ export default function CrudCuentadante() {
     { name: "Nombre", selector: row => row.nom_cuentadante, sortable: true },
     { name: "Apellido", selector: row => row.apell_cuentadante, sortable: true },
     { name: "Nombre Completo", selector: row => `${row.nom_cuentadante} ${row.apell_cuentadante}`, wrap: true },
+    { name: "Telefono", selector: row => row.tel_cuentadante, sortable: true },
     {
       name: "Acciones",
       center: true,
@@ -103,9 +104,9 @@ export default function CrudCuentadante() {
   );
 
   return (
-    <div className="container mt-4">
-      <h2 className="text-center mb-4 fw-bold text-primary">Gestión de Cuentadantes</h2>
-
+  <div className="container mt-4" style={{ maxWidth: "900px" }}>
+    <h2 className="text-center mb-4 fw-bold text-primary">Cuentadante</h2>
+  
       <div className="row mb-4 align-items-center">
         <div className="col-md-6">
           <input

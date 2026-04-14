@@ -10,9 +10,16 @@ const CrudSolicitudPrestamos = () => {
   const [filterText, setFilterText] = useState("");
   const [selectedSolicitud, setSelectedSolicitud] = useState(null);
 
+  const getToken = () => localStorage.getItem("token");
+
   const columns = [
     { name: "ID", selector: (row) => row.id_solicitud, sortable: true, width: "90px" },
-    { name: "Solicitante", selector: (row) => row.id_persona_solicitante, sortable: true, width: "130px" },
+    { 
+      name: "Solicitante", 
+      selector: (row) => row.usuario?.nombres_apellidos || "-", 
+      sortable: true, 
+      width: "180px" 
+    },
     { name: "Fecha Inicio", selector: (row) => (row.fecha_inicio ? new Date(row.fecha_inicio).toLocaleString() : "-"), sortable: true, width: "180px" },
     { name: "Fecha Fin", selector: (row) => (row.fecha_fin ? new Date(row.fecha_fin).toLocaleString() : "-"), sortable: true, width: "180px" },
     {
@@ -42,7 +49,10 @@ const CrudSolicitudPrestamos = () => {
 
   const cargarSolicitudes = async () => {
     try {
-      const res = await apiAxios.get("/api/solicitud");
+      const token = getToken();
+      const res = await apiAxios.get("/api/solicitud", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setSolicitudes(res.data);
     } catch (error) {
       console.error("Error al cargar solicitudes:", error);
@@ -61,7 +71,10 @@ const CrudSolicitudPrestamos = () => {
     });
     if (!result.isConfirmed) return;
     try {
-      await apiAxios.put(`/api/solicitud/estado/${id}`, { estado: nuevoEstado });
+      const token = getToken();
+      await apiAxios.put(`/api/solicitud/estado/${id}`, { estado: nuevoEstado }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setSolicitudes((prev) => prev.map((item) => item.id_solicitud === id ? { ...item, estado: nuevoEstado } : item));
       Swal.fire({ icon: "success", title: "¡Listo!", text: `Solicitud ahora está ${nuevoEstado === 1 ? "ACTIVO" : "INACTIVO"}`, timer: 1800, showConfirmButton: false });
     } catch (error) {
@@ -69,7 +82,6 @@ const CrudSolicitudPrestamos = () => {
     }
   };
 
-  // ✅ FIX: getOrCreateInstance + limpiar backdrop
   const hideModal = () => {
     const modal = document.getElementById("modalSolicitud");
     if (modal) {
@@ -84,7 +96,7 @@ const CrudSolicitudPrestamos = () => {
 
   const filtered = solicitudes.filter((item) =>
     String(item.id_solicitud || "").includes(filterText) ||
-    String(item.id_persona_solicitante || "").includes(filterText)
+    (item.usuario?.nombres_apellidos || "").toLowerCase().includes(filterText.toLowerCase())
   );
 
   return (

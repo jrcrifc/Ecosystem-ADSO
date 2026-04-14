@@ -1,6 +1,5 @@
 // models/associations.js
 
-// ← TODOS LOS IMPORTS ARRIBA
 import equipoModel from "./EquiposModel.js";
 import cuentadanteModel from "./cuentadanteModel.js";
 import movimientoreactivoModel from "./movimientoreactivosModel.js";
@@ -12,6 +11,8 @@ import estadoxEquipoModel from "./estadoxequipoModel.js";
 import solicitudxequipoModel from "./solicitudxequipoModel.js";
 import salidasModel from "./salidasModel.js";
 import userModel from "./userModel.js";
+import estadoEquipoModel from "./Estado_equipoModel.js";
+import estadoSolicitudModel from "./Estado_solicitudModel.js";
 
 // ============================================================
 // 🔗 EQUIPOS ↔ CUENTADANTE
@@ -35,16 +36,20 @@ salidasModel.belongsTo(movimientoreactivoModel,  { foreignKey: 'id_movimiento_re
 movimientoreactivoModel.hasMany(salidasModel,    { foreignKey: 'id_movimiento_reactivo', as: 'salidas' });
 
 // ============================================================
-// 🔗 ESTADO x SOLICITUD ↔ SOLICITUD
+// 🔗 ESTADO x SOLICITUD ↔ SOLICITUD + ESTADO SOLICITUD
 // ============================================================
-estadoxsolicitudModel.belongsTo(solicitudModel, { foreignKey: 'id_solicitud', as: 'solicitud' });
-solicitudModel.hasMany(estadoxsolicitudModel,   { foreignKey: 'id_solicitud', as: 'estados' });
+estadoxsolicitudModel.belongsTo(solicitudModel,      { foreignKey: 'id_solicitud',       as: 'solicitud' });
+estadoxsolicitudModel.belongsTo(estadoSolicitudModel, { foreignKey: 'id_estado_solicitud', as: 'estadoSolicitud' });
+solicitudModel.hasMany(estadoxsolicitudModel,         { foreignKey: 'id_solicitud',       as: 'estados' });
+estadoSolicitudModel.hasMany(estadoxsolicitudModel,   { foreignKey: 'id_estado_solicitud', as: 'registros' });
 
 // ============================================================
-// 🔗 ESTADO x EQUIPO ↔ EQUIPO
+// 🔗 ESTADO x EQUIPO ↔ EQUIPO + ESTADO EQUIPO
 // ============================================================
-estadoxEquipoModel.belongsTo(equipoModel, { foreignKey: 'id_equipo', as: 'equipo' });
-equipoModel.hasMany(estadoxEquipoModel,   { foreignKey: 'id_equipo', as: 'estadosEquipo' });
+estadoxEquipoModel.belongsTo(equipoModel,      { foreignKey: 'id_equipo',        as: 'equipo' });
+estadoxEquipoModel.belongsTo(estadoEquipoModel, { foreignKey: 'id_estado_equipo', as: 'estadoEquipo' });
+equipoModel.hasMany(estadoxEquipoModel,         { foreignKey: 'id_equipo',        as: 'estadosEquipo' });
+estadoEquipoModel.hasMany(estadoxEquipoModel,   { foreignKey: 'id_estado_equipo', as: 'registros' });
 
 // ============================================================
 // 🔗 SOLICITUD x EQUIPO ↔ SOLICITUD + EQUIPO

@@ -13,7 +13,7 @@ import equiposRoutes from './routes/EquiposRoutes.js';
 import proveedoresRoutes from './routes/proveedoresRoutes.js';
 import reactivosRoutes from "./routes/reactivosRoutes.js";
 import UserRoutes from './routes/userRoutes.js';
-import estadoequipoRoutes from "./routes/EstadosolicitudRoutes.js";
+import estadoequipoRoutes from "./routes/Estado_equipoRoutes.js";
 import solicitudRoutes from './routes/solicitudRoutes.js';
 import movimientosRoutes from './routes/movimientoreactivosRoutes.js';
 import solicitudxequipoRoutes from "./routes/solicitudxequipoRoutes.js";
