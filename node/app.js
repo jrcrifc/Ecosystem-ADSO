@@ -6,7 +6,7 @@ import db from './database/db.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import dotenv from 'dotenv';
-
+import adminRoutes from "./routes/adminRoutes.js";
 // Rutas
 import estadosolicitudRoutes from "./routes/EstadosolicitudRoutes.js";
 import equiposRoutes from './routes/EquiposRoutes.js';
@@ -69,6 +69,7 @@ app.use("/api/salidas", salidasRoutes);
 app.use("/api/movimientos", movimientosRoutes);
 app.use("/api/cuentadante", cuentadanteRoutes);
 app.use('/api/auth', UserRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.get('/', (req, res) => {
     res.send('Bienvenido a la API de Equipos - Laboratorio Ambiental');
