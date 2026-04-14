@@ -1,18 +1,19 @@
 import db from "../database/db.js";
 import { DataTypes } from "sequelize";
 
-const solicitudModel = db.define('solicitud_prestamos',{
+const solicitudModel = db.define('solicitud',{
     id_solicitud:{type:DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
     id_usuario:{type:DataTypes.INTEGER},
     fecha_inicio: { type: DataTypes.DATE },
     fecha_fin: { type: DataTypes.DATE },
-    estado: { 
-        type: DataTypes.TINYINT, 
-        defaultValue: 1,   // ACTIVO por defecto
-        allowNull: false 
+    estado: {
+        type: DataTypes.TINYINT,
+        defaultValue: 1,
+        allowNull: false
     },
-    }, {
-        freezeTableName: true
-    })
+}, {
+    freezeTableName: true,
+    timestamps: true
+});
 
-    export default solicitudModel;
+export default solicitudModel;

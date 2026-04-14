@@ -7,8 +7,10 @@ import movimientoreactivoModel from "./movimientoreactivosModel.js";
 import reactivoModel from "./reactivosModel.js";
 import proveedorModel from "./proveedoresModel.js";
 import estadoxsolicitudModel from "./estadoxsolicitudModel.js";
+import estadoSolicitudModel from "./Estado_solicitudModel.js";
 import solicitudModel from "./solicitudModel.js";
 import estadoxEquipoModel from "./estadoxequipoModel.js";
+import estadoEquipoModel from "./Estado_equipoModel.js";
 import solicitudxequipoModel from "./solicitudxequipoModel.js";
 import salidasModel from "./salidasModel.js";
 import userModel from "./userModel.js";
@@ -39,12 +41,16 @@ movimientoreactivoModel.hasMany(salidasModel,    { foreignKey: 'id_movimiento_re
 // ============================================================
 estadoxsolicitudModel.belongsTo(solicitudModel, { foreignKey: 'id_solicitud', as: 'solicitud' });
 solicitudModel.hasMany(estadoxsolicitudModel,   { foreignKey: 'id_solicitud', as: 'estados' });
+estadoxsolicitudModel.belongsTo(estadoSolicitudModel, { foreignKey: 'id_estado_solicitud', as: 'estado' });
+estadoSolicitudModel.hasMany(estadoxsolicitudModel, { foreignKey: 'id_estado_solicitud', as: 'historialSolicitudes' });
 
 // ============================================================
 // 🔗 ESTADO x EQUIPO ↔ EQUIPO
 // ============================================================
 estadoxEquipoModel.belongsTo(equipoModel, { foreignKey: 'id_equipo', as: 'equipo' });
 equipoModel.hasMany(estadoxEquipoModel,   { foreignKey: 'id_equipo', as: 'estadosEquipo' });
+estadoxEquipoModel.belongsTo(estadoEquipoModel, { foreignKey: 'id_estado_equipo', as: 'estadoEquipo' });
+estadoEquipoModel.hasMany(estadoxEquipoModel, { foreignKey: 'id_estado_equipo', as: 'historialEquipos' });
 
 // ============================================================
 // 🔗 SOLICITUD x EQUIPO ↔ SOLICITUD + EQUIPO

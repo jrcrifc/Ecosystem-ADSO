@@ -1,5 +1,4 @@
 // app.js
-import './models/associations.js'; // ← PRIMERA LÍNEA
 import express from 'express';
 import cors from 'cors';
 import db from './database/db.js';
@@ -32,13 +31,18 @@ import cuentadanteRoutes from './routes/cuentandanteRoutes.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Cargamos el .env desde la raíz del proyecto (más seguro)
+// Cargamos el .env desde la raíz del proyecto (más seguro).
 const envPath = path.resolve(__dirname, '../.env');
-const envResult = dotenv.config({ path: envPath });
+let envResult = dotenv.config({ path: envPath });
 if (envResult.error) {
     console.warn(`⚠️ No se encontró .env en ${envPath}. Intentando cargar sin ruta explícita...`);
-    dotenv.config();
+    envResult = dotenv.config();
 }
+if (envResult.error) {
+    console.warn('⚠️ No se encontró ningún archivo .env. Se usarán valores por defecto del entorno.');
+}
+
+await import('./models/associations.js');
 
 const jwtSecretLoaded = Boolean(process.env.JWT_SECRET);
 if (!jwtSecretLoaded) {
@@ -89,8 +93,11 @@ app.get('/', (req, res) => {
 try {
     await db.authenticate();
     console.log('✅ Conexión a la base de datos establecida');
+
+    await db.sync();
+    console.log('✅ Sincronización básica de tablas completada');
 } catch (error) {
-    console.error('❌ Error al conectar a la base de datos:', error);
+    console.error('❌ Error al conectar o sincronizar la base de datos:', error);
     process.exit(1);
 }
 
