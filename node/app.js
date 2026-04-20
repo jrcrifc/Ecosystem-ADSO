@@ -21,8 +21,8 @@ import estadoxsolicitudRoutes from './routes/estadoxsolicitudRoutes.js';
 import salidasRoutes from './routes/salidasRoutes.js';
 import estadoxequipoRoutes from './routes/estadoxequipoRoutes.js';
 import cuentadanteRoutes from './routes/cuentandanteRoutes.js';
-
-
+import notificacionRoutes from './routes/notificacionRoutes.js';
+import solicitudAccesoRoutes from './routes/solicitudAccesoRoutes.js';
 
 
 // =============================
@@ -70,6 +70,8 @@ app.use("/api/movimientos", movimientosRoutes);
 app.use("/api/cuentadante", cuentadanteRoutes);
 app.use('/api/auth', UserRoutes);
 app.use("/api/admin", adminRoutes);
+app.use('/api/notificaciones', notificacionRoutes);
+app.use('/api/solicitud-acceso', solicitudAccesoRoutes);
 
 app.get('/', (req, res) => {
     res.send('Bienvenido a la API de Equipos - Laboratorio Ambiental');

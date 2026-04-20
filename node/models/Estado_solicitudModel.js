@@ -12,7 +12,11 @@ const estadosolicitudModel = db.define('estado_solicitud', {
         type: DataTypes.ENUM("generado","aceptado","prestado","entregado","cancelado"),
         allowNull: false
     },
-    
+     activo: {
+        type: DataTypes.TINYINT, // o BOOLEAN también sirve
+        defaultValue: 1
+    }
+
 }, {
     freezeTableName: true,
     timestamps: true       // ← si no tienes createdAt/updatedAt

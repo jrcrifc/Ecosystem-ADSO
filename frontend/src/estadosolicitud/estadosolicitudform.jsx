@@ -4,32 +4,37 @@ import Swal from "sweetalert2";
 
 const EstadoSolicitudForm = ({ selectedEstado, refreshData, hideModal }) => {
   const [estado, setEstado] = useState("");
-  const [estados, setEstados] = useState(1);
+  const [activo, setActivo] = useState(1);
 
   const opciones = ["generado", "aceptado", "prestado", "cancelado", "entregado"];
 
   useEffect(() => {
     if (selectedEstado) {
       setEstado(selectedEstado.estado || "");
-      setEstados(selectedEstado.estados ?? 1);
+      setActivo(selectedEstado.activo ?? 1);
     } else {
       setEstado("");
-      setEstados(1);
+      setActivo(1);
     }
   }, [selectedEstado]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const data = { estado, estados };
+
+    const data = { estado, activo };
 
     try {
       if (selectedEstado) {
-        await apiAxios.put(`api/estadosolicitud/${selectedEstado.id_estado_solicitud}`, data);
-        Swal.fire("¡Éxito!", "Estado actualizado", "success");
+        await apiAxios.put(
+          `api/estadosolicitud/${selectedEstado.id_estado_solicitud}`,
+          data
+        );
+        Swal.fire("Éxito", "Actualizado correctamente", "success");
       } else {
         await apiAxios.post("api/estadosolicitud", data);
-        Swal.fire("¡Éxito!", "Estado creado", "success");
+        Swal.fire("Éxito", "Creado correctamente", "success");
       }
+
       refreshData();
       hideModal();
     } catch (error) {
@@ -40,35 +45,31 @@ const EstadoSolicitudForm = ({ selectedEstado, refreshData, hideModal }) => {
   return (
     <form onSubmit={handleSubmit}>
       <div className="mb-3">
-        <label className="form-label fw-semibold text-muted" style={{ fontSize: "0.9rem" }}>
-          Estado de la solicitud
-        </label>
+        <label className="form-label">Estado</label>
         <select
-          className="form-select form-select-sm"
+          className="form-select"
           value={estado}
           onChange={(e) => setEstado(e.target.value)}
           required
         >
-          <option value="">Seleccionar estado...</option>
-          {opciones.map(opt => (
+          <option value="">Seleccionar...</option>
+          {opciones.map((opt) => (
             <option key={opt} value={opt}>
-              {opt.charAt(0).toUpperCase() + opt.slice(1)}
+              {opt}
             </option>
           ))}
         </select>
       </div>
 
       {selectedEstado && (
-        <div className="alert alert-info py-2">
-          <small>
-            Estatus actual: <strong>{estados === 1 ? "ACTIVO" : "INACTIVO"}</strong>
-            <br />Puedes cambiarlo desde la tabla
-          </small>
+        <div className="alert alert-info">
+          Estatus actual:{" "}
+          <strong>{activo === 1 ? "ACTIVO" : "INACTIVO"}</strong>
         </div>
       )}
 
-      <button type="submit" className="btn btn-primary w-100">
-        {selectedEstado ? "Actualizar" : "Crear"} Estado
+      <button className="btn btn-primary w-100">
+        {selectedEstado ? "Actualizar" : "Crear"}
       </button>
     </form>
   );

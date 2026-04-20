@@ -39,7 +39,8 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
       if (!token || !user) throw new Error("Respuesta inválida del servidor");
 
       localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("user", JSON.stringify({ ...user, token }));
+      setUserData({ ...user, token });
 
       setUserData(user);
       setIsAuth(true);

@@ -9,7 +9,6 @@ const CrudEstadoSolicitud = () => {
   const [filterText, setFilterText] = useState("");
   const [selectedEstado, setSelectedEstado] = useState(null);
 
-  // ESTILOS MÍNIMOS PARA CENTRAR (sin cambiar tamaños)
   const customStyles = {
     table: {
       style: {
@@ -50,11 +49,11 @@ const CrudEstadoSolicitud = () => {
       cell: (row) => (
         <span
           className={`px-3 py-1 rounded-pill text-white fw-semibold ${
-            row.estados === 1 ? "bg-success" : "bg-danger"
+            row.activo === 1 ? "bg-success" : "bg-danger"
           }`}
           style={{ fontSize: "0.75rem" }}
         >
-          {row.estados === 1 ? "ACTIVO" : "INACTIVO"}
+          {row.activo === 1 ? "ACTIVO" : "INACTIVO"}
         </span>
       ),
       sortable: true,
@@ -70,19 +69,23 @@ const CrudEstadoSolicitud = () => {
             data-bs-toggle="modal"
             data-bs-target="#modalEstado"
             onClick={() => setSelectedEstado(row)}
-            title="Editar"
           >
             <i className="fa-solid fa-pencil"></i>
           </button>
 
           <button
             className={`btn btn-sm ${
-              row.estados === 1 ? "btn-outline-danger" : "btn-outline-success"
+              row.activo === 1 ? "btn-outline-danger" : "btn-outline-success"
             }`}
-            onClick={() => toggleEstado(row.id_estado_solicitud, row.estados)}
-            title={row.estados === 1 ? "Inactivar" : "Activar"}
+            onClick={() =>
+              toggleEstado(row.id_estado_solicitud, row.activo)
+            }
           >
-            <i className={`fas ${row.estados === 1 ? "fa-ban" : "fa-check"}`}></i>
+            <i
+              className={`fas ${
+                row.activo === 1 ? "fa-ban" : "fa-check"
+              }`}
+            ></i>
           </button>
         </div>
       ),
@@ -111,14 +114,14 @@ const CrudEstadoSolicitud = () => {
     } catch (error) {
       console.error(error);
     }
-  };   // ← Aquí estaba la llave que faltaba!!!
+  };
 
   const toggleEstado = async (id, estadoActual) => {
     const nuevoEstado = estadoActual === 1 ? 0 : 1;
 
     const result = await Swal.fire({
       title: "¿Cambiar estatus?",
-      text: `Este estado pasará a estar ${nuevoEstado === 1 ? "ACTIVO" : "INACTIVO"}`,
+      text: `Pasará a ${nuevoEstado === 1 ? "ACTIVO" : "INACTIVO"}`,
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: nuevoEstado === 1 ? "#28a745" : "#dc3545",
@@ -129,23 +132,32 @@ const CrudEstadoSolicitud = () => {
     if (!result.isConfirmed) return;
 
     try {
-      await apiAxios.put(`api/estadosolicitud/estados/${id}`, { estados: nuevoEstado });
+      await apiAxios.put(`api/estadosolicitud/${id}`, {
+        activo: nuevoEstado,
+      });
 
-      setEstados(prev =>
-        prev.map(item =>
-          item.id_estado_solicitud === id ? { ...item, estados: nuevoEstado } : item
+      setEstados((prev) =>
+        prev.map((item) =>
+          item.id_estado_solicitud === id
+            ? { ...item, activo: nuevoEstado }
+            : item
         )
       );
 
-      Swal.fire("¡Listo!", `Estado ahora está ${nuevoEstado === 1 ? "ACTIVO" : "INACTIVO"}`, "success");
+      Swal.fire(
+        "Listo",
+        `Ahora está ${nuevoEstado === 1 ? "ACTIVO" : "INACTIVO"}`,
+        "success"
+      );
     } catch (error) {
-      Swal.fire("Error", "No se pudo cambiar el estatus", "error");
+      Swal.fire("Error", "No se pudo cambiar el estado", "error");
     }
   };
 
-  const filtered = estados.filter(item =>
-    item.id_estado_solicitud.toString().includes(filterText) ||
-    item.estado?.toLowerCase().includes(filterText.toLowerCase())
+  const filtered = estados.filter(
+    (item) =>
+      item.id_estado_solicitud.toString().includes(filterText) ||
+      item.estado?.toLowerCase().includes(filterText.toLowerCase())
   );
 
   return (
@@ -159,11 +171,12 @@ const CrudEstadoSolicitud = () => {
           <input
             type="text"
             className="form-control"
-            placeholder="Buscar por ID o estado..."
+            placeholder="Buscar..."
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
           />
         </div>
+
         <div className="col-md-7 text-end">
           <button
             className="btn btn-success"
@@ -176,7 +189,6 @@ const CrudEstadoSolicitud = () => {
         </div>
       </div>
 
-      {/* Tabla centrada */}
       <div className="d-flex justify-content-center">
         <div style={{ width: "fit-content" }}>
           <DataTable
@@ -186,27 +198,35 @@ const CrudEstadoSolicitud = () => {
             highlightOnHover
             striped
             responsive
-            noDataComponent="No hay estados registrados"
+            noDataComponent="No hay datos"
             customStyles={customStyles}
           />
         </div>
       </div>
 
-      {/* MODAL */}
       <div className="modal fade" id="modalEstado" tabIndex="-1">
         <div className="modal-dialog">
           <div className="modal-content">
             <div className="modal-header bg-primary text-white">
               <h5 className="modal-title">
-                {selectedEstado ? "Editar" : "Nuevo"} Estado de Solicitud
+                {selectedEstado ? "Editar" : "Nuevo"} Estado
               </h5>
-              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+              <button
+                type="button"
+                className="btn-close btn-close-white"
+                data-bs-dismiss="modal"
+              ></button>
             </div>
+
             <div className="modal-body">
               <EstadoSolicitudForm
                 selectedEstado={selectedEstado}
                 refreshData={cargarEstados}
-                hideModal={() => document.querySelector("#modalEstado")?.modal?.("hide")}
+                hideModal={() =>
+                  document
+                    .getElementById("modalEstado")
+                    .classList.remove("show")
+                }
               />
             </div>
           </div>
