@@ -68,6 +68,12 @@ const Navbar = ({ isAuth, logOut, users }) => {
               <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/reactivos")}>Reactivos</span>
             </li>
             <li className="nav-item">
+              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/control-reactivos")}>Control de Reactivos</span>
+            </li>
+            <li className="nav-item">
+              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/salidas")}>Salidas</span>
+            </li>
+            <li className="nav-item">
               <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/estadoSolicitud")}>Estado de Solicitudes</span>
             </li>
             <li className="nav-item">

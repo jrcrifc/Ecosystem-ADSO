@@ -12,6 +12,7 @@ import Crudestadoxequipo from "./reactivos/crudreactivos.jsx";
 import Crudeestadoxsolicitud from "./movimientosReactivos/crudmovimientoreactivo.jsx";
 import Crudsolcitudxequipo from "./proveedores/Crudproveedor.jsx";
 import Crudsalidas from "./salidasReactivos/crudsalidareactivo.jsx";
+import ControlReactivos from "./controlReactivos/controlreactivos.jsx";
 import Crudcuentadantes from "./cuentadante/crudcuentadante.jsx";
 import Crudsolicitud from "./Solicitud/crudsolicitud.jsx";
 
@@ -175,6 +176,16 @@ function App() {
             element={
               <PrivateRoute isAuth={isAuth}>
                 <Crudsalidas />
+              </PrivateRoute>
+            }
+          />
+
+          {/* CONTROL DE REACTIVOS */}
+          <Route
+            path="/control-reactivos"
+            element={
+              <PrivateRoute isAuth={isAuth}>
+                <ControlReactivos />
               </PrivateRoute>
             }
           />

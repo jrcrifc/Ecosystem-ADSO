@@ -94,10 +94,27 @@ try {
     await db.authenticate();
     console.log('✅ Conexión a la base de datos establecida');
 
-    await db.sync();
-    console.log('✅ Sincronización básica de tablas completada');
+    // Usar sync() sin alter para evitar conflictos con columnas existentes
+    // Esto SOLO crea tablas nuevas, no modifica existentes
+    await db.sync({ force: false });
+    console.log('✅ Sincronización de tablas completada');
+    
+    // Validar que el campo cantidad_inventario existe
+    const [columns] = await db.query(`
+        SELECT COLUMN_NAME, COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_NAME = 'reactivos' AND TABLE_SCHEMA = ?
+    `, { replacements: [process.env.DB_NAME || 'ecosystem'] });
+    
+    const canidadInventarioExists = columns.some(col => col.COLUMN_NAME === 'cantidad_inventario');
+    if (canidadInventarioExists) {
+        console.log('✅ Validación: Campo cantidad_inventario existe en reactivos');
+    } else {
+        console.warn('⚠️ ADVERTENCIA: El campo cantidad_inventario NO fue encontrado en reactivos.');
+        console.warn('   Ejecuta manualmente: ALTER TABLE reactivos ADD COLUMN cantidad_inventario DECIMAL(10,3) DEFAULT 0;');
+    }
+    
 } catch (error) {
-    console.error('❌ Error al conectar o sincronizar la base de datos:', error);
+    console.error('❌ Error al conectar o sincronizar la base de datos:', error.message);
     process.exit(1);
 }
 

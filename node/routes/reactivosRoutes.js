@@ -4,13 +4,15 @@ import {
     getreactivos, 
     createreactivos, 
     updatereactivos, 
-    deletereactivos 
+    deletereactivos,
+    getAllreactivosConStock 
 } from '../controller/reactivosController.js';
 import reactivosModel from '../models/reactivosModel.js';
 
 const router = express.Router();
 
 // Rutas normales
+router.get('/stock/disponibilidad', getAllreactivosConStock);
 router.get('/', getAllreactivos);
 router.get('/:id', getreactivos);
 router.post('/', createreactivos);

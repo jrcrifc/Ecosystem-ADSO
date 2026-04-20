@@ -34,6 +34,16 @@ async getById(id_reactivo){
             return true
     }
 
+    async getAllconStock() {
+        const reactivos = await reactivosModel.findAll();
+        return reactivos.map(reactivo => ({
+            ...reactivo.toJSON(),
+            estado_stock: reactivo.cantidad_inventario > 0 && reactivo.existencia_reactivo === "SI" 
+                ? "disponible" 
+                : "agotado"
+        }));
+    }
+
 }
 
 

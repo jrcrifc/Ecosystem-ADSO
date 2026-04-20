@@ -44,3 +44,12 @@ export const deletereactivos = async (req, res) => {
         res.status(400).json({ message: error.message }); // 400 Bad Request
     }
 };
+
+export const getAllreactivosConStock = async (req, res) => {
+    try {
+        const reactivos = await reactivosService.getAllconStock();
+        res.status(200).json(reactivos); // 200 OK
+    } catch (error) {
+        res.status(500).json({ message: error.message }); // 500 Internal Server Error
+    }
+};
