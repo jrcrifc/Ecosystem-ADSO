@@ -17,7 +17,10 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
   const [loadingReactivos, setLoadingReactivos] = useState(false);
   const [loadingProveedores, setLoadingProveedores] = useState(false);
 
+<<<<<<< HEAD
   // Cargar reactivos y proveedor al montar
+=======
+>>>>>>> origin/main
   useEffect(() => {
     cargarReactivos();
     cargarProveedores();
@@ -43,13 +46,20 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
       setProveedores(res.data);
     } catch (error) {
       console.error("Error al cargar proveedor:", error);
+<<<<<<< HEAD
       Swal.fire("Error", "No se pudieron cargar los proveedor", "error");
+=======
+      Swal.fire("Error", "No se pudieron cargar los proveedores", "error");
+>>>>>>> origin/main
     } finally {
       setLoadingProveedores(false);
     }
   };
 
+<<<<<<< HEAD
   // Cargar datos al editar
+=======
+>>>>>>> origin/main
   useEffect(() => {
     if (selectedMovimiento) {
       setForm({
@@ -81,20 +91,28 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
     e.preventDefault();
 
     if (!form.fecha_ingreso || !form.cantidad_inicial || !form.id_reactivo) {
+<<<<<<< HEAD
       Swal.fire(
         "Campos obligatorios",
         "Fecha, cantidad inicial y reactivo son requeridos",
         "warning"
       );
+=======
+      Swal.fire("Campos obligatorios", "Fecha, cantidad inicial y reactivo son requeridos", "warning");
+>>>>>>> origin/main
       return;
     }
 
     if (parseFloat(form.cantidad_inicial) <= 0) {
+<<<<<<< HEAD
       Swal.fire(
         "⚠️ Atención",
         "La cantidad inicial debe ser mayor a 0",
         "warning"
       );
+=======
+      Swal.fire("⚠️ Atención", "La cantidad inicial debe ser mayor a 0", "warning");
+>>>>>>> origin/main
       return;
     }
 
@@ -118,7 +136,10 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
         await apiAxios.post("/api/movimientos", dataToSend);
         Swal.fire("✅ Registrado", "Ingreso creado y stock actualizado", "success");
       }
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
       refreshData();
       hideModal();
     } catch (err) {
@@ -174,7 +195,10 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
           />
         </div>
 
+<<<<<<< HEAD
         {/* ✅ SELECT REACTIVO */}
+=======
+>>>>>>> origin/main
         <div className="col-md-6">
           <label className="form-label fw-semibold text-muted">Reactivo</label>
           <select
@@ -192,12 +216,18 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
               </option>
             ))}
           </select>
+<<<<<<< HEAD
           {loadingReactivos && (
             <small className="text-muted">Cargando reactivos...</small>
           )}
         </div>
 
         {/* ✅ SELECT PROVEEDOR */}
+=======
+          {loadingReactivos && <small className="text-muted">Cargando reactivos...</small>}
+        </div>
+
+>>>>>>> origin/main
         <div className="col-md-6">
           <label className="form-label fw-semibold text-muted">Proveedor</label>
           <select
@@ -210,6 +240,7 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
             <option value="">Sin proveedor (opcional)</option>
             {proveedor.map((p) => (
               <option key={p.id_proveedor} value={p.id_proveedor}>
+<<<<<<< HEAD
                 {p.nom_proveedor} {p.apel_proveedor}
               </option>
             ))}
@@ -217,6 +248,13 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
           {loadingProveedores && (
             <small className="text-muted">Cargando proveedor...</small>
           )}
+=======
+                {`${p.nom_proveedor} ${p.apel_proveedor}`}
+              </option>
+            ))}
+          </select>
+          {loadingProveedores && <small className="text-muted">Cargando proveedores...</small>}
+>>>>>>> origin/main
         </div>
 
         <div className="col-md-6">

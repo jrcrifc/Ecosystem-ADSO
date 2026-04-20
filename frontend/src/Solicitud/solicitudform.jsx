@@ -6,6 +6,7 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
   const [fecha_inicio, setFecha_inicio] = useState("");
   const [fecha_fin, setFecha_fin] = useState("");
   const [estado, setEstado] = useState(1);
+<<<<<<< HEAD
   const [equipos, setEquipos] = useState([]);
   const [equiposSeleccionados, setEquiposSeleccionados] = useState([]);
   const [loadingEquipos, setLoadingEquipos] = useState(false);
@@ -23,11 +24,16 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
       setLoadingEquipos(false);
     }
   };
+=======
+
+  const getToken = () => localStorage.getItem("token");
+>>>>>>> origin/main
 
   useEffect(() => {
     if (selectedSolicitud) {
       setFecha_inicio(selectedSolicitud.fecha_inicio ? new Date(selectedSolicitud.fecha_inicio).toISOString().slice(0, 16) : "");
       setFecha_fin(selectedSolicitud.fecha_fin ? new Date(selectedSolicitud.fecha_fin).toISOString().slice(0, 16) : "");
+<<<<<<< HEAD
       setEstado(selectedSolicitud.estado ?? 1);
       if (selectedSolicitud.equiposSolicitud) {
         setEquiposSeleccionados(selectedSolicitud.equiposSolicitud.map(e => e.id_equipo));
@@ -51,20 +57,36 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+=======
+    } else {
+      const hoy = new Date().toISOString().slice(0, 16);
+      setFecha_inicio(hoy);
+      setFecha_fin("");
+      setEstado(1);
+    }
+  }, [selectedSolicitud]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+>>>>>>> origin/main
     if (fecha_fin && fecha_inicio && new Date(fecha_fin) <= new Date(fecha_inicio)) {
       Swal.fire("⚠️ Atención", "La fecha de fin debe ser posterior a la fecha de inicio", "warning");
       return;
     }
+<<<<<<< HEAD
 
     if (equiposSeleccionados.length === 0) {
       Swal.fire("⚠️ Atención", "Debes seleccionar al menos un equipo", "warning");
       return;
     }
 
+=======
+>>>>>>> origin/main
     const data = {
       fecha_inicio: fecha_inicio ? new Date(fecha_inicio).toISOString() : null,
       fecha_fin: fecha_fin ? new Date(fecha_fin).toISOString() : null,
       estado,
+<<<<<<< HEAD
       equipos: equiposSeleccionados,
     };
 
@@ -74,11 +96,27 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
         Swal.fire("🔥 Actualizado", "Solicitud modificada correctamente", "success");
       } else {
         await apiAxios.post("/api/solicitud", data);
+=======
+    };
+    try {
+      const token = getToken();
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+
+      if (selectedSolicitud) {
+        await apiAxios.put(`/api/solicitud/${selectedSolicitud.id_solicitud}`, data, config);
+        Swal.fire("🔥 Actualizado", "Solicitud modificada correctamente", "success");
+      } else {
+        await apiAxios.post("/api/solicitud", data, config);
+>>>>>>> origin/main
         Swal.fire("✅ Registrada", "Solicitud creada correctamente", "success");
       }
       refreshData();
       hideModal();
     } catch (error) {
+<<<<<<< HEAD
+=======
+      console.error("Error al guardar solicitud:", error);
+>>>>>>> origin/main
       Swal.fire("💀 Error", "No se pudo guardar la solicitud", "error");
     }
   };
@@ -86,6 +124,7 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
   return (
     <form onSubmit={handleSubmit} className="needs-validation" noValidate>
       <div className="row g-3">
+<<<<<<< HEAD
 
         <div className="col-md-6">
           <label className="form-label fw-semibold text-muted">Fecha y hora de inicio</label>
@@ -135,12 +174,36 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
           )}
         </div>
 
+=======
+        <div className="col-md-6">
+          <label className="form-label fw-semibold text-muted">Fecha y hora de inicio</label>
+          <input
+            type="datetime-local"
+            className="form-control form-control-sm"
+            value={fecha_inicio}
+            onChange={(e) => setFecha_inicio(e.target.value)}
+            required
+          />
+        </div>
+        <div className="col-md-6">
+          <label className="form-label fw-semibold text-muted">Fecha y hora de fin</label>
+          <input
+            type="datetime-local"
+            className="form-control form-control-sm"
+            value={fecha_fin}
+            onChange={(e) => setFecha_fin(e.target.value)}
+          />
+        </div>
+>>>>>>> origin/main
         <div className="col-12 mt-4">
           <button type="submit" className="btn btn-primary w-100">
             {selectedSolicitud ? "Actualizar Solicitud" : "Registrar Solicitud"}
           </button>
         </div>
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
       </div>
     </form>
   );
