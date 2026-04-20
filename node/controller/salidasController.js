@@ -44,3 +44,25 @@ export const deletesalidas = async (req, res) => {
         res.status(400).json({ message: error.message }); // 400 Bad Request
     }
 };
+
+export const getLoteProximo = async (req, res) => {
+    try {
+        const { id_reactivo } = req.params;
+        const loteProximo = await salidasService.getNextLoteToExpire(id_reactivo);
+        res.status(200).json(loteProximo);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+export const createSmartSalida = async (req, res) => {
+    try {
+        const resultado = await salidasService.createSmartSalida(req.body);
+        res.status(201).json({ 
+            message: "Salida(s) del reactivo creadas correctamente", 
+            data: resultado 
+        });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};

@@ -4,13 +4,17 @@ import {
     getsalidas, 
     createsalidas, 
     updatesalidas, 
-    deletesalidas 
+    deletesalidas,
+    getLoteProximo,
+    createSmartSalida
 } from '../controller/salidasController.js';
 import salidasModel from '../models/salidasModel.js';
 
 const router = express.Router();
 
 router.get('/', getAllsalidas);
+router.get('/lote-proximo/:id_reactivo', getLoteProximo);
+router.post('/smart', createSmartSalida);
 router.get('/:id', getsalidas);
 router.post('/', createsalidas);
 router.put('/:id', updatesalidas);

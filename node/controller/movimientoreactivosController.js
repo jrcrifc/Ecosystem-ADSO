@@ -44,3 +44,13 @@ export const deletemovimientoreactivo = async (req, res) => {
         res.status(400).json({ message: error.message }); // 400 Bad Request
     }
 };
+
+export const getStockLotes = async (req, res) => {
+    try {
+        const { id_reactivo } = req.params;
+        const stockLotes = await movimientoreactivoService.getStockLotes(id_reactivo);
+        res.status(200).json(stockLotes);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};

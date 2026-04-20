@@ -1,5 +1,5 @@
 import express from 'express'
-import { getAllmovimientoreactivo, getmovimientoreactivo, createmovimientoreactivo, updatemovimientoreactivo, deletemovimientoreactivo } from '../controller/movimientoreactivosController.js'
+import { getAllmovimientoreactivo, getmovimientoreactivo, createmovimientoreactivo, updatemovimientoreactivo, deletemovimientoreactivo, getStockLotes } from '../controller/movimientoreactivosController.js'
 import movimientoreactivoModel from '../models/movimientoreactivosModel.js';
 
 
@@ -7,6 +7,7 @@ import movimientoreactivoModel from '../models/movimientoreactivosModel.js';
 const router = express.Router()
 
 router.get('/', getAllmovimientoreactivo);
+router.get('/stock-lotes/:id_reactivo', getStockLotes);
 router.get('/:id', getmovimientoreactivo);
 router.post('/', createmovimientoreactivo);
 router.put('/:id', updatemovimientoreactivo);

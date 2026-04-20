@@ -84,6 +84,72 @@ class movimientoreactivoService {
         if (!deleted) throw new Error('No se pudo eliminar');
         return true;
     }
+
+    /**
+     * Obtener stock de lotes disponibles y resumen de vencidos
+     * @param {number} id_reactivo - ID del reactivo
+     * @returns {Object} { lotes_disponibles, resumen_vencidos }
+     */
+    async getStockLotes(id_reactivo) {
+        // Verificar que el reactivo existe
+        const reactivo = await reactivosModel.findByPk(id_reactivo);
+        if (!reactivo) throw new Error('Reactivo no encontrado');
+
+        // Obtener todos los movimientos del reactivo
+        const movimientos = await movimientoreactivoModel.findAll({
+            where: { id_reactivo },
+            order: [['fecha_vencimiento', 'ASC']] // Ordenar por fecha de vencimiento
+        });
+
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0); // Sin horas para comparación correcta
+
+        const lotes_disponibles = [];
+        const vencidos = [];
+
+        movimientos.forEach(mov => {
+            const cantidad_disponible = parseFloat(mov.cantidad_inicial || 0) - parseFloat(mov.cantidad_salida || 0);
+            
+            if (mov.fecha_vencimiento) {
+                const fechaVencimiento = new Date(mov.fecha_vencimiento);
+                fechaVencimiento.setHours(0, 0, 0, 0);
+                
+                const diasParaVencer = Math.floor((fechaVencimiento - hoy) / (1000 * 60 * 60 * 24));
+                const vencido = diasParaVencer < 0;
+
+                const lote_info = {
+                    id_movimiento_reactivo: mov.id_movimiento_reactivo,
+                    lote: mov.lote,
+                    fecha_vencimiento: mov.fecha_vencimiento,
+                    cantidad_disponible,
+                    dias_para_vencer: diasParaVencer
+                };
+
+                if (vencido) {
+                    vencidos.push(lote_info);
+                } else if (cantidad_disponible > 0) {
+                    lotes_disponibles.push(lote_info);
+                }
+            } else if (cantidad_disponible > 0) {
+                // Si no tiene fecha de vencimiento, considerar como disponible
+                lotes_disponibles.push({
+                    id_movimiento_reactivo: mov.id_movimiento_reactivo,
+                    lote: mov.lote,
+                    fecha_vencimiento: null,
+                    cantidad_disponible,
+                    dias_para_vencer: null
+                });
+            }
+        });
+
+        return {
+            lotes_disponibles,
+            resumen_vencidos: {
+                cantidad_lotes_vencidos: vencidos.length,
+                detalles: vencidos
+            }
+        };
+    }
 }
 
 export default new movimientoreactivoService();

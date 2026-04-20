@@ -11,7 +11,11 @@ async getById(id_reactivo){
 }
 
     async create(data) {
-        return await reactivosModel.create(data)
+        // Auto-ajustar existencia_reactivo basado en cantidad_inventario
+        if (data.cantidad_inventario !== undefined) {
+            data.existencia_reactivo = data.cantidad_inventario > 0 ? "SI" : "NO";
+        }
+        return await reactivosModel.create(data);
     }
 
     async update(id,data){

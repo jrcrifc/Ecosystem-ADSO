@@ -37,6 +37,11 @@ const movimientoreactivoModel = db.define('movimientos_reactivos', {
     fecha_ingreso: { 
         type: DataTypes.DATE 
     },
+    
+    fecha_vencimiento: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
 
     estado_inventario: { 
         type: DataTypes.ENUM("en stock","agotado"),
