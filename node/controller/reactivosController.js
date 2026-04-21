@@ -20,10 +20,13 @@ export const getreactivos = async (req, res) => {
 
 export const createreactivos = async (req, res) => {
     try {
+        console.log("📥 Body recibido:", JSON.stringify(req.body, null, 2)); // ← aquí
         const reactivos = await reactivosService.create(req.body);
-        res.status(201).json({ message: "reactivo creado correctamente", reactivos }); // 201 Created
+        res.status(201).json({ message: "reactivo creado correctamente", reactivos });
     } catch (error) {
-        res.status(400).json({ message: error.message }); // 400 Bad Request
+        console.error("❌ Error completo:", JSON.stringify(error, null, 2));
+        console.error("❌ Mensaje:", error.message);
+        res.status(400).json({ message: error.message });
     }
 };
 

@@ -23,8 +23,7 @@ const reactivosModel = db.define('reactivos', {
     clasificacion_reactivo: {
         type: DataTypes.ENUM('Peligro de contacto', 'Peligro de reactividad', 'Peligro de inflamabilidad', 'Riesgo minimo', 'Peligro para salud', 'Evalué el almacenamiento individualmente')
     },
-    existencia_reactivo: { type: DataTypes.ENUM("SI", "NO") },
-    estado: {
+     estado: {
         type: DataTypes.TINYINT,
         defaultValue: 1,
         allowNull: false
@@ -32,6 +31,8 @@ const reactivosModel = db.define('reactivos', {
 }, {
     freezeTableName: true,
     timestamps: true,
+    createdAt: 'createdat',  // ✅ mapear al nombre real de la BD
+    updatedAt: 'updatedat'   // ✅ mapear al nombre real de la BD
 });
 
 export default reactivosModel;

@@ -17,7 +17,6 @@ const CrudReactivos = () => {
     { name: "Cantidad presentacion", selector: (row) => row.cantidad_presentacion, sortable: true, width: "180px" },
     { name: "Stand / Col / Fila", selector: (row) => `${row.stand || "-"} / ${row.columna || "-"} / ${row.fila || "-"}`, sortable: false, width: "180px" },
     { name: "Color Stand", selector: (row) => row.color_stand, sortable: true, width: "160px" },
-    { name: "Existencia", selector: (row) => row.existencia_reactivo, sortable: true, width: "100px" },
     { name: "Clasificación", selector: (row) => row.clasificacion_reactivo, sortable: true, width: "160px" },
     {
       name: "Estado", width: "120px", center: true,

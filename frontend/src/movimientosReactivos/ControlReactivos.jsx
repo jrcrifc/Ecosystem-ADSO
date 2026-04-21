@@ -1,83 +1,155 @@
-import { useEffect, useState } from "react";
-import DataTable from "react-data-table-component";
 import apiAxios from "../api/axiosConfig.js";
+import { useState, useEffect } from "react";
+import DataTable from "react-data-table-component";
 import Swal from "sweetalert2";
+import * as bootstrap from "bootstrap";
 
-export default function ControlReactivos() {
+const ControlReactivos = () => {
   const [reactivos, setReactivos] = useState([]);
   const [filterText, setFilterText] = useState("");
+  const [selectedReactivo, setSelectedReactivo] = useState(null);
+  const [stockLotes, setStockLotes] = useState(null);
+  const [loadingModal, setLoadingModal] = useState(false);
 
-  const token = localStorage.getItem("token");
-  const headers = { Authorization: `Bearer ${token}` };
+  const columns = [
+    {
+      name: "ID",
+      selector: (row) => row.id_reactivo,
+      sortable: true,
+      width: "80px",
+    },
+    {
+      name: "Reactivo",
+      selector: (row) => row.nom_reactivo,
+      sortable: true,
+      width: "200px",
+    },
+    {
+      name: "Cantidad",
+      selector: (row) => row.cantidad_inventario,
+      sortable: true,
+      width: "120px",
+    },
+    {
+      name: "Presentación",
+      selector: (row) => row.presentacion_reactivo,
+      sortable: true,
+      width: "130px",
+    },
+    {
+      name: "Estado",
+      sortable: true,
+      width: "120px",
+      cell: (row) => (
+        <span
+          className={`badge ${
+            row.estado_stock === "disponible" ? "bg-success" : "bg-danger"
+          }`}
+          style={{ fontSize: "0.85rem" }}
+        >
+          {row.estado_stock === "disponible" ? "✓ Disponible" : "✗ Agotado"}
+        </span>
+      ),
+    },
+    {
+      name: "Acciones",
+      center: true,
+      width: "150px",
+      cell: (row) => (
+        <button
+          className="btn btn-sm btn-primary"
+          onClick={() => handleVerStock(row)}
+          title="Ver stock y lotes"
+        >
+          <i className="fa-solid fa-boxes-stacked"></i> Stock Actual
+        </button>
+      ),
+    },
+  ];
 
-  useEffect(() => { cargarControl(); }, []);
+  useEffect(() => {
+    cargarReactivos();
+  }, []);
 
-  const cargarControl = async () => {
+  const cargarReactivos = async () => {
     try {
-      const res = await apiAxios.get("/api/movimientos", { headers });
-      
-      // Agrupar por reactivo y calcular stock
-      const stockPorReactivo = {};
-      res.data.forEach(m => {
-        const id = m.id_reactivo;
-        if (!stockPorReactivo[id]) {
-          stockPorReactivo[id] = {
-            id_reactivo: id,
-            nom_reactivo: m.reactivo?.nom_reactivo || "-",
-            stock: 0
-          };
-        }
-        stockPorReactivo[id].stock += parseFloat(m.cantidad_inicial || 0);
-        stockPorReactivo[id].stock -= parseFloat(m.cantidad_salida || 0);
-      });
-
-      setReactivos(Object.values(stockPorReactivo));
-    } catch {
-      Swal.fire("Error", "No se pudo cargar el control de reactivos", "error");
+      const res = await apiAxios.get("/api/reactivos/stock/disponibilidad");
+      setReactivos(res.data);
+    } catch (error) {
+      console.error("Error al cargar reactivos:", error);
+      Swal.fire(
+        "Error",
+        "No se pudo cargar los reactivos",
+        "error"
+      );
     }
   };
 
-  const columns = [
-    { name: "Reactivo", selector: r => r.nom_reactivo, sortable: true },
-    {
-      name: "Stock Actual",
-      center: true,
-      cell: r => (
-        <span className={`badge ${r.stock > 0 ? 'bg-success' : 'bg-danger'}`}>
-          {r.stock.toFixed(3)}
-        </span>
-      )
-    },
-    // ✅ AGREGA ESTA COLUMNA
-    {
-      name: "Estado",
-      center: true,
-      cell: r => (
-        <span className={`badge ${r.stock > 0 ? 'bg-success' : 'bg-danger'}`}>
-          {r.stock > 0 ? 'en stock' : 'agotado'}
-        </span>
-      )
-    }
-  ];
+  const handleVerStock = async (reactivo) => {
+    setSelectedReactivo(reactivo);
+    setLoadingModal(true);
 
-  const filtered = reactivos.filter(r =>
-    r.nom_reactivo?.toLowerCase().includes(filterText.toLowerCase())
+    try {
+      const res = await apiAxios.get(
+        `/api/movimientos/stock-lotes/${reactivo.id_reactivo}`
+      );
+      setStockLotes(res.data);
+
+      const modal = document.getElementById("modalStock");
+      if (modal) {
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+      }
+    } catch (error) {
+      console.error("Error al cargar stock:", error);
+      Swal.fire("Error", "No se pudo cargar el detalle de stock", "error");
+    } finally {
+      setLoadingModal(false);
+    }
+  };
+
+  const hideModal = () => {
+    const modal = document.getElementById("modalStock");
+    if (modal) {
+      const bsModal = bootstrap.Modal.getInstance(modal);
+      if (bsModal) bsModal.hide();
+      document.body.classList.remove("modal-open");
+      document.body.style.removeProperty("overflow");
+      document.body.style.removeProperty("padding-right");
+      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+    }
+  };
+
+  const filtered = reactivos.filter((item) =>
+    `${item.id_reactivo || ""}`.includes(filterText) ||
+    `${item.nom_reactivo || ""}`
+      .toLowerCase()
+      .includes(filterText.toLowerCase())
   );
 
   return (
-    <div className="container mt-4" style={{ maxWidth: "600px" }}>
-      <h2 className="text-center mb-3 fw-bold text-primary">Control de Reactivos</h2>
+    <div
+      className="mt-4"
+      style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 16px" }}
+    >
+      <h2 className="text-center mb-4 text-primary fw-bold">
+        Control de Reactivos
+      </h2>
 
       <div className="row mb-3 align-items-center">
-        <div className="col-md-8">
-          <input type="text" className="form-control"
-            placeholder="Buscar por nombre de reactivo..."
-            value={filterText} onChange={e => setFilterText(e.target.value)} />
+        <div className="col-md-6">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Buscar por ID o nombre del reactivo..."
+            value={filterText}
+            onChange={(e) => setFilterText(e.target.value)}
+          />
         </div>
-        <div className="col-md-4 text-end">
-          <button className="btn btn-outline-primary" onClick={cargarControl}>
-            <i className="fas fa-sync me-2"></i>Actualizar
-          </button>
+        <div className="col-md-6 text-end">
+          <span className="text-muted">
+            Total de reactivos: <strong>{filtered.length}</strong>
+          </span>
         </div>
       </div>
 
@@ -85,16 +157,184 @@ export default function ControlReactivos() {
         columns={columns}
         data={filtered}
         pagination
-        paginationPerPage={10}
         highlightOnHover
         striped
         responsive
         noDataComponent="No hay reactivos registrados"
-        customStyles={{
-          headCells: { style: { justifyContent: "center", fontWeight: "bold" } },
-          cells: { style: { justifyContent: "center" } }
-        }}
+        paginationPerPage={10}
       />
+
+      {/* MODAL STOCK */}
+      <div className="modal fade" id="modalStock" tabIndex="-1">
+        <div className="modal-dialog modal-xl">
+          <div className="modal-content">
+            <div className="modal-header bg-info text-white">
+              <h5 className="modal-title">
+                📦 Stock de {selectedReactivo?.nom_reactivo}
+              </h5>
+              <button
+                type="button"
+                className="btn-close btn-close-white"
+                data-bs-dismiss="modal"
+                onClick={hideModal}
+              ></button>
+            </div>
+
+            <div className="modal-body">
+              {loadingModal ? (
+                <div className="text-center">
+                  <div className="spinner-border" role="status">
+                    <span className="visually-hidden">Cargando...</span>
+                  </div>
+                </div>
+              ) : stockLotes ? (
+                <div>
+                  {/* TABLA LOTES DISPONIBLES */}
+                  <h6 className="mb-3 text-success">
+                    <i className="fa-solid fa-check-circle"></i> Lotes
+                    Disponibles
+                  </h6>
+                  <div className="table-responsive mb-4">
+                    <table className="table table-striped table-sm">
+                      <thead className="table-success">
+                        <tr>
+                          <th>Lote</th>
+                          <th>Cantidad</th>
+                          <th>Fecha Vencimiento</th>
+                          <th>Días para Vencer</th>
+                          <th>Estado</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {stockLotes.lotes_disponibles &&
+                        stockLotes.lotes_disponibles.length > 0 ? (
+                          stockLotes.lotes_disponibles.map((lote) => (
+                            <tr key={lote.id_movimiento_reactivo}>
+                              <td>
+                                <strong>{lote.lote}</strong>
+                              </td>
+                              <td>{lote.cantidad_disponible}</td>
+                              <td>{lote.fecha_vencimiento}</td>
+                              <td>
+                                <span
+                                  className={`badge ${
+                                    lote.dias_para_vencer <= 7
+                                      ? "bg-warning"
+                                      : "bg-success"
+                                  }`}
+                                >
+                                  {lote.dias_para_vencer} días
+                                </span>
+                              </td>
+                              <td>
+                                {lote.dias_para_vencer <= 0 ? (
+                                  <span className="badge bg-danger">
+                                    Vencido
+                                  </span>
+                                ) : lote.dias_para_vencer <= 7 ? (
+                                  <span className="badge bg-warning">
+                                    Próximo a Vencer
+                                  </span>
+                                ) : (
+                                  <span className="badge bg-success">
+                                    OK
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="5" className="text-center text-muted">
+                              No hay lotes disponibles
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* TABLA LOTES VENCIDOS */}
+                  <h6 className="mb-3 text-danger">
+                    <i className="fa-solid fa-times-circle"></i> Resumen de
+                    Lotes Vencidos
+                  </h6>
+                  <div className="table-responsive">
+                    <table className="table table-striped table-sm">
+                      <thead className="table-danger">
+                        <tr>
+                          <th>Lote</th>
+                          <th>Cantidad</th>
+                          <th>Fecha Vencimiento</th>
+                          <th>Días Vencido</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {stockLotes.resumen_vencidos &&
+                        stockLotes.resumen_vencidos.detalles &&
+                        stockLotes.resumen_vencidos.detalles.length > 0 ? (
+                          stockLotes.resumen_vencidos.detalles.map((lote) => (
+                            <tr key={lote.id_movimiento_reactivo}>
+                              <td>
+                                <strong>{lote.lote}</strong>
+                              </td>
+                              <td>{lote.cantidad_disponible}</td>
+                              <td>{lote.fecha_vencimiento}</td>
+                              <td>
+                                <span className="badge bg-danger">
+                                  {Math.abs(
+                                    Math.floor(
+                                      (new Date() -
+                                        new Date(lote.fecha_vencimiento)) /
+                                        (1000 * 60 * 60 * 24)
+                                    )
+                                  )}{" "}
+                                  días
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="4" className="text-center text-muted">
+                              No hay lotes vencidos
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+
+                    {stockLotes.resumen_vencidos?.cantidad_lotes_vencidos >
+                      0 && (
+                      <div className="alert alert-warning mt-3" role="alert">
+                        <strong>Advertencia:</strong> Hay{" "}
+                        <strong>
+                          {stockLotes.resumen_vencidos.cantidad_lotes_vencidos}
+                        </strong>{" "}
+                        lote(s) vencido(s) que deben ser retirados del
+                        inventario.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                data-bs-dismiss="modal"
+                onClick={hideModal}
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
-}
+};
+
+export default ControlReactivos;

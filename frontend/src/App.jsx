@@ -23,6 +23,7 @@ import GestionEstadoEquipo from "./estadoequipo/GestionEstadoEquipo.jsx";
 import ControlReactivos from "./movimientosReactivos/ControlReactivos.jsx";
 import FormularioAcceso from "./FormularioAcceso/FormularioAcceso.jsx";
 import GestionUsuarios from "./usuarios/GestionUsuarios.jsx";
+import SalidasReactivos from "./salidasReactivos/crudsalidareactivo.jsx";
 
 // ✅ Aprendiz/Instructor → formulario | Pasante/Gestor → pantalla espera
 const FormularioRoute = ({ isAuth, userData, userRol, logOut, children }) => {
@@ -203,6 +204,7 @@ function App() {
           <Route path="/gestion-equipo" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><GestionEstadoEquipo /></AdminRoute>} />
           <Route path="/control-reactivos" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><ControlReactivos /></AdminRoute>} />
           <Route path="/cuentadante" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><Crudcuentadantes /></AdminRoute>} />
+          <Route path="/salidas" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><Crudsalidas /></AdminRoute>} />
 
           {/* DEFAULT */}
           <Route path="*" element={<Navigate to={isAuth ? "/home" : "/UserLogin"} replace />} />

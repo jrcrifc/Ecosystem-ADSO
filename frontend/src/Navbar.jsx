@@ -90,6 +90,9 @@ const Navbar = ({ isAuth, logOut, users, rol, onAprobado }) => {
                 <li className="nav-item">
                   <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/control-reactivos")}>Control Reactivos</span>
                 </li>
+                <li className="nav-item">
+                  <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/salidas")}>Salidas Reactivos</span>
+                </li>
               </>
             )}
 

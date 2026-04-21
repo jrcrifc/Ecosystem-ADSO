@@ -7,7 +7,7 @@ import {
     deletesalidas 
 } from '../controller/salidasController.js';
 import salidasModel from '../models/salidasModel.js';
-
+import salidasService from "../service/salidasService.js";
 const router = express.Router();
 
 router.get('/', getAllsalidas);
@@ -37,6 +37,16 @@ router.put('/estado/:id', async (req, res) => {
         console.error("Error al cambiar estado:", error);
         res.status(500).json({ message: "Error del servidor" });
     }
+});
+
+// ✅ Ruta para obtener lotes FEFO de un reactivo — ANTES de las rutas con :id
+router.get('/lotes-fefo/:id_reactivo', async (req, res) => {
+  try {
+    const lotes = await salidasService.getLotesFefo(req.params.id_reactivo);
+    res.json(lotes);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 export default router;

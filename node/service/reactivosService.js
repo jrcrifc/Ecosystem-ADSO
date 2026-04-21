@@ -11,8 +11,14 @@ async getById(id_reactivo){
 }
 
     async create(data) {
-        return await reactivosModel.create(data)
+    console.log("📥 Datos a guardar:", JSON.stringify(data, null, 2));
+    try {
+        return await reactivosModel.create(data);
+    } catch (error) {
+        console.error("❌ Error Sequelize completo:", error.errors); // ← esto muestra el campo exacto
+        throw error;
     }
+}
 
     async update(id,data){
         const result = await reactivosModel.update(data, { where: { id_reactivo: id }})
@@ -29,7 +35,7 @@ async getById(id_reactivo){
         if(!deleted) throw new Error('')
             return true
     }
-
+    
 }
 
 

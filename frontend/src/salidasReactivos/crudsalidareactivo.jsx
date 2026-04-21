@@ -11,43 +11,29 @@ const CrudSalidasReactivos = () => {
   const [selectedSalida, setSelectedSalida] = useState(null);
 
   const columns = [
+    { name: "ID", selector: (row) => row.id_salida, sortable: true, width: "80px" },
     {
-      name: "ID Salida",
-      selector: (row) => row.id_salida,
-      sortable: true,
-      width: "150px",
+      name: "Reactivo",
+      selector: (row) => row.movimiento?.reactivo?.nom_reactivo || "-",
+      sortable: true, width: "180px"
     },
     {
-      name: "ID Movimiento Reactivo",
-      selector: (row) => row.id_movimiento_reactivo,
-      sortable: true,
-      width: "180px",
+      name: "Lote",
+      selector: (row) => row.movimiento?.lote || "-",
+      sortable: true, width: "120px"
+    },
+    {
+      name: "Cantidad Salida",
+      selector: (row) => parseFloat(row.cantidad_salida).toFixed(3),
+      sortable: true, width: "150px"
     },
     {
       name: "Fecha de salida",
-      selector: (row) => (row.fecha_salida ? new Date(row.fecha_salida).toLocaleString() : "-"),
-      sortable: true,
-      width: "180px",
+      selector: (row) => row.fecha_salida ? new Date(row.fecha_salida).toLocaleString('es-CO') : "-",
+      sortable: true, width: "180px"
     },
     {
-      name: "Estado",
-      width: "140px",
-      center: true,
-      cell: (row) => (
-        <span
-          className={`px-3 py-1 rounded-pill text-white fw-semibold ${
-            row.estado === 1 ? "bg-success" : "bg-danger"
-          }`}
-          style={{ fontSize: "0.75rem" }}
-        >
-          {row.estado === 1 ? "ACTIVO" : "INACTIVO"}
-        </span>
-      ),
-    },
-    {
-      name: "Acciones",
-      center: true,
-      width: "140px",
+      name: "Acciones", center: true, width: "130px",
       cell: (row) => (
         <div className="d-flex gap-1 justify-content-center">
           <button
@@ -55,27 +41,23 @@ const CrudSalidasReactivos = () => {
             data-bs-toggle="modal"
             data-bs-target="#modalSalida"
             onClick={() => setSelectedSalida(row)}
-            title="Editar salida"
+            title="Editar"
           >
-            <i className="fa-solid fa-pencil"></i>
+            <i className="fas fa-pencil"></i>
           </button>
           <button
-            className={`btn btn-sm ${
-              row.estado === 1 ? "btn-outline-danger" : "btn-outline-success"
-            }`}
-            onClick={() => toggleEstado(row.id_salida, row.estado)}
-            title={row.estado === 1 ? "Inactivar" : "Activar"}
+            className="btn btn-sm btn-danger"
+            onClick={() => eliminar(row.id_salida)}
+            title="Eliminar"
           >
-            <i className={`fas ${row.estado === 1 ? "fa-ban" : "fa-check"}`}></i>
+            <i className="fas fa-trash"></i>
           </button>
         </div>
       ),
     },
-  ];
+  ]; // ✅ Cierre del array columns
 
-  useEffect(() => {
-    cargarSalidas();
-  }, []);
+  useEffect(() => { cargarSalidas(); }, []);
 
   const cargarSalidas = async () => {
     try {
@@ -87,41 +69,26 @@ const CrudSalidasReactivos = () => {
     }
   };
 
-  const toggleEstado = async (id, estadoActual) => {
-    const nuevoEstado = estadoActual === 1 ? 0 : 1;
-
+  const eliminar = async (id) => {
     const result = await Swal.fire({
-      title: "¿Cambiar estado?",
-      text: `La salida pasará a ${nuevoEstado === 1 ? "ACTIVO" : "INACTIVO"}`,
-      icon: "question",
+      title: "¿Eliminar salida?",
+      text: "El stock será devuelto al inventario",
+      icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: nuevoEstado === 1 ? "#28a745" : "#dc3545",
-      confirmButtonText: "Sí, cambiar",
-      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#d33",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar"
     });
-
     if (!result.isConfirmed) return;
-
     try {
-      await apiAxios.put(`/api/salidas/estado/${id}`, { estado: nuevoEstado });
-      setSalidas((prev) =>
-        prev.map((item) =>
-          item.id_salida === id ? { ...item, estado: nuevoEstado } : item
-        )
-      );
-      Swal.fire({
-        icon: "success",
-        title: "¡Listo!",
-        text: `Salida ahora está ${nuevoEstado === 1 ? "ACTIVO" : "INACTIVO"}`,
-        timer: 1800,
-        showConfirmButton: false,
-      });
+      await apiAxios.delete(`/api/salidas/${id}`);
+      Swal.fire("Eliminado", "Salida eliminada y stock restaurado", "success");
+      cargarSalidas();
     } catch (error) {
-      Swal.fire("Error", "No se pudo cambiar el estado", "error");
+      Swal.fire("Error", error.response?.data?.message || "No se pudo eliminar", "error");
     }
   };
 
-  // ✅ FIX: usar getOrCreateInstance + limpiar backdrop manualmente
   const hideModal = () => {
     const modal = document.getElementById("modalSalida");
     if (modal) {
@@ -134,10 +101,10 @@ const CrudSalidasReactivos = () => {
     }
   };
 
-  const filtered = salidas.filter(
-    (item) =>
-      String(item.id_salida || "").includes(filterText) ||
-      String(item.id_movimiento_reactivo || "").includes(filterText)
+  const filtered = salidas.filter(item =>
+    String(item.id_salida || "").includes(filterText) ||
+    (item.movimiento?.reactivo?.nom_reactivo || "").toLowerCase().includes(filterText.toLowerCase()) ||
+    (item.movimiento?.lote || "").toLowerCase().includes(filterText.toLowerCase())
   );
 
   return (
@@ -147,9 +114,8 @@ const CrudSalidasReactivos = () => {
       <div className="row mb-3 align-items-center">
         <div className="col-md-5">
           <input
-            type="text"
-            className="form-control"
-            placeholder="Buscar por ID salida o ID movimiento..."
+            type="text" className="form-control"
+            placeholder="Buscar por reactivo, lote o ID..."
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
           />
@@ -167,17 +133,12 @@ const CrudSalidasReactivos = () => {
       </div>
 
       <DataTable
-        columns={columns}
-        data={filtered}
-        pagination
-        highlightOnHover
-        striped
-        responsive
+        columns={columns} data={filtered}
+        pagination highlightOnHover striped responsive
         noDataComponent="No hay salidas registradas"
         paginationPerPage={10}
       />
 
-      {/* Modal */}
       <div className="modal fade" id="modalSalida" tabIndex="-1">
         <div className="modal-dialog modal-lg">
           <div className="modal-content">
@@ -185,12 +146,7 @@ const CrudSalidasReactivos = () => {
               <h5 className="modal-title">
                 {selectedSalida ? "Editar" : "Nueva"} Salida de Reactivo
               </h5>
-              <button
-                type="button"
-                className="btn-close btn-close-white"
-                data-bs-dismiss="modal"
-                onClick={hideModal}
-              ></button>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" onClick={hideModal}></button>
             </div>
             <div className="modal-body">
               <SalidaReactivoForm
