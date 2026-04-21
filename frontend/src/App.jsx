@@ -17,7 +17,6 @@ import Home from "./Home/home.jsx";
 import UserLogin from "./Home/userLogin.jsx";
 import Register from "./Home/Register.jsx";
 import GestionSolicitudes from "./Solicitud/GestionSolicitudes.jsx";
-import CrudSolicitudxEquipo from "./solicitudxequipo/crudsolicitudxequipo.jsx";
 import HistorialEstadoEquipo from "./estadoequipo/HistorialEstadoEquipo.jsx";
 import GestionEstadoEquipo from "./estadoequipo/GestionEstadoEquipo.jsx";
 import ControlReactivos from "./movimientosReactivos/ControlReactivos.jsx";
@@ -199,7 +198,6 @@ function App() {
           <Route path="/proveedor" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><Crudproveedor /></AdminRoute>} />
           <Route path="/salidas" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><Crudsalidas /></AdminRoute>} />
           <Route path="/estadoequipo" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><Crudestadoequipo /></AdminRoute>} />
-          <Route path="/solicitudxequipo" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><CrudSolicitudxEquipo /></AdminRoute>} />
           <Route path="/historial-equipo" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><HistorialEstadoEquipo /></AdminRoute>} />
           <Route path="/gestion-equipo" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><GestionEstadoEquipo /></AdminRoute>} />
           <Route path="/control-reactivos" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><ControlReactivos /></AdminRoute>} />

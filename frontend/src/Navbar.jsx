@@ -67,9 +67,6 @@ const Navbar = ({ isAuth, logOut, users, rol, onAprobado }) => {
                   <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/estadoequipo")}>Estado del Equipo</span>
                 </li>
                 <li className="nav-item">
-                  <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/solicitudxequipo")}>Solicitud x Equipo</span>
-                </li>
-                <li className="nav-item">
                   <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/historial-equipo")}>Historial Equipos</span>
                 </li>
                 <li className="nav-item">
