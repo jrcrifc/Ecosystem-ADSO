@@ -4,6 +4,7 @@ import DataTable from "react-data-table-component";
 import Swal from "sweetalert2";
 import * as bootstrap from "bootstrap";
 import SolicitudPrestamoForm from "./solicitudform.jsx";
+import { paginationComponentOptions, tableCustomStyles } from "../config/dataTableConfig";
 
 const getBadgeEquipo = (estado) => ({
   disponible:      { bg: "#d1fae5", color: "#065f46", label: "Disponible" },
@@ -55,7 +56,14 @@ const CrudSolicitudPrestamos = () => {
   const [selectedSolicitud, setSelectedSolicitud] = useState(null);
   const [verDetalle, setVerDetalle]         = useState(null); // modal detalle
 
-  const getToken = () => localStorage.getItem("token");
+  const getToken = () => sessionStorage.getItem("token");
+
+  // ✅ Detectar usuario y rol
+  const stored = sessionStorage.getItem("user");
+  const userData = stored ? JSON.parse(stored) : null;
+  const userRol = (userData?.user?.rol || userData?.rol || "").toLowerCase();
+  const userId = userData?.id_usuario || userData?.user?.id_usuario;
+  const esAdmin = userRol === "administrador" || userRol === "admin";
 
   const columns = [
     {
@@ -70,6 +78,7 @@ const CrudSolicitudPrestamos = () => {
       selector: r => r.usuario?.nombres_apellidos || "-",
       sortable: true,
       width: "160px",
+      omit: !esAdmin, // ✅ Solo admin ve esta columna
     },
     {
       name: "Fecha Inicio",
@@ -163,7 +172,13 @@ const CrudSolicitudPrestamos = () => {
       const res = await apiAxios.get("/api/solicitud", {
         headers: { Authorization: `Bearer ${getToken()}` }
       });
-      setSolicitudes(res.data);
+      // ✅ Si NO es admin, filtrar solo las solicitudes del usuario actual
+      if (esAdmin) {
+        setSolicitudes(res.data);
+      } else {
+        const misSolicitudes = res.data.filter(s => s.usuario?.id_usuario === userId || s.id_usuario === userId);
+        setSolicitudes(misSolicitudes);
+      }
     } catch {
       Swal.fire("Error", "No se pudieron cargar las solicitudes", "error");
     }
@@ -211,7 +226,7 @@ const CrudSolicitudPrestamos = () => {
   );
 
   return (
-    <div className="mt-4" style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 16px" }}>
+    <div className="mt-4" style={{ padding: "0 16px" }}>
       <h2 className="text-center mb-4 text-primary fw-bold">Solicitudes de Préstamo</h2>
 
       <div className="row mb-3 align-items-center">
@@ -231,22 +246,31 @@ const CrudSolicitudPrestamos = () => {
         </div>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={filtered}
-        pagination
-        highlightOnHover
-        striped
-        responsive
-        noDataComponent="No hay solicitudes registradas"
-        paginationPerPage={10}
-      />
+      <div style={{ borderRadius: "14px", overflow: "hidden", border: "1px solid #dbeafe" }}>
+        <DataTable
+          columns={columns}
+          data={filtered}
+          pagination
+          paginationComponentOptions={paginationComponentOptions}
+          customStyles={tableCustomStyles}
+          highlightOnHover
+          striped
+          responsive
+          noDataComponent={
+            <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
+              <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>
+              <p>No hay solicitudes registradas</p>
+            </div>
+          }
+          paginationPerPage={10}
+        />
+      </div>
 
       {/* Modal editar/crear */}
       <div className="modal fade" id="modalSolicitud" tabIndex="-1">
         <div className="modal-dialog modal-lg">
-          <div className="modal-content">
-            <div className="modal-header bg-primary text-white">
+          <div className="modal-content" style={{ borderRadius: "16px", overflow: "hidden" }}>
+            <div className="modal-header" style={{ background: "#023E8A", color: "#fff" }}>
               <h5 className="modal-title">
                 {selectedSolicitud ? "Editar" : "Nueva"} Solicitud de Préstamo
               </h5>

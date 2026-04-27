@@ -35,7 +35,7 @@ export default function CuentadanteForm({ selectedCuentadante, refreshParent, hi
   const saveData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
 
       if (!token) {
         Swal.fire("Error", "No se encontró token de autenticación", "warning");

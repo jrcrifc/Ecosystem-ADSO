@@ -28,7 +28,7 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
   const cargarCuentadantes = async () => {
     setLoadingCuentadantes(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
       
       const res = await apiAxios.get("/api/cuentadante", {   // ← Ruta corregida
         headers: { Authorization: `Bearer ${token}` }
@@ -91,7 +91,7 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
   const saveData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
       if (!token) {
         Swal.fire("Error", "No se encontró token de autenticación", "warning");
         return;

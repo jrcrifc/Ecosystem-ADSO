@@ -7,7 +7,7 @@ export default function HistorialEstadoEquipo() {
   const [registros, setRegistros] = useState([]);
   const [filterText, setFilterText] = useState("");
 
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
   const headers = { Authorization: `Bearer ${token}` };
 
   useEffect(() => { cargarRegistros(); }, []);
@@ -54,7 +54,7 @@ export default function HistorialEstadoEquipo() {
   );
 
   return (
-    <div className="container mt-4" style={{ maxWidth: "900px" }}>
+    <div className="container mt-4">
       <h2 className="text-center mb-4 fw-bold text-primary">Historial de Estados de Equipos</h2>
       <div className="row mb-4 align-items-center">
         <div className="col-md-6">

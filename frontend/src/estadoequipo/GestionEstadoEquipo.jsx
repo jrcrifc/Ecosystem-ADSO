@@ -7,7 +7,7 @@ export default function GestionEstadoEquipo() {
   const [equipos, setEquipos] = useState([]);
   const [filterText, setFilterText] = useState("");
 
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
   const headers = { Authorization: `Bearer ${token}` };
 
   const mapaEstados = { disponible: 1, "no disponible": 2, mantenimiento: 3 };

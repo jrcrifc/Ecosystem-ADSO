@@ -1,10 +1,10 @@
 import express from "express";
 import UserModel from "../models/userModel.js";
-import { 
-  RegisterUser, LoginUser, GetPendientes, 
-  GetTodos, AprobarUsuario, RechazarUsuario 
-} from "../controller/userController.js";
 import { check } from "express-validator";
+import {
+  RegisterUser, LoginUser, GetPendientes, 
+  GetTodos, AprobarUsuario, RechazarUsuario, ToggleActivoUsuario
+} from "../controller/userController.js";
 
 const router = express.Router();
 
@@ -18,6 +18,7 @@ router.get("/usuarios", GetTodos);
 router.get("/usuarios/pendientes", GetPendientes);
 router.put("/usuarios/:id/aprobar", AprobarUsuario);
 router.put("/usuarios/:id/rechazar", RechazarUsuario);
+router.put("/usuarios/:id/toggle-activo", ToggleActivoUsuario);
 
 // ✅ Obtener usuario por ID
 router.get("/usuarios/:id", async (req, res) => {

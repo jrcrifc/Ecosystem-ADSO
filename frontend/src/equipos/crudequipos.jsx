@@ -17,7 +17,7 @@ export default function CrudEquipo() {
 
   const getAllEquipos = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
       if (!token) {
         Swal.fire("Error", "No se encontró token de autenticación", "warning");
         return;
@@ -47,7 +47,7 @@ export default function CrudEquipo() {
     if (!result.isConfirmed) return;
 
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
       if (!token) {
         Swal.fire("Error", "No se encontró token de autenticación", "warning");
         return;
@@ -114,7 +114,7 @@ export default function CrudEquipo() {
                 height: "80px",
                 objectFit: "cover",
                 borderRadius: "8px",
-                border: "2px solid #28a745",
+                border: "2px solid #0077B6",
                 transition: "transform 0.2s",
                 boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
               }}
@@ -248,45 +248,36 @@ export default function CrudEquipo() {
         </div>
       </div>
 
-      {/* MODAL FOTO GRANDE */}
-      <div className="modal fade" id="largePhotoModal" tabIndex="-1" aria-labelledby="largePhotoLabel" aria-hidden="true">
+      {/* LIGHTBOX FOTO GRANDE */}
+      <div className="modal fade" id="largePhotoModal" tabIndex="-1" aria-hidden="true">
         <div className="modal-dialog modal-xl modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title" id="largePhotoLabel">Foto del equipo</h5>
+          <div className="modal-content" style={{ background: "rgba(0,0,0,0.95)", border: "none", borderRadius: "16px" }}>
+            <div className="modal-header" style={{ border: "none", paddingBottom: 0 }}>
+              <h6 style={{ color: "#fff", fontWeight: "600", margin: 0 }}>📷 Vista ampliada</h6>
               <button
                 type="button"
-                className="btn-close"
+                className="btn-close btn-close-white"
                 data-bs-dismiss="modal"
                 onClick={() => hideModal("largePhotoModal")}
                 aria-label="Close"
               ></button>
             </div>
-            <div className="modal-body text-center p-4">
+            <div className="modal-body text-center" style={{ padding: "20px 40px 40px" }}>
               {largePhoto && (
                 <img
                   src={`http://localhost:8000/uploads/${largePhoto}?v=${Date.now()}`}
-                  alt="Foto grande del equipo"
+                  alt="Foto del equipo"
                   style={{
                     maxWidth: "100%",
-                    maxHeight: "80vh",
+                    maxHeight: "75vh",
                     objectFit: "contain",
                     borderRadius: "12px",
-                    boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+                    boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
+                    transition: "transform 0.3s ease",
                   }}
                   onError={(e) => { e.target.src = "/img/no-image.png"; }}
                 />
               )}
-            </div>
-            <div className="modal-footer">
-              <button
-                type="button"
-                className="btn btn-secondary"
-                data-bs-dismiss="modal"
-                onClick={() => hideModal("largePhotoModal")}
-              >
-                Cerrar
-              </button>
             </div>
           </div>
         </div>

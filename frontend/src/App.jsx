@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import Navbar from "./Navbar";
+import Sidebar from "./Sidebar";
 import apiAxios from "./api/axiosConfig.js";
 
 import CrudReactivos from "./reactivos/crudreactivos.jsx";
@@ -23,6 +23,7 @@ import ControlReactivos from "./movimientosReactivos/ControlReactivos.jsx";
 import FormularioAcceso from "./FormularioAcceso/FormularioAcceso.jsx";
 import GestionUsuarios from "./usuarios/GestionUsuarios.jsx";
 import SalidasReactivos from "./salidasReactivos/crudsalidareactivo.jsx";
+import TopBar from "./TopBar.jsx";
 
 // ✅ Aprendiz/Instructor → formulario | Pasante/Gestor → pantalla espera
 const FormularioRoute = ({ isAuth, userData, userRol, logOut, children }) => {
@@ -98,22 +99,22 @@ function App() {
   const [userData, setUserData] = useState(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem("user");
+    const stored = sessionStorage.getItem("user");
     if (!stored) { setIsAuth(false); setIsLoading(false); return; }
     try {
       const user = JSON.parse(stored);
       if (user?.token) { setIsAuth(true); setUserData(user); }
       else setIsAuth(false);
     } catch {
-      localStorage.removeItem("user");
+      sessionStorage.removeItem("user");
       setIsAuth(false);
     }
     setIsLoading(false);
   }, []);
 
   const logOut = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
+    sessionStorage.removeItem("user");
+    sessionStorage.removeItem("token");
     setIsAuth(false);
     setUserData(null);
   };
@@ -121,19 +122,19 @@ function App() {
   // ✅ Recarga el usuario desde el backend y actualiza el estado
   const recargarUsuario = async () => {
     try {
-      const stored = localStorage.getItem("user");
+      const stored = sessionStorage.getItem("user");
       if (!stored) return;
       const userActual = JSON.parse(stored);
       const id = userActual?.id_usuario || userActual?.user?.id_usuario;
       if (!id) return;
 
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
       const res = await apiAxios.get(`/api/auth/usuarios/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       const userActualizado = { ...userActual, ...res.data };
-      localStorage.setItem("user", JSON.stringify(userActualizado));
+      sessionStorage.setItem("user", JSON.stringify(userActualizado));
       setUserData(userActualizado);
 
       // Si fue rechazado, expulsar
@@ -148,9 +149,9 @@ function App() {
   if (isLoading) return <div className="text-center mt-5">Cargando...</div>;
 
   return (
-    <>
+    <div className="sidebar-layout">
       {isAuth && (
-        <Navbar
+        <Sidebar
           isAuth={isAuth}
           logOut={logOut}
           users={userData}
@@ -158,58 +159,67 @@ function App() {
           onAprobado={recargarUsuario}
         />
       )}
-      <div style={{ padding: "20px" }}>
-        <Routes>
+      <main className="sidebar-main-content" style={!isAuth ? { marginLeft: 0 } : {}}>
+        {isAuth && (
+          <TopBar
+            userData={userData}
+            userRol={userRol}
+            logOut={logOut}
+            onAprobado={recargarUsuario}
+          />
+        )}
+        <div style={{ padding: "24px", maxWidth: "1100px", margin: "0 auto" }}>
+          <Routes>
 
-          {/* LOGIN */}
-          <Route path="/UserLogin" element={isAuth ? <Navigate to="/home" replace /> : <UserLogin setIsAuth={setIsAuth} setUserData={setUserData} />} />
+            {/* LOGIN */}
+            <Route path="/UserLogin" element={isAuth ? <Navigate to="/home" replace /> : <UserLogin setIsAuth={setIsAuth} setUserData={setUserData} />} />
 
-          {/* REGISTER */}
-          <Route path="/register" element={isAuth ? <Navigate to="/home" replace /> : <Register />} />
+            {/* REGISTER */}
+            <Route path="/register" element={isAuth ? <Navigate to="/home" replace /> : <Register />} />
 
-          {/* HOME */}
-          <Route path="/home" element={
-            <FormularioRoute isAuth={isAuth} userData={userData} userRol={userRol} logOut={logOut}>
-              <Home />
-            </FormularioRoute>
-          } />
+            {/* HOME */}
+            <Route path="/home" element={
+              <FormularioRoute isAuth={isAuth} userData={userData} userRol={userRol} logOut={logOut}>
+                <Home />
+              </FormularioRoute>
+            } />
 
-          {/* SOLICITUDES — Aprendiz/Instructor aprobados y Admin */}
-          <Route path="/solicitud" element={
-            <FormularioRoute isAuth={isAuth} userData={userData} userRol={userRol} logOut={logOut}>
-              <Crudsolicitud />
-            </FormularioRoute>
-          } />
-          <Route path="/estadoxsolicitud" element={
-            <FormularioRoute isAuth={isAuth} userData={userData} userRol={userRol} logOut={logOut}>
-              <CrudEstadoxSolicitud />
-            </FormularioRoute>
-          } />
+            {/* SOLICITUDES — Aprendiz/Instructor aprobados y Admin */}
+            <Route path="/solicitud" element={
+              <FormularioRoute isAuth={isAuth} userData={userData} userRol={userRol} logOut={logOut}>
+                <Crudsolicitud />
+              </FormularioRoute>
+            } />
+            <Route path="/estadoxsolicitud" element={
+              <FormularioRoute isAuth={isAuth} userData={userData} userRol={userRol} logOut={logOut}>
+                <CrudEstadoxSolicitud />
+              </FormularioRoute>
+            } />
 
-          {/* SOLO ADMINISTRADOR */}
-          <Route path="/gestion-usuarios" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><GestionUsuarios /></SoloAdminRoute>} />
-          <Route path="/gestion-solicitudes" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><GestionSolicitudes /></SoloAdminRoute>} />
-          <Route path="/estadoSolicitud" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Crudestadosolicitud /></SoloAdminRoute>} />
+            {/* SOLO ADMINISTRADOR */}
+            <Route path="/gestion-usuarios" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><GestionUsuarios /></SoloAdminRoute>} />
+            <Route path="/gestion-solicitudes" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><GestionSolicitudes /></SoloAdminRoute>} />
+            <Route path="/estadoSolicitud" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Crudestadosolicitud /></SoloAdminRoute>} />
 
-          {/* ADMIN + PASANTE + GESTOR */}
-          <Route path="/reactivos" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><CrudReactivos /></AdminRoute>} />
-          <Route path="/equipos" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><CrudEquipo /></AdminRoute>} />
-          <Route path="/movimientoreactivo" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><CrudmovimientoReactivo /></AdminRoute>} />
-          <Route path="/proveedor" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><Crudproveedor /></AdminRoute>} />
-          <Route path="/salidas" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><Crudsalidas /></AdminRoute>} />
-          <Route path="/estadoequipo" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><Crudestadoequipo /></AdminRoute>} />
-          <Route path="/historial-equipo" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><HistorialEstadoEquipo /></AdminRoute>} />
-          <Route path="/gestion-equipo" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><GestionEstadoEquipo /></AdminRoute>} />
-          <Route path="/control-reactivos" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><ControlReactivos /></AdminRoute>} />
-          <Route path="/cuentadante" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><Crudcuentadantes /></AdminRoute>} />
-          <Route path="/salidas" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><Crudsalidas /></AdminRoute>} />
+            {/* ADMIN + PASANTE + GESTOR */}
+            <Route path="/reactivos" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><CrudReactivos /></AdminRoute>} />
+            <Route path="/equipos" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><CrudEquipo /></AdminRoute>} />
+            <Route path="/movimientoreactivo" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><CrudmovimientoReactivo /></AdminRoute>} />
+            <Route path="/proveedor" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><Crudproveedor /></AdminRoute>} />
+            <Route path="/salidas" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><Crudsalidas /></AdminRoute>} />
+            <Route path="/estadoequipo" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><Crudestadoequipo /></AdminRoute>} />
+            <Route path="/historial-equipo" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><HistorialEstadoEquipo /></AdminRoute>} />
+            <Route path="/gestion-equipo" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><GestionEstadoEquipo /></AdminRoute>} />
+            <Route path="/control-reactivos" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><ControlReactivos /></AdminRoute>} />
+            <Route path="/cuentadante" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><Crudcuentadantes /></AdminRoute>} />
 
-          {/* DEFAULT */}
-          <Route path="*" element={<Navigate to={isAuth ? "/home" : "/UserLogin"} replace />} />
+            {/* DEFAULT */}
+            <Route path="*" element={<Navigate to={isAuth ? "/home" : "/UserLogin"} replace />} />
 
-        </Routes>
-      </div>
-    </>
+          </Routes>
+        </div>
+      </main>
+    </div>
   );
 }
 

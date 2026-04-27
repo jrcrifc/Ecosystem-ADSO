@@ -9,7 +9,7 @@ class EstadoxsolicitudService {
             {
                 model: solicitudModel,
                 as: 'solicitud',
-                attributes: ['id_solicitud', 'fecha_inicio', 'fecha_fin'],
+                attributes: ['id_solicitud', 'id_usuario', 'fecha_inicio', 'fecha_fin'],
                 include: [{
                     model: userModel,  // ← agrega este
                     as: 'usuario',

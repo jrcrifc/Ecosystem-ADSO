@@ -68,3 +68,13 @@ export const RechazarUsuario = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+
+// ✅ Activar/Inactivar usuario (toggle)
+export const ToggleActivoUsuario = async (req, res) => {
+  try {
+    const result = await UserService.toggleActivoUsuario(req.params.id);
+    res.json({ message: `Usuario ${result.estado === 'inactivo' ? 'inactivado' : 'activado'} correctamente`, estado: result.estado });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};

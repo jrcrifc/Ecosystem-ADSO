@@ -1,13 +1,16 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import apiAxios from "../api/axiosConfig.js";
 
-export default function Campanita({ userData, onAprobado }) {
+export default function Campanita({ userData, onAprobado, userRol }) {
   const [notificaciones, setNotificaciones] = useState([]);
   const [open, setOpen] = useState(false);
   const ref = useRef();
+  const navigate = useNavigate();
 
   const id_usuario = userData?.id_usuario || userData?.user?.id_usuario;
   const noLeidas = notificaciones.filter(n => !n.leida).length;
+  const esAdmin = userRol === 'Administrador';
 
   useEffect(() => {
     if (!id_usuario) return;
@@ -29,12 +32,15 @@ export default function Campanita({ userData, onAprobado }) {
       const nuevas = res.data;
 
       // ✅ Si hay notificación de aprobado no leída, avisar al App para recargar userData
+      // ⚠️ Solo para usuarios NO administradores (evita re-render innecesario del admin)
       const hayAprobacion = nuevas.some(n => n.tipo === 'aprobado' && !n.leida);
-      if (hayAprobacion && onAprobado) {
+      if (hayAprobacion && onAprobado && userRol !== 'Administrador') {
         onAprobado();
       }
 
-      setNotificaciones(nuevas);
+      // ✅ Limitar a las últimas 5 notificaciones
+      const ultimasCinco = nuevas.slice(0, 5);
+      setNotificaciones(ultimasCinco);
     } catch { }
   };
 
@@ -43,6 +49,24 @@ export default function Campanita({ userData, onAprobado }) {
       await apiAxios.put(`/api/notificaciones/${id_usuario}/todas-leidas`);
       setNotificaciones(prev => prev.map(n => ({ ...n, leida: true })));
     } catch { }
+  };
+
+  const handleNotificacionClick = async (n) => {
+    // Marcar como leída
+    if (!n.leida) {
+      try {
+        await apiAxios.put(`/api/notificaciones/${n.id_notificacion}/leida`);
+        setNotificaciones(prev => prev.map(x =>
+          x.id_notificacion === n.id_notificacion ? { ...x, leida: true } : x
+        ));
+      } catch { }
+    }
+
+    // ✅ Si es admin y la notificación es de solicitud de acceso, redirigir a gestión usuarios
+    if (esAdmin && n.tipo === 'solicitud_acceso') {
+      setOpen(false);
+      navigate('/gestion-usuarios');
+    }
   };
 
   const colorTipo = (tipo) => {
@@ -79,10 +103,10 @@ export default function Campanita({ userData, onAprobado }) {
 
       {open && (
         <div style={{
-          position: "absolute", right: 0, top: "40px",
+          position: "fixed", left: "290px", top: "auto",
           width: "360px", maxHeight: "420px",
           background: "#fff", borderRadius: "16px",
-          boxShadow: "0 10px 40px rgba(0,0,0,0.15)",
+          boxShadow: "0 10px 40px rgba(0,0,0,0.2)",
           border: "1px solid #f0f4f8", zIndex: 9999,
           overflow: "hidden", display: "flex", flexDirection: "column"
         }}>
@@ -114,23 +138,27 @@ export default function Campanita({ userData, onAprobado }) {
                 padding: "14px 20px",
                 background: n.leida ? "#fff" : colorTipo(n.tipo),
                 borderBottom: "1px solid #f0f4f8",
-                cursor: "pointer"
-              }} onClick={async () => {
-                if (!n.leida) {
-                  await apiAxios.put(`/api/notificaciones/${n.id_notificacion}/leida`);
-                  setNotificaciones(prev => prev.map(x =>
-                    x.id_notificacion === n.id_notificacion ? { ...x, leida: true } : x
-                  ));
-                }
-              }}>
+                cursor: "pointer",
+                transition: "background 0.15s ease"
+              }} onClick={() => handleNotificacionClick(n)}>
                 <div style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
-                  <span style={{ fontSize: "18px" }}>{iconTipo(n.tipo)}</span>
-                  <div style={{ flex: 1 }}>
+                  <span style={{ fontSize: "18px", flexShrink: 0 }}>{iconTipo(n.tipo)}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ margin: "0 0 4px", fontWeight: "600", fontSize: "13px", color: "#0A1628" }}>{n.titulo}</p>
-                    <p style={{ margin: "0 0 4px", fontSize: "12px", color: "#64748b", lineHeight: "1.5" }}>{n.mensaje}</p>
-                    <p style={{ margin: 0, fontSize: "11px", color: "#94a3b8" }}>
-                      {new Date(n.createdAt).toLocaleString('es-CO')}
-                    </p>
+                    <p style={{ margin: "0 0 4px", fontSize: "12px", color: "#64748b", lineHeight: "1.5", wordBreak: "break-word" }}>{n.mensaje}</p>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+                      <p style={{ margin: 0, fontSize: "11px", color: "#94a3b8" }}>
+                        {new Date(n.createdAt).toLocaleString('es-CO')}
+                      </p>
+                      {/* ✅ Indicador de acción para admin en solicitudes de acceso */}
+                      {esAdmin && n.tipo === 'solicitud_acceso' && (
+                        <span style={{
+                          fontSize: "10px", fontWeight: "700", color: "#00A8CC",
+                          background: "rgba(0,168,204,0.1)", padding: "2px 8px",
+                          borderRadius: "99px", whiteSpace: "nowrap"
+                        }}>Ver solicitud →</span>
+                      )}
+                    </div>
                   </div>
                   {!n.leida && <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#00D4FF", marginTop: "4px", flexShrink: 0 }} />}
                 </div>

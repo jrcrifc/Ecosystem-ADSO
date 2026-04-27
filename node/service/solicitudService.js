@@ -11,7 +11,7 @@ class solicitudService {
                 {
                     model: userModel,
                     as: 'usuario',
-                    attributes: ['nombres_apellidos', 'rol']
+                    attributes: ['id_usuario', 'nombres_apellidos', 'rol']
                 },
                 {
                     model: Estadoxsolicitud,

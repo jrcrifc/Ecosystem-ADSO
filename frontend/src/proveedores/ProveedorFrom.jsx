@@ -3,7 +3,7 @@ import apiAxios from "../api/axiosConfig";
 import Swal from "sweetalert2";
 import * as bootstrap from "bootstrap";
 
-const ProveedorForm = ({ selectedProveedor, refreshData }) => {
+const ProveedorForm = ({ selectedProveedor, refreshData, hideModal }) => {
     const [form, setForm] = useState({
         nom_proveedor: "",
         apel_proveedor: "",
@@ -45,18 +45,18 @@ const ProveedorForm = ({ selectedProveedor, refreshData }) => {
         try {
             if (selectedProveedor) {
                 await apiAxios.put(`/api/proveedor/${selectedProveedor.id_proveedor}`, form);
-                Swal.fire("Actualizado", "Proveedor modificado correctamente", "success");
+                Swal.fire({ icon: "success", title: "Actualizado", text: "Proveedor modificado correctamente", timer: 1500, showConfirmButton: false });
             } else {
                 await apiAxios.post("/api/proveedor", form);
-                Swal.fire("Registrado", "Proveedor creado correctamente", "success");
+                Swal.fire({ icon: "success", title: "Registrado", text: "Proveedor creado correctamente", timer: 1500, showConfirmButton: false });
             }
 
-            refreshData();
+            // ✅ Limpiar formulario
+            setForm({ nom_proveedor: "", apel_proveedor: "", tel_proveedor: "", dir_proveedor: "" });
 
-            // Cerrar modal Bootstrap
-            const modal = document.getElementById("modalProveedor");
-            const bsModal = bootstrap.Modal.getInstance(modal);
-            bsModal?.hide();
+            // ✅ Refrescar tabla Y cerrar modal
+            refreshData();
+            if (hideModal) hideModal();
         } catch (err) {
             console.error(err);
             const msg = err.response?.data?.message || "No se pudo guardar el proveedor";

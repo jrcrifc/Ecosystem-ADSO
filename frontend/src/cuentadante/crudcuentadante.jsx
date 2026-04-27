@@ -16,7 +16,7 @@ export default function CrudCuentadante() {
 
   const cargarCuentadantes = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
       const res = await apiAxios.get("/api/cuentadante", {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -53,7 +53,7 @@ export default function CrudCuentadante() {
     if (!result.isConfirmed) return;
 
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
       await apiAxios.delete(`/api/cuentadante/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -104,7 +104,7 @@ export default function CrudCuentadante() {
   );
 
   return (
-  <div className="container mt-4" style={{ maxWidth: "900px" }}>
+  <div className="container mt-4">
     <h2 className="text-center mb-4 fw-bold text-primary">Cuentadante</h2>
   
       <div className="row mb-4 align-items-center">

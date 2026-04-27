@@ -108,7 +108,7 @@ const CrudSalidasReactivos = () => {
   );
 
   return (
-    <div className="mt-4" style={{ maxWidth: "960px", margin: "0 auto", padding: "0 16px" }}>
+    <div className="mt-4" style={{ padding: "0 16px" }}>
       <h2 className="text-center mb-4 text-primary fw-bold">Salidas de Reactivos</h2>
 
       <div className="row mb-3 align-items-center">

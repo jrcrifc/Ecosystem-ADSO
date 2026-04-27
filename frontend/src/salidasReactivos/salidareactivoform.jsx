@@ -8,11 +8,12 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
   const [lotesFefo, setLotesFefo] = useState([]);
   const [cantidad_salida, setCantidadSalida] = useState("");
   const [fecha_salida, setFechaSalida] = useState("");
+  const [hora_salida, setHoraSalida] = useState("07:00");
   const [loadingLotes, setLoadingLotes] = useState(false);
 
   useEffect(() => {
     cargarReactivos();
-    setFechaSalida(new Date().toISOString().slice(0, 16));
+    setFechaSalida(new Date().toISOString().slice(0, 10));
   }, []);
 
   useEffect(() => {
@@ -76,11 +77,18 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
       Swal.fire("⚠️ Stock insuficiente", `Solo hay ${stockTotal.toFixed(3)} disponible en total`, "warning");
       return;
     }
+    // ✅ Validar hora entre 7:00 y 16:00
+    const [hh, mm] = hora_salida.split(':').map(Number);
+    const minutos = hh * 60 + mm;
+    if (minutos < 420 || minutos > 960) { // 7*60=420, 16*60=960
+      Swal.fire("⚠️ Hora no permitida", "La hora debe estar entre 7:00 AM y 4:00 PM", "warning");
+      return;
+    }
 
     const data = {
       id_reactivo: parseInt(id_reactivo),
       cantidad_salida: parseFloat(cantidad_salida),
-      fecha_salida: fecha_salida ? new Date(fecha_salida).toISOString() : new Date().toISOString(),
+      fecha_salida: fecha_salida ? new Date(`${fecha_salida}T${hora_salida}:00`).toISOString() : new Date().toISOString(),
     };
 
     try {
@@ -214,21 +222,31 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
           )}
         </div>
 
-        {/* FECHA */}
+        {/* FECHA Y HORA */}
         <div className="col-md-6">
-          <label className="form-label fw-semibold text-muted">Fecha y hora de salida</label>
+          <label className="form-label fw-semibold" style={{ color: "#023E8A", fontSize: "13px" }}>📅 Fecha de salida</label>
           <input
-            type="datetime-local"
+            type="date"
             className="form-control form-control-sm"
             value={fecha_salida}
             onChange={(e) => setFechaSalida(e.target.value)}
+            min={new Date().toISOString().slice(0, 10)}
             required
           />
+        </div>
+        <div className="col-md-6">
+          <label className="form-label fw-semibold" style={{ color: "#023E8A", fontSize: "13px" }}>⏰ Hora</label>
+          <input type="time" className="form-control form-control-sm"
+            value={hora_salida} onChange={(e) => setHoraSalida(e.target.value)}
+            min="07:00" max="16:00" required />
+          <small style={{ color: "#0077B6", fontSize: "11px", fontWeight: "600" }}>
+            Horario permitido: 7:00 AM - 4:00 PM
+          </small>
         </div>
 
         {/* BOTÓN */}
         <div className="col-12 mt-3">
-          <button type="submit" className="btn btn-primary w-100">
+          <button type="submit" className="btn w-100" style={{ background: "#0077B6", color: "#fff", fontWeight: "600", border: "none", borderRadius: "10px" }}>
             {selectedSalida ? "Actualizar Salida" : "Registrar Salida"}
           </button>
         </div>

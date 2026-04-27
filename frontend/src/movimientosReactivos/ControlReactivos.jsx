@@ -130,7 +130,7 @@ const ControlReactivos = () => {
   return (
     <div
       className="mt-4"
-      style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 16px" }}
+      style={{ padding: "0 16px" }}
     >
       <h2 className="text-center mb-4 text-primary fw-bold">
         Control de Reactivos

@@ -80,6 +80,9 @@ class UserService {
     if (user.estado === 'rechazado') {
       throw new Error("Tu cuenta fue rechazada. Contacta al administrador del Laboratorio Ambiental.");
     }
+    if (user.estado === 'inactivo') {
+      throw new Error("Tu cuenta está inactiva. Contacta al administrador del Laboratorio Ambiental.");
+    }
 
     const token = jwt.sign(
       { id: user.id_usuario, uuid: user.uuid, rol: user.rol },
@@ -122,6 +125,15 @@ class UserService {
     if (!user) throw new Error("Usuario no encontrado");
     await user.update({ estado: 'rechazado' });
     return user;
+  }
+
+  // ✅ Activar/Inactivar usuario (toggle)
+  async toggleActivoUsuario(id) {
+    const user = await UserModel.findByPk(id);
+    if (!user) throw new Error("Usuario no encontrado");
+    const nuevoEstado = user.estado === 'inactivo' ? 'aprobado' : 'inactivo';
+    await user.update({ estado: nuevoEstado });
+    return { ...user.toJSON(), estado: nuevoEstado };
   }
 }
 

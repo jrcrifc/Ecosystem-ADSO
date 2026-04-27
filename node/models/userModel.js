@@ -28,7 +28,7 @@ const UserModel = sequelize.define('usuarios', {
     defaultValue: 'Aprendiz'
   },
   estado: {
-    type: DataTypes.ENUM('pendiente', 'aprobado', 'rechazado'),
+    type: DataTypes.ENUM('pendiente', 'aprobado', 'rechazado', 'inactivo'),
     allowNull: false,
     defaultValue: 'pendiente'
   }

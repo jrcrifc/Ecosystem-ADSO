@@ -10,7 +10,7 @@ export default function CrudEstadoEquipo() {
   const [editando, setEditando] = useState(null);
   const [estadoForm, setEstadoForm] = useState("");
 
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
   const headers = { Authorization: `Bearer ${token}` };
   const opciones = ["disponible", "no disponible", "mantenimiento"];
 
@@ -128,7 +128,7 @@ export default function CrudEstadoEquipo() {
   );
 
   return (
-  <div className="container mt-4" style={{ maxWidth: "900px" }}>
+  <div className="container mt-4">
     <h2 className="text-center mb-4 fw-bold text-primary">Estados de Equipo</h2>
    
 

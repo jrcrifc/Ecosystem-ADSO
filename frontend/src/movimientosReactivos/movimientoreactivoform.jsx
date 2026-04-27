@@ -110,6 +110,7 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
             className="form-control form-control-sm"
             value={form.fecha_vencimiento}
             onChange={handleChange}
+            min={new Date().toISOString().slice(0, 10)}
           />
         </div>
 
@@ -177,7 +178,7 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
         </div>
 
         <div className="col-12 mt-4">
-          <button type="submit" className="btn btn-primary w-100">
+          <button type="submit" className="btn w-100" style={{ background: "#0077B6", color: "#fff", fontWeight: "600", border: "none", borderRadius: "10px" }}>
             {selectedMovimiento ? "Actualizar Movimiento" : "Registrar Movimiento"}
           </button>
         </div>

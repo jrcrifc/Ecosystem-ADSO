@@ -92,8 +92,8 @@ const Register = () => {
                   style={{
                     flex: 1, padding: "8px 3px", borderRadius: "8px",
                     textAlign: "center", cursor: "pointer", fontSize: "11px", fontWeight: "600",
-                    border: form.rol === rolValue ? "2px solid #10b981" : "2px solid #e5e7eb",
-                    background: form.rol === rolValue ? "#10b981" : "#f9fafb",
+                    border: form.rol === rolValue ? "2px solid #0077B6" : "2px solid #e5e7eb",
+                    background: form.rol === rolValue ? "#0077B6" : "#f9fafb",
                     color: form.rol === rolValue ? "#fff" : "#374151"
                   }}
                 >
@@ -129,17 +129,17 @@ const Register = () => {
 
           <button type="submit" className="btn w-100" disabled={loading}
             style={{
-              background: "linear-gradient(135deg, #10b981, #059669)",
+              background: "#0077B6",
               color: "#fff", fontWeight: "bold", borderRadius: "10px",
               padding: "10px", fontSize: "14px", border: "none",
-              boxShadow: "0 5px 15px rgba(16,185,129,0.25)"
+              boxShadow: "0 5px 15px rgba(0,119,182,0.25)"
             }}>
             {loading ? "Registrando..." : "Registrarse"}
           </button>
 
-          <p className="mt-3 text-center" style={{ fontSize: "13px", color: "#6b7280" }}>
+          <p className="mt-3 text-center" style={{ fontSize: "13px", color: "#64748b" }}>
             ¿Ya tienes cuenta?{" "}
-            <span style={{ color: "#10b981", cursor: "pointer", fontWeight: "600" }}
+            <span style={{ color: "#0077B6", cursor: "pointer", fontWeight: "600" }}
               onClick={() => navigate("/UserLogin")}>
               Iniciar sesión
             </span>

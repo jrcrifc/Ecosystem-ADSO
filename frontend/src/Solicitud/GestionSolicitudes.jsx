@@ -7,7 +7,7 @@ const GestionSolicitudes = () => {
   const [solicitudes, setSolicitudes] = useState([]);
   const [filterText, setFilterText] = useState("");
 
-  const getToken = () => localStorage.getItem("token");
+  const getToken = () => sessionStorage.getItem("token");
 
   const getBadgeColor = (estado) => {
     switch (estado) {
@@ -150,7 +150,7 @@ const GestionSolicitudes = () => {
   );
 
   return (
-    <div className="container mt-4" style={{ maxWidth: "1000px" }}>
+    <div className="container mt-4">
       <h2 className="text-center mb-4 fw-bold text-primary">Gestión de Solicitudes</h2>
       
 
