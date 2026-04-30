@@ -7,11 +7,12 @@ import {
   deletemovimientoreactivo 
 } from '../controller/movimientoreactivosController.js';
 import movimientoreactivoModel from '../models/movimientoreactivosModel.js';
+import { adminOGestor } from '../middleware/roleMiddleware.js';
 
 const router = express.Router();
 
 // ✅ RUTA STOCK POR LOTES — debe ir ANTES de '/:id'
-router.get('/stock-lotes/:id_reactivo', async (req, res) => {
+router.get('/stock-lotes/:id_reactivo', adminOGestor, async (req, res) => {
   try {
     const { id_reactivo } = req.params;
     const hoy = new Date();
@@ -70,13 +71,13 @@ router.get('/stock-lotes/:id_reactivo', async (req, res) => {
   }
 });
 
-router.get('/', getAllmovimientoreactivo);
-router.get('/:id', getmovimientoreactivo);
-router.post('/', createmovimientoreactivo);
-router.put('/:id', updatemovimientoreactivo);
-router.delete('/:id', deletemovimientoreactivo);
+router.get('/', adminOGestor, getAllmovimientoreactivo);
+router.get('/:id', adminOGestor, getmovimientoreactivo);
+router.post('/', adminOGestor, createmovimientoreactivo);
+router.put('/:id', adminOGestor, updatemovimientoreactivo);
+router.delete('/:id', adminOGestor, deletemovimientoreactivo);
 
-router.put("/estado/:id", async (req, res) => {
+router.put("/estado/:id", adminOGestor, async (req, res) => {
   try {
     const movimiento = await movimientoreactivoModel.findByPk(req.params.id);
     if (!movimiento) return res.status(404).json({ message: "Relación no encontrada" });

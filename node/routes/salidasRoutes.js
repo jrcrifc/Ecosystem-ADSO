@@ -8,16 +8,17 @@ import {
 } from '../controller/salidasController.js';
 import salidasModel from '../models/salidasModel.js';
 import salidasService from "../service/salidasService.js";
+import { adminOGestor } from '../middleware/roleMiddleware.js';
 const router = express.Router();
 
-router.get('/', getAllsalidas);
-router.get('/:id', getsalidas);
-router.post('/', createsalidas);
-router.put('/:id', updatesalidas);
-router.delete('/:id', deletesalidas);
+router.get('/', adminOGestor, getAllsalidas);
+router.get('/:id', adminOGestor, getsalidas);
+router.post('/', adminOGestor, createsalidas);
+router.put('/:id', adminOGestor, updatesalidas);
+router.delete('/:id', adminOGestor, deletesalidas);
 
 // NUEVA RUTA PARA CAMBIAR ESTADO
-router.put('/estado/:id', async (req, res) => {
+router.put('/estado/:id', adminOGestor, async (req, res) => {
     try {
         const { id } = req.params;
         const salidas = await salidasModel.findByPk(id);
@@ -40,7 +41,7 @@ router.put('/estado/:id', async (req, res) => {
 });
 
 // ✅ Ruta para obtener lotes FEFO de un reactivo — ANTES de las rutas con :id
-router.get('/lotes-fefo/:id_reactivo', async (req, res) => {
+router.get('/lotes-fefo/:id_reactivo', adminOGestor, async (req, res) => {
   try {
     const lotes = await salidasService.getLotesFefo(req.params.id_reactivo);
     res.json(lotes);

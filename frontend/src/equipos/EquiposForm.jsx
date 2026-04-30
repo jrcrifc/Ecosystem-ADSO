@@ -239,7 +239,8 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
 
       <button
         type="button"
-        className="btn btn-success w-100 mt-4"
+        className="btn w-100 mt-4"
+        style={{ background: "#0077B6", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }}
         onClick={saveData}
         disabled={loading}
       >

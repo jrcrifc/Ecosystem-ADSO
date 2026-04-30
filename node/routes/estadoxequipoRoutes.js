@@ -6,12 +6,13 @@ import {
   updateEstadoxequipo,
   deleteEstadoxequipo
 } from '../controller/EstadoxequipoController.js';
-import estadoxequipoService from '../service/EstadoxequipoService.js'; // ← arriba
+import estadoxequipoService from '../service/EstadoxequipoService.js';
+import { adminOGestor, todosLosRoles } from '../middleware/roleMiddleware.js';
 
 const router = express.Router();
 
 // ← Rutas específicas ANTES de /:id
-router.get('/ultimos/estados', async (req, res) => {
+router.get('/ultimos/estados', todosLosRoles, async (req, res) => {
   try {
     const data = await estadoxequipoService.getUltimosEstados();
     res.json(data);
@@ -20,7 +21,7 @@ router.get('/ultimos/estados', async (req, res) => {
   }
 });
 
-router.post('/cambiarEstado', async (req, res) => {
+router.post('/cambiarEstado', adminOGestor, async (req, res) => {
   try {
     const { id_equipo, id_estado_equipo } = req.body;
     const data = await estadoxequipoService.cambiarEstado(id_equipo, id_estado_equipo);
@@ -31,10 +32,10 @@ router.post('/cambiarEstado', async (req, res) => {
 });
 
 // ← Rutas con parámetro DESPUÉS
-router.get('/', getAllEstadoxequipo);
-router.get('/:id', getEstadoxequipo);
-router.post('/', createEstadoxequipo);
-router.put('/:id', updateEstadoxequipo);
-router.delete('/:id', deleteEstadoxequipo);
+router.get('/', adminOGestor, getAllEstadoxequipo);
+router.get('/:id', adminOGestor, getEstadoxequipo);
+router.post('/', adminOGestor, createEstadoxequipo);
+router.put('/:id', adminOGestor, updateEstadoxequipo);
+router.delete('/:id', adminOGestor, deleteEstadoxequipo);
 
 export default router;

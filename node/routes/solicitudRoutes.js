@@ -9,18 +9,19 @@ import {
 } from '../controller/solicitudController.js';
 import solicitudModel from '../models/solicitudModel.js';
 import authMiddleware from '../middleware/authMiddleware.js'; // ← importa el middleware
+import { todosLosRoles } from '../middleware/roleMiddleware.js';
 
 const router = express.Router();
 
 // ← todas las rutas protegidas con el middleware
-router.get('/',            authMiddleware, getAll);
-router.get('/:id',         authMiddleware, getById);
-router.post('/',           authMiddleware, create);       // aquí req.user.id ya está disponible
-router.put('/:id',         authMiddleware, update);
-router.delete('/:id',      authMiddleware, remove);
+router.get('/',            todosLosRoles, getAll);
+router.get('/:id',         todosLosRoles, getById);
+router.post('/',           todosLosRoles, create);       // aquí req.user.id ya está disponible
+router.put('/:id',         todosLosRoles, update);
+router.delete('/:id',      todosLosRoles, remove);
 
 // ← Cambiar estado activo/inactivo (toggle 1/0)
-router.put('/estado/:id',  authMiddleware, async (req, res) => {
+router.put('/estado/:id',  todosLosRoles, async (req, res) => {
     try {
         const { id } = req.params;
         const solicitud = await solicitudModel.findByPk(id);
@@ -36,6 +37,6 @@ router.put('/estado/:id',  authMiddleware, async (req, res) => {
 });
 
 // ← Solo admin: cambiar estado (generado, aceptado, prestado, etc.)
-router.post('/cambiarEstado/:id', authMiddleware, cambiarEstado);
+router.post('/cambiarEstado/:id', todosLosRoles, cambiarEstado);
 
 export default router;

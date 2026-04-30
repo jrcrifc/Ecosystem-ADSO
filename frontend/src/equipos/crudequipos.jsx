@@ -39,7 +39,7 @@ export default function CrudEquipo() {
       text: `El equipo pasará a ${nuevoEstado === 1 ? "ACTIVO" : "INACTIVO"}`,
       icon: "question",
       showCancelButton: true,
-      confirmButtonColor: nuevoEstado === 1 ? "#28a745" : "#dc3545",
+      confirmButtonColor: nuevoEstado === 1 ? "#0077B6" : "#dc3545",
       confirmButtonText: "Sí, cambiar",
       cancelButtonText: "Cancelar",
     });
@@ -200,7 +200,8 @@ export default function CrudEquipo() {
         </div>
         <div className="col-md-6 text-end">
           <button
-            className="btn btn-success"
+            className="btn"
+            style={{ background: "#0077B6", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }}
             data-bs-toggle="modal"
             data-bs-target="#modalEquipo"
             onClick={() => setSelectedEquipo(null)}

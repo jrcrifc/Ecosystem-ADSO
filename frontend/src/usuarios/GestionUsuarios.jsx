@@ -152,6 +152,13 @@ export default function GestionUsuarios() {
     return map[rol] || "linear-gradient(135deg, #94a3b8, #64748b)";
   };
 
+  const rolSections = [
+    { key: "Gestor",     icon: "🔑", label: "Gestores",     color: "#0077B6" },
+    { key: "Pasante",    icon: "🔬", label: "Pasantes",     color: "#d97706" },
+    { key: "Aprendiz",   icon: "🎓", label: "Aprendices",   color: "#0891b2" },
+    { key: "Instructor", icon: "👨‍🏫", label: "Instructores", color: "#059669" },
+  ];
+
   const cardUsuario = (u) => (
     <div key={u.id_usuario} style={{
       background: "#fff", borderRadius: "16px", padding: "24px",
@@ -207,10 +214,10 @@ export default function GestionUsuarios() {
         )}
         {(u.estado === 'aprobado' || u.estado === 'inactivo') && (
           <button onClick={() => toggleActivo(u.id_usuario, u.estado)} style={{
-            background: u.estado === 'inactivo' ? "#ecfdf5" : "#fffbeb",
-            border: `1px solid ${u.estado === 'inactivo' ? "#6ee7b7" : "#fde68a"}`,
+            background: u.estado === 'inactivo' ? "linear-gradient(135deg, #0077B6, #023E8A)" : "transparent",
+            border: u.estado === 'inactivo' ? "none" : "1px solid #f59e0b",
             borderRadius: "10px", padding: "10px 24px",
-            color: u.estado === 'inactivo' ? "#059669" : "#d97706",
+            color: u.estado === 'inactivo' ? "#fff" : "#d97706",
             fontWeight: "700", cursor: "pointer", fontSize: "13px"
           }}>
             {u.estado === 'inactivo' ? "🔓 Activar" : "🔒 Inactivar"}
@@ -242,68 +249,95 @@ export default function GestionUsuarios() {
         }}>🔄 Actualizar</button>
       </div>
 
-      {/* ✅ Pestaña Gestión — Todos los usuarios con toggle */}
+      {/* ✅ Pestaña Gestión — Separada por roles */}
       {tab === "gestion" && (
         <div>
-          <p style={{
-            fontSize: "11px", fontWeight: "700", color: "#0077B6",
-            letterSpacing: "1px", textTransform: "uppercase", marginBottom: "14px"
-          }}>👥 Todos los usuarios registrados</p>
-
           {todosUsuarios.length === 0 ? (
             <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>
               <div style={{ fontSize: "48px", marginBottom: "12px" }}>📭</div>
               <p>No hay usuarios registrados</p>
             </div>
           ) : (
-            todosUsuarios.map(u => (
-              <div key={u.id_usuario} style={{
-                background: "#fff", borderRadius: "16px", padding: "20px 24px",
-                marginBottom: "10px", border: "1px solid #e2e8f0",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-                display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap"
-              }}>
-                <div style={{
-                  width: "42px", height: "42px", borderRadius: "50%",
-                  background: gradientFor(u.rol),
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  color: "#fff", fontWeight: "800", fontSize: "16px", flexShrink: 0
-                }}>
-                  {u.nombres_apellidos?.charAt(0).toUpperCase()}
-                </div>
-                <div style={{ flex: 1, minWidth: "200px" }}>
-                  <div style={{ fontWeight: "700", color: "#0f172a", fontSize: "14px" }}>{u.nombres_apellidos}</div>
-                  <div style={{ fontSize: "12px", color: "#64748b" }}>{u.email} · {u.documento} · <strong>{u.rol}</strong></div>
-                </div>
-                {estadoBadge(u.estado)}
-                {(u.estado === 'aprobado' || u.estado === 'inactivo') && (
-                  <button onClick={() => toggleActivo(u.id_usuario, u.estado)} style={{
-                    background: u.estado === 'inactivo' ? "linear-gradient(135deg, #0077B6, #023E8A)" : "transparent",
-                    border: u.estado === 'inactivo' ? "none" : "1px solid #f59e0b",
-                    borderRadius: "8px", padding: "7px 18px",
-                    color: u.estado === 'inactivo' ? "#fff" : "#d97706",
-                    fontWeight: "700", cursor: "pointer", fontSize: "12px",
-                    transition: "all 0.2s"
+            rolSections.map(section => {
+              const usuarios = todosUsuarios.filter(u => u.rol === section.key);
+              if (usuarios.length === 0) return null;
+
+              return (
+                <div key={section.key} style={{ marginBottom: "28px" }}>
+                  {/* Section header */}
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: "10px",
+                    marginBottom: "14px", paddingBottom: "10px",
+                    borderBottom: `2px solid ${section.color}22`
                   }}>
-                    {u.estado === 'inactivo' ? "🔓 Activar" : "🔒 Inactivar"}
-                  </button>
-                )}
-                {u.estado === 'pendiente' && (
-                  <div style={{ display: "flex", gap: "6px" }}>
-                    <button onClick={() => aprobarUsuario(u.id_usuario)} style={{
-                      background: "linear-gradient(135deg, #0077B6, #023E8A)", border: "none",
-                      borderRadius: "8px", padding: "7px 16px", color: "#fff",
-                      fontWeight: "700", cursor: "pointer", fontSize: "12px"
-                    }}>✅</button>
-                    <button onClick={() => rechazarUsuario(u.id_usuario)} style={{
-                      background: "#fff", border: "1px solid #ef4444",
-                      borderRadius: "8px", padding: "7px 16px", color: "#ef4444",
-                      fontWeight: "700", cursor: "pointer", fontSize: "12px"
-                    }}>❌</button>
+                    <span style={{ fontSize: "20px" }}>{section.icon}</span>
+                    <span style={{
+                      fontSize: "13px", fontWeight: "800", color: section.color,
+                      letterSpacing: "1px", textTransform: "uppercase"
+                    }}>
+                      {section.label}
+                    </span>
+                    <span style={{
+                      background: section.color, color: "#fff",
+                      fontSize: "11px", fontWeight: "700", padding: "2px 10px",
+                      borderRadius: "99px", marginLeft: "4px"
+                    }}>
+                      {usuarios.length}
+                    </span>
                   </div>
-                )}
-              </div>
-            ))
+
+                  {/* Users in this role */}
+                  {usuarios.map(u => (
+                    <div key={u.id_usuario} style={{
+                      background: "#fff", borderRadius: "14px", padding: "18px 22px",
+                      marginBottom: "10px", border: "1px solid #e2e8f0",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                      display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap"
+                    }}>
+                      <div style={{
+                        width: "42px", height: "42px", borderRadius: "50%",
+                        background: gradientFor(u.rol),
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        color: "#fff", fontWeight: "800", fontSize: "16px", flexShrink: 0
+                      }}>
+                        {u.nombres_apellidos?.charAt(0).toUpperCase()}
+                      </div>
+                      <div style={{ flex: 1, minWidth: "200px" }}>
+                        <div style={{ fontWeight: "700", color: "#0f172a", fontSize: "14px" }}>{u.nombres_apellidos}</div>
+                        <div style={{ fontSize: "12px", color: "#64748b" }}>{u.email} · {u.documento}</div>
+                      </div>
+                      {estadoBadge(u.estado)}
+                      {(u.estado === 'aprobado' || u.estado === 'inactivo') && (
+                        <button onClick={() => toggleActivo(u.id_usuario, u.estado)} style={{
+                          background: u.estado === 'inactivo' ? "linear-gradient(135deg, #0077B6, #023E8A)" : "transparent",
+                          border: u.estado === 'inactivo' ? "none" : "1px solid #f59e0b",
+                          borderRadius: "8px", padding: "7px 18px",
+                          color: u.estado === 'inactivo' ? "#fff" : "#d97706",
+                          fontWeight: "700", cursor: "pointer", fontSize: "12px",
+                          transition: "all 0.2s"
+                        }}>
+                          {u.estado === 'inactivo' ? "🔓 Activar" : "🔒 Inactivar"}
+                        </button>
+                      )}
+                      {u.estado === 'pendiente' && (
+                        <div style={{ display: "flex", gap: "6px" }}>
+                          <button onClick={() => aprobarUsuario(u.id_usuario)} style={{
+                            background: "linear-gradient(135deg, #0077B6, #023E8A)", border: "none",
+                            borderRadius: "8px", padding: "7px 16px", color: "#fff",
+                            fontWeight: "700", cursor: "pointer", fontSize: "12px"
+                          }}>✅</button>
+                          <button onClick={() => rechazarUsuario(u.id_usuario)} style={{
+                            background: "#fff", border: "1px solid #ef4444",
+                            borderRadius: "8px", padding: "7px 16px", color: "#ef4444",
+                            fontWeight: "700", cursor: "pointer", fontSize: "12px"
+                          }}>❌</button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              );
+            })
           )}
         </div>
       )}

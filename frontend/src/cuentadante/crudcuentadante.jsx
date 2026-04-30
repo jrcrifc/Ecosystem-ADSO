@@ -119,7 +119,8 @@ export default function CrudCuentadante() {
         </div>
         <div className="col-md-6 text-end">
           <button
-            className="btn btn-success"
+            className="btn"
+            style={{ background: "#0077B6", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }}
             data-bs-toggle="modal"
             data-bs-target="#modalCuentadante"
             onClick={() => setSelectedCuentadante(null)}

@@ -1,201 +1,87 @@
-import { useEffect, useState } from "react";
-import DataTable from "react-data-table-component";
-import apiAxios from "../api/axiosConfig.js";
-import Swal from "sweetalert2";
-
 export default function CrudEstadoEquipo() {
-  const [estados, setEstados] = useState([]);
-  const [filterText, setFilterText] = useState("");
-  const [showModal, setShowModal] = useState(false);
-  const [editando, setEditando] = useState(null);
-  const [estadoForm, setEstadoForm] = useState("");
-
-  const token = sessionStorage.getItem("token");
-  const headers = { Authorization: `Bearer ${token}` };
-  const opciones = ["disponible", "no disponible", "mantenimiento"];
-
-  useEffect(() => { cargarEstados(); }, []);
-
-  const cargarEstados = async () => {
-    try {
-      const res = await apiAxios.get("/api/estadoequipo", { headers });
-      setEstados(res.data);
-    } catch {
-      Swal.fire("Error", "No se pudieron cargar los estados", "error");
-    }
-  };
-
-  const abrirModal = (estado = null) => {
-    if (estado) {
-      setEditando(estado);
-      setEstadoForm(estado.estado);
-    } else {
-      setEditando(null);
-      setEstadoForm("");
-    }
-    setShowModal(true);
-  };
-
-  const cerrarModal = () => {
-    setShowModal(false);
-    setEditando(null);
-    setEstadoForm("");
-  };
-
-  const guardar = async () => {
-    if (!estadoForm) {
-      Swal.fire("Atención", "Selecciona un estado", "warning");
-      return;
-    }
-    try {
-      if (editando) {
-        await apiAxios.put(`/api/estadoequipo/${editando.id_estado_equipo}`, { estado: estadoForm }, { headers });
-        Swal.fire("¡Actualizado!", "Estado actualizado correctamente", "success");
-      } else {
-        await apiAxios.post("/api/estadoequipo", { estado: estadoForm }, { headers });
-        Swal.fire("¡Creado!", "Estado creado correctamente", "success");
-      }
-      cerrarModal();
-      cargarEstados();
-    } catch (error) {
-      Swal.fire("Error", error.response?.data?.message || "No se pudo guardar", "error");
-    }
-  };
-
-  const eliminar = async (id) => {
-    const result = await Swal.fire({
-      title: "¿Eliminar estado?",
-      text: "Esta acción no se puede deshacer",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar"
-    });
-    if (!result.isConfirmed) return;
-    try {
-      await apiAxios.delete(`/api/estadoequipo/${id}`, { headers });
-      Swal.fire("Eliminado", "Estado eliminado", "success");
-      cargarEstados();
-    } catch {
-      Swal.fire("Error", "No se pudo eliminar", "error");
-    }
-  };
-
-  const getBadgeColor = (estado) => {
-    switch (estado?.toLowerCase()) {
-      case "disponible":    return "bg-success";
-      case "no disponible": return "bg-danger";
-      case "mantenimiento": return "bg-warning text-dark";
-      default:              return "bg-secondary";
-    }
-  };
-
-  const columns = [
-    {
-      name: "ID",
-      selector: r => r.id_estado_equipo,
-      sortable: true,
-    },
-    {
-      name: "Estado",
-      sortable: true,
-      center: true,
-      cell: r => (
-        <span className={`badge ${getBadgeColor(r.estado)}`} style={{ fontSize: "0.8rem" }}>
-          {r.estado}
-        </span>
-      )
-    },
-    {
-      name: "Acciones",
-      center: true,
-      cell: r => (
-        <div className="d-flex gap-2">
-          <button className="btn btn-sm btn-warning" onClick={() => abrirModal(r)} title="Editar">
-            <i className="fas fa-edit"></i>
-          </button>
-          <button className="btn btn-sm btn-danger" onClick={() => eliminar(r.id_estado_equipo)} title="Eliminar">
-            <i className="fas fa-trash"></i>
-          </button>
-        </div>
-      )
-    }
+  const estados = [
+    { id: 1, estado: "disponible",    icon: "✅", color: "#0077B6", bg: "#e0f2fe", border: "#bae6fd", desc: "El equipo está en el laboratorio, listo para ser prestado o utilizado" },
+    { id: 2, estado: "no disponible", icon: "🚫", color: "#dc2626", bg: "#fee2e2", border: "#fecaca", desc: "El equipo no se encuentra disponible actualmente para préstamo" },
+    { id: 3, estado: "mantenimiento", icon: "🔧", color: "#d97706", bg: "#fef3c7", border: "#fde68a", desc: "El equipo está en proceso de mantenimiento o calibración" },
   ];
 
-  const filtered = estados.filter(r =>
-    r.estado?.toLowerCase().includes(filterText.toLowerCase())
-  );
-
   return (
-  <div className="container mt-4">
-    <h2 className="text-center mb-4 fw-bold text-primary">Estados de Equipo</h2>
-   
-
-      <div className="row mb-4 align-items-center">
-        <div className="col-md-6">
-          <input type="text" className="form-control"
-            placeholder="Buscar estado..."
-            value={filterText} onChange={e => setFilterText(e.target.value)} />
-        </div>
-        <div className="col-md-6 text-end d-flex gap-2 justify-content-end">
-          <button className="btn btn-outline-primary" onClick={cargarEstados}>
-            <i className="fas fa-sync me-2"></i>Actualizar
-          </button>
-          <button className="btn btn-primary" onClick={() => abrirModal()}>
-            <i className="fas fa-plus me-2"></i>Nuevo Estado
-          </button>
-        </div>
+    <div className="container mt-4">
+      <h2 className="fw-bold mb-1" style={{ color: "#0f172a" }}>Estados de Equipo</h2>
+      <p style={{ color: "#64748b", fontSize: "14px", marginBottom: "8px" }}>
+        Estos son los estados fijos que puede tener cada equipo del laboratorio
+      </p>
+      <div style={{
+        background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "12px",
+        padding: "12px 18px", marginBottom: "28px", display: "flex", alignItems: "center", gap: "10px"
+      }}>
+        <span style={{ fontSize: "18px" }}>ℹ️</span>
+        <p style={{ margin: 0, fontSize: "13px", color: "#0369a1", fontWeight: "500" }}>
+          Los estados son fijos y se asignan desde la gestión de equipos. No pueden ser creados ni eliminados.
+        </p>
       </div>
 
-      <DataTable
-  columns={columns}
-  data={filtered}
-  pagination
-  paginationPerPage={10}
-  highlightOnHover
-  striped
-  responsive
-  noDataComponent="No hay estados registrados"
-  customStyles={{
-    headCells: { style: { justifyContent: "center", fontWeight: "bold" } },
-    cells: { style: { justifyContent: "center" } }
-  }}
-/>
-
-      {showModal && (
-        <div className="modal show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title fw-bold">
-                  {editando ? "Editar Estado" : "Nuevo Estado"}
-                </h5>
-                <button className="btn-close" onClick={cerrarModal}></button>
-              </div>
-              <div className="modal-body">
-                <label className="form-label fw-semibold">Estado del equipo</label>
-                <select className="form-select" value={estadoForm}
-                  onChange={e => setEstadoForm(e.target.value)}>
-                  <option value="">-- Selecciona un estado --</option>
-                  {opciones.map(opt => (
-                    <option key={opt} value={opt}>
-                      {opt.charAt(0).toUpperCase() + opt.slice(1)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={cerrarModal}>Cancelar</button>
-                <button className="btn btn-primary" onClick={guardar}>
-                  <i className="fas fa-save me-2"></i>
-                  {editando ? "Actualizar" : "Guardar"}
-                </button>
+      {/* Flow diagram */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "center",
+        flexWrap: "wrap", gap: "0", marginBottom: "32px"
+      }}>
+        {estados.map((e, i) => (
+          <div key={e.id} style={{ display: "flex", alignItems: "center" }}>
+            <div style={{
+              background: e.bg, border: `2px solid ${e.border}`, borderRadius: "12px",
+              padding: "14px 28px", textAlign: "center", minWidth: "120px"
+            }}>
+              <div style={{ fontSize: "28px", marginBottom: "4px" }}>{e.icon}</div>
+              <div style={{ fontSize: "13px", fontWeight: "700", color: e.color, textTransform: "uppercase" }}>
+                {e.estado}
               </div>
             </div>
+            {i < estados.length - 1 && (
+              <div style={{ padding: "0 12px", color: "#cbd5e1", fontSize: "24px", fontWeight: "bold" }}>⇄</div>
+            )}
           </div>
-        </div>
-      )}
+        ))}
+      </div>
+
+      {/* Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "16px" }}>
+        {estados.map(e => (
+          <div key={e.id} style={{
+            background: "#fff", borderRadius: "16px", overflow: "hidden",
+            border: `1px solid ${e.border}`, boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+            transition: "transform 0.2s, box-shadow 0.2s"
+          }}
+            onMouseOver={ev => { ev.currentTarget.style.transform = "translateY(-3px)"; ev.currentTarget.style.boxShadow = "0 8px 25px rgba(0,0,0,0.1)"; }}
+            onMouseOut={ev => { ev.currentTarget.style.transform = "translateY(0)"; ev.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)"; }}
+          >
+            <div style={{ height: "5px", background: `linear-gradient(90deg, ${e.color}, ${e.color}88)` }} />
+            <div style={{ padding: "24px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "14px" }}>
+                <div style={{
+                  width: "52px", height: "52px", borderRadius: "14px",
+                  background: `linear-gradient(135deg, ${e.color}, ${e.color}cc)`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: "24px"
+                }}>
+                  {e.icon}
+                </div>
+                <div>
+                  <div style={{ fontWeight: "800", color: e.color, fontSize: "16px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                    {e.estado}
+                  </div>
+                  <div style={{ fontSize: "11px", color: "#94a3b8", fontWeight: "600" }}>
+                    Registro ID: {e.id}
+                  </div>
+                </div>
+              </div>
+              <p style={{ margin: 0, fontSize: "13px", color: "#64748b", lineHeight: "1.7" }}>
+                {e.desc}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

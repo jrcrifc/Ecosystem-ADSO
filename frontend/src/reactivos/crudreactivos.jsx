@@ -97,7 +97,7 @@ const CrudReactivos = () => {
           <input type="text" className="form-control" placeholder="Buscar por ID o nombre..." value={filterText} onChange={(e) => setFilterText(e.target.value)} />
         </div>
         <div className="col-md-7 text-end">
-          <button className="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalReactivo" onClick={() => setSelectedReactivo(null)}>
+          <button className="btn" style={{ background: "#0077B6", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }} data-bs-toggle="modal" data-bs-target="#modalReactivo" onClick={() => setSelectedReactivo(null)}>
             + Nuevo Reactivo
           </button>
         </div>

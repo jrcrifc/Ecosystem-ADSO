@@ -5,6 +5,8 @@ import {
   RegisterUser, LoginUser, GetPendientes, 
   GetTodos, AprobarUsuario, RechazarUsuario, ToggleActivoUsuario
 } from "../controller/userController.js";
+import { soloAdmin } from '../middleware/roleMiddleware.js';
+import authMiddleware from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -14,14 +16,14 @@ router.post("/", [
 ], RegisterUser);
 
 router.post("/login", LoginUser);
-router.get("/usuarios", GetTodos);
-router.get("/usuarios/pendientes", GetPendientes);
-router.put("/usuarios/:id/aprobar", AprobarUsuario);
-router.put("/usuarios/:id/rechazar", RechazarUsuario);
-router.put("/usuarios/:id/toggle-activo", ToggleActivoUsuario);
+router.get("/usuarios", soloAdmin, GetTodos);
+router.get("/usuarios/pendientes", soloAdmin, GetPendientes);
+router.put("/usuarios/:id/aprobar", soloAdmin, AprobarUsuario);
+router.put("/usuarios/:id/rechazar", soloAdmin, RechazarUsuario);
+router.put("/usuarios/:id/toggle-activo", soloAdmin, ToggleActivoUsuario);
 
-// ✅ Obtener usuario por ID
-router.get("/usuarios/:id", async (req, res) => {
+// ✅ Obtener usuario por ID — accesible para todos los autenticados (para recargarUsuario)
+router.get("/usuarios/:id", authMiddleware, async (req, res) => {
   try {
     const user = await UserModel.findByPk(req.params.id, {
       attributes: { exclude: ['password', 'token'] }

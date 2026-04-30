@@ -1,236 +1,88 @@
-import apiAxios from "../api/axiosConfig.js";
-import { useState, useEffect } from "react";
-import DataTable from "react-data-table-component";
-import Swal from "sweetalert2";
-import EstadoSolicitudForm from "./estadosolicitudform.jsx";
-
 const CrudEstadoSolicitud = () => {
-  const [estados, setEstados] = useState([]);
-  const [filterText, setFilterText] = useState("");
-  const [selectedEstado, setSelectedEstado] = useState(null);
-
-  const customStyles = {
-    table: {
-      style: {
-        margin: "0 auto",
-        width: "fit-content",
-      },
-    },
-    cells: {
-      style: {
-        justifyContent: "center",
-      },
-    },
-  };
-
-  const columns = [
-    {
-      name: "ID Estado de la solicitud",
-      selector: (row) => row.id_estado_solicitud,
-      sortable: true,
-      width: "250px",
-      center: true,
-    },
-    {
-      name: "Estado Solicitud",
-      selector: (row) => (
-        <span className={`fw-bold ${getColorEstado(row.estado)}`}>
-          {row.estado?.toUpperCase() || "Sin estado"}
-        </span>
-      ),
-      sortable: true,
-      width: "250px",
-      center: true,
-    },
-    {
-      name: "Estatus",
-      width: "250px",
-      center: true,
-      cell: (row) => (
-        <span
-          className={`px-3 py-1 rounded-pill text-white fw-semibold ${
-            row.activo === 1 ? "bg-success" : "bg-danger"
-          }`}
-          style={{ fontSize: "0.75rem" }}
-        >
-          {row.activo === 1 ? "ACTIVO" : "INACTIVO"}
-        </span>
-      ),
-      sortable: true,
-    },
-    {
-      name: "Acciones",
-      center: true,
-      width: "140px",
-      cell: (row) => (
-        <div className="d-flex gap-1 justify-content-center">
-          <button
-            className="btn btn-sm btn-warning"
-            data-bs-toggle="modal"
-            data-bs-target="#modalEstado"
-            onClick={() => setSelectedEstado(row)}
-          >
-            <i className="fa-solid fa-pencil"></i>
-          </button>
-
-          <button
-            className={`btn btn-sm ${
-              row.activo === 1 ? "btn-outline-danger" : "btn-outline-success"
-            }`}
-            onClick={() =>
-              toggleEstado(row.id_estado_solicitud, row.activo)
-            }
-          >
-            <i
-              className={`fas ${
-                row.activo === 1 ? "fa-ban" : "fa-check"
-              }`}
-            ></i>
-          </button>
-        </div>
-      ),
-    },
+  const estados = [
+    { id: 1, estado: "generado",  icon: "📋", color: "#0077B6", bg: "#e0f2fe", border: "#bae6fd", desc: "La solicitud ha sido creada y registrada en el sistema" },
+    { id: 2, estado: "aceptado",  icon: "✅", color: "#059669", bg: "#d1fae5", border: "#a7f3d0", desc: "La solicitud fue revisada y aprobada por el administrador" },
+    { id: 3, estado: "prestado",  icon: "📦", color: "#d97706", bg: "#fef3c7", border: "#fde68a", desc: "Los equipos están en posesión del solicitante" },
+    { id: 4, estado: "cancelado", icon: "❌", color: "#dc2626", bg: "#fee2e2", border: "#fecaca", desc: "La solicitud fue cancelada o rechazada" },
+    { id: 5, estado: "entregado", icon: "🔄", color: "#374151", bg: "#f3f4f6", border: "#d1d5db", desc: "Los equipos fueron devueltos al laboratorio" },
   ];
-
-  const getColorEstado = (estado) => {
-    switch (estado) {
-      case "generado": return "text-primary";
-      case "aceptado": return "text-success";
-      case "prestado": return "text-info";
-      case "cancelado": return "text-danger";
-      case "entregado": return "text-dark";
-      default: return "text-muted";
-    }
-  };
-
-  useEffect(() => {
-    cargarEstados();
-  }, []);
-
-  const cargarEstados = async () => {
-    try {
-      const res = await apiAxios.get("api/estadosolicitud");
-      setEstados(res.data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const toggleEstado = async (id, estadoActual) => {
-    const nuevoEstado = estadoActual === 1 ? 0 : 1;
-
-    const result = await Swal.fire({
-      title: "¿Cambiar estatus?",
-      text: `Pasará a ${nuevoEstado === 1 ? "ACTIVO" : "INACTIVO"}`,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonColor: nuevoEstado === 1 ? "#28a745" : "#dc3545",
-      confirmButtonText: "Sí",
-      cancelButtonText: "No",
-    });
-
-    if (!result.isConfirmed) return;
-
-    try {
-      await apiAxios.put(`api/estadosolicitud/${id}`, {
-        activo: nuevoEstado,
-      });
-
-      setEstados((prev) =>
-        prev.map((item) =>
-          item.id_estado_solicitud === id
-            ? { ...item, activo: nuevoEstado }
-            : item
-        )
-      );
-
-      Swal.fire(
-        "Listo",
-        `Ahora está ${nuevoEstado === 1 ? "ACTIVO" : "INACTIVO"}`,
-        "success"
-      );
-    } catch (error) {
-      Swal.fire("Error", "No se pudo cambiar el estado", "error");
-    }
-  };
-
-  const filtered = estados.filter(
-    (item) =>
-      item.id_estado_solicitud.toString().includes(filterText) ||
-      item.estado?.toLowerCase().includes(filterText.toLowerCase())
-  );
 
   return (
     <div className="container mt-4">
-      <h2 className="text-center mb-4 text-primary fw-bold">
-        Estados de Solicitud
-      </h2>
-
-      <div className="row mb-3 align-items-center">
-        <div className="col-md-5">
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Buscar..."
-            value={filterText}
-            onChange={(e) => setFilterText(e.target.value)}
-          />
-        </div>
-
-        <div className="col-md-7 text-end">
-          <button
-            className="btn btn-success"
-            data-bs-toggle="modal"
-            data-bs-target="#modalEstado"
-            onClick={() => setSelectedEstado(null)}
-          >
-            + Nuevo Estado
-          </button>
-        </div>
+      <h2 className="fw-bold mb-1" style={{ color: "#0f172a" }}>Estados de Solicitud</h2>
+      <p style={{ color: "#64748b", fontSize: "14px", marginBottom: "8px" }}>
+        Estos son los estados fijos del flujo de solicitudes de préstamo
+      </p>
+      <div style={{
+        background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "12px",
+        padding: "12px 18px", marginBottom: "28px", display: "flex", alignItems: "center", gap: "10px"
+      }}>
+        <span style={{ fontSize: "18px" }}>ℹ️</span>
+        <p style={{ margin: 0, fontSize: "13px", color: "#0369a1", fontWeight: "500" }}>
+          Los estados son fijos y definen el ciclo de vida de cada solicitud. No pueden ser modificados.
+        </p>
       </div>
 
-      <div className="d-flex justify-content-center">
-        <div style={{ width: "fit-content" }}>
-          <DataTable
-            columns={columns}
-            data={filtered}
-            pagination
-            highlightOnHover
-            striped
-            responsive
-            noDataComponent="No hay datos"
-            customStyles={customStyles}
-          />
-        </div>
-      </div>
-
-      <div className="modal fade" id="modalEstado" tabIndex="-1">
-        <div className="modal-dialog">
-          <div className="modal-content">
-            <div className="modal-header bg-primary text-white">
-              <h5 className="modal-title">
-                {selectedEstado ? "Editar" : "Nuevo"} Estado
-              </h5>
-              <button
-                type="button"
-                className="btn-close btn-close-white"
-                data-bs-dismiss="modal"
-              ></button>
+      {/* Flow diagram */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "center",
+        flexWrap: "wrap", gap: "0", marginBottom: "32px"
+      }}>
+        {estados.filter(e => e.estado !== "cancelado").map((e, i, arr) => (
+          <div key={e.id} style={{ display: "flex", alignItems: "center" }}>
+            <div style={{
+              background: e.bg, border: `2px solid ${e.border}`, borderRadius: "12px",
+              padding: "10px 20px", textAlign: "center", minWidth: "100px"
+            }}>
+              <div style={{ fontSize: "20px" }}>{e.icon}</div>
+              <div style={{ fontSize: "12px", fontWeight: "700", color: e.color, textTransform: "uppercase" }}>
+                {e.estado}
+              </div>
             </div>
+            {i < arr.length - 1 && (
+              <div style={{ padding: "0 8px", color: "#cbd5e1", fontSize: "20px", fontWeight: "bold" }}>→</div>
+            )}
+          </div>
+        ))}
+      </div>
 
-            <div className="modal-body">
-              <EstadoSolicitudForm
-                selectedEstado={selectedEstado}
-                refreshData={cargarEstados}
-                hideModal={() =>
-                  document
-                    .getElementById("modalEstado")
-                    .classList.remove("show")
-                }
-              />
+      {/* Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>
+        {estados.map(e => (
+          <div key={e.id} style={{
+            background: "#fff", borderRadius: "16px", overflow: "hidden",
+            border: `1px solid ${e.border}`, boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+            transition: "transform 0.2s, box-shadow 0.2s"
+          }}
+            onMouseOver={ev => { ev.currentTarget.style.transform = "translateY(-2px)"; ev.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.08)"; }}
+            onMouseOut={ev => { ev.currentTarget.style.transform = "translateY(0)"; ev.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)"; }}
+          >
+            <div style={{ height: "4px", background: `linear-gradient(90deg, ${e.color}, ${e.color}88)` }} />
+            <div style={{ padding: "20px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+                <div style={{
+                  width: "44px", height: "44px", borderRadius: "12px",
+                  background: e.bg, border: `1px solid ${e.border}`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: "22px"
+                }}>
+                  {e.icon}
+                </div>
+                <div>
+                  <div style={{ fontWeight: "800", color: e.color, fontSize: "15px", textTransform: "uppercase" }}>
+                    {e.estado}
+                  </div>
+                  <div style={{ fontSize: "11px", color: "#94a3b8", fontWeight: "600" }}>
+                    ID: {e.id}
+                  </div>
+                </div>
+              </div>
+              <p style={{ margin: 0, fontSize: "13px", color: "#64748b", lineHeight: "1.6" }}>
+                {e.desc}
+              </p>
             </div>
           </div>
-        </div>
+        ))}
       </div>
     </div>
   );

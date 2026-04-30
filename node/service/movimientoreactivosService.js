@@ -87,8 +87,14 @@ class movimientoreactivoService {
       });
 
       // Ordenamos por fecha de vencimiento (primero el que vence antes)
+      // Excluir lotes vencidos
+      const hoy = new Date();
       const sortedLotes = Object.values(loteMap)
-        .filter(l => l.cantidad_disponible > 0)
+        .filter(l => {
+          if (l.cantidad_disponible <= 0) return false;
+          if (l.fecha_vencimiento && new Date(l.fecha_vencimiento) <= hoy) return false;
+          return true;
+        })
         .sort((a, b) => {
           if (!a.fecha_vencimiento) return 1;
           if (!b.fecha_vencimiento) return -1;
@@ -214,8 +220,13 @@ class movimientoreactivoService {
         loteMap[loteKey].cantidad_disponible -= parseFloat(m.cantidad_salida || 0);
       });
 
+      const hoyUpdate = new Date();
       const sortedLotes = Object.values(loteMap)
-        .filter(l => l.cantidad_disponible > 0)
+        .filter(l => {
+          if (l.cantidad_disponible <= 0) return false;
+          if (l.fecha_vencimiento && new Date(l.fecha_vencimiento) <= hoyUpdate) return false;
+          return true;
+        })
         .sort((a, b) => {
           if (!a.fecha_vencimiento) return 1;
           if (!b.fecha_vencimiento) return -1;

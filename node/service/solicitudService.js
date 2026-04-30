@@ -3,6 +3,8 @@ import Estadoxsolicitud from "../models/estadoxsolicitudModel.js";
 import userModel from "../models/userModel.js";
 import estadoSolicitudModel from "../models/Estado_solicitudModel.js";
 import { Sequelize } from "sequelize";
+import equipoModel from "../models/EquiposModel.js";
+import solicitudxequipoModel from "../models/solicitudxequipoModel.js";
 
 class solicitudService {
     async getAll() {
@@ -22,6 +24,11 @@ class solicitudService {
                         attributes: ['estado']
                     }],
                     attributes: ['id_estadoxsolicitud', 'createdat']
+                },
+                {
+                    model: equipoModel,
+                    as: 'equipos',
+                    attributes: ['id_equipo', 'nom_equipo', 'marca_equipo', 'no_placa']
                 }
             ],
             order: [
@@ -37,10 +44,16 @@ class solicitudService {
             const ultimoEstado = estadosOrdenados[0]?.estadoSolicitud?.estado || "generado";
             return { ...sol, ultimoEstado };
         });
-    } // ← ESTA LLAVE FALTABA
+    }
 
     async getById(id_solicitud) {
-        const solicitud = await solicitudModel.findByPk(id_solicitud);
+        const solicitud = await solicitudModel.findByPk(id_solicitud, {
+            include: [{
+                model: equipoModel,
+                as: 'equipos',
+                attributes: ['id_equipo', 'nom_equipo']
+            }]
+        });
         if (!solicitud) throw new Error('Solicitud no encontrada');
         return solicitud;
     }
@@ -54,12 +67,33 @@ class solicitudService {
             id_solicitud: solicitud.id_solicitud,
             id_estado_solicitud: 1
         });
+
+        if (data.equipos_ids && Array.isArray(data.equipos_ids)) {
+            for (const id_equipo of data.equipos_ids) {
+                await solicitudxequipoModel.create({
+                    id_solicitud: solicitud.id_solicitud,
+                    id_equipo
+                });
+            }
+        }
+
         return solicitud;
     }
 
     async update(id, data) {
         const result = await solicitudModel.update(data, { where: { id_solicitud: id } });
         if (result[0] === 0) throw new Error('Solicitud no encontrada');
+        
+        if (data.equipos_ids && Array.isArray(data.equipos_ids)) {
+            await solicitudxequipoModel.destroy({ where: { id_solicitud: id } });
+            for (const id_equipo of data.equipos_ids) {
+                await solicitudxequipoModel.create({
+                    id_solicitud: id,
+                    id_equipo
+                });
+            }
+        }
+        
         return true;
     }
 

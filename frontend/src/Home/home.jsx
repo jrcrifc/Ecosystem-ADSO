@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import ecosystemLogo from "./ecosystem_logo.png";
-import labOficina from "./lab_oficina.png";
+import labOficina from "./labAmbien.jpeg";
 import labEquipos from "./lab_equipos.png";
 import labFlujo from "./lab_flujo.png";
 
@@ -169,10 +169,10 @@ const Home = () => {
                 ¿Qué es Ecosystem?
               </h3>
               <p style={{ margin: "0 0 18px", fontSize: "14px", color: "#475569", lineHeight: "1.8" }}>
-                <strong>Ecosystem</strong> es una plataforma web desarrollada por aprendices del programa 
-                <strong> Análisis y Desarrollo de Software (ADSO)</strong> del SENA, diseñada para la 
-                gestión integral del <strong>Laboratorio Ambiental</strong>. Centraliza el control de 
-                préstamos de equipos, inventario de reactivos, seguimiento de solicitudes y administración 
+                <strong>Ecosystem</strong> es una plataforma web desarrollada por aprendices del programa
+                <strong> Análisis y Desarrollo de Software (ADSO)</strong> del SENA, diseñada para la
+                gestión integral del <strong>Laboratorio Ambiental</strong>. Centraliza el control de
+                préstamos de equipos, inventario de reactivos, seguimiento de solicitudes y administración
                 de usuarios, garantizando trazabilidad y eficiencia en cada operación.
               </p>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "10px" }}>
