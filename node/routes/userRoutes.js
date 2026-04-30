@@ -3,7 +3,8 @@ import UserModel from "../models/userModel.js";
 import { check } from "express-validator";
 import {
   RegisterUser, LoginUser, GetPendientes, 
-  GetTodos, AprobarUsuario, RechazarUsuario, ToggleActivoUsuario
+  GetTodos, AprobarUsuario, RechazarUsuario, ToggleActivoUsuario,
+  GetProfile, UpdateProfile, ChangePassword
 } from "../controller/userController.js";
 import { soloAdmin } from '../middleware/roleMiddleware.js';
 import authMiddleware from '../middleware/authMiddleware.js';
@@ -21,6 +22,11 @@ router.get("/usuarios/pendientes", soloAdmin, GetPendientes);
 router.put("/usuarios/:id/aprobar", soloAdmin, AprobarUsuario);
 router.put("/usuarios/:id/rechazar", soloAdmin, RechazarUsuario);
 router.put("/usuarios/:id/toggle-activo", soloAdmin, ToggleActivoUsuario);
+
+// RUTAS DE PERFIL
+router.get("/profile/me", authMiddleware, GetProfile);
+router.put("/profile/update", authMiddleware, UpdateProfile);
+router.put("/profile/change-password", authMiddleware, ChangePassword);
 
 // ✅ Obtener usuario por ID — accesible para todos los autenticados (para recargarUsuario)
 router.get("/usuarios/:id", authMiddleware, async (req, res) => {

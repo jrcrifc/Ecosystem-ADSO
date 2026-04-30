@@ -1,11 +1,15 @@
 import NotificacionModel from "../models/notificacionModel.js";
 import UserModel from "../models/userModel.js";
+import { sendNotification } from "../socket.js";
 
 class NotificacionService {
   async crearNotificacion({ id_usuario_destino, id_usuario_origen, titulo, mensaje, tipo }) {
-    return await NotificacionModel.create({
+    const noti = await NotificacionModel.create({
       id_usuario_destino, id_usuario_origen, titulo, mensaje, tipo
     });
+    // Emitir por socket
+    sendNotification(id_usuario_destino, noti.toJSON());
+    return noti;
   }
 
   async getMisNotificaciones(id_usuario) {

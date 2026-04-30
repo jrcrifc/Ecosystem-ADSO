@@ -4,6 +4,7 @@ import DataTable from "react-data-table-component";
 import Swal from "sweetalert2";
 import ReactivoForm from "./reactivosform.jsx";
 import * as bootstrap from "bootstrap";
+import { exportToPDF, exportToExcel } from "../api/ExportUtils.js";
 
 const CrudReactivos = () => {
   const [reactivos, setReactivos] = useState([]);
@@ -96,7 +97,21 @@ const CrudReactivos = () => {
         <div className="col-md-5">
           <input type="text" className="form-control" placeholder="Buscar por ID o nombre..." value={filterText} onChange={(e) => setFilterText(e.target.value)} />
         </div>
-        <div className="col-md-7 text-end">
+        <div className="col-md-7 text-end d-flex gap-2 justify-content-end">
+          <button className="btn btn-outline-danger" onClick={() => {
+            const cols = [
+              { header: "ID", dataKey: "id_reactivo" },
+              { header: "Nombre", dataKey: "nom_reactivo" },
+              { header: "Presentación", dataKey: "presentacion_reactivo" },
+              { header: "Clasificación", dataKey: "clasificacion_reactivo" }
+            ];
+            exportToPDF(filtered, cols, "Inventario_Reactivos", "INVENTARIO DE REACTIVOS");
+          }}>
+            <i className="fa-solid fa-file-pdf me-2"></i> PDF
+          </button>
+          <button className="btn btn-outline-success" onClick={() => exportToExcel(filtered, "Inventario_Reactivos")}>
+            <i className="fa-solid fa-file-excel me-2"></i> Excel
+          </button>
           <button className="btn" style={{ background: "#0077B6", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }} data-bs-toggle="modal" data-bs-target="#modalReactivo" onClick={() => setSelectedReactivo(null)}>
             + Nuevo Reactivo
           </button>

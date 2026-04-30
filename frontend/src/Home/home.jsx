@@ -3,6 +3,7 @@ import ecosystemLogo from "./ecosystem_logo.png";
 import labOficina from "./labAmbien.jpeg";
 import labEquipos from "./lab_equipos.png";
 import labFlujo from "./lab_flujo.png";
+import DashboardCharts from "./DashboardCharts.jsx";
 
 const Home = () => {
   const [heroVisible, setHeroVisible] = useState(false);
@@ -238,6 +239,9 @@ const Home = () => {
           ))}
         </div>
       </div>
+
+      {/* ===== DASHBOARD ===== */}
+      {(esAdmin || esGestor) && <DashboardCharts />}
 
       {/* ===== ACCESOS RÁPIDOS ===== */}
       <div style={{

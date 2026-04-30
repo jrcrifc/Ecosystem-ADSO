@@ -1,7 +1,17 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import Campanita from "./FormularioAcceso/Campanita.jsx";
 
 const TopBar = ({ userData, userRol, logOut, onAprobado }) => {
+  const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(theme === "light" ? "dark" : "light");
+
   const esAdmin = userRol === 'Administrador';
   const esGestorPasante = ['Pasante', 'Gestor'].includes(userRol);
   const userName = userData?.nombres_apellidos;
@@ -21,6 +31,13 @@ const TopBar = ({ userData, userRol, logOut, onAprobado }) => {
       zIndex: 50,
       marginBottom: "8px",
     }}>
+      {/* Tema */}
+      <button onClick={toggleTheme} style={{
+        background: "transparent", border: "none", cursor: "pointer", fontSize: "20px"
+      }}>
+        {theme === "light" ? "🌙" : "☀️"}
+      </button>
+
       {/* Notificaciones */}
       <Campanita userData={userData} onAprobado={onAprobado} userRol={userRol} />
 
@@ -28,31 +45,33 @@ const TopBar = ({ userData, userRol, logOut, onAprobado }) => {
       <div style={{ width: "1px", height: "32px", background: "#e2e8f0" }} />
 
       {/* Perfil */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: "10px",
-        cursor: "default",
-      }}>
+      <Link to="/perfil" style={{ textDecoration: "none", color: "inherit" }}>
         <div style={{
-          width: "36px", height: "36px", borderRadius: "10px",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontWeight: "800", fontSize: "14px", color: "#fff",
-          background: avatarBg,
-          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+          display: "flex", alignItems: "center", gap: "10px",
+          cursor: "pointer",
         }}>
-          {userName ? userName.charAt(0).toUpperCase() : "?"}
-        </div>
-        <div>
-          <p style={{
-            margin: 0, fontSize: "13px", fontWeight: "600", color: "#0f172a",
-            textTransform: "capitalize", lineHeight: "1.2",
+          <div style={{
+            width: "36px", height: "36px", borderRadius: "10px",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontWeight: "800", fontSize: "14px", color: "#fff",
+            background: avatarBg,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
           }}>
-            {userName || "Usuario"}
-          </p>
-          <p style={{ margin: 0, fontSize: "11px", color: "#64748b" }}>
-            {esAdmin ? "👑" : esGestorPasante ? "⚙️" : "🎓"} {userRol}
-          </p>
+            {userName ? userName.charAt(0).toUpperCase() : "?"}
+          </div>
+          <div>
+            <p style={{
+              margin: 0, fontSize: "13px", fontWeight: "600", color: "#0f172a",
+              textTransform: "capitalize", lineHeight: "1.2",
+            }}>
+              {userName || "Usuario"}
+            </p>
+            <p style={{ margin: 0, fontSize: "11px", color: "#64748b" }}>
+              {esAdmin ? "👑" : esGestorPasante ? "⚙️" : "🎓"} {userRol}
+            </p>
+          </div>
         </div>
-      </div>
+      </Link>
 
       {/* Logout */}
       <button

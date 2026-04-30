@@ -78,6 +78,7 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
         { icon: "👥", text: "Gestión Usuarios", path: "/gestion-usuarios", show: true },
         { icon: "📑", text: "Gestión Solicitudes", path: "/gestion-solicitudes", show: true },
         { icon: "🏷️", text: "Estados Solicitud", path: "/estadoSolicitud", show: true },
+        { icon: "🕵️", text: "Bitácora Auditoría", path: "/auditoria", show: true },
       ]
     },
   ];

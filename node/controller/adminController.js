@@ -1,4 +1,5 @@
 import UserModel from "../models/userModel.js";
+import auditService from "../service/auditService.js";
 
 // Ver todos los usuarios
 export const getUsuarios = async (req, res) => {
@@ -31,5 +32,15 @@ export const cambiarEstado = async (req, res) => {
     res.json({ message: `Usuario ${estado} correctamente`, usuario });
   } catch (err) {
     res.status(500).json({ message: "Error al actualizar estado" });
+  }
+};
+
+// Obtener bitácora de auditoría
+export const getAuditLogs = async (req, res) => {
+  try {
+    const logs = await auditService.getAllLogs();
+    res.json(logs);
+  } catch (err) {
+    res.status(500).json({ message: "Error al obtener la bitácora" });
   }
 };

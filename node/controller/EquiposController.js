@@ -1,4 +1,5 @@
 import EquiposService from '../service/EquiposService.js';
+import auditService from "../service/auditService.js";
 
 export const getAllEquipos = async (req, res) => {
   try {
@@ -47,8 +48,16 @@ export const createEquipos = async (req, res) => {
     console.log('Datos FINALES a guardar en BD:', data);
 
     const equipo = await EquiposService.create(data);
-    console.log('Equipo creado:', equipo);
 
+    await auditService.log({
+        id_usuario: req.user?.id_usuario,
+        accion: 'CREAR',
+        modulo: 'EQUIPOS',
+        detalle: `Se creó el equipo: ${data.nom_equipo}`,
+        ip: req.ip
+    });
+
+    console.log('Equipo creado:', equipo);
     res.status(201).json({ mensaje: 'Equipo creado', equipo });
   } catch (error) {
     console.error('ERROR EN CREATE:', error.stack || error);
@@ -79,6 +88,14 @@ export const updateEquipos = async (req, res) => {
 
     if (!updated) return res.status(404).json({ message: 'Equipo no encontrado' });
 
+    await auditService.log({
+        id_usuario: req.user?.id_usuario,
+        accion: 'ACTUALIZAR',
+        modulo: 'EQUIPOS',
+        detalle: `Se actualizó el equipo con ID: ${req.params.id}`,
+        ip: req.ip
+    });
+
     res.status(200).json({ mensaje: 'Actualizado OK', id: req.params.id });
   } catch (error) {
     console.error('ERROR EN UPDATE:', error.stack || error);
@@ -89,6 +106,15 @@ export const updateEquipos = async (req, res) => {
 export const deleteEquipos = async (req, res) => {
   try {
     await EquiposService.delete(req.params.id);
+
+    await auditService.log({
+        id_usuario: req.user?.id_usuario,
+        accion: 'ELIMINAR',
+        modulo: 'EQUIPOS',
+        detalle: `Se eliminó el equipo con ID: ${req.params.id}`,
+        ip: req.ip
+    });
+
     res.status(200).json({ mensaje: 'Equipo eliminado' });
   } catch (error) {
     console.error('Error eliminando:', error);

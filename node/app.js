@@ -1,7 +1,9 @@
 // app.js
 import './models/associations.js'; // ← PRIMERA LÍNEA
 import express from 'express';
+import http from 'http';
 import cors from 'cors';
+import { initSocket } from './socket.js';
 import db from './database/db.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
@@ -23,6 +25,7 @@ import estadoxequipoRoutes from './routes/estadoxequipoRoutes.js';
 import cuentadanteRoutes from './routes/cuentandanteRoutes.js';
 import notificacionRoutes from './routes/notificacionRoutes.js';
 import solicitudAccesoRoutes from './routes/solicitudAccesoRoutes.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
 
 
 // =============================
@@ -43,6 +46,8 @@ console.log("📌 Puerto configurado:", process.env.PORT || 8000);
 // 🔥 EXPRESS APP
 // =============================
 const app = express();
+const server = http.createServer(app);
+initSocket(server);
 
 // =============================
 // 🔥 MIDDLEWARES
@@ -72,6 +77,7 @@ app.use('/api/auth', UserRoutes);
 app.use("/api/admin", adminRoutes);
 app.use('/api/notificaciones', notificacionRoutes);
 app.use('/api/solicitud-acceso', solicitudAccesoRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 app.get('/', (req, res) => {
     res.send('Bienvenido a la API de Equipos - Laboratorio Ambiental');
@@ -93,7 +99,7 @@ try {
 // =============================
 const PORT = process.env.PORT || 8000;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`🚀 Server running → http://localhost:${PORT}`);
 });
 

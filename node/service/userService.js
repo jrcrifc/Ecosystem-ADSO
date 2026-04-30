@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import NotificacionService from "./notificacionService.js";
+import emailService from "./emailService.js";
 class UserService {
 
   // ✅ Crea el admin predeterminado si no existe
@@ -116,6 +117,10 @@ class UserService {
     const user = await UserModel.findByPk(id);
     if (!user) throw new Error("Usuario no encontrado");
     await user.update({ estado: 'aprobado' });
+    
+    // Enviar correo de aprobación
+    await emailService.sendAprovalEmail(user.email, user.nombres_apellidos);
+
     return user;
   }
 
@@ -134,6 +139,37 @@ class UserService {
     const nuevoEstado = user.estado === 'inactivo' ? 'aprobado' : 'inactivo';
     await user.update({ estado: nuevoEstado });
     return { ...user.toJSON(), estado: nuevoEstado };
+  }
+
+  // Obtener usuario por ID
+  async getById(id) {
+    return await UserModel.findByPk(id, {
+      attributes: { exclude: ['password', 'token'] }
+    });
+  }
+
+  // Actualizar perfil básico
+  async updateProfile(id, data) {
+    const user = await UserModel.findByPk(id);
+    if (!user) throw new Error("Usuario no encontrado");
+    await user.update({
+      nombres_apellidos: data.nombres_apellidos,
+      email: data.email
+    });
+    return user;
+  }
+
+  // Cambiar contraseña
+  async changePassword(id, { passwordActual, passwordNueva }) {
+    const user = await UserModel.findByPk(id);
+    if (!user) throw new Error("Usuario no encontrado");
+
+    const isValid = await bcrypt.compare(passwordActual, user.password);
+    if (!isValid) throw new Error("La contraseña actual es incorrecta");
+
+    const hashedPassword = await bcrypt.hash(passwordNueva, 10);
+    await user.update({ password: hashedPassword });
+    return true;
   }
 }
 

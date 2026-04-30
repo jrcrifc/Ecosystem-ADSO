@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import apiAxios from "../api/axiosConfig.js";
+import { io } from "socket.io-client";
 
 export default function Campanita({ userData, onAprobado, userRol }) {
   const [notificaciones, setNotificaciones] = useState([]);
@@ -14,10 +15,28 @@ export default function Campanita({ userData, onAprobado, userRol }) {
 
   useEffect(() => {
     if (!id_usuario) return;
+
     cargar();
-    // ✅ Polling cada 5 segundos
-    const interval = setInterval(cargar, 5000);
-    return () => clearInterval(interval);
+
+    // ✅ Conexión Socket.io
+    const socket = io("http://localhost:8000"); // Asegúrate que el puerto coincida
+
+    socket.on("connect", () => {
+      socket.emit("join", id_usuario);
+    });
+
+    socket.on("notification", (nueva) => {
+      setNotificaciones(prev => [nueva, ...prev.slice(0, 4)]);
+      
+      // ✅ Si hay notificación de aprobado, avisar al App
+      if (nueva.tipo === 'aprobado' && onAprobado && userRol !== 'Administrador') {
+        onAprobado();
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, [id_usuario]);
 
   useEffect(() => {

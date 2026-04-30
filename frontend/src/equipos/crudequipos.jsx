@@ -4,6 +4,7 @@ import apiAxios from "../api/axiosConfig";
 import EquipoForm from "./EquiposForm.jsx";
 import Swal from "sweetalert2";
 import * as bootstrap from "bootstrap";
+import { exportToPDF, exportToExcel } from "../api/ExportUtils.js";
 
 export default function CrudEquipo() {
   const [equipos, setEquipos] = useState([]);
@@ -198,7 +199,22 @@ export default function CrudEquipo() {
             onChange={(e) => setFilterText(e.target.value)}
           />
         </div>
-        <div className="col-md-6 text-end">
+        <div className="col-md-6 text-end d-flex gap-2 justify-content-end">
+          <button className="btn btn-outline-danger" onClick={() => {
+            const cols = [
+              { header: "ID", dataKey: "id_equipo" },
+              { header: "Grupo", dataKey: "grupo_equipo" },
+              { header: "Nombre", dataKey: "nom_equipo" },
+              { header: "Marca", dataKey: "marca_equipo" },
+              { header: "Placa", dataKey: "no_placa" }
+            ];
+            exportToPDF(filteredEquipos, cols, "Inventario_Equipos", "INVENTARIO DE EQUIPOS");
+          }}>
+            <i className="fa-solid fa-file-pdf me-2"></i> PDF
+          </button>
+          <button className="btn btn-outline-success" onClick={() => exportToExcel(filteredEquipos, "Inventario_Equipos")}>
+            <i className="fa-solid fa-file-excel me-2"></i> Excel
+          </button>
           <button
             className="btn"
             style={{ background: "#0077B6", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }}
