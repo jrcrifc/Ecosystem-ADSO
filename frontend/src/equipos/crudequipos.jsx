@@ -5,6 +5,7 @@ import EquipoForm from "./EquiposForm.jsx";
 import Swal from "sweetalert2";
 import * as bootstrap from "bootstrap";
 import { exportToPDF, exportToExcel } from "../api/ExportUtils.js";
+import { paginationComponentOptions, tableCustomStyles } from "../config/dataTableConfig";
 
 export default function CrudEquipo() {
   const [equipos, setEquipos] = useState([]);
@@ -156,7 +157,7 @@ export default function CrudEquipo() {
       cell: (row) => (
         <div className="d-flex gap-2 justify-content-center">
           <button
-            className="btn btn-sm btn-warning"
+            className="btn btn-sm" style={{ background: "#dbeafe", color: "#0077B6", border: "none" }}
             data-bs-toggle="modal"
             data-bs-target="#modalEquipo"
             onClick={() => setSelectedEquipo(row)}
@@ -165,7 +166,7 @@ export default function CrudEquipo() {
             <i className="fas fa-edit"></i>
           </button>
           <button
-            className={`btn btn-sm ${row.estado === 1 ? "btn-outline-danger" : "btn-outline-success"}`}
+            className="btn btn-sm" style={{ background: row.estado === 1 ? "#fee2e2" : "#dcfce7", color: row.estado === 1 ? "#dc2626" : "#16a34a", border: "none" }}
             onClick={() => cambiarEstado(row)}
             title={row.estado === 1 ? "Inactivar" : "Activar"}
           >
@@ -187,7 +188,10 @@ export default function CrudEquipo() {
 
   return (
     <div className="container mt-4">
-      <h2 className="text-center mb-4 fw-bold text-primary">Gestión de Equipos</h2>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
+        <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
+        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Gestión de Equipos</h2>
+      </div>
 
       <div className="row mb-4 align-items-center">
         <div className="col-md-6">
@@ -197,6 +201,7 @@ export default function CrudEquipo() {
             placeholder="Buscar por nombre, grupo, marca, placa o cuentadante..."
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
+            style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
           />
         </div>
         <div className="col-md-6 text-end d-flex gap-2 justify-content-end">
@@ -227,16 +232,25 @@ export default function CrudEquipo() {
         </div>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={filteredEquipos}
-        pagination
-        paginationPerPage={10}
-        highlightOnHover
-        striped
-        responsive
-        noDataComponent="No hay equipos registrados"
-      />
+      <div style={{ borderRadius: "14px", overflow: "hidden", border: "1px solid #dbeafe" }}>
+        <DataTable
+          columns={columns}
+          data={filteredEquipos}
+          pagination
+          paginationPerPage={10}
+          paginationComponentOptions={paginationComponentOptions}
+          customStyles={tableCustomStyles}
+          highlightOnHover
+          striped
+          responsive
+          noDataComponent={
+            <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
+              <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>
+              <p>No hay equipos registrados</p>
+            </div>
+          }
+        />
+      </div>
 
       {/* MODAL EDITAR / CREAR */}
       <div className="modal fade" id="modalEquipo" tabIndex="-1" aria-labelledby="modalEquipoLabel" aria-hidden="true">

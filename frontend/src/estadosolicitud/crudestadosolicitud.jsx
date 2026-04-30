@@ -9,7 +9,10 @@ const CrudEstadoSolicitud = () => {
 
   return (
     <div className="container mt-4">
-      <h2 className="fw-bold mb-1" style={{ color: "#0f172a" }}>Estados de Solicitud</h2>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
+        <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
+        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Estados de Solicitud</h2>
+      </div>
       <p style={{ color: "#64748b", fontSize: "14px", marginBottom: "8px" }}>
         Estos son los estados fijos del flujo de solicitudes de préstamo
       </p>

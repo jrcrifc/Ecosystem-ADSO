@@ -103,11 +103,13 @@ const CrudSolicitudPrestamos = () => {
       center: true,
       cell: r => {
         const colores = {
-          generado:   { bg: "#e0f2fe", color: "#0369a1" },
-          aceptado:   { bg: "#d1fae5", color: "#065f46" },
-          prestado:   { bg: "#fef3c7", color: "#92400e" },
-          devuelto:   { bg: "#f3f4f6", color: "#374151" },
-          rechazado:  { bg: "#fee2e2", color: "#991b1b" },
+          generado:   { bg: "#f1f5f9", color: "#475569" },
+          aceptado:   { bg: "#dbeafe", color: "#0077B6" },
+          prestado:   { bg: "#fffbeb", color: "#d97706" },
+          entregado:  { bg: "#ecfdf5", color: "#059669" },
+          devuelto:   { bg: "#ecfdf5", color: "#059669" },
+          cancelado:  { bg: "#fef2f2", color: "#dc2626" },
+          rechazado:  { bg: "#fef2f2", color: "#dc2626" },
         };
         const c = colores[r.ultimoEstado] || { bg: "#f3f4f6", color: "#374151" };
         return (
@@ -227,7 +229,10 @@ const CrudSolicitudPrestamos = () => {
 
   return (
     <div className="mt-4" style={{ padding: "0 16px" }}>
-      <h2 className="text-center mb-4 text-primary fw-bold">Solicitudes de Préstamo</h2>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
+        <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
+        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Solicitudes de Préstamo</h2>
+      </div>
 
       <div className="row mb-3 align-items-center">
         <div className="col-md-5">

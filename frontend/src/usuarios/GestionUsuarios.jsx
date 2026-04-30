@@ -3,7 +3,6 @@ import apiAxios from "../api/axiosConfig";
 import Swal from "sweetalert2";
 
 export default function GestionUsuarios() {
-  const [solicitudes, setSolicitudes] = useState([]);
   const [usuariosPendientes, setUsuariosPendientes] = useState([]);
   const [todosUsuarios, setTodosUsuarios] = useState([]);
   const [tab, setTab] = useState("pendientes");
@@ -15,15 +14,9 @@ export default function GestionUsuarios() {
   const cargar = async () => {
     try {
       if (tab === "pendientes" || tab === "todas") {
-        const urlSolicitudes = tab === "pendientes"
-          ? "/api/solicitud-acceso/pendientes"
-          : "/api/solicitud-acceso/todas";
-        const resSolicitudes = await apiAxios.get(urlSolicitudes, { headers });
-        setSolicitudes(resSolicitudes.data);
-
         const resUsuarios = await apiAxios.get("/api/auth/usuarios", { headers });
         const pendientes = resUsuarios.data.filter(u =>
-          ['Pasante', 'Gestor'].includes(u.rol) &&
+          ['Pasante', 'Gestor', 'Aprendiz', 'Instructor'].includes(u.rol) &&
           (tab === "pendientes" ? u.estado === 'pendiente' : true)
         );
         setUsuariosPendientes(pendientes);
@@ -99,37 +92,7 @@ export default function GestionUsuarios() {
     }
   };
 
-  const aprobar = async (id) => {
-    const result = await Swal.fire({
-      title: "¿Aprobar usuario?", icon: "question",
-      showCancelButton: true, confirmButtonColor: "#0077B6",
-      confirmButtonText: "Sí, aprobar", cancelButtonText: "Cancelar"
-    });
-    if (!result.isConfirmed) return;
-    try {
-      await apiAxios.put(`/api/solicitud-acceso/${id}/aprobar`, {}, { headers });
-      Swal.fire("✅ Aprobado", "El usuario ya puede acceder al sistema", "success");
-      cargar();
-    } catch (err) {
-      Swal.fire("Error", err.response?.data?.message, "error");
-    }
-  };
 
-  const rechazar = async (id) => {
-    const result = await Swal.fire({
-      title: "¿Rechazar usuario?", icon: "warning",
-      showCancelButton: true, confirmButtonColor: "#ef4444",
-      confirmButtonText: "Sí, rechazar", cancelButtonText: "Cancelar"
-    });
-    if (!result.isConfirmed) return;
-    try {
-      await apiAxios.put(`/api/solicitud-acceso/${id}/rechazar`, {}, { headers });
-      Swal.fire("Rechazado", "El usuario fue rechazado", "info");
-      cargar();
-    } catch (err) {
-      Swal.fire("Error", err.response?.data?.message, "error");
-    }
-  };
 
   const estadoBadge = (estado) => {
     const map = {
@@ -229,7 +192,10 @@ export default function GestionUsuarios() {
 
   return (
     <div className="container mt-4">
-      <h2 className="fw-bold mb-1" style={{ color: "#0f172a" }}>Gestión de Usuarios</h2>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
+        <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
+        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Gestión de Usuarios</h2>
+      </div>
       <p style={{ color: "#64748b", marginBottom: "24px" }}>Aprueba, rechaza, activa o inactiva usuarios del sistema</p>
 
       {/* Tabs */}
@@ -342,94 +308,22 @@ export default function GestionUsuarios() {
         </div>
       )}
 
-      {/* ✅ Sección Pasante/Gestor (pendientes/todas) */}
-      {tab !== "gestion" && usuariosPendientes.length > 0 && (
-        <div style={{ marginBottom: "24px" }}>
-          <p style={{
-            fontSize: "11px", fontWeight: "700", color: "#f59e0b",
-            letterSpacing: "1px", textTransform: "uppercase", marginBottom: "12px"
-          }}>⚙️ Pasantes y Gestores</p>
-          {usuariosPendientes.map(u => cardUsuario(u))}
-        </div>
-      )}
-
-      {/* ✅ Sección Aprendiz/Instructor (pendientes/todas) */}
-      {tab !== "gestion" && solicitudes.length > 0 && (
-        <div>
-          <p style={{
-            fontSize: "11px", fontWeight: "700", color: "#0077B6",
-            letterSpacing: "1px", textTransform: "uppercase", marginBottom: "12px"
-          }}>🎓 Aprendices e Instructores</p>
-          {solicitudes.map(s => (
-            <div key={s.id_solicitud_acceso} style={{
-              background: "#fff", borderRadius: "16px", padding: "24px",
-              marginBottom: "14px", border: "1px solid #e2e8f0",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.04)"
-            }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                  <div style={{
-                    width: "48px", height: "48px", borderRadius: "50%",
-                    background: gradientFor(s.usuario?.rol),
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    color: "#fff", fontWeight: "800", fontSize: "18px"
-                  }}>
-                    {s.usuario?.nombres_apellidos?.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <h5 style={{ margin: "0 0 2px", fontWeight: "700", color: "#0f172a" }}>{s.usuario?.nombres_apellidos}</h5>
-                    <p style={{ margin: "0 0 4px", fontSize: "13px", color: "#64748b" }}>{s.usuario?.email} · {s.usuario?.documento}</p>
-                    <span style={{
-                      background: "#eef2ff", color: "#0077B6",
-                      fontSize: "11px", fontWeight: "700", padding: "2px 10px", borderRadius: "99px"
-                    }}>🎓 {s.usuario?.rol}</span>
-                  </div>
-                </div>
-                {estadoBadge(s.estado)}
-              </div>
-
-              <div style={{
-                marginTop: "14px", background: "#f8fafc", borderRadius: "10px",
-                padding: "14px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px"
-              }}>
-                <div>
-                  <p style={{ margin: "0 0 2px", fontSize: "11px", color: "#94a3b8", fontWeight: "700", textTransform: "uppercase" }}>Ficha</p>
-                  <p style={{ margin: 0, fontWeight: "600", color: "#0f172a" }}>{s.ficha}</p>
-                </div>
-                <div>
-                  <p style={{ margin: "0 0 2px", fontSize: "11px", color: "#94a3b8", fontWeight: "700", textTransform: "uppercase" }}>Grupo</p>
-                  <p style={{ margin: 0, fontWeight: "600", color: "#0f172a" }}>{s.grupo}</p>
-                </div>
-                <div style={{ gridColumn: "1 / -1" }}>
-                  <p style={{ margin: "0 0 2px", fontSize: "11px", color: "#94a3b8", fontWeight: "700", textTransform: "uppercase" }}>Motivo</p>
-                  <p style={{ margin: 0, color: "#374151", lineHeight: "1.6" }}>{s.motivo}</p>
-                </div>
-              </div>
-
-              {s.estado === 'pendiente' && (
-                <div style={{ display: "flex", gap: "10px", marginTop: "14px" }}>
-                  <button onClick={() => aprobar(s.id_solicitud_acceso)} style={{
-                    background: "linear-gradient(135deg, #0077B6, #023E8A)",
-                    border: "none", borderRadius: "10px", padding: "10px 24px",
-                    color: "#fff", fontWeight: "700", cursor: "pointer", fontSize: "13px"
-                  }}>✅ Aprobar</button>
-                  <button onClick={() => rechazar(s.id_solicitud_acceso)} style={{
-                    background: "#fff", border: "1px solid #ef4444",
-                    borderRadius: "10px", padding: "10px 24px",
-                    color: "#ef4444", fontWeight: "700", cursor: "pointer", fontSize: "13px"
-                  }}>❌ Rechazar</button>
-                </div>
-              )}
+          {/* ✅ Sección Usuarios (pendientes/todas) */}
+          {tab !== "gestion" && usuariosPendientes.length > 0 && (
+            <div style={{ marginBottom: "24px" }}>
+              <p style={{
+                fontSize: "11px", fontWeight: "700", color: "#0077B6",
+                letterSpacing: "1px", textTransform: "uppercase", marginBottom: "12px"
+              }}>⚙️ Lista de Usuarios</p>
+              {usuariosPendientes.map(u => cardUsuario(u))}
             </div>
-          ))}
-        </div>
-      )}
+          )}
 
       {/* Sin datos */}
-      {tab !== "gestion" && solicitudes.length === 0 && usuariosPendientes.length === 0 && (
+      {tab !== "gestion" && usuariosPendientes.length === 0 && (
         <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>
           <div style={{ fontSize: "48px", marginBottom: "12px" }}>📭</div>
-          <p style={{ fontSize: "16px" }}>No hay solicitudes {tab === "pendientes" ? "pendientes" : ""}</p>
+          <p style={{ fontSize: "16px" }}>No hay usuarios {tab === "pendientes" ? "pendientes" : ""}</p>
         </div>
       )}
     </div>

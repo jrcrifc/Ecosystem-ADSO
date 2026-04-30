@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
 import Swal from "sweetalert2";
 import * as bootstrap from "bootstrap";
+import { paginationComponentOptions, tableCustomStyles } from "../config/dataTableConfig";
 import SalidaReactivoForm from "./salidareactivoform.jsx";
 
 const CrudSalidasReactivos = () => {
@@ -109,7 +110,10 @@ const CrudSalidasReactivos = () => {
 
   return (
     <div className="mt-4" style={{ padding: "0 16px" }}>
-      <h2 className="text-center mb-4 text-primary fw-bold">Salidas de Reactivos</h2>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
+        <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
+        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Salidas de Reactivos</h2>
+      </div>
 
       <div className="row mb-3 align-items-center">
         <div className="col-md-5">
@@ -118,6 +122,7 @@ const CrudSalidasReactivos = () => {
             placeholder="Buscar por reactivo, lote o ID..."
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
+            style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
           />
         </div>
         <div className="col-md-7 text-end">
@@ -133,12 +138,25 @@ const CrudSalidasReactivos = () => {
         </div>
       </div>
 
-      <DataTable
-        columns={columns} data={filtered}
-        pagination highlightOnHover striped responsive
-        noDataComponent="No hay salidas registradas"
-        paginationPerPage={10}
-      />
+      <div style={{ borderRadius: "14px", overflow: "hidden", border: "1px solid #dbeafe" }}>
+        <DataTable
+          columns={columns}
+          data={filtered}
+          pagination
+          paginationPerPage={10}
+          paginationComponentOptions={paginationComponentOptions}
+          customStyles={tableCustomStyles}
+          highlightOnHover
+          striped
+          responsive
+          noDataComponent={
+            <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
+              <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>
+              <p>No hay salidas registradas</p>
+            </div>
+          }
+        />
+      </div>
 
       <div className="modal fade" id="modalSalida" tabIndex="-1">
         <div className="modal-dialog modal-lg">

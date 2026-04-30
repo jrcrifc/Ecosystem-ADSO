@@ -10,7 +10,7 @@ import * as XLSX from "xlsx";
  * @param {String} title - Título dentro del PDF
  */
 export const exportToPDF = (data, columns, fileName = "reporte", title = "Reporte del Laboratorio") => {
-  const doc = jsPDF();
+  const doc = new jsPDF();
   
   // Agregar logo o cabecera
   doc.setFontSize(18);

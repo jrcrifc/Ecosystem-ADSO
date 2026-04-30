@@ -2,6 +2,7 @@ import apiAxios from "../api/axiosConfig.js";
 import { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
 import Swal from "sweetalert2";
+import { paginationComponentOptions, tableCustomStyles } from "../config/dataTableConfig";
 
 const GestionSolicitudes = () => {
   const [solicitudes, setSolicitudes] = useState([]);
@@ -9,15 +10,17 @@ const GestionSolicitudes = () => {
 
   const getToken = () => sessionStorage.getItem("token");
 
-  const getBadgeColor = (estado) => {
-    switch (estado) {
-      case "generado":  return "bg-secondary";
-      case "aceptado":  return "bg-primary";
-      case "prestado":  return "bg-warning text-dark";
-      case "entregado": return "bg-success";
-      case "cancelado": return "bg-danger";
-      default:          return "bg-secondary";
-    }
+  const getBadgeStyle = (estado) => {
+    const map = {
+      generado:  { bg: "#f1f5f9", color: "#475569" },
+      aceptado:  { bg: "#dbeafe", color: "#0077B6" },
+      prestado:  { bg: "#fffbeb", color: "#d97706" },
+      entregado: { bg: "#ecfdf5", color: "#059669" },
+      devuelto:  { bg: "#ecfdf5", color: "#059669" },
+      cancelado: { bg: "#fef2f2", color: "#dc2626" },
+      rechazado: { bg: "#fef2f2", color: "#dc2626" },
+    };
+    return map[estado] || { bg: "#f1f5f9", color: "#475569" };
   };
 
   const estadosSiguientes = {
@@ -52,35 +55,49 @@ const GestionSolicitudes = () => {
       name: "Estado Actual",
       width: "150px",
       center: true,
-      cell: (row) => (
-        <span className={`badge ${getBadgeColor(row.ultimoEstado)}`} style={{ fontSize: "0.75rem" }}>
-          {row.ultimoEstado || "generado"}
-        </span>
-      )
+      cell: (row) => {
+        const style = getBadgeStyle(row.ultimoEstado);
+        return (
+          <span style={{
+            background: style.bg, color: style.color,
+            fontSize: "11px", fontWeight: "700",
+            padding: "4px 12px", borderRadius: "99px"
+          }}>
+            {row.ultimoEstado || "generado"}
+          </span>
+        );
+      }
     },
     {
-      name: "Cambiar Estado",
-      center: true,
-      width: "200px",
+      name: "Acciones",
       cell: (row) => {
         const estadoActual = row.ultimoEstado || "generado";
         const siguientes = estadosSiguientes[estadoActual] || [];
         if (siguientes.length === 0) return <span className="text-muted small">Sin acciones</span>;
         return (
-          <div className="d-flex gap-1 flex-wrap justify-content-center">
-            {siguientes.map((estado) => (
-              <button
-                key={estado}
-                className={`btn btn-sm ${getBadgeColor(estado)} text-white`}
-                onClick={() => cambiarEstado(row.id_solicitud, estado)}
-                style={{ fontSize: "0.7rem" }}
-              >
-                {estado}
-              </button>
-            ))}
+          <div className="dropdown">
+            <button className="btn btn-sm text-white dropdown-toggle" style={{ background: "#0077B6" }} type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i className="fas fa-exchange-alt me-1"></i> Cambiar
+            </button>
+            <ul className="dropdown-menu">
+              {siguientes.map((estado) => (
+                <li key={estado}>
+                  <button className="dropdown-item" onClick={() => cambiarEstado(row.id_solicitud, estado)}>
+                    {estado === "aceptado" && "✅ Aceptado"}
+                    {estado === "prestado" && "📦 Prestado"}
+                    {estado === "entregado" && "🔄 Entregado"}
+                    {estado === "cancelado" && "❌ Cancelado"}
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
         );
-      }
+      },
+      ignoreRowClick: true,
+      allowOverflow: true,
+      button: true,
+      width: "150px"
     }
   ];
 
@@ -151,7 +168,10 @@ const GestionSolicitudes = () => {
 
   return (
     <div className="container mt-4">
-      <h2 className="text-center mb-4 fw-bold text-primary">Gestión de Solicitudes</h2>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
+        <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
+        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Gestión de Solicitudes</h2>
+      </div>
       
 
       <div className="row mb-4 align-items-center">
@@ -162,6 +182,7 @@ const GestionSolicitudes = () => {
             placeholder="Buscar por ID, solicitante o estado..."
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
+            style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
           />
         </div>
         <div className="col-md-6 text-end">
@@ -171,16 +192,25 @@ const GestionSolicitudes = () => {
         </div>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={filtered}
-        pagination
-        paginationPerPage={10}
-        highlightOnHover
-        striped
-        responsive
-        noDataComponent="No hay solicitudes registradas"
-      />
+      <div style={{ borderRadius: "14px", overflow: "hidden", border: "1px solid #dbeafe" }}>
+        <DataTable
+          columns={columns}
+          data={filtered}
+          pagination
+          paginationPerPage={10}
+          paginationComponentOptions={paginationComponentOptions}
+          customStyles={tableCustomStyles}
+          highlightOnHover
+          striped
+          responsive
+          noDataComponent={
+            <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
+              <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>
+              <p>No hay solicitudes registradas</p>
+            </div>
+          }
+        />
+      </div>
     </div>
   );
 };

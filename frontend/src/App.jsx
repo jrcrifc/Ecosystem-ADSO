@@ -24,7 +24,6 @@ import FormularioAcceso from "./FormularioAcceso/FormularioAcceso.jsx";
 import GestionUsuarios from "./usuarios/GestionUsuarios.jsx";
 import SalidasReactivos from "./salidasReactivos/crudsalidareactivo.jsx";
 import TopBar from "./TopBar.jsx";
-import BitacoraAuditoria from "./usuarios/BitacoraAuditoria.jsx";
 import PerfilUsuario from "./Home/PerfilUsuario.jsx";
 
 // ✅ Aprendiz/Instructor → formulario | Pasante/Gestor → pantalla espera
@@ -32,14 +31,9 @@ const FormularioRoute = ({ isAuth, userData, userRol, logOut, children }) => {
   if (!isAuth) return <Navigate to="/UserLogin" replace />;
 
   const estado = userData?.estado || userData?.user?.estado;
-  const rolesFormulario = ['Aprendiz', 'Instructor'];
-  const rolesEspera = ['Pasante', 'Gestor'];
+  const rolesRevision = ['Aprendiz', 'Instructor', 'Pasante', 'Gestor'];
 
-  if (rolesFormulario.includes(userRol) && estado !== 'aprobado') {
-    return <FormularioAcceso userData={userData} logOut={logOut} />;
-  }
-
-  if (rolesEspera.includes(userRol) && estado !== 'aprobado') {
+  if (rolesRevision.includes(userRol) && estado !== 'aprobado') {
     return (
       <div style={{
         minHeight: "100vh", background: "#f0f9ff",
@@ -207,7 +201,6 @@ function App() {
 
             {/* SOLO ADMINISTRADOR */}
             <Route path="/gestion-usuarios" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><GestionUsuarios /></SoloAdminRoute>} />
-            <Route path="/auditoria" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><BitacoraAuditoria /></SoloAdminRoute>} />
             <Route path="/gestion-solicitudes" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><GestionSolicitudes /></SoloAdminRoute>} />
             <Route path="/estadoSolicitud" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Crudestadosolicitud /></SoloAdminRoute>} />
 

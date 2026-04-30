@@ -65,11 +65,11 @@ const Crudproveedor = () => {
         <div className="d-flex gap-2 justify-content-center">
           <button className="btn btn-sm" style={{ background: "#dbeafe", color: "#0077B6", border: "none" }}
             data-bs-toggle="modal" data-bs-target="#modalProveedor" onClick={() => setSelectedProveedor(row)} title="Editar">
-            ✏️
+            <i className="fas fa-edit"></i>
           </button>
           <button className="btn btn-sm" style={{ background: "#fee2e2", color: "#dc2626", border: "none" }}
             onClick={() => eliminarProveedor(row.id_proveedor)} title="Eliminar">
-            🗑️
+            <i className="fas fa-trash-alt"></i>
           </button>
         </div>
       ),
@@ -83,7 +83,10 @@ const Crudproveedor = () => {
 
   return (
     <div className="mt-4" style={{ padding: "0 16px" }}>
-      <h2 className="fw-bold mb-1" style={{ color: "#0A1628" }}>Gestión de Proveedores</h2>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
+        <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
+        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Gestión de Proveedores</h2>
+      </div>
       <p style={{ color: "#64748b", fontSize: "14px", marginBottom: "20px" }}>Administra los proveedores del laboratorio</p>
 
       <div className="row mb-3 align-items-center">

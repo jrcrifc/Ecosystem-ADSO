@@ -5,6 +5,7 @@ import Swal from "sweetalert2";
 import ReactivoForm from "./reactivosform.jsx";
 import * as bootstrap from "bootstrap";
 import { exportToPDF, exportToExcel } from "../api/ExportUtils.js";
+import { paginationComponentOptions, tableCustomStyles } from "../config/dataTableConfig";
 
 const CrudReactivos = () => {
   const [reactivos, setReactivos] = useState([]);
@@ -31,10 +32,10 @@ const CrudReactivos = () => {
       name: "Acciones", center: true, width: "130px",
       cell: (row) => (
         <div className="d-flex gap-1 justify-content-center">
-          <button className="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#modalReactivo" onClick={() => setSelectedReactivo(row)}>
+          <button className="btn btn-sm" style={{ background: "#dbeafe", color: "#0077B6", border: "none" }} data-bs-toggle="modal" data-bs-target="#modalReactivo" onClick={() => setSelectedReactivo(row)}>
             <i className="fa-solid fa-pencil"></i>
           </button>
-          <button className={`btn btn-sm ${row.estado === 1 ? "btn-outline-danger" : "btn-outline-success"}`} onClick={() => toggleEstado(row.id_reactivo, row.estado)}>
+          <button className="btn btn-sm" style={{ background: row.estado === 1 ? "#fee2e2" : "#dcfce7", color: row.estado === 1 ? "#dc2626" : "#16a34a", border: "none" }} onClick={() => toggleEstado(row.id_reactivo, row.estado)}>
             <i className={`fas ${row.estado === 1 ? "fa-ban" : "fa-check"}`}></i>
           </button>
         </div>
@@ -92,10 +93,13 @@ const CrudReactivos = () => {
 
   return (
     <div className="container mt-4">
-      <h2 className="text-center mb-4 text-primary fw-bold">Gestión de Reactivos</h2>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
+        <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
+        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Gestión de Reactivos</h2>
+      </div>
       <div className="row mb-3 align-items-center">
         <div className="col-md-5">
-          <input type="text" className="form-control" placeholder="Buscar por ID o nombre..." value={filterText} onChange={(e) => setFilterText(e.target.value)} />
+          <input type="text" className="form-control" placeholder="Buscar por ID o nombre..." value={filterText} onChange={(e) => setFilterText(e.target.value)} style={{ borderColor: "#dbeafe", borderRadius: "10px" }} />
         </div>
         <div className="col-md-7 text-end d-flex gap-2 justify-content-end">
           <button className="btn btn-outline-danger" onClick={() => {
@@ -117,7 +121,14 @@ const CrudReactivos = () => {
           </button>
         </div>
       </div>
-      <DataTable columns={columns} data={filtered} pagination highlightOnHover striped responsive noDataComponent="No hay reactivos registrados" paginationPerPage={10} />
+      <div style={{ borderRadius: "14px", overflow: "hidden", border: "1px solid #dbeafe" }}>
+        <DataTable columns={columns} data={filtered} pagination paginationPerPage={10} paginationComponentOptions={paginationComponentOptions} customStyles={tableCustomStyles} highlightOnHover striped responsive noDataComponent={
+          <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
+            <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>
+            <p>No hay reactivos registrados</p>
+          </div>
+        } />
+      </div>
       <div className="modal fade" id="modalReactivo" tabIndex="-1">
         <div className="modal-dialog modal-xl">
           <div className="modal-content">

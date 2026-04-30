@@ -51,8 +51,8 @@ class UserService {
       estado: 'pendiente'
     });
 
-    // ✅ Notificar al admin si es Pasante o Gestor
-    if (['Pasante', 'Gestor'].includes(rol)) {
+    // ✅ Notificar al admin si requiere aprobación
+    if (['Pasante', 'Gestor', 'Aprendiz', 'Instructor'].includes(rol)) {
       await NotificacionService.notificarAdmins({
         id_usuario_origen: user.id_usuario,
         titulo: '👤 Nuevo usuario pendiente de aprobación',
@@ -118,6 +118,15 @@ class UserService {
     if (!user) throw new Error("Usuario no encontrado");
     await user.update({ estado: 'aprobado' });
     
+    // Crear notificación para el socket
+    await NotificacionService.crearNotificacion({
+      id_usuario_origen: null,
+      id_usuario_destino: user.id_usuario,
+      titulo: '¡Cuenta Aprobada!',
+      mensaje: 'El administrador ha aprobado tu cuenta. Ya puedes acceder a todas las funcionalidades.',
+      tipo: 'aprobado'
+    });
+
     // Enviar correo de aprobación
     await emailService.sendAprovalEmail(user.email, user.nombres_apellidos);
 

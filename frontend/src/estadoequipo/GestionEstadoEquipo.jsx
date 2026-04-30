@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import apiAxios from "../api/axiosConfig";
 import Swal from "sweetalert2";
+import DataTable from "react-data-table-component";
+import { paginationComponentOptions, tableCustomStyles } from "../config/dataTableConfig";
 
 const estadoConfig = {
   disponible:      { icon: "✅", color: "#0077B6", bg: "#e0f2fe", border: "#bae6fd", label: "Disponible" },
@@ -8,18 +10,11 @@ const estadoConfig = {
   mantenimiento:   { icon: "🔧", color: "#d97706", bg: "#fef3c7", border: "#fde68a", label: "Mantenimiento" },
 };
 
-const estadosSiguientes = {
-  disponible:      ["no disponible", "mantenimiento"],
-  "no disponible": ["disponible", "mantenimiento"],
-  mantenimiento:   ["disponible", "no disponible"],
-};
-
 const mapaEstados = { disponible: 1, "no disponible": 2, mantenimiento: 3 };
 
 export default function GestionEstadoEquipo() {
   const [equipos, setEquipos] = useState([]);
   const [filterText, setFilterText] = useState("");
-  const [expandedId, setExpandedId] = useState(null);
 
   const token = sessionStorage.getItem("token");
   const headers = { Authorization: `Bearer ${token}` };
@@ -46,7 +41,9 @@ export default function GestionEstadoEquipo() {
       confirmButtonText: "Sí, cambiar",
       cancelButtonText: "Cancelar"
     });
+    
     if (!result.isConfirmed) return;
+    
     try {
       await apiAxios.post("/api/estadoxequipo/cambiarEstado",
         { id_equipo, id_estado_equipo: mapaEstados[nuevoEstado] },
@@ -54,7 +51,6 @@ export default function GestionEstadoEquipo() {
       );
       Swal.fire({ icon: "success", title: "¡Estado actualizado!", timer: 1500, showConfirmButton: false });
       cargarEquipos();
-      setExpandedId(null);
     } catch {
       Swal.fire("Error", "No se pudo cambiar el estado", "error");
     }
@@ -65,178 +61,105 @@ export default function GestionEstadoEquipo() {
       .some(f => f?.toLowerCase().includes(filterText.toLowerCase()))
   );
 
+  const columns = [
+    {
+      name: "Equipo",
+      selector: row => row.nom_equipo,
+      sortable: true,
+    },
+    {
+      name: "Placa",
+      selector: row => row.no_placa,
+      sortable: true,
+    },
+    {
+      name: "Marca",
+      selector: row => row.marca_equipo,
+      sortable: true,
+    },
+    {
+      name: "Estado Actual",
+      selector: row => row.ultimoEstado || "disponible",
+      sortable: true,
+      cell: row => {
+        const estado = row.ultimoEstado || "disponible";
+        const cfg = estadoConfig[estado] || estadoConfig.disponible;
+        return (
+          <span style={{
+            background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`,
+            padding: "4px 10px", borderRadius: "99px", fontSize: "12px",
+            fontWeight: "700"
+          }}>
+            {cfg.icon} {cfg.label}
+          </span>
+        );
+      }
+    },
+    {
+      name: "Acciones",
+      cell: row => (
+        <div className="dropdown">
+          <button className="btn btn-sm text-white dropdown-toggle" style={{ background: "#0077B6" }} type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i className="fas fa-exchange-alt me-1"></i> Cambiar
+          </button>
+          <ul className="dropdown-menu">
+            <li><button className="dropdown-item" onClick={() => cambiarEstado(row.id_equipo, "disponible")}>✅ Disponible</button></li>
+            <li><button className="dropdown-item" onClick={() => cambiarEstado(row.id_equipo, "mantenimiento")}>🔧 Mantenimiento</button></li>
+            <li><button className="dropdown-item" onClick={() => cambiarEstado(row.id_equipo, "no disponible")}>🚫 No Disponible</button></li>
+          </ul>
+        </div>
+      ),
+      ignoreRowClick: true,
+      allowOverflow: true,
+      button: true,
+      width: "150px"
+    }
+  ];
+
   return (
     <div className="container mt-4">
-      <h2 className="fw-bold mb-1" style={{ color: "#0f172a" }}>Gestión de Estado de Equipos</h2>
-      <p style={{ color: "#64748b", fontSize: "14px", marginBottom: "24px" }}>
-        Cambia el estado de disponibilidad de cada equipo
-      </p>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
+        <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
+        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Gestión de Estado de Equipos</h2>
+      </div>
 
-      {/* Search + Refresh */}
       <div className="row mb-4 align-items-center">
         <div className="col-md-7">
-          <input type="text" className="form-control"
-            placeholder="Buscar por nombre, placa, marca o estado..."
-            value={filterText} onChange={e => setFilterText(e.target.value)}
+          <input 
+            type="text" 
+            className="form-control" 
+            placeholder="Buscar por nombre, placa, marca o estado..." 
+            value={filterText}
+            onChange={(e) => setFilterText(e.target.value)}
             style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
           />
         </div>
         <div className="col-md-5 text-end">
-          <button className="btn btn-outline-primary" onClick={cargarEquipos}
-            style={{ borderRadius: "10px", fontWeight: "600" }}>
+          <button className="btn btn-outline-primary" onClick={cargarEquipos}>
             <i className="fas fa-sync me-2"></i>Actualizar
           </button>
         </div>
       </div>
-
-      {/* Stats */}
-      <div style={{ display: "flex", gap: "12px", marginBottom: "24px", flexWrap: "wrap" }}>
-        {Object.entries(estadoConfig).map(([key, cfg]) => {
-          const count = filtered.filter(e => (e.ultimoEstado || "disponible") === key).length;
-          return (
-            <div key={key} style={{
-              flex: "1 1 160px", background: cfg.bg, border: `1px solid ${cfg.border}`,
-              borderRadius: "14px", padding: "16px 20px", textAlign: "center",
-              minWidth: "140px"
-            }}>
-              <div style={{ fontSize: "28px", marginBottom: "4px" }}>{cfg.icon}</div>
-              <div style={{ fontSize: "24px", fontWeight: "800", color: cfg.color }}>{count}</div>
-              <div style={{ fontSize: "12px", fontWeight: "700", color: cfg.color, textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                {cfg.label}
-              </div>
+          
+      <div style={{ borderRadius: "14px", overflow: "hidden", border: "1px solid #dbeafe" }}>
+        <DataTable 
+          columns={columns} 
+          data={filtered} 
+          pagination 
+          paginationPerPage={10}
+          paginationComponentOptions={paginationComponentOptions}
+          customStyles={tableCustomStyles}
+          highlightOnHover 
+          striped
+          responsive 
+          noDataComponent={
+            <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
+              <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>
+              <p>No hay equipos registrados</p>
             </div>
-          );
-        })}
+          }
+        />
       </div>
-
-      {/* Equipment Cards */}
-      {filtered.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>
-          <div style={{ fontSize: "48px", marginBottom: "12px" }}>📦</div>
-          <p style={{ fontSize: "16px" }}>No hay equipos que coincidan con la búsqueda</p>
-        </div>
-      ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: "16px" }}>
-          {filtered.map(equipo => {
-            const estado = equipo.ultimoEstado || "disponible";
-            const cfg = estadoConfig[estado] || estadoConfig.disponible;
-            const siguientes = estadosSiguientes[estado] || [];
-            const isExpanded = expandedId === equipo.id_equipo;
-
-            return (
-              <div key={equipo.id_equipo} style={{
-                background: "#fff", borderRadius: "16px", overflow: "hidden",
-                border: `1px solid ${cfg.border}`, boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-                transition: "all 0.3s ease",
-                transform: isExpanded ? "scale(1.01)" : "scale(1)"
-              }}>
-                {/* Top color bar */}
-                <div style={{ height: "4px", background: `linear-gradient(90deg, ${cfg.color}, ${cfg.color}88)` }} />
-
-                <div style={{ padding: "20px" }}>
-                  {/* Header row */}
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1 }}>
-                      <div style={{
-                        width: "46px", height: "46px", borderRadius: "12px",
-                        background: `linear-gradient(135deg, ${cfg.color}, ${cfg.color}cc)`,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: "20px", flexShrink: 0
-                      }}>
-                        {cfg.icon}
-                      </div>
-                      <div style={{ minWidth: 0 }}>
-                        <h6 style={{ margin: "0 0 2px", fontWeight: "700", color: "#0f172a", fontSize: "15px",
-                          whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "200px" }}
-                          title={equipo.nom_equipo}>
-                          {equipo.nom_equipo}
-                        </h6>
-                        <p style={{ margin: 0, fontSize: "12px", color: "#94a3b8" }}>
-                          {equipo.marca_equipo || "Sin marca"} · {equipo.no_placa || "Sin placa"}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Status badge */}
-                    <span style={{
-                      background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`,
-                      padding: "4px 14px", borderRadius: "99px", fontSize: "11px",
-                      fontWeight: "700", whiteSpace: "nowrap", textTransform: "uppercase",
-                      letterSpacing: "0.3px"
-                    }}>
-                      {cfg.label}
-                    </span>
-                  </div>
-
-                  {/* Action area */}
-                  <div style={{ marginTop: "16px" }}>
-                    {!isExpanded ? (
-                      <button
-                        onClick={() => setExpandedId(equipo.id_equipo)}
-                        style={{
-                          width: "100%", padding: "10px", borderRadius: "10px",
-                          border: `1px solid ${cfg.border}`, background: cfg.bg,
-                          color: cfg.color, fontWeight: "700", fontSize: "12px",
-                          cursor: "pointer", transition: "all 0.2s",
-                          display: "flex", alignItems: "center", justifyContent: "center", gap: "6px"
-                        }}
-                      >
-                        <i className="fas fa-exchange-alt" style={{ fontSize: "11px" }}></i>
-                        Cambiar Estado
-                      </button>
-                    ) : (
-                      <div style={{
-                        background: "#f8fafc", borderRadius: "12px", padding: "14px",
-                        border: "1px solid #e2e8f0"
-                      }}>
-                        <p style={{
-                          margin: "0 0 10px", fontSize: "11px", fontWeight: "700",
-                          color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px"
-                        }}>
-                          Cambiar a:
-                        </p>
-                        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                          {siguientes.map(nuevoEstado => {
-                            const targetCfg = estadoConfig[nuevoEstado];
-                            return (
-                              <button key={nuevoEstado}
-                                onClick={() => cambiarEstado(equipo.id_equipo, nuevoEstado)}
-                                style={{
-                                  flex: 1, padding: "10px 16px", borderRadius: "10px",
-                                  border: `1px solid ${targetCfg.border}`,
-                                  background: targetCfg.bg, color: targetCfg.color,
-                                  fontWeight: "700", fontSize: "12px", cursor: "pointer",
-                                  transition: "all 0.2s", minWidth: "120px",
-                                  display: "flex", alignItems: "center", justifyContent: "center", gap: "6px"
-                                }}
-                                onMouseOver={e => { e.target.style.background = targetCfg.color; e.target.style.color = "#fff"; }}
-                                onMouseOut={e => { e.target.style.background = targetCfg.bg; e.target.style.color = targetCfg.color; }}
-                              >
-                                {targetCfg.icon} {targetCfg.label}
-                              </button>
-                            );
-                          })}
-                        </div>
-                        <button
-                          onClick={() => setExpandedId(null)}
-                          style={{
-                            marginTop: "10px", width: "100%", padding: "8px",
-                            borderRadius: "8px", border: "1px solid #e2e8f0",
-                            background: "#fff", color: "#94a3b8", fontWeight: "600",
-                            fontSize: "11px", cursor: "pointer"
-                          }}
-                        >
-                          ✕ Cancelar
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 }

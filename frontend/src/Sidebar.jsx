@@ -38,7 +38,7 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
       ]
     },
     {
-      key: "solicitudes", icon: "📋", text: "Solicitudes", show: true,
+      key: "solicitudes", icon: "📋", text: "Solicitudes", show: ['Aprendiz', 'Instructor'].includes(userRol),
       items: [
         { icon: "📝", text: "Nueva Solicitud", path: "/solicitud", show: true },
         { icon: "📜", text: "Historial", path: "/estadoxsolicitud", show: true },
@@ -49,7 +49,7 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
       show: esAdmin || esGestorPasante,
       items: [
         { icon: "⚗️", text: "Reactivos", path: "/reactivos", show: true },
-        { icon: "🔄", text: "Movimientos", path: "/movimientoreactivo", show: true },
+        { icon: "🔄", text: "Movimiento Reactivos", path: "/movimientoreactivo", show: true },
         { icon: "📊", text: "Control Reactivos", path: "/control-reactivos", show: true },
         { icon: "📤", text: "Salidas Reactivos", path: "/salidas", show: true },
       ]
@@ -78,7 +78,6 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
         { icon: "👥", text: "Gestión Usuarios", path: "/gestion-usuarios", show: true },
         { icon: "📑", text: "Gestión Solicitudes", path: "/gestion-solicitudes", show: true },
         { icon: "🏷️", text: "Estados Solicitud", path: "/estadoSolicitud", show: true },
-        { icon: "🕵️", text: "Bitácora Auditoría", path: "/auditoria", show: true },
       ]
     },
   ];

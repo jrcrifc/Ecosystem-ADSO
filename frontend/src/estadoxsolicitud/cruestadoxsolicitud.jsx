@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import DataTable from "react-data-table-component";
 import apiAxios from "../api/axiosConfig";
 import Swal from "sweetalert2";
+import { paginationComponentOptions, tableCustomStyles } from "../config/dataTableConfig";
 
 export default function CrudEstadoxSolicitud() {
   const [registros, setRegistros] = useState([]);
@@ -46,7 +47,7 @@ export default function CrudEstadoxSolicitud() {
       aceptado:  { bg: "#dbeafe", color: "#0077B6" },
       prestado:  { bg: "#fffbeb", color: "#d97706" },
       entregado: { bg: "#ecfdf5", color: "#059669" },
-      devuelto:  { bg: "#f0fdf4", color: "#16a34a" },
+      devuelto:  { bg: "#ecfdf5", color: "#059669" },
       cancelado: { bg: "#fef2f2", color: "#dc2626" },
       rechazado: { bg: "#fef2f2", color: "#dc2626" },
     };
@@ -116,9 +117,12 @@ export default function CrudEstadoxSolicitud() {
 
   return (
     <div className="container mt-4">
-      <h2 className="fw-bold mb-1" style={{ color: "#0f172a" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
+        <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
+        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>
         {esAdmin ? "Historial de Todas las Solicitudes" : "Mi Historial de Solicitudes"}
       </h2>
+    </div>
       <p style={{ color: "#64748b", marginBottom: "24px", fontSize: "14px" }}>
         {esAdmin
           ? "Vista completa de todos los cambios de estado de solicitudes del sistema."
@@ -134,7 +138,7 @@ export default function CrudEstadoxSolicitud() {
             placeholder="Buscar por ID, estado o solicitante..."
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
-            style={{ borderColor: "#e2e8f0", borderRadius: "10px" }}
+            style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
           />
         </div>
         <div className="col-md-6 text-end">
@@ -151,21 +155,25 @@ export default function CrudEstadoxSolicitud() {
         </div>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={filtered}
-        pagination
-        paginationPerPage={10}
-        highlightOnHover
-        striped
-        responsive
-        noDataComponent={
-          <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
-            <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>
-            <p>No tienes solicitudes registradas</p>
-          </div>
-        }
-      />
+      <div style={{ borderRadius: "14px", overflow: "hidden", border: "1px solid #dbeafe" }}>
+        <DataTable
+          columns={columns}
+          data={filtered}
+          pagination
+          paginationPerPage={10}
+          paginationComponentOptions={paginationComponentOptions}
+          customStyles={tableCustomStyles}
+          highlightOnHover
+          striped
+          responsive
+          noDataComponent={
+            <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
+              <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>
+              <p>No tienes solicitudes registradas</p>
+            </div>
+          }
+        />
+      </div>
     </div>
   );
 }
