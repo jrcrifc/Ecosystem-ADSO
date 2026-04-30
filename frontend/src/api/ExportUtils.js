@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 
 /**
@@ -22,12 +22,12 @@ export const exportToPDF = (data, columns, fileName = "reporte", title = "Report
   doc.text(`Fecha de generación: ${new Date().toLocaleString()}`, 14, 30);
 
   // Generar tabla
-  doc.autoTable({
+  autoTable(doc, {
     startY: 35,
     head: [columns.map(c => c.header)],
     body: data.map(row => columns.map(c => row[c.dataKey] || "-")),
     theme: 'grid',
-    headStyles: { fillStyle: 'f', fillColor: [2, 62, 138] }, // Estilo azul
+    headStyles: { fillColor: [2, 62, 138], textColor: [255, 255, 255] }, // Estilo azul
     styles: { fontSize: 8 },
   });
 
