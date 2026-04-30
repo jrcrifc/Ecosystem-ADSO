@@ -350,8 +350,8 @@ const CrudSolicitudPrestamos = () => {
                           border: "1px solid #e2e8f0", backgroundColor: "#fff"
                         }}>
                           <div>
-                            <div className="fw-semibold" style={{ fontSize: "0.85rem" }}>{eq.nom_equipo}</div>
-                            <div className="text-muted" style={{ fontSize: "0.75rem" }}>
+                            <div className="fw-semibold" style={{ fontSize: "0.85rem", color: "#0f172a" }}>{eq.nom_equipo}</div>
+                            <div className="text-muted" style={{ fontSize: "0.75rem", color: "#64748b" }}>
                               {eq.marca_equipo || "Sin marca"} · {eq.no_placa || "Sin placa"}
                             </div>
                           </div>
