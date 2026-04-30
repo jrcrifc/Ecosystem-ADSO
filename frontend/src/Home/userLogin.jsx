@@ -134,7 +134,7 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
             {loading ? "Ingresando..." : "Iniciar Sesión"}
           </button>
 
-          <p className="mt-3">
+          <p className="mt-3" style={{ color: "#334155", fontSize: "14px" }}>
             ¿No tienes cuenta?{" "}
             <span onClick={() => navigate("/register")}
               style={{ color: "#0077B6", fontWeight: "bold", cursor: "pointer" }}>
