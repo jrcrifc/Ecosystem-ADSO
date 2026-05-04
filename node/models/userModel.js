@@ -35,8 +35,8 @@ const UserModel = sequelize.define('usuarios', {
 }, {
   freezeTableName: true,
   timestamps: true,
-  createdAt: 'createdat',
-  updatedAt: 'updatedat'
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 });
 
 export default UserModel;

@@ -14,8 +14,8 @@ const SolicitudAccesoModel = sequelize.define('solicitudes_acceso', {
 }, { 
   freezeTableName: true,
   timestamps: true,
-  createdAt: 'createdat',
-  updatedAt: 'updatedat'
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 });
 
 export default SolicitudAccesoModel;

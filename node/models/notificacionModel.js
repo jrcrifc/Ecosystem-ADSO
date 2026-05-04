@@ -15,8 +15,8 @@ const NotificacionModel = sequelize.define('notificaciones', {
 }, { 
   freezeTableName: true,
   timestamps: true,
-  createdAt: 'createdat',
-  updatedAt: 'updatedat'
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 });
 
 export default NotificacionModel;

@@ -26,6 +26,7 @@ import cuentadanteRoutes from './routes/cuentandanteRoutes.js';
 import notificacionRoutes from './routes/notificacionRoutes.js';
 import solicitudAccesoRoutes from './routes/solicitudAccesoRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
+import UserService from './service/userService.js';
 
 // =============================
 // 🔥 CARGAR VARIABLES DE ENTORNO (CORREGIDO)
@@ -106,6 +107,9 @@ try {
     // Esto SOLO crea tablas nuevas, no modifica existentes
     await db.sync({ force: false });
     console.log('✅ Sincronización de tablas completada');
+
+    // ✅ Crear admin si no existe
+    await UserService.crearAdminPredeterminado();
     
     // Validar que el campo cantidad_inventario existe
     const [columns] = await db.query(`
