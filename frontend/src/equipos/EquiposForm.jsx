@@ -55,7 +55,7 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
         observaciones: selectedEquipo.observaciones || "",
         foto_equipo: null,
         previewFoto: selectedEquipo.foto_equipo
-          ? `http://localhost:8000/uploads/${selectedEquipo.foto_equipo}`
+          ? `http://localhost:3001/uploads/${selectedEquipo.foto_equipo}`
           : "",
         estado: selectedEquipo.estado ?? 1
       });

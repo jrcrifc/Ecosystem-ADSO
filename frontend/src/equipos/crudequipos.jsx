@@ -109,7 +109,7 @@ export default function CrudEquipo() {
         <div style={{ padding: "5px", cursor: row.foto_equipo ? "pointer" : "default" }}>
           {row.foto_equipo ? (
             <img
-              src={`http://localhost:8000/uploads/${row.foto_equipo}?v=${Date.now()}`}
+              src={`http://localhost:3001/uploads/${row.foto_equipo}?v=${Date.now()}`}
               alt={row.nom_equipo || "Foto del equipo"}
               style={{
                 width: "80px",
@@ -296,7 +296,7 @@ export default function CrudEquipo() {
             <div className="modal-body text-center" style={{ padding: "20px 40px 40px" }}>
               {largePhoto && (
                 <img
-                  src={`http://localhost:8000/uploads/${largePhoto}?v=${Date.now()}`}
+                  src={`http://localhost:3001/uploads/${largePhoto}?v=${Date.now()}`}
                   alt="Foto del equipo"
                   style={{
                     maxWidth: "100%",

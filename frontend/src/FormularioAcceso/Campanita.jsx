@@ -19,7 +19,7 @@ export default function Campanita({ userData, onAprobado, userRol }) {
     cargar();
 
     // ✅ Conexión Socket.io
-    const socket = io("http://localhost:8000"); // Asegúrate que el puerto coincida
+    const socket = io("http://localhost:3001"); // Asegúrate que el puerto coincida
 
     socket.on("connect", () => {
       socket.emit("join", id_usuario);
