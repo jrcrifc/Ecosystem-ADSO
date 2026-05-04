@@ -45,25 +45,7 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
       setUserData(user);
       setIsAuth(true);
 
-      switch (user.rol) {
-        case "Administrador":
-          navigate("/dashboardAdmin");
-          break;
-        case "Instructor":
-          navigate("/dashboardInstructor");
-          break;
-        case "Gestor":
-          navigate("/dashboardGestor");
-          break;
-        case "Pasante":
-          navigate("/dashboardPasante");
-          break;
-        case "Aprendiz":
-          navigate("/dashboardAprendiz");
-          break;
-        default:
-          navigate("/home");
-      }
+      navigate("/home");
 
       setForm({ email: "", password: "" });
     } catch (err) {
