@@ -3,74 +3,92 @@ import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 
 const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
-  const [id_movimiento_reactivo, setId_movimiento_reactivo] = useState("");
-  const [cantidad_salida, setCantidad_salida] = useState("");
-  const [fecha_salida, setFecha_salida] = useState("");
-  const [estado, setEstado] = useState(1);
-  const [stockDisponible, setStockDisponible] = useState(null);
+  const [reactivos, setReactivos] = useState([]);
+  const [id_reactivo, setIdReactivo] = useState("");
+  const [lotesFefo, setLotesFefo] = useState([]);
+  const [cantidad_salida, setCantidadSalida] = useState("");
+  const [fecha_salida, setFechaSalida] = useState("");
+  const [hora_salida, setHoraSalida] = useState("07:00");
+  const [loadingLotes, setLoadingLotes] = useState(false);
+
+  useEffect(() => {
+    cargarReactivos();
+    setFechaSalida(new Date().toISOString().slice(0, 10));
+  }, []);
 
   useEffect(() => {
     if (selectedSalida) {
-      setId_movimiento_reactivo(selectedSalida.id_movimiento_reactivo || "");
-      setCantidad_salida(selectedSalida.cantidad_salida || "");
-      setFecha_salida(
+      setCantidadSalida(selectedSalida.cantidad_salida || "");
+      setFechaSalida(
         selectedSalida.fecha_salida
           ? new Date(selectedSalida.fecha_salida).toISOString().slice(0, 16)
-          : ""
+          : new Date().toISOString().slice(0, 16)
       );
-      setEstado(selectedSalida.estado ?? 1);
     } else {
-      const hoy = new Date().toISOString().slice(0, 16);
-      setFecha_salida(hoy);
-      setId_movimiento_reactivo("");
-      setCantidad_salida("");
-      setEstado(1);
-      setStockDisponible(null);
+      setIdReactivo("");
+      setCantidadSalida("");
+      setLotesFefo([]);
     }
   }, [selectedSalida]);
 
-  // Cuando cambia el id_movimiento_reactivo, consultar el stock disponible
-  const handleMovimientoChange = async (e) => {
-    const val = e.target.value;
-    setId_movimiento_reactivo(val);
-    setStockDisponible(null);
-
-    if (!val) return;
-
+  const cargarReactivos = async () => {
     try {
-      const res = await apiAxios.get(`/api/movimientoreactivos/${val}`);
-      const movimiento = res.data;
-      // Buscar el reactivo para ver cantidad_inventario
-      const resReactivo = await apiAxios.get(`/api/reactivos/${movimiento.id_reactivo}`);
-      setStockDisponible(resReactivo.data.cantidad_inventario);
-    } catch {
-      setStockDisponible(null);
+      const res = await apiAxios.get("/api/reactivos/stock/disponibilidad");
+      // Solo mostrar reactivos disponibles
+      setReactivos(res.data.filter(r => r.estado_stock === 'disponible'));
+    } catch (error) {
+      console.error("Error al cargar reactivos:", error);
     }
   };
+
+  const handleReactivoChange = async (e) => {
+    const val = e.target.value;
+    setIdReactivo(val);
+    setLotesFefo([]);
+    setCantidadSalida("");
+    if (!val) return;
+
+    setLoadingLotes(true);
+    try {
+      const res = await apiAxios.get(`/api/salidas/lotes-fefo/${val}`);
+      setLotesFefo(res.data);
+    } catch {
+      Swal.fire("Error", "No se pudieron cargar los lotes", "error");
+    } finally {
+      setLoadingLotes(false);
+    }
+  };
+
+  const stockTotal = lotesFefo.reduce((acc, l) => acc + l.cantidad_disponible, 0);
+  const loteFefo = lotesFefo[0]; // El primero es el más próximo a vencer
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!id_movimiento_reactivo) {
-      Swal.fire("⚠️ Atención", "Debes ingresar el ID del movimiento", "warning");
+    if (!id_reactivo) {
+      Swal.fire("⚠️ Atención", "Selecciona un reactivo", "warning");
       return;
     }
-
     if (!cantidad_salida || parseFloat(cantidad_salida) <= 0) {
-      Swal.fire("⚠️ Atención", "La cantidad de salida debe ser mayor a 0", "warning");
+      Swal.fire("⚠️ Atención", "La cantidad debe ser mayor a 0", "warning");
       return;
     }
-
-    if (stockDisponible !== null && parseFloat(cantidad_salida) > parseFloat(stockDisponible)) {
-      Swal.fire("⚠️ Stock insuficiente", `Solo hay ${stockDisponible} en inventario`, "warning");
+    if (parseFloat(cantidad_salida) > stockTotal) {
+      Swal.fire("⚠️ Stock insuficiente", `Solo hay ${stockTotal.toFixed(3)} disponible en total`, "warning");
+      return;
+    }
+    // ✅ Validar hora entre 7:00 y 16:00
+    const [hh, mm] = hora_salida.split(':').map(Number);
+    const minutos = hh * 60 + mm;
+    if (minutos < 420 || minutos > 960) { // 7*60=420, 16*60=960
+      Swal.fire("⚠️ Hora no permitida", "La hora debe estar entre 7:00 AM y 4:00 PM", "warning");
       return;
     }
 
     const data = {
-      id_movimiento_reactivo: parseInt(id_movimiento_reactivo),
+      id_reactivo: parseInt(id_reactivo),
       cantidad_salida: parseFloat(cantidad_salida),
-      fecha_salida: fecha_salida ? new Date(fecha_salida).toISOString() : new Date().toISOString(),
-      estado,
+      fecha_salida: fecha_salida ? new Date(`${fecha_salida}T${hora_salida}:00`).toISOString() : new Date().toISOString(),
     };
 
     try {
@@ -79,13 +97,11 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
         Swal.fire("✅ Actualizado", "Salida modificada correctamente", "success");
       } else {
         await apiAxios.post("/api/salidas", data);
-        Swal.fire("✅ Registrada", "Salida registrada y stock actualizado", "success");
+        Swal.fire("✅ Registrada", "Salida registrada con lógica FEFO", "success");
       }
-
       refreshData();
       hideModal();
     } catch (error) {
-      console.error("Error al guardar salida:", error);
       Swal.fire("Error", error.response?.data?.message || "No se pudo registrar la salida", "error");
     }
   };
@@ -94,68 +110,143 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
     <form onSubmit={handleSubmit} className="needs-validation" noValidate>
       <div className="row g-3">
 
-        {/* ID MOVIMIENTO */}
-        <div className="col-md-6">
-          <label className="form-label fw-semibold text-muted">ID Movimiento Reactivo</label>
-          <input
-            type="number"
-            className="form-control form-control-sm"
-            value={id_movimiento_reactivo}
-            onChange={handleMovimientoChange}
+        {/* REACTIVO */}
+        <div className="col-md-12">
+          <label className="form-label fw-semibold text-muted">Reactivo</label>
+          <select
+            className="form-select form-select-sm"
+            value={id_reactivo}
+            onChange={handleReactivoChange}
             required
-            min="1"
-            placeholder="ID del ingreso"
-          />
-          {stockDisponible !== null && (
-            <div className={`form-text fw-semibold ${parseFloat(stockDisponible) <= 0 ? 'text-danger' : 'text-success'}`}>
-              Stock disponible: {stockDisponible}
-            </div>
-          )}
+            disabled={!!selectedSalida}
+          >
+            <option value="">Seleccione un reactivo...</option>
+            {reactivos.map(r => (
+              <option key={r.id_reactivo} value={r.id_reactivo}>
+                {r.nom_reactivo} — Stock total: {r.cantidad_inventario} {r.presentacion_reactivo}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {/* CANTIDAD SALIDA */}
+        {/* LOTES FEFO */}
+        {loadingLotes && (
+          <div className="col-12 text-center text-muted">
+            <div className="spinner-border spinner-border-sm me-2" />
+            Cargando lotes...
+          </div>
+        )}
+
+        {lotesFefo.length > 0 && (
+          <div className="col-12">
+            <label className="form-label fw-semibold text-muted">
+              Lotes disponibles <span className="text-success">(ordenados por vencimiento)</span>
+            </label>
+            <div style={{ background: "#f8fafc", borderRadius: "10px", padding: "12px" }}>
+              <table className="table table-sm table-striped mb-0">
+                <thead className="table-success">
+                  <tr>
+                    <th>#</th>
+                    <th>Lote</th>
+                    <th>Disponible</th>
+                    <th>Vencimiento</th>
+                    <th>Días</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lotesFefo.map((l, i) => (
+                    <tr key={l.id_movimiento_reactivo} style={{ background: i === 0 ? "#e8f5e9" : "" }}>
+                      <td>
+                        {i === 0 && <span className="badge bg-warning text-dark">⭐ FEFO</span>}
+                        {i > 0 && <span className="text-muted">{i + 1}</span>}
+                      </td>
+                      <td><strong>{l.lote}</strong></td>
+                      <td>{l.cantidad_disponible}</td>
+                      <td>{l.fecha_vencimiento ? new Date(l.fecha_vencimiento).toLocaleDateString('es-CO') : 'Sin fecha'}</td>
+                      <td>
+                        {l.dias_para_vencer !== null ? (
+                          <span className={`badge ${l.dias_para_vencer <= 7 ? 'bg-danger' : l.dias_para_vencer <= 30 ? 'bg-warning text-dark' : 'bg-success'}`}>
+                            {l.dias_para_vencer} días
+                          </span>
+                        ) : '-'}
+                      </td>
+                      <td>
+                        {l.dias_para_vencer !== null && l.dias_para_vencer <= 7
+                          ? <span className="badge bg-danger">⚠️ Urgente</span>
+                          : <span className="badge bg-success">OK</span>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="table-info">
+                    <td colSpan="2"><strong>Stock total disponible</strong></td>
+                    <td colSpan="4"><strong>{stockTotal.toFixed(3)}</strong></td>
+                  </tr>
+                </tfoot>
+              </table>
+
+              {loteFefo && (
+                <div className="alert alert-info mt-2 mb-0 py-2" style={{ fontSize: "13px" }}>
+                  🔔 El sistema usará primero el lote <strong>{loteFefo.lote}</strong> que vence el{" "}
+                  <strong>{loteFefo.fecha_vencimiento ? new Date(loteFefo.fecha_vencimiento).toLocaleDateString('es-CO') : 'sin fecha'}</strong>
+                  {" "}(disponible: <strong>{loteFefo.cantidad_disponible}</strong>).
+                  {parseFloat(cantidad_salida) > loteFefo.cantidad_disponible && parseFloat(cantidad_salida) <= stockTotal && (
+                    <span className="d-block mt-1 text-warning">
+                      ⚡ La cantidad pedida supera este lote — el sistema tomará del siguiente lote automáticamente.
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* CANTIDAD */}
         <div className="col-md-6">
           <label className="form-label fw-semibold text-muted">Cantidad de salida</label>
           <input
             type="number"
             className="form-control form-control-sm"
             value={cantidad_salida}
-            onChange={(e) => setCantidad_salida(e.target.value)}
-            required
-            min="0.001"
-            step="0.001"
+            onChange={(e) => setCantidadSalida(e.target.value)}
+            required min="0.001" step="0.001"
             placeholder="Ej: 2.500"
+            max={stockTotal || undefined}
           />
+          {stockTotal > 0 && (
+            <div className={`form-text fw-semibold ${parseFloat(cantidad_salida) > stockTotal ? 'text-danger' : 'text-success'}`}>
+              Stock total disponible: {stockTotal.toFixed(3)}
+            </div>
+          )}
         </div>
 
-        {/* FECHA SALIDA */}
+        {/* FECHA Y HORA */}
         <div className="col-md-6">
-          <label className="form-label fw-semibold text-muted">Fecha y hora de salida</label>
+          <label className="form-label fw-semibold" style={{ color: "#023E8A", fontSize: "13px" }}>📅 Fecha de salida</label>
           <input
-            type="datetime-local"
+            type="date"
             className="form-control form-control-sm"
             value={fecha_salida}
-            onChange={(e) => setFecha_salida(e.target.value)}
+            onChange={(e) => setFechaSalida(e.target.value)}
+            min={new Date().toISOString().slice(0, 10)}
             required
           />
         </div>
-
-        {/* ESTADO */}
         <div className="col-md-6">
-          <label className="form-label fw-semibold text-muted">Estado</label>
-          <select
-            className="form-select form-select-sm"
-            value={estado}
-            onChange={(e) => setEstado(parseInt(e.target.value))}
-          >
-            <option value={1}>Activo</option>
-            <option value={0}>Inactivo</option>
-          </select>
+          <label className="form-label fw-semibold" style={{ color: "#023E8A", fontSize: "13px" }}>⏰ Hora</label>
+          <input type="time" className="form-control form-control-sm"
+            value={hora_salida} onChange={(e) => setHoraSalida(e.target.value)}
+            min="07:00" max="16:00" required />
+          <small style={{ color: "#0077B6", fontSize: "11px", fontWeight: "600" }}>
+            Horario permitido: 7:00 AM - 4:00 PM
+          </small>
         </div>
 
         {/* BOTÓN */}
-        <div className="col-12 mt-4">
-          <button type="submit" className="btn btn-primary w-100">
+        <div className="col-12 mt-3">
+          <button type="submit" className="btn w-100" style={{ background: "#0077B6", color: "#fff", fontWeight: "600", border: "none", borderRadius: "10px" }}>
             {selectedSalida ? "Actualizar Salida" : "Registrar Salida"}
           </button>
         </div>

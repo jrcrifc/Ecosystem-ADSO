@@ -6,13 +6,14 @@ import {
   updateEstadoxsolicitud,
   deleteEstadoxsolicitud
 } from '../controller/estadoxsolicitudController.js';
+import { todosLosRoles } from '../middleware/roleMiddleware.js';
 
 const router = express.Router();
 
-router.get('/', getAllEstadoxsolicitud);
-router.get('/:id', getEstadoxsolicitud);
-router.post('/', createEstadoxsolicitud);
-router.put('/:id', updateEstadoxsolicitud);
-router.delete('/:id', deleteEstadoxsolicitud);
+router.get('/', todosLosRoles, getAllEstadoxsolicitud);
+router.get('/:id', todosLosRoles, getEstadoxsolicitud);
+router.post('/', todosLosRoles, createEstadoxsolicitud);
+router.put('/:id', todosLosRoles, updateEstadoxsolicitud);
+router.delete('/:id', todosLosRoles, deleteEstadoxsolicitud);
 
 export default router;

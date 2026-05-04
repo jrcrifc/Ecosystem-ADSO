@@ -14,7 +14,6 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
   const [columna, setColumna] = useState("");
   const [fila, setFila] = useState("");
   const [clasificacion_reactivo, setClasificacion_reactivo] = useState("");
-  const [existencia_reactivo, setExistencia_reactivo] = useState("SI");
   const [estado, setEstado] = useState(1);
 
   useEffect(() => {
@@ -30,7 +29,6 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
       setColumna(selectedReactivo.columna || "");
       setFila(selectedReactivo.fila || "");
       setClasificacion_reactivo(selectedReactivo.clasificacion_reactivo || "");
-      setExistencia_reactivo(selectedReactivo.existencia_reactivo || "SI");
       setEstado(selectedReactivo.estado ?? 1);
     } else {
       // valores por defecto al crear nuevo
@@ -45,7 +43,6 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
       setColumna("");
       setFila("");
       setClasificacion_reactivo("");
-      setExistencia_reactivo("SI");
       setEstado(1);
     }
   }, [selectedReactivo]);
@@ -66,7 +63,6 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
       columna,
       fila,
       clasificacion_reactivo,
-      existencia_reactivo,
       estado,
     };
 
@@ -159,18 +155,6 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
           />
         </div>
 
-        {/* EXISTENCIA */}
-        <div className="col-md-6">
-          <label className="form-label fw-semibold text-muted">¿Existe en almacén?</label>
-          <select
-            className="form-select form-select-sm"
-            value={existencia_reactivo}
-            onChange={(e) => setExistencia_reactivo(e.target.value)}
-          >
-            <option value="SI">Sí</option>
-            <option value="NO">No</option>
-          </select>
-        </div>
 
         {/* COLOR ALMACENAMIENTO */}
         <div className="col-md-6">

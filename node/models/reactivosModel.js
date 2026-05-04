@@ -33,6 +33,8 @@ const reactivosModel = db.define('reactivos', {
 }, {
     freezeTableName: true,
     timestamps: true,
+    createdAt: 'createdat',  // ✅ mapear al nombre real de la BD
+    updatedAt: 'updatedat'   // ✅ mapear al nombre real de la BD
 });
 
 export default reactivosModel;

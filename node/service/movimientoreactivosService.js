@@ -1,155 +1,251 @@
 import movimientoreactivoModel from "../models/movimientoreactivosModel.js";
 import reactivosModel from "../models/reactivosModel.js";
+import proveedoresModel from "../models/proveedoresModel.js";
 
 class movimientoreactivoService {
-    async getAll() {
-        return await movimientoreactivoModel.findAll();
+  async getAll() {
+    const movimientos = await movimientoreactivoModel.findAll({
+      include: [
+        { model: reactivosModel, as: "reactivo", attributes: ["nom_reactivo", "presentacion_reactivo"] },
+        { model: proveedoresModel, as: "proveedor", attributes: ["nom_proveedor", "apel_proveedor"] },
+      ],
+      order: [["createdAt", "DESC"]]
+    });
+    const todos = await movimientoreactivoModel.findAll();
+    const stockPorReactivo = {};
+    todos.forEach(m => {
+      const id = m.id_reactivo;
+      if (!stockPorReactivo[id]) stockPorReactivo[id] = 0;
+      stockPorReactivo[id] += parseFloat(m.cantidad_inicial || 0);
+      stockPorReactivo[id] -= parseFloat(m.cantidad_salida || 0);
+    });
+    return movimientos.map(m => {
+      const mov = m.toJSON();
+      mov.stock_actual = parseFloat((stockPorReactivo[mov.id_reactivo] || 0).toFixed(3));
+      return mov;
+    });
+  }
+
+  async getById(id) {
+    const movimiento = await movimientoreactivoModel.findByPk(id, {
+      include: [
+        { model: reactivosModel, as: "reactivo", attributes: ["nom_reactivo", "presentacion_reactivo"] },
+        { model: proveedoresModel, as: "proveedor", attributes: ["nom_proveedor", "apel_proveedor"] },
+      ]
+    });
+    if (!movimiento) throw new Error("Movimiento no encontrado");
+    return movimiento;
+  }
+
+  async create(data) {
+    data.cantidad_inicial = parseFloat(data.cantidad_inicial || 0);
+    data.cantidad_salida = parseFloat(data.cantidad_salida || 0);
+
+    if (data.cantidad_inicial > 0 && data.cantidad_salida > 0) {
+      throw new Error("No puedes registrar entrada y salida al mismo tiempo");
+    }
+    if (data.cantidad_inicial === 0 && data.cantidad_salida === 0) {
+      throw new Error("Debes registrar una entrada o una salida");
     }
 
-    async getById(id_movimiento_reactivo) {
-        const movimiento = await movimientoreactivoModel.findByPk(id_movimiento_reactivo);
-        if (!movimiento) throw new Error('Movimiento del reactivo no encontrado');
-        return movimiento;
+    // Traemos todos los movimientos actuales del reactivo
+    const movimientos = await movimientoreactivoModel.findAll({
+      where: { id_reactivo: data.id_reactivo }
+    });
+
+    const stockActual = movimientos.reduce((acc, m) => {
+      return acc + parseFloat(m.cantidad_inicial || 0) - parseFloat(m.cantidad_salida || 0);
+    }, 0);
+
+    // Validación general de stock total
+    if (data.cantidad_salida > 0 && data.cantidad_salida > stockActual) {
+      throw new Error(`No hay suficiente stock total. Disponible: ${stockActual.toFixed(3)}`);
     }
 
-    async create(data) {
-        // 1. Crear el movimiento (entrada)
-        const movimiento = await movimientoreactivoModel.create(data);
+    // ==================== LÓGICA DE SALIDA CON DIVISIÓN AUTOMÁTICA (FEFO) ====================
+    if (data.cantidad_salida > 0) {
+      let chosenLote = data.lote;
+      let chosenFechaVenc = data.fecha_vencimiento;
 
-        // 2. Sumar cantidad_inicial al stock del reactivo
-        if (data.id_reactivo && data.cantidad_inicial) {
-            const reactivo = await reactivosModel.findByPk(data.id_reactivo);
-            if (!reactivo) throw new Error('Reactivo no encontrado');
+      if (!chosenLote) {
+        // === AUTO DIVISIÓN POR LOTES (FEFO) ===
+        const loteMap = {};
 
-            const nuevaCantidad = parseFloat(reactivo.cantidad_inventario || 0) + parseFloat(data.cantidad_inicial);
-
-            await reactivo.update({
-                cantidad_inventario: nuevaCantidad,
-                // Si tenía existencia NO y ahora entra stock, pasa a SI
-                existencia_reactivo: nuevaCantidad > 0 ? "SI" : "NO"
-            });
-
-            // Actualizar estado_inventario del movimiento
-            await movimiento.update({
-                estado_inventario: nuevaCantidad > 0 ? "en stock" : "agotado"
-            });
-        }
-
-        return movimiento;
-    }
-
-    async update(id, data) {
-        // Si cambia la cantidad_inicial, ajustar el stock
-        if (data.cantidad_inicial !== undefined) {
-            const movimientoAnterior = await movimientoreactivoModel.findByPk(id);
-            if (!movimientoAnterior) throw new Error('Movimiento no encontrado');
-
-            const reactivo = await reactivosModel.findByPk(movimientoAnterior.id_reactivo);
-            if (reactivo) {
-                // Revertir la cantidad anterior y aplicar la nueva
-                const diff = parseFloat(data.cantidad_inicial) - parseFloat(movimientoAnterior.cantidad_inicial || 0);
-                const nuevaCantidad = Math.max(0, parseFloat(reactivo.cantidad_inventario || 0) + diff);
-
-                await reactivo.update({
-                    cantidad_inventario: nuevaCantidad,
-                    existencia_reactivo: nuevaCantidad > 0 ? "SI" : "NO"
-                });
-            }
-        }
-
-        const [updated] = await movimientoreactivoModel.update(data, {
-            where: { id_movimiento_reactivo: id }
-        });
-        if (updated === 0) throw new Error('No se pudo actualizar');
-        return true;
-    }
-
-    async delete(id) {
-        // Al borrar un movimiento, revertir el stock
-        const movimiento = await movimientoreactivoModel.findByPk(id);
-        if (!movimiento) throw new Error('Movimiento no encontrado');
-
-        const reactivo = await reactivosModel.findByPk(movimiento.id_reactivo);
-        if (reactivo && movimiento.cantidad_inicial) {
-            const nuevaCantidad = Math.max(0, parseFloat(reactivo.cantidad_inventario || 0) - parseFloat(movimiento.cantidad_inicial));
-            await reactivo.update({
-                cantidad_inventario: nuevaCantidad,
-                existencia_reactivo: nuevaCantidad > 0 ? "SI" : "NO"
-            });
-        }
-
-        const deleted = await movimientoreactivoModel.destroy({
-            where: { id_movimiento_reactivo: id }
-        });
-        if (!deleted) throw new Error('No se pudo eliminar');
-        return true;
-    }
-
-    /**
-     * Obtener stock de lotes disponibles y resumen de vencidos
-     * @param {number} id_reactivo - ID del reactivo
-     * @returns {Object} { lotes_disponibles, resumen_vencidos }
-     */
-    async getStockLotes(id_reactivo) {
-        // Verificar que el reactivo existe
-        const reactivo = await reactivosModel.findByPk(id_reactivo);
-        if (!reactivo) throw new Error('Reactivo no encontrado');
-
-        // Obtener todos los movimientos del reactivo
-        const movimientos = await movimientoreactivoModel.findAll({
-            where: { id_reactivo },
-            order: [['fecha_vencimiento', 'ASC']] // Ordenar por fecha de vencimiento
+        // Construimos stock disponible por lote
+        movimientos.forEach(m => {
+          const loteKey = m.lote || 'Sin lote';
+          if (!loteMap[loteKey]) {
+            loteMap[loteKey] = {
+              lote: loteKey,
+              fecha_vencimiento: m.fecha_vencimiento || null,
+              cantidad_disponible: 0
+            };
+          }
+          loteMap[loteKey].cantidad_disponible += parseFloat(m.cantidad_inicial || 0);
+          loteMap[loteKey].cantidad_disponible -= parseFloat(m.cantidad_salida || 0);
         });
 
+        // Ordenamos por fecha de vencimiento (primero el que vence antes)
         const hoy = new Date();
-        hoy.setHours(0, 0, 0, 0); // Sin horas para comparación correcta
+        const sortedLotes = Object.values(loteMap)
+          .filter(l => {
+            if (l.cantidad_disponible <= 0) return false;
+            if (l.fecha_vencimiento && new Date(l.fecha_vencimiento) <= hoy) return false;
+            return true;
+          })
+          .sort((a, b) => {
+            if (!a.fecha_vencimiento) return 1;
+            if (!b.fecha_vencimiento) return -1;
+            return new Date(a.fecha_vencimiento) - new Date(b.fecha_vencimiento);
+          });
 
-        const lotes_disponibles = [];
-        const vencidos = [];
+        if (sortedLotes.length === 0) {
+          throw new Error("No hay lotes con stock disponible");
+        }
 
-        movimientos.forEach(mov => {
-            const cantidad_disponible = parseFloat(mov.cantidad_inicial || 0) - parseFloat(mov.cantidad_salida || 0);
-            
-            if (mov.fecha_vencimiento) {
-                const fechaVencimiento = new Date(mov.fecha_vencimiento);
-                fechaVencimiento.setHours(0, 0, 0, 0);
-                
-                const diasParaVencer = Math.floor((fechaVencimiento - hoy) / (1000 * 60 * 60 * 24));
-                const vencido = diasParaVencer < 0;
+        let remaining = data.cantidad_salida;
+        const createdMovements = [];
 
-                const lote_info = {
-                    id_movimiento_reactivo: mov.id_movimiento_reactivo,
-                    lote: mov.lote,
-                    fecha_vencimiento: mov.fecha_vencimiento,
-                    cantidad_disponible,
-                    dias_para_vencer: diasParaVencer
-                };
+        for (const lot of sortedLotes) {
+          if (remaining <= 0) break;
 
-                if (vencido) {
-                    vencidos.push(lote_info);
-                } else if (cantidad_disponible > 0) {
-                    lotes_disponibles.push(lote_info);
-                }
-            } else if (cantidad_disponible > 0) {
-                // Si no tiene fecha de vencimiento, considerar como disponible
-                lotes_disponibles.push({
-                    id_movimiento_reactivo: mov.id_movimiento_reactivo,
-                    lote: mov.lote,
-                    fecha_vencimiento: null,
-                    cantidad_disponible,
-                    dias_para_vencer: null
-                });
-            }
-        });
+          const take = Math.min(remaining, lot.cantidad_disponible);
 
-        return {
-            lotes_disponibles,
-            resumen_vencidos: {
-                cantidad_lotes_vencidos: vencidos.length,
-                detalles: vencidos
-            }
-        };
+          const movementData = {
+            id_reactivo: data.id_reactivo,
+            cantidad_inicial: 0,
+            cantidad_salida: parseFloat(take.toFixed(3)),
+            lote: lot.lote,
+            fecha_vencimiento: lot.fecha_vencimiento,
+            id_proveedor: data.id_proveedor || null
+          };
+
+          const creado = await movimientoreactivoModel.create(movementData);
+          createdMovements.push(creado);
+
+          remaining -= take;
+        }
+
+        if (remaining > 0) {
+          throw new Error("No hay suficiente stock total en los lotes disponibles");
+        }
+
+        return createdMovements;
+      } else {
+        return await movimientoreactivoModel.create(data);
+      }
     }
+
+    return await movimientoreactivoModel.create(data);
+  }
+
+  async update(id, data) {
+    data.cantidad_inicial = parseFloat(data.cantidad_inicial || 0);
+    data.cantidad_salida = parseFloat(data.cantidad_salida || 0);
+
+    if (data.cantidad_inicial > 0 && data.cantidad_salida > 0) {
+      throw new Error("No puedes registrar entrada y salida al mismo tiempo");
+    }
+    if (data.cantidad_inicial === 0 && data.cantidad_salida === 0) {
+      throw new Error("Debes registrar una entrada o una salida");
+    }
+
+    const movimientoActual = await movimientoreactivoModel.findByPk(id);
+    if (!movimientoActual) throw new Error("Movimiento no encontrado");
+
+    const idReactivoNuevo = data.id_reactivo || movimientoActual.id_reactivo;
+
+    const movsNuevo = await movimientoreactivoModel.findAll({
+      where: { id_reactivo: idReactivoNuevo }
+    });
+
+    const stockActualNuevo = movsNuevo.reduce((acc, m) => {
+      if (m.id_movimiento_reactivo === id) return acc;
+      return acc + parseFloat(m.cantidad_inicial || 0) - parseFloat(m.cantidad_salida || 0);
+    }, 0);
+
+    if (data.cantidad_salida > 0 && data.cantidad_salida > stockActualNuevo) {
+      throw new Error(`No hay suficiente stock. Disponible: ${stockActualNuevo.toFixed(3)}`);
+    }
+
+    const [updated] = await movimientoreactivoModel.update(data, {
+      where: { id_movimiento_reactivo: id }
+    });
+
+    if (updated === 0) throw new Error("No se pudo actualizar el movimiento");
+    return true;
+  }
+
+  async delete(id) {
+    const deleted = await movimientoreactivoModel.destroy({
+      where: { id_movimiento_reactivo: id }
+    });
+    if (!deleted) throw new Error("No se pudo eliminar");
+    return true;
+  }
+
+  /**
+   * Obtener stock de lotes disponibles y resumen de vencidos
+   */
+  async getStockLotes(id_reactivo) {
+    const reactivo = await reactivosModel.findByPk(id_reactivo);
+    if (!reactivo) throw new Error('Reactivo no encontrado');
+
+    const movimientos = await movimientoreactivoModel.findAll({
+      where: { id_reactivo },
+      order: [['fecha_vencimiento', 'ASC']]
+    });
+
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    const lotes_disponibles = [];
+    const vencidos = [];
+
+    // Agrupar por lote para consolidar cantidades
+    const loteMap = {};
+    movimientos.forEach(m => {
+        const loteKey = m.lote || 'Sin lote';
+        if (!loteMap[loteKey]) {
+            loteMap[loteKey] = {
+                id_movimiento_reactivo: m.id_movimiento_reactivo,
+                lote: m.lote,
+                fecha_vencimiento: m.fecha_vencimiento,
+                cantidad_disponible: 0
+            };
+        }
+        loteMap[loteKey].cantidad_disponible += parseFloat(m.cantidad_inicial || 0);
+        loteMap[loteKey].cantidad_disponible -= parseFloat(m.cantidad_salida || 0);
+    });
+
+    Object.values(loteMap).forEach(lot => {
+        if (lot.fecha_vencimiento) {
+            const fechaVencimiento = new Date(lot.fecha_vencimiento);
+            fechaVencimiento.setHours(0, 0, 0, 0);
+            
+            const diasParaVencer = Math.floor((fechaVencimiento - hoy) / (1000 * 60 * 60 * 24));
+            const vencido = diasParaVencer < 0;
+
+            const lote_info = { ...lot, dias_para_vencer: diasParaVencer };
+
+            if (vencido) {
+                vencidos.push(lote_info);
+            } else if (lot.cantidad_disponible > 0) {
+                lotes_disponibles.push(lote_info);
+            }
+        } else if (lot.cantidad_disponible > 0) {
+            lotes_disponibles.push({ ...lot, dias_para_vencer: null });
+        }
+    });
+
+    return {
+      lotes_disponibles,
+      resumen_vencidos: {
+        cantidad_lotes_vencidos: vencidos.length,
+        detalles: vencidos
+      }
+    };
+  }
 }
 
 export default new movimientoreactivoService();

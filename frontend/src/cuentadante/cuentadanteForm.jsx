@@ -5,8 +5,10 @@ import Swal from "sweetalert2";
 export default function CuentadanteForm({ selectedCuentadante, refreshParent, hideModal }) {
   const [form, setForm] = useState({
     nom_cuentadante: "",
-    apell_cuentadante: ""
+    apell_cuentadante: "",
+    tel_cuentadante: ""
   });
+
   const [loading, setLoading] = useState(false);
 
   // Cargar datos al editar
@@ -14,10 +16,15 @@ export default function CuentadanteForm({ selectedCuentadante, refreshParent, hi
     if (selectedCuentadante) {
       setForm({
         nom_cuentadante: selectedCuentadante.nom_cuentadante || "",
-        apell_cuentadante: selectedCuentadante.apell_cuentadante || ""
+        apell_cuentadante: selectedCuentadante.apell_cuentadante || "",
+        tel_cuentadante: selectedCuentadante.tel_cuentadante || ""
       });
     } else {
-      setForm({ nom_cuentadante: "", apell_cuentadante: "" });
+      setForm({
+        nom_cuentadante: "",
+        apell_cuentadante: "",
+        tel_cuentadante: ""
+      });
     }
   }, [selectedCuentadante]);
 
@@ -28,16 +35,23 @@ export default function CuentadanteForm({ selectedCuentadante, refreshParent, hi
   const saveData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
+
       if (!token) {
         Swal.fire("Error", "No se encontró token de autenticación", "warning");
         return;
       }
 
-      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const config = {
+        headers: { Authorization: `Bearer ${token}` }
+      };
 
       if (selectedCuentadante) {
-        await apiAxios.put(`/api/cuentadante/${selectedCuentadante.id_cuentadante}`, form, config);
+        await apiAxios.put(
+          `/api/cuentadante/${selectedCuentadante.id_cuentadante}`,
+          form,
+          config
+        );
       } else {
         await apiAxios.post("/api/cuentadante", form, config);
       }
@@ -49,9 +63,14 @@ export default function CuentadanteForm({ selectedCuentadante, refreshParent, hi
         showConfirmButton: false
       });
 
-      setForm({ nom_cuentadante: "", apell_cuentadante: "" });
-      if (refreshParent) refreshParent();
-      if (hideModal) hideModal();
+      setForm({
+        nom_cuentadante: "",
+        apell_cuentadante: "",
+        tel_cuentadante: ""
+      });
+
+      refreshParent?.();
+      hideModal?.();
 
     } catch (error) {
       Swal.fire({
@@ -66,6 +85,8 @@ export default function CuentadanteForm({ selectedCuentadante, refreshParent, hi
 
   return (
     <div className="p-3">
+
+      {/* NOMBRE */}
       <div className="mb-3">
         <label className="form-label">Nombre</label>
         <input
@@ -77,6 +98,8 @@ export default function CuentadanteForm({ selectedCuentadante, refreshParent, hi
           required
         />
       </div>
+
+      {/* APELLIDO */}
       <div className="mb-3">
         <label className="form-label">Apellido</label>
         <input
@@ -88,14 +111,34 @@ export default function CuentadanteForm({ selectedCuentadante, refreshParent, hi
           required
         />
       </div>
+
+      {/* TELÉFONO (NUEVO) */}
+      <div className="mb-3">
+        <label className="form-label">Teléfono</label>
+        <input
+          type="number"
+          className="form-control"
+          name="tel_cuentadante"
+          value={form.tel_cuentadante}
+          onChange={handleChange}
+          required
+        />
+      </div>
+
+      {/* BOTÓN */}
       <button
         type="button"
         className="btn btn-success w-100 mt-2"
         onClick={saveData}
         disabled={loading}
       >
-        {loading ? "Guardando..." : selectedCuentadante ? "Actualizar Cuentadante" : "Registrar Cuentadante"}
+        {loading
+          ? "Guardando..."
+          : selectedCuentadante
+          ? "Actualizar Cuentadante"
+          : "Registrar Cuentadante"}
       </button>
+
     </div>
   );
 }

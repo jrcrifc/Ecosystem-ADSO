@@ -1,299 +1,90 @@
-import apiAxios from "../api/axiosConfig.js";
-import { useState, useEffect } from "react";
-import DataTable from "react-data-table-component";
-import Swal from "sweetalert2";
-import EstadoEquipoForm from "./estadoequipoform.jsx";
-
-// decodificador de JWT (local) — usado para sacar userType/admin
-const parseToken = (token) => {
-  try {
-    const base64Url = token.split('.')[1]
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-    }).join(''))
-    return JSON.parse(jsonPayload)
-  } catch (err) {
-    return null
-  }
-}
-
-const CrudEstadoEquipo = () => {
-  const [estados, setEstados] = useState([]);
-  const [filterText, setFilterText] = useState("");
-  const [selectedEstado, setSelectedEstado] = useState(null);
-  const [isAuthorized, setIsAuthorized] = useState(null); // null = loading, false = no autorizado, true = autorizado
-  const [canEdit, setCanEdit] = useState(false); // control de permisos (aprendiz = solo ver)
-
-  const customStyles = {
-    table: {
-      style: {
-        margin: "0 auto",
-        width: "fit-content",
-      },
-    },
-    cells: {
-      style: {
-        justifyContent: "center",
-      },
-    },
-  };
-
-  const columns = [
-    {
-      name: "ID Estado del Equipo",
-      selector: (row) => row.id_estado_equipo,
-      sortable: true,
-      width: "250px",
-      center: true,
-    },
-    {
-      name: "Estado Equipo",
-      selector: (row) => (
-        <span className={`fw-bold ${getColorEstado(row.estado)}`}>
-          {row.estado?.toUpperCase() || "Sin estado"}
-        </span>
-      ),
-      sortable: true,
-      width: "250px",
-      center: true,
-    },
-    {
-      name: "Acciones",
-      center: true,
-      width: "180px",
-      cell: (row) => (
-        <div className="d-flex gap-2 justify-content-center">
-          {canEdit ? (
-            <>
-              <button
-                className="btn btn-sm btn-primary"
-                data-bs-toggle="modal"
-                data-bs-target="#modalEstadoEquipo"
-                onClick={() => setSelectedEstado(row)}
-                title="Editar"
-              >
-                <i className="fa-solid fa-pencil"></i>
-              </button>
-
-              <button
-                className="btn btn-sm btn-danger"
-                onClick={() => eliminarEstadoEquipo(row.id_estado_equipo)}
-                title="Eliminar"
-              >
-                <i className="fa-solid fa-trash"></i>
-              </button>
-            </>
-          ) : (
-            <span className="text-muted">—</span>
-          )}
-        </div>
-      ),
-    },
+export default function CrudEstadoEquipo() {
+  const estados = [
+    { id: 1, estado: "disponible",    icon: "✅", color: "#0077B6", bg: "#e0f2fe", border: "#bae6fd", desc: "El equipo está en el laboratorio, listo para ser prestado o utilizado" },
+    { id: 2, estado: "no disponible", icon: "🚫", color: "#dc2626", bg: "#fee2e2", border: "#fecaca", desc: "El equipo no se encuentra disponible actualmente para préstamo" },
+    { id: 3, estado: "mantenimiento", icon: "🔧", color: "#d97706", bg: "#fef3c7", border: "#fde68a", desc: "El equipo está en proceso de mantenimiento o calibración" },
   ];
-
-  // Nota: Se fuerza el color negro para todas las etiquetas de estado
-  // porque se solicitó que las etiquetas aparezcan en negro.
-  // La implementación original por estado queda comentada abajo.
-  const getColorEstado = () => {
-    return "text-dark";
-  };
-
-  /* Implementación original por estado (comentada):
-  const getColorEstado = (estado) => {
-    switch (estado) {
-      case "disponible":
-        return "text-success";
-      case "en_uso":
-        return "text-info";
-      case "mantenimiento":
-        return "text-warning";
-      case "dañado":
-        return "text-danger";
-      case "descartado":
-        return "text-dark";
-      default:
-        return "text-muted";
-    }
-  };
-  */
-
-  useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      setIsAuthorized(false)
-      setCanEdit(false)
-      return
-    }
-    const payload = parseToken(token)
-    const role = (payload?.userType || '').toString().toLowerCase()
-    const allowedEdit = ['gestor','instructor','intructor']
-    setCanEdit(Boolean(payload?.admin || allowedEdit.includes(role)))
-    cargarEstados();
-
-    const handleTokenUpdate = () => {
-      const t = localStorage.getItem('token')
-      const p = parseToken(t)
-      const r = (p?.userType || '').toString().toLowerCase()
-      setCanEdit(Boolean(p?.admin || allowedEdit.includes(r)))
-      setIsAuthorized(Boolean(t))
-      if (t) cargarEstados()
-    }
-    window.addEventListener('tokenUpdated', handleTokenUpdate)
-    return () => window.removeEventListener('tokenUpdated', handleTokenUpdate)
-  }, []);
-
-  const cargarEstados = async () => {
-    try {
-      const res = await apiAxios.get("/api/estadoequipo");
-      setEstados(res.data);
-      setIsAuthorized(true)
-    } catch (error) {
-      // si el backend responde 401 -> usuario no existe o token inválido
-      if (error.response?.status === 401) {
-        localStorage.removeItem('token')
-        setIsAuthorized(false)
-        return
-      }
-      console.error(error);
-    }
-  };
-
-  // onSaved actualiza la lista localmente sin recargar todo
-  const onSaved = (item, isUpdate) => {
-    if (isUpdate) {
-      setEstados((prev) => prev.map((p) => (p.id_estado_equipo === item.id_estado_equipo ? item : p)));
-    } else {
-      setEstados((prev) => [item, ...prev]);
-    }
-  };
-
-  const filtered = estados.filter(
-    (item) =>
-      item.id_estado_equipo.toString().includes(filterText) ||
-      item.estado?.toLowerCase().includes(filterText.toLowerCase())
-  );
-
-  const hideModal = () => {
-    document.getElementById("closeModalEstadoEquipo").click();
-    cargarEstados();
-  };
-
-  const eliminarEstadoEquipo = async (id) => {
-    const result = await Swal.fire({
-      title: "¿Eliminar?",
-      text: "Esta acción no se puede deshacer",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
-    });
-
-    if (!result.isConfirmed) return;
-
-    try {
-      await apiAxios.delete(`/api/estadoequipo/${id}`);
-      // Actualizar estado localmente sin recargar la lista
-      setEstados((prev) => prev.filter((p) => p.id_estado_equipo !== id));
-      Swal.fire("Eliminado", "Elemento eliminado", "success");
-    } catch (error) {
-      Swal.fire("Error", "No se pudo eliminar", "error");
-    }
-  };
-
-  if (isAuthorized === false) {
-    return (
-      <div className="container mt-4">
-        <h2 className="text-center mb-4 text-primary fw-bold">Estados del Equipo</h2>
-        <div className="alert alert-warning text-center">
-          Acceso denegado — debes iniciar sesión para ver esta tabla. <a href="/login">Iniciar sesión</a>
-        </div>
-      </div>
-    )
-  }
-
-  if (isAuthorized === null) {
-    return (
-      <div className="container mt-4">
-        <h2 className="text-center mb-4 text-primary fw-bold">Estados del Equipo</h2>
-        <div className="text-center">Cargando...</div>
-      </div>
-    )
-  }
 
   return (
     <div className="container mt-4">
-      <h2 className="text-center mb-4 text-primary fw-bold">Estados del Equipo</h2>
-
-      <div className="row mb-3 align-items-center">
-        <div className="col-md-5">
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Buscar por ID o estado..."
-            value={filterText}
-            onChange={(e) => setFilterText(e.target.value)}
-          />
-        </div>
-        <div className="col-md-7 text-end">
-          {canEdit ? (
-            <button
-              className="btn btn-primary"
-              data-bs-toggle="modal"
-              data-bs-target="#modalEstadoEquipo"
-              onClick={() => setSelectedEstado(null)}
-            >
-              + Nuevo Estado
-            </button>
-          ) : (
-            <button className="btn btn-secondary" disabled title="No tienes permisos para crear">
-              + Nuevo Estado
-            </button>
-          )}
-        </div>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
+        <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
+        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Estados de Equipo</h2>
+      </div>
+      <p style={{ color: "#64748b", fontSize: "14px", marginBottom: "8px" }}>
+        Estos son los estados fijos que puede tener cada equipo del laboratorio
+      </p>
+      <div style={{
+        background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "12px",
+        padding: "12px 18px", marginBottom: "28px", display: "flex", alignItems: "center", gap: "10px"
+      }}>
+        <span style={{ fontSize: "18px" }}>ℹ️</span>
+        <p style={{ margin: 0, fontSize: "13px", color: "#0369a1", fontWeight: "500" }}>
+          Los estados son fijos y se asignan desde la gestión de equipos. No pueden ser creados ni eliminados.
+        </p>
       </div>
 
-      <div className="d-flex justify-content-center">
-        <div style={{ width: "fit-content" }}>
-          <DataTable
-            columns={columns}
-            data={filtered}
-            pagination
-            highlightOnHover
-            striped
-            responsive
-            noDataComponent="No hay estados registrados"
-            customStyles={customStyles}
-          />
-        </div>
-      </div>
-
-      <div className="modal fade" id="modalEstadoEquipo" tabIndex="-1">
-        <div className="modal-dialog">
-          <div className="modal-content">
-            <div className="modal-header bg-primary text-white">
-              <h5 className="modal-title">
-                {selectedEstado ? "Editar" : "Nuevo"} Estado del Equipo
-              </h5>
-              <button
-                type="button"
-                className="btn-close btn-close-white"
-                data-bs-dismiss="modal"
-              ></button>
+      {/* Flow diagram */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "center",
+        flexWrap: "wrap", gap: "0", marginBottom: "32px"
+      }}>
+        {estados.map((e, i) => (
+          <div key={e.id} style={{ display: "flex", alignItems: "center" }}>
+            <div style={{
+              background: e.bg, border: `2px solid ${e.border}`, borderRadius: "12px",
+              padding: "14px 28px", textAlign: "center", minWidth: "120px"
+            }}>
+              <div style={{ fontSize: "28px", marginBottom: "4px" }}>{e.icon}</div>
+              <div style={{ fontSize: "13px", fontWeight: "700", color: e.color, textTransform: "uppercase" }}>
+                {e.estado}
+              </div>
             </div>
-            <div className="modal-body">
-              <EstadoEquipoForm
-                    selectedEstado={selectedEstado}
-                    onSaved={onSaved}
-                    hideModal={hideModal}
-                  />
+            {i < estados.length - 1 && (
+              <div style={{ padding: "0 12px", color: "#cbd5e1", fontSize: "24px", fontWeight: "bold" }}>⇄</div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "16px" }}>
+        {estados.map(e => (
+          <div key={e.id} style={{
+            background: "#fff", borderRadius: "16px", overflow: "hidden",
+            border: `1px solid ${e.border}`, boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+            transition: "transform 0.2s, box-shadow 0.2s"
+          }}
+            onMouseOver={ev => { ev.currentTarget.style.transform = "translateY(-3px)"; ev.currentTarget.style.boxShadow = "0 8px 25px rgba(0,0,0,0.1)"; }}
+            onMouseOut={ev => { ev.currentTarget.style.transform = "translateY(0)"; ev.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)"; }}
+          >
+            <div style={{ height: "5px", background: `linear-gradient(90deg, ${e.color}, ${e.color}88)` }} />
+            <div style={{ padding: "24px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "14px" }}>
+                <div style={{
+                  width: "52px", height: "52px", borderRadius: "14px",
+                  background: `linear-gradient(135deg, ${e.color}, ${e.color}cc)`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: "24px"
+                }}>
+                  {e.icon}
+                </div>
+                <div>
+                  <div style={{ fontWeight: "800", color: e.color, fontSize: "16px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                    {e.estado}
+                  </div>
+                  <div style={{ fontSize: "11px", color: "#94a3b8", fontWeight: "600" }}>
+                    Registro ID: {e.id}
+                  </div>
+                </div>
+              </div>
+              <p style={{ margin: 0, fontSize: "13px", color: "#64748b", lineHeight: "1.7" }}>
+                {e.desc}
+              </p>
             </div>
           </div>
-        </div>
+        ))}
       </div>
-      <button type="button" id="closeModalEstadoEquipo" className="btn btn-primary d-none" data-bs-dismiss="modal"></button>
     </div>
   );
-};
-
-export default CrudEstadoEquipo;
+}

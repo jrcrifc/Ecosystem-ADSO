@@ -47,8 +47,8 @@ export const createEquipos = async (req, res) => {
     console.log('Datos FINALES a guardar en BD:', data);
 
     const equipo = await EquiposService.create(data);
-    console.log('Equipo creado:', equipo);
 
+    console.log('Equipo creado:', equipo);
     res.status(201).json({ mensaje: 'Equipo creado', equipo });
   } catch (error) {
     console.error('ERROR EN CREATE:', error.stack || error);
@@ -89,6 +89,7 @@ export const updateEquipos = async (req, res) => {
 export const deleteEquipos = async (req, res) => {
   try {
     await EquiposService.delete(req.params.id);
+
     res.status(200).json({ mensaje: 'Equipo eliminado' });
   } catch (error) {
     console.error('Error eliminando:', error);

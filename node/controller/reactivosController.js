@@ -20,16 +20,21 @@ export const getreactivos = async (req, res) => {
 
 export const createreactivos = async (req, res) => {
     try {
+        console.log("📥 Body recibido:", JSON.stringify(req.body, null, 2)); // ← aquí
         const reactivos = await reactivosService.create(req.body);
-        res.status(201).json({ message: "reactivo creado correctamente", reactivos }); // 201 Created
+        
+        res.status(201).json({ message: "reactivo creado correctamente", reactivos });
     } catch (error) {
-        res.status(400).json({ message: error.message }); // 400 Bad Request
+        console.error("❌ Error completo:", JSON.stringify(error, null, 2));
+        console.error("❌ Mensaje:", error.message);
+        res.status(400).json({ message: error.message });
     }
 };
 
 export const updatereactivos = async (req, res) => {
     try {
         await reactivosService.update(req.params.id, req.body);
+
         res.status(200).json({ message: "reactivo actualizado correctamente" }); // 200 OK
     } catch (error) {
         res.status(400).json({ message: error.message }); // 400 Bad Request
@@ -39,6 +44,7 @@ export const updatereactivos = async (req, res) => {
 export const deletereactivos = async (req, res) => {
     try {
         await reactivosService.delete(req.params.id);
+
        res.status(200).json({ message: "reactivo eliminado correctamente" }); // 200 OK
     } catch (error) {
         res.status(400).json({ message: error.message }); // 400 Bad Request

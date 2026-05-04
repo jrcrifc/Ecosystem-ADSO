@@ -20,10 +20,25 @@ export const getmovimientoreactivo = async (req, res) => {
 
 export const createmovimientoreactivo = async (req, res) => {
     try {
-        const movimientoreactivo = await movimientoreactivoService.create(req.body);
-        res.status(201).json({ message: "el movimiento del reactivo ha sido creada correctamente", movimientoreactivo }); // 201 Created
+        const resultado = await movimientoreactivoService.create(req.body);
+
+        // ✅ Manejo inteligente: puede ser un solo movimiento o varios (división automática)
+        if (Array.isArray(resultado)) {
+            // Caso de salida dividida en varios lotes
+            res.status(201).json({
+                message: `✅ Salida registrada correctamente y dividida automáticamente en ${resultado.length} lotes`,
+                movimientos: resultado,           // ← array con todos los movimientos creados
+                cantidad_lotes: resultado.length
+            });
+        } else {
+            // Caso normal (entrada o salida en un solo lote)
+            res.status(201).json({
+                message: "✅ El movimiento del reactivo ha sido creado correctamente",
+                movimientoreactivo: resultado
+            });
+        }
     } catch (error) {
-        res.status(400).json({ message: error.message }); // 400 Bad Request
+        res.status(400).json({ message: error.message });
     }
 };
 

@@ -4,6 +4,7 @@ import apiAxios from "../api/axiosConfig";
 import CuentadanteForm from "./cuentadanteForm.jsx";
 import Swal from "sweetalert2";
 import * as bootstrap from "bootstrap";
+import { paginationComponentOptions, tableCustomStyles } from "../config/dataTableConfig";
 
 export default function CrudCuentadante() {
   const [cuentadantes, setCuentadantes] = useState([]);
@@ -16,7 +17,7 @@ export default function CrudCuentadante() {
 
   const cargarCuentadantes = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
       const res = await apiAxios.get("/api/cuentadante", {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -53,7 +54,7 @@ export default function CrudCuentadante() {
     if (!result.isConfirmed) return;
 
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
       await apiAxios.delete(`/api/cuentadante/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -69,6 +70,7 @@ export default function CrudCuentadante() {
     { name: "Nombre", selector: row => row.nom_cuentadante, sortable: true },
     { name: "Apellido", selector: row => row.apell_cuentadante, sortable: true },
     { name: "Nombre Completo", selector: row => `${row.nom_cuentadante} ${row.apell_cuentadante}`, wrap: true },
+    { name: "Telefono", selector: row => row.tel_cuentadante, sortable: true },
     {
       name: "Acciones",
       center: true,
@@ -103,9 +105,12 @@ export default function CrudCuentadante() {
   );
 
   return (
-    <div className="container mt-4">
-      <h2 className="text-center mb-4 fw-bold text-primary">Gestión de Cuentadantes</h2>
-
+  <div className="container mt-4">
+    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
+      <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
+      <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Cuentadante</h2>
+    </div>
+  
       <div className="row mb-4 align-items-center">
         <div className="col-md-6">
           <input
@@ -114,11 +119,13 @@ export default function CrudCuentadante() {
             placeholder="Buscar por nombre o apellido..."
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
+            style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
           />
         </div>
         <div className="col-md-6 text-end">
           <button
-            className="btn btn-success"
+            className="btn"
+            style={{ background: "#0077B6", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }}
             data-bs-toggle="modal"
             data-bs-target="#modalCuentadante"
             onClick={() => setSelectedCuentadante(null)}
@@ -128,16 +135,25 @@ export default function CrudCuentadante() {
         </div>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={filteredCuentadantes}
-        pagination
-        paginationPerPage={10}
-        highlightOnHover
-        striped
-        responsive
-        noDataComponent="No hay cuentadantes registrados"
-      />
+      <div style={{ borderRadius: "14px", overflow: "hidden", border: "1px solid #dbeafe" }}>
+        <DataTable
+          columns={columns}
+          data={filteredCuentadantes}
+          pagination
+          paginationPerPage={10}
+          paginationComponentOptions={paginationComponentOptions}
+          customStyles={tableCustomStyles}
+          highlightOnHover
+          striped
+          responsive
+          noDataComponent={
+            <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
+              <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>
+              <p>No hay cuentadantes registrados</p>
+            </div>
+          }
+        />
+      </div>
 
       {/* MODAL CREAR / EDITAR */}
       <div className="modal fade" id="modalCuentadante" tabIndex="-1" aria-labelledby="modalCuentadanteLabel" aria-hidden="true">

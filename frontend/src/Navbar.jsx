@@ -1,42 +1,30 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
+import Campanita from "./FormularioAcceso/Campanita.jsx";
 
-const Navbar = ({ isAuth, logOut, users }) => {
+const Navbar = ({ isAuth, logOut, users, rol, onAprobado }) => {
   const navigate = useNavigate();
 
-  // --- DEPURACIÓN ---
-  useEffect(() => {
-    if (isAuth) {
-      console.log("Revisando prop 'users' en consola:", users);
-    }
-  }, [users, isAuth]);
-
-  // --- EXTRACCIÓN DE TU BASE DE DATOS ---
-  // Buscamos dentro de 'users', 'users.user' o 'users.data' según cómo responda tu API
   const userData = Array.isArray(users) ? users[0] : (users?.user || users?.data || users);
-
-  // Mapeo exacto a las columnas de tu tabla SQL
   const userName = userData?.nombres_apellidos;
   const userEmail = userData?.email;
-  const userRol = userData?.rol;
+  const userRol = rol || userData?.rol;
+
+  const esAdmin = userRol === 'Administrador';
+  const esGestorPasante = ['Pasante', 'Gestor'].includes(userRol);
+  const esAprendizInstructor = ['Aprendiz', 'Instructor'].includes(userRol);
 
   const handleClick = (path) => {
-    if (!isAuth) {
-      navigate("/UserLogin");
-      return;
-    }
+    if (!isAuth) { navigate("/UserLogin"); return; }
     navigate(path);
   };
 
   return (
     <nav className="navbar navbar-expand-lg bg-dark navbar-dark shadow-sm py-3">
       <div className="container-fluid">
-        {/* LOGO */}
+
         <div className="d-flex align-items-center gap-3">
-          <div
-            className="bg-white text-success fw-bold rounded-circle d-flex align-items-center justify-content-center"
-            style={{ width: 45, height: 45 }}
-          >
+          <div className="bg-white text-success fw-bold rounded-circle d-flex align-items-center justify-content-center" style={{ width: 45, height: 45 }}>
             ES
           </div>
           <div className="text-white">
@@ -45,90 +33,114 @@ const Navbar = ({ isAuth, logOut, users }) => {
           </div>
         </div>
 
-        <button
-          className="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
-        >
+        <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
           <span className="navbar-toggler-icon"></span>
         </button>
 
         <div className="collapse navbar-collapse" id="navbarNav">
-          {/* Si usas un componente estilizado aquí que reciba 'center', 
-              asegúrate de llamarlo como $center={true} */}
           <ul className="navbar-nav ms-auto gap-2 align-items-center">
+
+            {/* Inicio — todos */}
             <li className="nav-item">
               <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/home")}>Inicio</span>
             </li>
-            <li className="nav-item">
-              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/movimientoreactivo")}>Movimientos Reactivos</span>
-            </li>
-            <li className="nav-item">
-              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/reactivos")}>Reactivos</span>
-            </li>
-            <li className="nav-item">
-              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/control-reactivos")}>Control de Reactivos</span>
-            </li>
-            <li className="nav-item">
-              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/salidas")}>Salidas</span>
-            </li>
-            <li className="nav-item">
-              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/estadoSolicitud")}>Estado de Solicitudes</span>
-            </li>
-            <li className="nav-item">
-              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/proveedor")}>Proveedores</span>
-            </li>
-            <li className="nav-item">
-              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/estadoxsolicitud")}>Reporte de los estados de las solcitudes</span>
-            </li>
-            <li className="nav-item">
-              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/estadoxequipo")}>Reporte de los estados de los equipos</span>
-            </li>
-            <li className="nav-item">
-              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/solicitud")}>Solicitudes de prestamo de equipos</span>
-            </li>
-            <li className="nav-item">
-              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/equipos")}>equipos</span>
-            </li>
-            <li className="nav-item">
-              <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/cuentadante")}>cuentadantes</span>
-            </li>
+
+            {/* Solicitudes — Aprendiz e Instructor */}
+            {(esAdmin || esAprendizInstructor) && (
+              <>
+                <li className="nav-item">
+                  <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/solicitud")}>Solicitudes</span>
+                </li>
+                <li className="nav-item">
+                  <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/estadoxsolicitud")}>Historial Solicitudes</span>
+                </li>
+              </>
+            )}
+
+            {/* Módulos — Admin + Pasante + Gestor */}
+            {(esAdmin || esGestorPasante) && (
+              <>
+                <li className="nav-item">
+                  <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/equipos")}>Equipos</span>
+                </li>
+                <li className="nav-item">
+                  <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/estadoequipo")}>Estado del Equipo</span>
+                </li>
+                <li className="nav-item">
+                  <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/historial-equipo")}>Historial Equipos</span>
+                </li>
+                <li className="nav-item">
+                  <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/gestion-equipo")}>Gestión Equipos</span>
+                </li>
+                <li className="nav-item">
+                  <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/cuentadante")}>Cuentadantes</span>
+                </li>
+                <li className="nav-item">
+                  <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/proveedor")}>Proveedores</span>
+                </li>
+                <li className="nav-item">
+                  <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/reactivos")}>Reactivos</span>
+                </li>
+                <li className="nav-item">
+                  <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/movimientoreactivo")}>Movimientos Reactivos</span>
+                </li>
+                <li className="nav-item">
+                  <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/control-reactivos")}>Control Reactivos</span>
+                </li>
+                <li className="nav-item">
+                  <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/salidas")}>Salidas Reactivos</span>
+                </li>
+              </>
+            )}
+
+            {/* Solo Administrador */}
+            {esAdmin && (
+              <>
+                <li className="nav-item">
+                  <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/estadoSolicitud")}>Estados Solicitud</span>
+                </li>
+                <li className="nav-item">
+                  <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/gestion-solicitudes")}>Gestión Solicitudes</span>
+                </li>
+                <li className="nav-item">
+                  <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleClick("/gestion-usuarios")}>👥 Gestión Usuarios</span>
+                </li>
+              </>
+            )}
+
+            {/* Campanita — todos los logueados */}
+            {isAuth && (
+              <li className="nav-item">
+                <Campanita userData={userData} onAprobado={onAprobado} />
+              </li>
+            )}
+
+            {/* Perfil */}
             {isAuth ? (
               <li className="nav-item dropdown">
-                <a
-                  className="nav-link dropdown-toggle d-flex align-items-center"
-                  href="#"
-                  id="navbarDropdown"
-                  role="button"
-                  data-bs-toggle="dropdown"
-                  aria-expanded="false"
-                >
-                  <div 
-                    className="rounded-circle bg-success d-flex align-items-center justify-content-center text-white fw-bold" 
-                    style={{ width: "35px", height: "35px" }}
+                <a className="nav-link dropdown-toggle d-flex align-items-center"
+                  href="#" id="navbarDropdown" role="button"
+                  data-bs-toggle="dropdown" aria-expanded="false">
+                  <div
+                    className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
+                    style={{
+                      width: "35px", height: "35px",
+                      backgroundColor: esAdmin ? "#dc3545" : esGestorPasante ? "#f59e0b" : "#28a745"
+                    }}
                   >
                     {userName ? userName.charAt(0).toUpperCase() : "?"}
                   </div>
                 </a>
-
-                <ul 
-                  className="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0" 
-                  style={{ minWidth: "250px", borderRadius: "12px", overflow: "hidden" }}
-                >
+                <ul className="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0" style={{ minWidth: "250px", borderRadius: "12px", overflow: "hidden" }}>
                   <li className="p-4 bg-light border-bottom text-center">
-                    <div>
-                      {/* SOLO DATOS DE LA DB */}
-                      {userName && <h6 className="m-0 fw-bold text-dark text-capitalize">{userName}</h6>}
-                      {userEmail && <p className="text-muted mb-1 small">{userEmail}</p>}
-                      {userRol && (
-                        <span className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3">
-                          {userRol}
-                        </span>
-                      )}
-                    </div>
+                    {userName && <h6 className="m-0 fw-bold text-dark text-capitalize">{userName}</h6>}
+                    {userEmail && <p className="text-muted mb-1 small">{userEmail}</p>}
+                    {userRol && (
+                      <span className={`badge px-3 ${esAdmin ? "bg-danger" : esGestorPasante ? "bg-warning text-dark" : "bg-success"}`}>
+                        {esAdmin ? `👑 ${userRol}` : esGestorPasante ? `⚙️ ${userRol}` : `🎓 ${userRol}`}
+                      </span>
+                    )}
                   </li>
-
                   <li>
                     <button className="dropdown-item py-3 text-center fw-bold text-danger" onClick={logOut}>
                       Cerrar sesión
@@ -141,6 +153,7 @@ const Navbar = ({ isAuth, logOut, users }) => {
                 <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => navigate("/UserLogin")}>Login</span>
               </li>
             )}
+
           </ul>
         </div>
       </div>

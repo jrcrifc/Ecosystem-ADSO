@@ -1,76 +1,95 @@
 import apiAxios from "../api/axiosConfig";
 import { useState, useEffect } from "react";
-import * as bootstrap from "bootstrap"; // ✅ FIX: import faltaba
 import Swal from "sweetalert2";
 
 const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) => {
   const [form, setForm] = useState({
-    fecha_ingreso: "",
+    fecha_vencimiento: "",
     cantidad_inicial: "",
     lote: "",
     id_reactivo: "",
     id_proveedor: "",
-    estado_inventario: "en stock",
   });
+
+  const [reactivos, setReactivos] = useState([]);
+  const [proveedores, setProveedores] = useState([]);
+
+  useEffect(() => {
+    cargarReactivos();
+    cargarProveedores();
+  }, []);
+
+  const cargarReactivos = async () => {
+    try {
+      const res = await apiAxios.get("/api/reactivos");
+      setReactivos(res.data);
+    } catch (error) {
+      console.error("Error al cargar reactivos:", error);
+    }
+  };
+
+  const cargarProveedores = async () => {
+    try {
+      const res = await apiAxios.get("/api/proveedor");
+      setProveedores(res.data);
+    } catch (error) {
+      console.error("Error al cargar proveedores:", error);
+    }
+  };
 
   useEffect(() => {
     if (selectedMovimiento) {
       setForm({
-        fecha_ingreso: selectedMovimiento.fecha_ingreso?.slice(0, 10) || "",
+        fecha_vencimiento: selectedMovimiento.fecha_vencimiento?.slice(0, 10) || "",
         cantidad_inicial: selectedMovimiento.cantidad_inicial || "",
         lote: selectedMovimiento.lote || "",
         id_reactivo: selectedMovimiento.id_reactivo || "",
         id_proveedor: selectedMovimiento.id_proveedor || "",
-        estado_inventario: selectedMovimiento.estado_inventario || "en stock",
       });
     } else {
       setForm({
-        fecha_ingreso: new Date().toISOString().slice(0, 10),
+        fecha_vencimiento: "",
         cantidad_inicial: "",
         lote: "",
         id_reactivo: "",
         id_proveedor: "",
-        estado_inventario: "en stock",
       });
     }
   }, [selectedMovimiento]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.fecha_ingreso || !form.cantidad_inicial || !form.id_reactivo) {
-      Swal.fire("Campos obligatorios", "Fecha, cantidad inicial y reactivo son requeridos", "warning");
+    if (!form.cantidad_inicial || !form.id_reactivo) {
+      Swal.fire("Campos obligatorios", "Cantidad inicial y reactivo son requeridos", "warning");
       return;
     }
-
     if (parseFloat(form.cantidad_inicial) <= 0) {
       Swal.fire("⚠️ Atención", "La cantidad inicial debe ser mayor a 0", "warning");
       return;
     }
 
     const dataToSend = {
-      fecha_ingreso: form.fecha_ingreso,
+      fecha_vencimiento: form.fecha_vencimiento || null,
       cantidad_inicial: parseFloat(form.cantidad_inicial),
-      lote: form.lote,
+      lote: form.lote || null,
       id_reactivo: parseInt(form.id_reactivo),
       id_proveedor: form.id_proveedor ? parseInt(form.id_proveedor) : null,
-      estado_inventario: form.estado_inventario,
     };
 
     try {
       if (selectedMovimiento) {
         await apiAxios.put(`/api/movimientos/${selectedMovimiento.id_movimiento_reactivo}`, dataToSend);
-        Swal.fire("✅ Actualizado", "Movimiento modificado y stock ajustado", "success");
+        Swal.fire("✅ Actualizado", "Movimiento modificado correctamente", "success");
       } else {
         await apiAxios.post("/api/movimientos", dataToSend);
-        Swal.fire("✅ Registrado", "Ingreso creado y stock actualizado", "success");
+        Swal.fire("✅ Registrado", "Movimiento creado correctamente", "success");
       }
-
       refreshData();
       hideModal();
     } catch (err) {
@@ -83,16 +102,15 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
   return (
     <form onSubmit={handleSubmit} className="needs-validation" noValidate>
       <div className="row g-3">
-
         <div className="col-md-6">
-          <label className="form-label fw-semibold text-muted">Fecha ingreso</label>
+          <label className="form-label fw-semibold text-muted">Fecha de Vencimiento</label>
           <input
             type="date"
-            name="fecha_ingreso"
+            name="fecha_vencimiento"
             className="form-control form-control-sm"
-            value={form.fecha_ingreso}
+            value={form.fecha_vencimiento}
             onChange={handleChange}
-            required
+            min={new Date().toISOString().slice(0, 10)}
           />
         </div>
 
@@ -125,49 +143,45 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
         </div>
 
         <div className="col-md-6">
-          <label className="form-label fw-semibold text-muted">ID Reactivo</label>
-          <input
-            type="number"
+          <label className="form-label fw-semibold text-muted">Reactivo</label>
+          <select
             name="id_reactivo"
-            className="form-control form-control-sm"
+            className="form-select form-select-sm"
             value={form.id_reactivo}
             onChange={handleChange}
             required
-            placeholder="ID del reactivo"
-          />
+          >
+            <option value="">Seleccione un reactivo...</option>
+            {reactivos.map((r) => (
+              <option key={r.id_reactivo} value={r.id_reactivo}>
+                {r.nom_reactivo} ({r.presentacion_reactivo})
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="col-md-6">
-          <label className="form-label fw-semibold text-muted">ID Proveedor</label>
-          <input
-            type="number"
+          <label className="form-label fw-semibold text-muted">Proveedor</label>
+          <select
             name="id_proveedor"
-            className="form-control form-control-sm"
+            className="form-select form-select-sm"
             value={form.id_proveedor}
             onChange={handleChange}
-            placeholder="Opcional"
-          />
-        </div>
-
-        <div className="col-md-6">
-          <label className="form-label fw-semibold text-muted">Estado inventario</label>
-          <select
-            name="estado_inventario"
-            className="form-select form-select-sm"
-            value={form.estado_inventario}
-            onChange={handleChange}
           >
-            <option value="en stock">En stock</option>
-            <option value="agotado">Agotado</option>
+            <option value="">Sin proveedor (opcional)</option>
+            {proveedores.map((p) => (
+              <option key={p.id_proveedor} value={p.id_proveedor}>
+                {p.nom_proveedor} {p.apel_proveedor}
+              </option>
+            ))}
           </select>
         </div>
 
         <div className="col-12 mt-4">
-          <button type="submit" className="btn btn-primary w-100">
-            {selectedMovimiento ? "Actualizar" : "Registrar Ingreso"}
+          <button type="submit" className="btn w-100" style={{ background: "#0077B6", color: "#fff", fontWeight: "600", border: "none", borderRadius: "10px" }}>
+            {selectedMovimiento ? "Actualizar Movimiento" : "Registrar Movimiento"}
           </button>
         </div>
-
       </div>
     </form>
   );

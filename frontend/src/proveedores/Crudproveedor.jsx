@@ -4,6 +4,7 @@ import DataTable from "react-data-table-component";
 import Swal from "sweetalert2";
 import * as bootstrap from "bootstrap";
 import ProveedorForm from "./ProveedorFrom.jsx";
+import { paginationComponentOptions, tableCustomStyles } from "../config/dataTableConfig";
 
 const Crudproveedor = () => {
   const [proveedor, setProveedor] = useState([]);
@@ -54,19 +55,21 @@ const Crudproveedor = () => {
 
   const columnas = [
     { name: "ID",        selector: (row) => row.id_proveedor,   sortable: true, width: "80px" },
-    { name: "Nombre",    selector: (row) => row.nom_proveedor,  sortable: true, width: "160px" },
-    { name: "Apellido",  selector: (row) => row.apel_proveedor, sortable: true, width: "160px" },
-    { name: "Teléfono",  selector: (row) => row.tel_proveedor,  sortable: true, width: "160px" },
-    { name: "Dirección", selector: (row) => row.dir_proveedor,  sortable: true, width: "160px" },
+    { name: "Nombre",    selector: (row) => row.nom_proveedor,  sortable: true },
+    { name: "Apellido",  selector: (row) => row.apel_proveedor, sortable: true },
+    { name: "Teléfono",  selector: (row) => row.tel_proveedor,  sortable: true },
+    { name: "Dirección", selector: (row) => row.dir_proveedor,  sortable: true },
     {
       name: "Acciones", center: true, width: "120px",
       cell: (row) => (
         <div className="d-flex gap-2 justify-content-center">
-          <button className="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#modalProveedor" onClick={() => setSelectedProveedor(row)} title="Editar">
-            <i className="fa-solid fa-pencil"></i>
+          <button className="btn btn-sm" style={{ background: "#dbeafe", color: "#0077B6", border: "none" }}
+            data-bs-toggle="modal" data-bs-target="#modalProveedor" onClick={() => setSelectedProveedor(row)} title="Editar">
+            <i className="fas fa-edit"></i>
           </button>
-          <button className="btn btn-sm btn-danger" onClick={() => eliminarProveedor(row.id_proveedor)} title="Eliminar">
-            <i className="fa-solid fa-trash"></i>
+          <button className="btn btn-sm" style={{ background: "#fee2e2", color: "#dc2626", border: "none" }}
+            onClick={() => eliminarProveedor(row.id_proveedor)} title="Eliminar">
+            <i className="fas fa-trash-alt"></i>
           </button>
         </div>
       ),
@@ -79,24 +82,53 @@ const Crudproveedor = () => {
   );
 
   return (
-    <div className="mt-4" style={{ maxWidth: "900px", margin: "0 auto", padding: "0 16px" }}>
-      <h2 className="text-center mb-4 text-primary fw-bold">Gestión de Proveedores</h2>
+    <div className="mt-4" style={{ padding: "0 16px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
+        <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
+        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Gestión de Proveedores</h2>
+      </div>
+      <p style={{ color: "#64748b", fontSize: "14px", marginBottom: "20px" }}>Administra los proveedores del laboratorio</p>
+
       <div className="row mb-3 align-items-center">
         <div className="col-md-7">
-          <input type="text" className="form-control" placeholder="Buscar por nombre, apellido, teléfono o dirección..." value={filterText} onChange={(e) => setFilterText(e.target.value)} />
+          <input type="text" className="form-control" placeholder="Buscar por nombre, apellido, teléfono..."
+            value={filterText} onChange={(e) => setFilterText(e.target.value)}
+            style={{ borderColor: "#dbeafe", borderRadius: "10px" }} />
         </div>
         <div className="col-md-5 text-end">
-          <button className="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalProveedor" onClick={() => setSelectedProveedor(null)}>
+          <button className="btn" data-bs-toggle="modal" data-bs-target="#modalProveedor"
+            onClick={() => setSelectedProveedor(null)}
+            style={{ background: "#0077B6", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }}>
             + Nuevo Proveedor
           </button>
         </div>
       </div>
-      <DataTable columns={columnas} data={listaFiltrada} pagination highlightOnHover striped responsive noDataComponent="No hay proveedores registrados" paginationPerPage={10} />
+
+      <div style={{ borderRadius: "14px", overflow: "hidden", border: "1px solid #dbeafe" }}>
+        <DataTable
+          columns={columnas}
+          data={listaFiltrada}
+          pagination
+          paginationComponentOptions={paginationComponentOptions}
+          customStyles={tableCustomStyles}
+          highlightOnHover
+          striped
+          responsive
+          noDataComponent={
+            <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
+              <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>
+              <p>No hay proveedores registrados</p>
+            </div>
+          }
+          paginationPerPage={10}
+        />
+      </div>
+
       <div className="modal fade" id="modalProveedor" tabIndex="-1">
         <div className="modal-dialog modal-lg">
-          <div className="modal-content">
-            <div className="modal-header bg-primary text-white">
-              <h5 className="modal-title">{selectedProveedor ? "Editar Proveedor" : "Nuevo Proveedor"}</h5>
+          <div className="modal-content" style={{ borderRadius: "16px", overflow: "hidden" }}>
+            <div className="modal-header" style={{ background: "#023E8A", color: "#fff" }}>
+              <h5 className="modal-title fw-bold">{selectedProveedor ? "Editar Proveedor" : "Nuevo Proveedor"}</h5>
               <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" onClick={hideModal}></button>
             </div>
             <div className="modal-body">

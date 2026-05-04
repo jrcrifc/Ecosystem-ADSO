@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
 import Swal from "sweetalert2";
 import * as bootstrap from "bootstrap";
+import { paginationComponentOptions, tableCustomStyles } from "../config/dataTableConfig";
 import IngresoReactivoForm from "./movimientoreactivoform.jsx";
 
 const CrudmovimientoReactivo = () => {
@@ -11,26 +12,26 @@ const CrudmovimientoReactivo = () => {
   const [selectedMovimiento, setSelectedMovimiento] = useState(null);
 
   const columns = [
-    { name: "ID",            selector: (row) => row.id_movimiento_reactivo,      sortable: true, width: "90px" },
-    { name: "Reactivo",      selector: (row) => row.id_reactivo,                 sortable: true, width: "110px" },
-    { name: "Cant. Inicial", selector: (row) => row.cantidad_inicial,            sortable: true, width: "130px" },
-    { name: "Lote",          selector: (row) => row.lote,                        sortable: true, width: "140px" },
-    { name: "Proveedor",     selector: (row) => row.id_proveedor,                sortable: true, width: "110px" },
-    { name: "Cant. Salida",  selector: (row) => row.cantidad_salida,             sortable: true, width: "130px" },
-    { name: "Fecha Ingreso", selector: (row) => row.fecha_ingreso?.slice(0, 10), sortable: true, width: "140px" },
+    { name: "ID", selector: (row) => row.id_movimiento_reactivo, sortable: true, width: "80px" },
+    { name: "Reactivo", selector: (row) => row.reactivo?.nom_reactivo || "-", sortable: true, width: "180px" },
+    { name: "Cant. Inicial", selector: (row) => row.cantidad_inicial || 0, sortable: true, width: "130px" },
+    { name: "Lote", selector: (row) => row.lote || "-", sortable: true, width: "120px" },
+    { name: "Proveedor", selector: (row) => row.proveedor ? `${row.proveedor.nom_proveedor} ${row.proveedor.apel_proveedor}` : "-", sortable: true, width: "170px" },
+    { name: "Cant. Salida", selector: (row) => row.cantidad_salida || 0, sortable: true, width: "130px" },
+    { name: "Fecha Vencimiento", selector: (row) => row.fecha_vencimiento?.slice(0, 10) || "-", sortable: true, width: "160px" },
     {
-      name: "Estado", selector: (row) => row.estado_inventario, sortable: true, width: "130px",
-      cell: (row) => (
-        <span className={`badge ${row.estado_inventario === "en stock" ? "bg-success" : "bg-danger"}`} style={{ fontSize: "0.75rem" }}>
-          {row.estado_inventario}
-        </span>
-      ),
-    },
-    {
-      name: "Acciones", center: true, width: "100px",
+      name: "Acciones",
+      center: true,
+      width: "100px",
       cell: (row) => (
         <div className="d-flex gap-2 justify-content-center">
-          <button className="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#modalIngreso" onClick={() => setSelectedMovimiento(row)} title="Editar">
+          <button
+            className="btn btn-sm btn-warning"
+            data-bs-toggle="modal"
+            data-bs-target="#modalIngreso"
+            onClick={() => setSelectedMovimiento(row)}
+            title="Editar"
+          >
             <i className="fa-solid fa-pencil"></i>
           </button>
         </div>
@@ -38,7 +39,9 @@ const CrudmovimientoReactivo = () => {
     },
   ];
 
-  useEffect(() => { cargarMovimientos(); }, []);
+  useEffect(() => {
+    cargarMovimientos();
+  }, []);
 
   const cargarMovimientos = async () => {
     try {
@@ -50,7 +53,6 @@ const CrudmovimientoReactivo = () => {
     }
   };
 
-  // ✅ FIX: getOrCreateInstance + limpiar backdrop
   const hideModal = () => {
     const modal = document.getElementById("modalIngreso");
     if (modal) {
@@ -65,33 +67,81 @@ const CrudmovimientoReactivo = () => {
 
   const filtered = movimientos.filter((item) =>
     `${item.id_movimiento_reactivo || ""}`.includes(filterText) ||
-    `${item.id_reactivo || ""}`.includes(filterText) ||
+    `${item.reactivo?.nom_reactivo || ""}`.toLowerCase().includes(filterText.toLowerCase()) ||
     `${item.lote || ""}`.toLowerCase().includes(filterText.toLowerCase())
   );
 
   return (
-    <div className="mt-4" style={{ maxWidth: "960px", margin: "0 auto", padding: "0 16px" }}>
-      <h2 className="text-center mb-4 text-primary fw-bold">Movimientos de Reactivos</h2>
+    <div className="mt-4" style={{ padding: "0 16px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
+        <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
+        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Movimientos de Reactivos</h2>
+      </div>
+
       <div className="row mb-3 align-items-center">
         <div className="col-md-5">
-          <input type="text" className="form-control" placeholder="Buscar por ID, reactivo o lote..." value={filterText} onChange={(e) => setFilterText(e.target.value)} />
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Buscar por ID, reactivo o lote..."
+            value={filterText}
+            onChange={(e) => setFilterText(e.target.value)}
+            style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
+          />
         </div>
         <div className="col-md-7 text-end">
-          <button className="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalIngreso" onClick={() => setSelectedMovimiento(null)}>
+          <button
+            className="btn"
+            style={{ background: "#0077B6", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }}
+            data-bs-toggle="modal"
+            data-bs-target="#modalIngreso"
+            onClick={() => setSelectedMovimiento(null)}
+          >
             + Nuevo Ingreso
           </button>
         </div>
       </div>
-      <DataTable columns={columns} data={filtered} pagination highlightOnHover striped responsive noDataComponent="No hay movimientos registrados" paginationPerPage={10} />
+
+      <div style={{ borderRadius: "14px", overflow: "hidden", border: "1px solid #dbeafe" }}>
+        <DataTable
+          columns={columns}
+          data={filtered}
+          pagination
+          paginationPerPage={10}
+          paginationComponentOptions={paginationComponentOptions}
+          customStyles={tableCustomStyles}
+          highlightOnHover
+          striped
+          responsive
+          noDataComponent={
+            <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
+              <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>
+              <p>No hay movimientos registrados</p>
+            </div>
+          }
+        />
+      </div>
+
       <div className="modal fade" id="modalIngreso" tabIndex="-1">
         <div className="modal-dialog modal-lg">
           <div className="modal-content">
             <div className="modal-header bg-primary text-white">
-              <h5 className="modal-title">{selectedMovimiento ? "Editar" : "Nuevo"} Ingreso de Reactivo</h5>
-              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" onClick={hideModal}></button>
+              <h5 className="modal-title">
+                {selectedMovimiento ? "Editar" : "Nuevo"} Movimiento de Reactivo
+              </h5>
+              <button
+                type="button"
+                className="btn-close btn-close-white"
+                data-bs-dismiss="modal"
+                onClick={hideModal}
+              ></button>
             </div>
             <div className="modal-body">
-              <IngresoReactivoForm selectedMovimiento={selectedMovimiento} refreshData={cargarMovimientos} hideModal={hideModal} />
+              <IngresoReactivoForm
+                selectedMovimiento={selectedMovimiento}
+                refreshData={cargarMovimientos}
+                hideModal={hideModal}
+              />
             </div>
           </div>
         </div>

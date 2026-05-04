@@ -9,19 +9,32 @@ import {
     createSmartSalida
 } from '../controller/salidasController.js';
 import salidasModel from '../models/salidasModel.js';
+import salidasService from "../service/salidasService.js";
+import { adminOGestor } from '../middleware/roleMiddleware.js';
 
 const router = express.Router();
 
-router.get('/', getAllsalidas);
-router.get('/lote-proximo/:id_reactivo', getLoteProximo);
-router.post('/smart', createSmartSalida);
-router.get('/:id', getsalidas);
-router.post('/', createsalidas);
-router.put('/:id', updatesalidas);
-router.delete('/:id', deletesalidas);
+// ✅ Ruta para obtener lotes FEFO de un reactivo — ANTES de las rutas con :id
+router.get('/lotes-fefo/:id_reactivo', adminOGestor, async (req, res) => {
+  try {
+    const lotes = await salidasService.getLotesFefo(req.params.id_reactivo);
+    res.json(lotes);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get('/lote-proximo/:id_reactivo', adminOGestor, getLoteProximo);
+router.post('/smart', adminOGestor, createSmartSalida);
+
+router.get('/', adminOGestor, getAllsalidas);
+router.get('/:id', adminOGestor, getsalidas);
+router.post('/', adminOGestor, createsalidas);
+router.put('/:id', adminOGestor, updatesalidas);
+router.delete('/:id', adminOGestor, deletesalidas);
 
 // NUEVA RUTA PARA CAMBIAR ESTADO
-router.put('/estado/:id', async (req, res) => {
+router.put('/estado/:id', adminOGestor, async (req, res) => {
     try {
         const { id } = req.params;
         const salidas = await salidasModel.findByPk(id);

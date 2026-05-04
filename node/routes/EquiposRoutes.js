@@ -3,6 +3,7 @@ import { getAllEquipos, getEquipos, createEquipos, updateEquipos, deleteEquipos 
 import multer from 'multer';
 import path from 'path';
 import authMiddleware from '../middleware/authMiddleware.js';
+import { adminOGestor } from '../middleware/roleMiddleware.js';
 
 const router = express.Router();
 
@@ -18,10 +19,10 @@ const almacenamiento = multer.diskStorage({
 
 const upload = multer({ storage: almacenamiento });
 
-router.get('/', authMiddleware ,getAllEquipos);
-router.get('/:id', authMiddleware , getEquipos);
-router.post('/',  authMiddleware , upload.single('foto_equipo'), createEquipos);
-router.put('/:id', authMiddleware, upload.single('foto_equipo'), updateEquipos);
-router.delete('/:id', authMiddleware, deleteEquipos);
+router.get('/', adminOGestor, getAllEquipos);
+router.get('/:id', adminOGestor, getEquipos);
+router.post('/', adminOGestor, upload.single('foto_equipo'), createEquipos);
+router.put('/:id', adminOGestor, upload.single('foto_equipo'), updateEquipos);
+router.delete('/:id', adminOGestor, deleteEquipos);
 
 export default router;
