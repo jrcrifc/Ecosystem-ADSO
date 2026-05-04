@@ -13,7 +13,9 @@ const solicitudModel = db.define('solicitud',{
     },
 }, {
     freezeTableName: true,
-    timestamps: true
+    timestamps: true,
+    createdAt: 'createdat',
+    updatedAt: 'updatedat'
 });
 
 export default solicitudModel;

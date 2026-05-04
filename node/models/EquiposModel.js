@@ -51,6 +51,8 @@ const EquiposModel = db.define('equipos', {
 }, {
   freezeTableName: true,
   timestamps: true,
+  createdAt: 'createdat',
+  updatedAt: 'updatedat'
 });
 
 export default EquiposModel;

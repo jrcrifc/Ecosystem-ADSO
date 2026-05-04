@@ -15,7 +15,9 @@ const estadoEquipoModel = db.define('estado_equipo', {
     
 }, {
     freezeTableName: true,
-    timestamps: true       // ← si no tienes createdAt/updatedAt
+    timestamps: true,
+    createdAt: 'createdat',
+    updatedAt: 'updatedat'
 });
 
 export default estadoEquipoModel;

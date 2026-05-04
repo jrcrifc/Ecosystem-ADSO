@@ -11,6 +11,11 @@ const SolicitudAccesoModel = sequelize.define('solicitudes_acceso', {
     type: DataTypes.ENUM('pendiente', 'aprobado', 'rechazado'),
     defaultValue: 'pendiente'
   }
-}, { freezeTableName: true });
+}, { 
+  freezeTableName: true,
+  timestamps: true,
+  createdAt: 'createdat',
+  updatedAt: 'updatedat'
+});
 
 export default SolicitudAccesoModel;

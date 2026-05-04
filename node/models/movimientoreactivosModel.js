@@ -33,7 +33,9 @@ const movimientoreactivoModel = db.define('movimientos_reactivos', {
     }
 }, {
     freezeTableName: true,
-    timestamps: true
+    timestamps: true,
+    createdAt: 'createdat',
+    updatedAt: 'updatedat'
 });
 
 export default movimientoreactivoModel;

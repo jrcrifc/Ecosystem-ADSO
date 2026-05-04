@@ -16,6 +16,9 @@ const proveedoresModel = db.define('proveedor', {
     },
 }, {
     freezeTableName: true,
+    timestamps: true,
+    createdAt: 'createdat',
+    updatedAt: 'updatedat'
 });
 
 export default proveedoresModel;

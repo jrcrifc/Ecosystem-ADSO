@@ -12,6 +12,11 @@ const NotificacionModel = sequelize.define('notificaciones', {
     defaultValue: 'general'
   },
   leida: { type: DataTypes.BOOLEAN, defaultValue: false }
-}, { freezeTableName: true });
+}, { 
+  freezeTableName: true,
+  timestamps: true,
+  createdAt: 'createdat',
+  updatedAt: 'updatedat'
+});
 
 export default NotificacionModel;

@@ -22,7 +22,10 @@ const solicitudxequipoModel = db.define('solicitudxequipo',{
     onDelete: 'CASCADE'
   },
     }, {
-        freezeTableName: true
+        freezeTableName: true,
+        timestamps: true,
+        createdAt: 'createdat',
+        updatedAt: 'updatedat'
     })
 
     export default solicitudxequipoModel;

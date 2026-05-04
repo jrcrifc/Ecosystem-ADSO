@@ -19,7 +19,9 @@ const estadosolicitudModel = db.define('estado_solicitud', {
 
 }, {
     freezeTableName: true,
-    timestamps: true       // ← si no tienes createdAt/updatedAt
+    timestamps: true,
+    createdAt: 'createdat',
+    updatedAt: 'updatedat'
 });
 
 export default estadosolicitudModel;

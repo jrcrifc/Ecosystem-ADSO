@@ -28,6 +28,8 @@ const salidasModel = db.define('salidas_reactivos', {
 }, {
     freezeTableName: true,
     timestamps: true,
+    createdAt: 'createdat',
+    updatedAt: 'updatedat'
 });
 
 export default salidasModel;
