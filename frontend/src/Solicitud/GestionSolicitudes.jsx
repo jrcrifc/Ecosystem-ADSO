@@ -40,6 +40,13 @@ const GestionSolicitudes = () => {
       width: "180px"
     },
     {
+      name: "Equipos",
+      selector: (row) => (row.equipos || []).map(e => e.nom_equipo).join(", ") || "-",
+      sortable: false,
+      width: "250px",
+      wrap: true
+    },
+    {
       name: "Fecha Inicio",
       selector: (row) => row.fecha_inicio ? new Date(row.fecha_inicio).toLocaleString() : "-",
       sortable: true,

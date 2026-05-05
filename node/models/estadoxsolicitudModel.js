@@ -9,7 +9,8 @@ const Estadoxsolicitud = db.define('estadoxsolicitud', {
   },
   id_solicitud: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,
+    field: 'Id_solicitud'
   },
   id_estado_solicitud: {
     type: DataTypes.INTEGER,

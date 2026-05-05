@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import apiAxios from "../api/axiosConfig";
+import apiAxios, { API_URL } from "../api/axiosConfig";
 import Swal from "sweetalert2";
 import * as bootstrap from 'bootstrap';
 
@@ -55,7 +55,7 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
         observaciones: selectedEquipo.observaciones || "",
         foto_equipo: null,
         previewFoto: selectedEquipo.foto_equipo
-          ? `http://localhost:3001/uploads/${selectedEquipo.foto_equipo}`
+          ? `${API_URL}/uploads/${selectedEquipo.foto_equipo}`
           : "",
         estado: selectedEquipo.estado ?? 1
       });

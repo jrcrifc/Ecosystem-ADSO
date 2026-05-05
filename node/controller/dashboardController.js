@@ -32,7 +32,7 @@ export const getDashboardStats = async (req, res) => {
     const solicitudesStats = await estadoxsolicitudModel.findAll({
         attributes: [
             [estadoxsolicitudModel.sequelize.col('estadoSolicitud.estado'), 'estado_nombre'],
-            [estadoxsolicitudModel.sequelize.fn('COUNT', estadoxsolicitudModel.sequelize.col('estadoxsolicitud.id_solicitud')), 'count']
+            [estadoxsolicitudModel.sequelize.fn('COUNT', estadoxsolicitudModel.sequelize.col('estadoxsolicitud.Id_solicitud')), 'count']
         ],
         include: [{
             model: estadoSolicitudModel,

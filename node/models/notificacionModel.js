@@ -8,7 +8,7 @@ const NotificacionModel = sequelize.define('notificaciones', {
   titulo: { type: DataTypes.STRING, allowNull: false },
   mensaje: { type: DataTypes.TEXT, allowNull: false },
   tipo: {
-    type: DataTypes.ENUM('solicitud_acceso', 'aprobado', 'rechazado', 'general'),
+    type: DataTypes.ENUM('solicitud_acceso', 'aprobado', 'rechazado', 'general', 'nueva_solicitud', 'cambio_estado_solicitud'),
     defaultValue: 'general'
   },
   leida: { type: DataTypes.BOOLEAN, defaultValue: false }
