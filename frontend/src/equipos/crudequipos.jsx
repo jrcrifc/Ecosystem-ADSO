@@ -85,11 +85,11 @@ export default function CrudEquipo() {
   };
 
   const columns = [
-    { name: "ID", selector: (row) => row.id_equipo, sortable: true, width: "80px" },
-    { name: "Grupo", selector: (row) => row.grupo_equipo, sortable: true, wrap: true, width: "220px" },
-    { name: "Nombre", selector: (row) => row.nom_equipo, sortable: true, wrap: true, width: "200px" },
-    { name: "Marca", selector: (row) => row.marca_equipo || "-", sortable: true, width: "140px" },
-    { name: "Placa/Serial", selector: (row) => row.no_placa || "-", sortable: true, width: "130px" },
+    { name: "ID", selector: (row) => row.id_equipo, sortable: true, width: "70px", center: true },
+    { name: "Grupo", selector: (row) => row.grupo_equipo, sortable: true, wrap: true, width: "180px" },
+    { name: "Nombre", selector: (row) => row.nom_equipo, sortable: true, wrap: true, grow: 2 },
+    { name: "Marca", selector: (row) => row.marca_equipo || "-", sortable: true, width: "120px", center: true },
+    { name: "Placa/Serial", selector: (row) => row.no_placa || "-", sortable: true, width: "120px", center: true },
 
     // ✅ COLUMNA CORREGIDA
     {
@@ -98,7 +98,7 @@ export default function CrudEquipo() {
         ? `${row.cuentadante.nom_cuentadante} ${row.cuentadante.apell_cuentadante}`
         : "-",
       sortable: true,
-      width: "180px"
+      grow: 1.5
     },
 
     {
@@ -153,7 +153,7 @@ export default function CrudEquipo() {
     {
       name: "Acciones",
       center: true,
-      width: "140px",
+      width: "120px",
       cell: (row) => (
         <div className="d-flex gap-2 justify-content-center">
           <button

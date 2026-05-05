@@ -28,7 +28,9 @@ const estadoxEquipoModel = db.define('estadoxequipo', {
   },
 }, {
   freezeTableName: true,       // tabla se llama exactamente 'estadoxequipo' (sin plural)
-  timestamps: true             // crea createdAt y updatedAt automáticamente
+  timestamps: true,             // crea createdAt y updatedAt automáticamente
+  createdAt: 'createdat',
+  updatedAt: 'updatedat'
 });
 
 export default estadoxEquipoModel;

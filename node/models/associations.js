@@ -29,9 +29,9 @@ salidasModel.belongsTo(movimientoreactivoModel,  { foreignKey: 'id_movimiento_re
 movimientoreactivoModel.hasMany(salidasModel,    { foreignKey: 'id_movimiento_reactivo', as: 'salidas' });
 
 // ESTADO x SOLICITUD ↔ SOLICITUD + ESTADO SOLICITUD
-estadoxsolicitudModel.belongsTo(solicitudModel,      { foreignKey: 'Id_solicitud',       as: 'solicitud' });
+estadoxsolicitudModel.belongsTo(solicitudModel,      { foreignKey: 'id_solicitud',       as: 'solicitud' });
 estadoxsolicitudModel.belongsTo(estadoSolicitudModel, { foreignKey: 'id_estado_solicitud', as: 'estadoSolicitud' });
-solicitudModel.hasMany(estadoxsolicitudModel,         { foreignKey: 'Id_solicitud',       as: 'estados' });
+solicitudModel.hasMany(estadoxsolicitudModel,         { foreignKey: 'id_solicitud',       as: 'estados' });
 estadoSolicitudModel.hasMany(estadoxsolicitudModel,   { foreignKey: 'id_estado_solicitud', as: 'registros' });
 
 // ESTADO x EQUIPO ↔ EQUIPO + ESTADO EQUIPO

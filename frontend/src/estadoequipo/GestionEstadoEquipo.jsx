@@ -66,21 +66,28 @@ export default function GestionEstadoEquipo() {
       name: "Equipo",
       selector: row => row.nom_equipo,
       sortable: true,
+      grow: 2
     },
     {
       name: "Placa",
       selector: row => row.no_placa,
       sortable: true,
+      width: "130px",
+      center: true
     },
     {
       name: "Marca",
       selector: row => row.marca_equipo,
       sortable: true,
+      width: "130px",
+      center: true
     },
     {
       name: "Estado Actual",
       selector: row => row.ultimoEstado || "disponible",
       sortable: true,
+      width: "170px",
+      center: true,
       cell: row => {
         const estado = row.ultimoEstado || "disponible";
         const cfg = estadoConfig[estado] || estadoConfig.disponible;
@@ -112,7 +119,8 @@ export default function GestionEstadoEquipo() {
       ignoreRowClick: true,
       allowOverflow: true,
       button: true,
-      width: "150px"
+      width: "140px",
+      center: true
     }
   ];
 

@@ -13,13 +13,13 @@ const CrudReactivos = () => {
   const [selectedReactivo, setSelectedReactivo] = useState(null);
 
   const columns = [
-    { name: "ID", selector: (row) => row.id_reactivo, sortable: true, width: "120px" },
-    { name: "Nombre", selector: (row) => row.nom_reactivo, sortable: true, width: "200px" },
-    { name: "Presentación", selector: (row) => row.presentacion_reactivo, sortable: true, width: "130px" },
-    { name: "Cantidad presentacion", selector: (row) => row.cantidad_presentacion, sortable: true, width: "180px" },
-    { name: "Stand / Col / Fila", selector: (row) => `${row.stand || "-"} / ${row.columna || "-"} / ${row.fila || "-"}`, sortable: false, width: "180px" },
-    { name: "Color Stand", selector: (row) => row.color_stand, sortable: true, width: "160px" },
-    { name: "Clasificación", selector: (row) => row.clasificacion_reactivo, sortable: true, width: "160px" },
+    { name: "ID", selector: (row) => row.id_reactivo, sortable: true, width: "70px", center: true },
+    { name: "Nombre", selector: (row) => row.nom_reactivo, sortable: true, grow: 2 },
+    { name: "Presentación", selector: (row) => row.presentacion_reactivo, sortable: true, width: "120px", center: true },
+    { name: "Cantidad", selector: (row) => row.cantidad_presentacion, sortable: true, width: "100px", center: true },
+    { name: "Stand / Col / Fila", selector: (row) => `${row.stand || "-"} / ${row.columna || "-"} / ${row.fila || "-"}`, sortable: false, width: "150px", center: true },
+    { name: "Color Stand", selector: (row) => row.color_stand, sortable: true, width: "130px", center: true },
+    { name: "Clasificación", selector: (row) => row.clasificacion_reactivo, sortable: true, grow: 1.5 },
     {
       name: "Estado", width: "120px", center: true,
       cell: (row) => (

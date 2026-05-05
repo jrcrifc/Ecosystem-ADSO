@@ -43,20 +43,22 @@ const GestionSolicitudes = () => {
       name: "Equipos",
       selector: (row) => (row.equipos || []).map(e => e.nom_equipo).join(", ") || "-",
       sortable: false,
-      width: "250px",
+      grow: 2,
       wrap: true
     },
     {
       name: "Fecha Inicio",
-      selector: (row) => row.fecha_inicio ? new Date(row.fecha_inicio).toLocaleString() : "-",
+      selector: (row) => row.fecha_inicio ? new Date(row.fecha_inicio).toLocaleDateString() : "-",
       sortable: true,
-      width: "170px"
+      width: "140px",
+      center: true
     },
     {
       name: "Fecha Fin",
-      selector: (row) => row.fecha_fin ? new Date(row.fecha_fin).toLocaleString() : "-",
+      selector: (row) => row.fecha_fin ? new Date(row.fecha_fin).toLocaleDateString() : "-",
       sortable: true,
-      width: "170px"
+      width: "140px",
+      center: true
     },
     {
       name: "Prioridad",
@@ -110,7 +112,8 @@ const GestionSolicitudes = () => {
       ignoreRowClick: true,
       allowOverflow: true,
       button: true,
-      width: "120px"
+      width: "150px",
+      center: true
     }
   ];
 
