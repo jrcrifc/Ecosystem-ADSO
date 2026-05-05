@@ -50,41 +50,44 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Preparar datos
+    // Preparar datos - Convertir strings vacíos a null para evitar errores de ENUM en Sequelize
     const data = {
-      presentacion_reactivo,
-      cantidad_presentacion: cantidad_presentacion ? parseInt(cantidad_presentacion) : null,
-      nom_reactivo,
-      nom_reactivo_ingles,
-      formula_reactivo,
-      color_almacenamiento,
-      color_stand,
-      stand,
-      columna,
-      fila,
-      clasificacion_reactivo,
+      presentacion_reactivo: presentacion_reactivo || null,
+      cantidad_presentacion: (cantidad_presentacion !== "" && cantidad_presentacion !== null) ? parseInt(cantidad_presentacion) : null,
+      nom_reactivo: nom_reactivo || null,
+      nom_reactivo_ingles: nom_reactivo_ingles || null,
+      formula_reactivo: formula_reactivo || null,
+      color_almacenamiento: color_almacenamiento || null,
+      color_stand: color_stand || null,
+      stand: stand || null,
+      columna: columna || null,
+      fila: fila || null,
+      clasificacion_reactivo: clasificacion_reactivo || null,
       estado,
     };
 
     try {
-      if (selectedReactivo) {
+      if (selectedReactivo && selectedReactivo.id_reactivo) {
         // Actualizar
         await apiAxios.put(
           `/api/reactivos/${selectedReactivo.id_reactivo}`,
           data
         );
-        Swal.fire(" Actualizado", "Reactivo modificado correctamente", "success");
+        Swal.fire("✅ Actualizado", "Reactivo modificado correctamente", "success");
       } else {
         // Crear
-        await apiAxios.post("/api/reactivos", data);
-        Swal.fire("Registrado", "Reactivo creado correctamente", "success");
+        // Aseguramos que no se envíe un id_reactivo si existiera en el objeto (aunque aquí no está)
+        const createData = { ...data };
+        await apiAxios.post("/api/reactivos", createData);
+        Swal.fire("✅ Registrado", "Reactivo creado correctamente", "success");
       }
 
       refreshData();
       hideModal();
     } catch (error) {
       console.error("Error al guardar reactivo:", error);
-      Swal.fire("💀 Error", "No se pudo guardar el reactivo", "error");
+      const msg = error.response?.data?.message || "No se pudo guardar el reactivo";
+      Swal.fire("💀 Error", msg, "error");
     }
   };
 
@@ -135,13 +138,20 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
         {/* CANTIDAD PRESENTACIÓN */}
         <div className="col-md-6">
           <label className="form-label fw-semibold text-muted">Cantidad por presentación</label>
-          <input
-            type="number"
-            className="form-control form-control-sm"
-            value={cantidad_presentacion}
-            onChange={(e) => setCantidad_presentacion(e.target.value)}
-            min="0"
-          />
+          <div className="input-group input-group-sm">
+            <input
+              type="number"
+              className="form-control form-control-sm"
+              value={cantidad_presentacion}
+              onChange={(e) => setCantidad_presentacion(e.target.value)}
+              min="0"
+            />
+            {presentacion_reactivo && (
+              <span className="input-group-text" style={{ background: "#e0f2fe", color: "#0077B6", fontWeight: "600", fontSize: "12px" }}>
+                {presentacion_reactivo}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* FÓRMULA */}

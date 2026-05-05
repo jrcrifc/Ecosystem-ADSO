@@ -9,6 +9,10 @@ import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./theme.css";
 
+// ✅ Limpiar tema oscuro residual (fue eliminado)
+localStorage.removeItem("theme");
+document.documentElement.removeAttribute("data-theme");
+
 import * as bootstrap from 'bootstrap';
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

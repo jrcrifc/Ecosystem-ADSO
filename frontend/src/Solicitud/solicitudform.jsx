@@ -6,18 +6,16 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
   const [fecha_inicio, setFecha_inicio] = useState("");
   const [hora_inicio, setHora_inicio]   = useState("07:00");
   const [fecha_fin, setFecha_fin]       = useState("");
-  const [hora_fin, setHora_fin]         = useState("11:00");
+  const [hora_fin, setHora_fin]         = useState("16:00");
 
-  // ✅ Horarios permitidos: 7-11am y 2-4pm
-  const horariosPermitidos = [
-    "07:00", "08:00", "09:00", "10:00", "11:00",
-    "14:00", "15:00", "16:00"
-  ];
-  const formatHora = (h) => {
-    const [hh] = h.split(":");
-    const num = parseInt(hh);
-    return num < 12 ? `${num}:00 AM` : num === 12 ? `12:00 PM` : `${num-12}:00 PM`;
+  // ✅ Horarios: 7 AM - 4 PM (Flexible)
+  const isTimeValid = (time) => {
+    if (!time) return false;
+    const [hh, mm] = time.split(":").map(Number);
+    const totalMinutes = hh * 60 + mm;
+    return totalMinutes >= 7 * 60 && totalMinutes <= 16 * 60;
   };
+
   const [estado, setEstado]             = useState(1);
   const [equipos, setEquipos]           = useState([]);
   const [equiposSeleccionados, setEquiposSeleccionados] = useState([]);
@@ -36,6 +34,20 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
   const userData = stored ? JSON.parse(stored) : null;
   const userRol = (userData?.user?.rol || userData?.rol || "").toLowerCase();
   const esAdmin = userRol === "administrador" || userRol === "admin";
+
+  // ✅ Determinar el ROL EFECTIVO del solicitante
+  // Si es admin y seleccionó un usuario, usar el rol de ese usuario
+  // Si no, usar el rol del usuario logueado
+  const selectedUser = usuarios.find(u => u.id_usuario === parseInt(idUsuarioSolicitante));
+  const rolEfectivo = esAdmin && selectedUser
+    ? selectedUser.rol.toLowerCase()
+    : userRol;
+
+  // ✅ Reglas por rol:
+  // Aprendiz → devuelve el MISMO DÍA
+  // Instructor → puede devolver hasta 1 MES después
+  const esAprendiz = rolEfectivo === "aprendiz";
+  const esInstructor = rolEfectivo === "instructor";
 
   // Cargar equipos disponibles
   useEffect(() => {
@@ -66,7 +78,7 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
       setFecha_fin(selectedSolicitud.fecha_fin
         ? new Date(selectedSolicitud.fecha_fin).toISOString().slice(0, 10) : "");
       setHora_fin(selectedSolicitud.fecha_fin
-        ? new Date(selectedSolicitud.fecha_fin).toTimeString().slice(0, 5) : "11:00");
+        ? new Date(selectedSolicitud.fecha_fin).toTimeString().slice(0, 5) : "16:00");
       setEstado(selectedSolicitud.estado ?? 1);
       const idsActuales = (selectedSolicitud.equipos || []).map(e => e.id_equipo);
       setEquiposSeleccionados(idsActuales);
@@ -75,7 +87,7 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
       const defaultDate = new Date(); defaultDate.setDate(defaultDate.getDate() + 5);
       setFecha_inicio(defaultDate.toISOString().slice(0, 10));
       setHora_inicio("07:00");
-      setHora_fin("11:00");
+      setHora_fin("16:00");
       setFecha_fin("");
       setEstado(1);
       setEquiposSeleccionados([]);
@@ -115,23 +127,65 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
       Swal.fire("⚠️ Atención", "La fecha de inicio es obligatoria", "warning");
       return;
     }
-    if (fecha_fin && new Date(`${fecha_fin}T${hora_fin}`) <= new Date(`${fecha_inicio}T${hora_inicio}`)) {
-      Swal.fire("⚠️ Atención", "La fecha/hora de fin debe ser posterior a la de inicio", "warning");
+    if (!isTimeValid(hora_inicio)) {
+      Swal.fire("⚠️ Atención", "La hora de inicio debe estar entre 7:00 AM y 4:00 PM", "warning");
       return;
     }
+
+    // ✅ Validaciones según rol
+    if (esAprendiz) {
+      // Aprendiz: mismo día, validar hora fin
+      if (!isTimeValid(hora_fin)) {
+        Swal.fire("⚠️ Atención", "La hora de devolución debe estar entre 7:00 AM y 4:00 PM", "warning");
+        return;
+      }
+      if (new Date(`${fecha_inicio}T${hora_fin}`) <= new Date(`${fecha_inicio}T${hora_inicio}`)) {
+        Swal.fire("⚠️ Atención", "La hora de devolución debe ser posterior a la de inicio", "warning");
+        return;
+      }
+    } else if (esInstructor) {
+      // Instructor: necesita fecha fin (hasta 1 mes)
+      if (!fecha_fin) {
+        Swal.fire("⚠️ Atención", "Debe seleccionar la fecha de devolución", "warning");
+        return;
+      }
+      if (!isTimeValid(hora_fin)) {
+        Swal.fire("⚠️ Atención", "La hora de devolución debe estar entre 7:00 AM y 4:00 PM", "warning");
+        return;
+      }
+      if (new Date(`${fecha_fin}T${hora_fin}`) <= new Date(`${fecha_inicio}T${hora_inicio}`)) {
+        Swal.fire("⚠️ Atención", "La fecha/hora de devolución debe ser posterior a la de inicio", "warning");
+        return;
+      }
+    }
+
     if (!selectedSolicitud && equiposSeleccionados.length === 0) {
       Swal.fire("⚠️ Atención", "Selecciona al menos un equipo", "warning");
       return;
     }
+
     // ✅ Admin debe seleccionar solicitante al crear
     if (esAdmin && !selectedSolicitud && !idUsuarioSolicitante) {
       Swal.fire("⚠️ Atención", "Como administrador, debes seleccionar un solicitante", "warning");
       return;
     }
 
+    // ✅ Construir fecha_fin según rol
+    let fechaFinISO;
+    if (esAprendiz) {
+      // Mismo día: fecha_inicio + hora_fin
+      fechaFinISO = new Date(`${fecha_inicio}T${hora_fin}:00`).toISOString();
+    } else if (esInstructor) {
+      // Fecha diferente: fecha_fin + hora_fin
+      fechaFinISO = new Date(`${fecha_fin}T${hora_fin}:00`).toISOString();
+    } else {
+      // Fallback (admin sin usuario seleccionado): mismo día
+      fechaFinISO = new Date(`${fecha_inicio}T${hora_fin}:00`).toISOString();
+    }
+
     const data = {
       fecha_inicio: new Date(`${fecha_inicio}T${hora_inicio}:00`).toISOString(),
-      fecha_fin:    fecha_fin ? new Date(`${fecha_fin}T${hora_fin}:00`).toISOString() : null,
+      fecha_fin:    fechaFinISO,
       estado,
       equipos_ids:  equiposSeleccionados,
     };
@@ -160,8 +214,6 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
     }
   };
 
-  const selectedUser = usuarios.find(u => u.id_usuario === parseInt(idUsuarioSolicitante));
-
   return (
     <form onSubmit={handleSubmit} noValidate>
       <div className="row g-3">
@@ -169,10 +221,10 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
         {/* ✅ ADMIN: Selector de solicitante */}
         {esAdmin && !selectedSolicitud && (
           <div className="col-12">
-            <label className="form-label fw-semibold" style={{ color: "#1B3A2D" }}>
+            <label className="form-label fw-semibold" style={{ color: "#023E8A" }}>
               👤 Solicitante <span style={{ color: "#dc3545" }}>*</span>
             </label>
-            <p style={{ fontSize: "12px", color: "#5f7d6a", margin: "0 0 8px" }}>
+            <p style={{ fontSize: "12px", color: "#64748b", margin: "0 0 8px" }}>
               Como administrador, selecciona el usuario que está realizando la solicitud.
             </p>
 
@@ -183,7 +235,7 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
               placeholder="Buscar por nombre, documento o email..."
               value={busquedaUsuario}
               onChange={e => setBusquedaUsuario(e.target.value)}
-              style={{ borderColor: "#c8e6c9" }}
+              style={{ borderColor: "#dbeafe" }}
             />
 
             {/* Usuario seleccionado */}
@@ -191,22 +243,22 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
               <div style={{
                 display: "flex", alignItems: "center", gap: "12px",
                 padding: "10px 14px", borderRadius: "10px", marginBottom: "8px",
-                background: "#e8f5e9", border: "2px solid #4CAF50"
+                background: "#dbeafe", border: "2px solid #0077B6"
               }}>
                 <div style={{
                   width: "36px", height: "36px", borderRadius: "50%",
-                  background: "linear-gradient(135deg, #4CAF50, #2D8A4E)",
+                  background: "linear-gradient(135deg, #0077B6, #023E8A)",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   color: "#fff", fontWeight: "800", fontSize: "14px", flexShrink: 0
                 }}>
                   {selectedUser.nombres_apellidos?.charAt(0).toUpperCase()}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: "600", fontSize: "13px", color: "#1B3A2D" }}>
+                  <div style={{ fontWeight: "600", fontSize: "13px", color: "#023E8A" }}>
                     {selectedUser.nombres_apellidos}
                   </div>
-                  <div style={{ fontSize: "11px", color: "#5f7d6a" }}>
-                    {selectedUser.email} · {selectedUser.rol}
+                  <div style={{ fontSize: "11px", color: "#64748b" }}>
+                    {selectedUser.email} · <strong>{selectedUser.rol}</strong>
                   </div>
                 </div>
                 <button type="button" onClick={() => setIdUsuarioSolicitante("")} style={{
@@ -233,24 +285,24 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
                       marginBottom: "2px", transition: "background 0.15s",
                       border: "1px solid transparent"
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "#f0f9f2"; e.currentTarget.style.borderColor = "#c8e6c9"; }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "#f0f7ff"; e.currentTarget.style.borderColor = "#dbeafe"; }}
                     onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "transparent"; }}
                   >
                     <div style={{
                       width: "32px", height: "32px", borderRadius: "50%",
-                      background: "#e8f5e9", display: "flex", alignItems: "center",
+                      background: "#dbeafe", display: "flex", alignItems: "center",
                       justifyContent: "center", fontSize: "12px", fontWeight: "700",
-                      color: "#2D8A4E", flexShrink: 0
+                      color: "#0077B6", flexShrink: 0
                     }}>
                       {u.nombres_apellidos?.charAt(0).toUpperCase()}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: "600", fontSize: "12.5px", color: "#1B3A2D" }}>{u.nombres_apellidos}</div>
+                      <div style={{ fontWeight: "600", fontSize: "12.5px", color: "#0f172a" }}>{u.nombres_apellidos}</div>
                       <div style={{ fontSize: "11px", color: "#94a3b8" }}>{u.email} · {u.documento}</div>
                     </div>
                     <span style={{
-                      fontSize: "10px", fontWeight: "600", color: "#2D8A4E",
-                      background: "#e8f5e9", padding: "2px 8px", borderRadius: "99px"
+                      fontSize: "10px", fontWeight: "600", color: "#0077B6",
+                      background: "#dbeafe", padding: "2px 8px", borderRadius: "99px"
                     }}>{u.rol}</span>
                   </div>
                 ))}
@@ -259,53 +311,90 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
           </div>
         )}
 
-        {/* Fechas — mínimo 5 días, máximo 2 meses desde hoy */}
+        {/* ✅ Info del tipo de solicitud según rol */}
+        {(esAprendiz || esInstructor) && (
+          <div className="col-12">
+            <div style={{
+              padding: "10px 16px", borderRadius: "10px", fontSize: "12px",
+              background: esAprendiz ? "#fff8e1" : "#e3f2fd",
+              border: `1px solid ${esAprendiz ? "#ffe082" : "#90caf9"}`,
+              color: esAprendiz ? "#7c5e00" : "#0d47a1"
+            }}>
+              {esAprendiz ? (
+                <>🎓 <strong>Aprendiz:</strong> La solicitud es por un solo día. Debes devolver los equipos el mismo día antes de las 4:00 PM.</>
+              ) : (
+                <>👨‍🏫 <strong>Instructor:</strong> Puedes solicitar con 3 a 5 días de anticipación y tienes hasta <strong>1 mes</strong> para devolver los equipos.</>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ✅ FECHA Y HORARIO — Adaptado por rol */}
         {(() => {
           const hoy = new Date();
           const minDate = new Date(hoy);
-          minDate.setDate(minDate.getDate() + 5);
+          minDate.setDate(minDate.getDate() + 3); // mínimo 3 días hábiles
           const maxDate = new Date(hoy);
           maxDate.setMonth(maxDate.getMonth() + 2);
           const minStr = minDate.toISOString().slice(0, 10);
           const maxStr = maxDate.toISOString().slice(0, 10);
-          const minFinStr = fecha_inicio || minStr;
+
+          // Para instructor: fecha fin máxima = fecha_inicio + 1 mes
+          let maxFinStr = maxStr;
+          if (fecha_inicio && esInstructor) {
+            const maxFin = new Date(fecha_inicio);
+            maxFin.setMonth(maxFin.getMonth() + 1);
+            maxFinStr = maxFin.toISOString().slice(0, 10);
+          }
 
           return (
             <>
+              {/* Fecha de solicitud (siempre) */}
               <div className="col-md-6">
-                <label className="form-label fw-semibold" style={{ color: "#023E8A", fontSize: "13px" }}>📅 Desde</label>
-                <div className="d-flex gap-2">
-                  <input type="date" className="form-control form-control-sm"
-                    value={fecha_inicio} onChange={e => setFecha_inicio(e.target.value)}
-                    min={minStr} max={maxStr} required style={{ flex: 2 }} />
-                  <select className="form-select form-select-sm" value={hora_inicio}
-                    onChange={e => setHora_inicio(e.target.value)} required style={{ flex: 1 }}>
-                    {horariosPermitidos.map(h => (
-                      <option key={h} value={h}>{formatHora(h)}</option>
-                    ))}
-                  </select>
-                </div>
-                <small style={{ color: "#94a3b8", fontSize: "10px" }}>Mín. 5 días · Máx. 2 meses</small>
+                <label className="form-label fw-semibold" style={{ color: "#023E8A", fontSize: "13px" }}>
+                  📅 {esAprendiz ? "Fecha de Solicitud (Mismo día)" : "Fecha de Inicio"}
+                </label>
+                <input type="date" className="form-control form-control-sm"
+                  value={fecha_inicio} onChange={e => { setFecha_inicio(e.target.value); if (esAprendiz) setFecha_fin(e.target.value); }}
+                  min={minStr} max={maxStr} required />
+                <small style={{ color: "#94a3b8", fontSize: "10px" }}>Solicitar con mín. 3 días de anticipación</small>
               </div>
 
-              <div className="col-md-6">
-                <label className="form-label fw-semibold" style={{ color: "#023E8A", fontSize: "13px" }}>📅 Hasta</label>
-                <div className="d-flex gap-2">
+              {/* Instructor: Fecha de devolución */}
+              {esInstructor && (
+                <div className="col-md-6">
+                  <label className="form-label fw-semibold" style={{ color: "#023E8A", fontSize: "13px" }}>
+                    📅 Fecha de Devolución
+                  </label>
                   <input type="date" className="form-control form-control-sm"
                     value={fecha_fin} onChange={e => setFecha_fin(e.target.value)}
-                    min={minFinStr} max={maxStr} style={{ flex: 2 }} />
-                  <select className="form-select form-select-sm" value={hora_fin}
-                    onChange={e => setHora_fin(e.target.value)} style={{ flex: 1 }}>
-                    {horariosPermitidos.map(h => (
-                      <option key={h} value={h}>{formatHora(h)}</option>
-                    ))}
-                  </select>
+                    min={fecha_inicio || minStr} max={maxFinStr} required />
+                  <small style={{ color: "#94a3b8", fontSize: "10px" }}>Máx. 1 mes después del inicio</small>
                 </div>
-              </div>
+              )}
 
-              <div className="col-12">
-                <small style={{ color: "#0077B6", fontSize: "11px", fontWeight: "600" }}>
-                  ⏰ Horarios: 7:00 AM - 11:00 AM y 2:00 PM - 4:00 PM
+              {/* Horario (siempre) */}
+              <div className={esInstructor ? "col-12" : "col-md-6"}>
+                <label className="form-label fw-semibold" style={{ color: "#023E8A", fontSize: "13px" }}>
+                  ⏰ {esAprendiz ? "Horario de Uso (Mismo día)" : "Horario"}
+                </label>
+                <div className="d-flex gap-2 align-items-center">
+                  <div style={{ flex: 1 }}>
+                    <small className="text-muted" style={{ fontSize: "10px" }}>Hora inicio</small>
+                    <input type="time" className="form-control form-control-sm"
+                      value={hora_inicio} onChange={e => setHora_inicio(e.target.value)}
+                      min="07:00" max="16:00" required />
+                  </div>
+                  <span className="text-muted small" style={{ paddingTop: "16px" }}>a</span>
+                  <div style={{ flex: 1 }}>
+                    <small className="text-muted" style={{ fontSize: "10px" }}>Hora {esAprendiz ? "devolución" : "fin"}</small>
+                    <input type="time" className="form-control form-control-sm"
+                      value={hora_fin} onChange={e => setHora_fin(e.target.value)}
+                      min="07:00" max="16:00" required />
+                  </div>
+                </div>
+                <small style={{ color: "#0077B6", fontSize: "10px", fontWeight: "600" }}>
+                  Laboratorio Ambiental: 7:00 AM - 4:00 PM
                 </small>
               </div>
             </>
@@ -317,7 +406,7 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
           <label className="form-label fw-semibold text-muted">
             Equipos a solicitar
             {equiposSeleccionados.length > 0 && (
-              <span className="badge ms-2" style={{ background: "#2D8A4E", color: "#fff" }}>{equiposSeleccionados.length} seleccionado(s)</span>
+              <span className="badge ms-2" style={{ background: "#0077B6", color: "#fff" }}>{equiposSeleccionados.length} seleccionado(s)</span>
             )}
           </label>
 
@@ -348,16 +437,16 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
                       display: "flex", alignItems: "center", gap: "12px",
                       padding: "10px 12px", marginBottom: "4px",
                       borderRadius: "8px", cursor: disponible ? "pointer" : "not-allowed",
-                      border: `2px solid ${seleccionado ? "#2D8A4E" : "#e9ecef"}`,
-                      backgroundColor: seleccionado ? "#e8f5e9" : disponible ? "#fff" : "#f8f9fa",
+                      border: `2px solid ${seleccionado ? "#0077B6" : "#e9ecef"}`,
+                      backgroundColor: seleccionado ? "#dbeafe" : disponible ? "#fff" : "#f8f9fa",
                       opacity: disponible ? 1 : 0.6,
                       transition: "all 0.15s",
                     }}
                   >
                     <div style={{
                       width: 20, height: 20, borderRadius: 4, flexShrink: 0,
-                      border: `2px solid ${seleccionado ? "#2D8A4E" : "#adb5bd"}`,
-                      backgroundColor: seleccionado ? "#2D8A4E" : "transparent",
+                      border: `2px solid ${seleccionado ? "#0077B6" : "#adb5bd"}`,
+                      backgroundColor: seleccionado ? "#0077B6" : "transparent",
                       display: "flex", alignItems: "center", justifyContent: "center"
                     }}>
                       {seleccionado && <i className="fas fa-check" style={{ color: "#fff", fontSize: 11 }}></i>}
@@ -389,7 +478,7 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
         {/* Botón */}
         <div className="col-12 mt-2">
           <button type="submit" className="btn w-100" style={{
-            background: "linear-gradient(135deg, #2D8A4E, #4CAF50)",
+            background: "linear-gradient(135deg, #0077B6, #023E8A)",
             color: "#fff", fontWeight: "700", border: "none",
             padding: "10px", borderRadius: "10px", fontSize: "14px"
           }}>

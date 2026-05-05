@@ -41,7 +41,7 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
     if (selectedMovimiento) {
       setForm({
         fecha_vencimiento: selectedMovimiento.fecha_vencimiento?.slice(0, 10) || "",
-        cantidad_inicial: selectedMovimiento.cantidad_inicial || "",
+        cantidad_inicial: selectedMovimiento.cantidad_inicial ? parseFloat(selectedMovimiento.cantidad_inicial).toString() : "",
         lote: selectedMovimiento.lote || "",
         id_reactivo: selectedMovimiento.id_reactivo || "",
         id_proveedor: selectedMovimiento.id_proveedor || "",
@@ -99,35 +99,56 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
     }
   };
 
+  const selectedReactivo = reactivos.find(x => x.id_reactivo === parseInt(form.id_reactivo));
+
   return (
     <form onSubmit={handleSubmit} className="needs-validation" noValidate>
       <div className="row g-3">
-        <div className="col-md-6">
-          <label className="form-label fw-semibold text-muted">Fecha de Vencimiento</label>
-          <input
-            type="date"
-            name="fecha_vencimiento"
-            className="form-control form-control-sm"
-            value={form.fecha_vencimiento}
-            onChange={handleChange}
-            min={new Date().toISOString().slice(0, 10)}
-          />
-        </div>
-
-        <div className="col-md-6">
-          <label className="form-label fw-semibold text-muted">Cantidad inicial</label>
-          <input
-            type="number"
-            name="cantidad_inicial"
-            step="0.001"
-            min="0.001"
-            className="form-control form-control-sm"
-            value={form.cantidad_inicial}
+        {/* REACTIVO (MOVIDO ARRIBA) */}
+        <div className="col-12">
+          <label className="form-label fw-semibold" style={{ color: "#023E8A" }}>Reactivo <span className="text-danger">*</span></label>
+          <select
+            name="id_reactivo"
+            className="form-select"
+            value={form.id_reactivo}
             onChange={handleChange}
             required
-            placeholder="Ej: 5.000"
-          />
-          <div className="form-text text-muted small">Esta cantidad se sumará al inventario del reactivo</div>
+            style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
+          >
+            <option value="">Seleccione el reactivo que ingresa...</option>
+            {reactivos.map((r) => (
+              <option key={r.id_reactivo} value={r.id_reactivo}>
+                {r.nom_reactivo} — ({r.presentacion_reactivo})
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* CANTIDAD INICIAL (ADAPTADA) */}
+        <div className="col-md-6">
+          <label className="form-label fw-semibold text-muted">Cantidad de Ingreso</label>
+          <div className="input-group">
+            <input
+              type="number"
+              name="cantidad_inicial"
+              step="0.001"
+              min="0.001"
+              className="form-control"
+              value={form.cantidad_inicial}
+              onChange={handleChange}
+              required
+              placeholder={selectedReactivo?.presentacion_reactivo?.toLowerCase().includes('lit') ? "Ej: 1.5 (Litros)" : "Ej: 500 (Gramos)"}
+              style={{ borderColor: "#dbeafe", borderTopLeftRadius: "10px", borderBottomLeftRadius: "10px" }}
+            />
+            {selectedReactivo && (
+              <span className="input-group-text fw-bold" style={{ background: "#e0f2fe", color: "#0077B6", borderColor: "#dbeafe", borderTopRightRadius: "10px", borderBottomRightRadius: "10px" }}>
+                {selectedReactivo.presentacion_reactivo}
+              </span>
+            )}
+          </div>
+          <small className="text-muted" style={{ fontSize: '11px' }}>
+            Indique la cantidad exacta en {selectedReactivo?.presentacion_reactivo || 'unidades'}.
+          </small>
         </div>
 
         <div className="col-md-6">
@@ -135,38 +156,35 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
           <input
             type="text"
             name="lote"
-            className="form-control form-control-sm"
+            className="form-control"
             value={form.lote}
             onChange={handleChange}
-            placeholder="Número de lote"
+            placeholder="N° de Lote"
+            style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
           />
         </div>
 
         <div className="col-md-6">
-          <label className="form-label fw-semibold text-muted">Reactivo</label>
-          <select
-            name="id_reactivo"
-            className="form-select form-select-sm"
-            value={form.id_reactivo}
+          <label className="form-label fw-semibold text-muted">Fecha de Vencimiento</label>
+          <input
+            type="date"
+            name="fecha_vencimiento"
+            className="form-control"
+            value={form.fecha_vencimiento}
             onChange={handleChange}
-            required
-          >
-            <option value="">Seleccione un reactivo...</option>
-            {reactivos.map((r) => (
-              <option key={r.id_reactivo} value={r.id_reactivo}>
-                {r.nom_reactivo} ({r.presentacion_reactivo})
-              </option>
-            ))}
-          </select>
+            min={new Date().toISOString().slice(0, 10)}
+            style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
+          />
         </div>
 
         <div className="col-md-6">
           <label className="form-label fw-semibold text-muted">Proveedor</label>
           <select
             name="id_proveedor"
-            className="form-select form-select-sm"
+            className="form-select"
             value={form.id_proveedor}
             onChange={handleChange}
+            style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
           >
             <option value="">Sin proveedor (opcional)</option>
             {proveedores.map((p) => (
@@ -178,8 +196,9 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
         </div>
 
         <div className="col-12 mt-4">
-          <button type="submit" className="btn w-100" style={{ background: "#0077B6", color: "#fff", fontWeight: "600", border: "none", borderRadius: "10px" }}>
-            {selectedMovimiento ? "Actualizar Movimiento" : "Registrar Movimiento"}
+          <button type="submit" className="btn w-100 py-2" style={{ background: "linear-gradient(135deg, #0077B6, #023E8A)", color: "#fff", fontWeight: "700", border: "none", borderRadius: "10px" }}>
+            <i className="fa-solid fa-plus-circle me-2"></i>
+            {selectedMovimiento ? "Actualizar Registro" : "Registrar Ingreso de Reactivo"}
           </button>
         </div>
       </div>

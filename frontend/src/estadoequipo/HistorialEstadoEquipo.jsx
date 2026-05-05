@@ -32,21 +32,21 @@ export default function HistorialEstadoEquipo() {
   };
 
   const columns = [
-    { name: "ID Registro", selector: r => r.id_estadoxequipo, sortable: true, width: "120px" },
-    { name: "Equipo", selector: r => r.equipo?.nom_equipo || "-", sortable: true, width: "180px" },
-    { name: "Marca", selector: r => r.equipo?.marca_equipo || "-", sortable: true, width: "130px" },
-    { name: "No. Placa", selector: r => r.equipo?.no_placa || "-", sortable: true, width: "120px" },
+    { name: "ID", selector: r => r.id_estadoxequipo, sortable: true, width: "80px" },
+    { name: "Equipo", selector: r => r.equipo?.nom_equipo || "-", sortable: true, minWidth: "200px" },
+    { name: "Marca", selector: r => r.equipo?.marca_equipo || "-", sortable: true, minWidth: "150px" },
+    { name: "Placa", selector: r => r.equipo?.no_placa || "-", sortable: true, minWidth: "150px" },
     {
       name: "Estado",
       sortable: true,
       width: "150px",
       cell: r => (
-        <span className={`badge ${getBadgeColor(r.estadoEquipo?.estado)}`} style={{ fontSize: "0.75rem" }}>
+        <span className={`badge ${getBadgeColor(r.estadoEquipo?.estado)}`} style={{ fontSize: "0.75rem", padding: "6px 12px", borderRadius: "20px" }}>
           {r.estadoEquipo?.estado || "-"}
         </span>
       )
     },
-    { name: "Fecha Cambio", selector: r => r.createdAt?.slice(0, 10) || "-", sortable: true, width: "140px" },
+    { name: "Fecha Cambio", selector: r => r.createdAt ? new Date(r.createdAt).toLocaleString() : "-", sortable: true, minWidth: "250px" },
   ];
 
   const filtered = registros.filter(r =>
@@ -55,10 +55,13 @@ export default function HistorialEstadoEquipo() {
   );
 
   return (
-    <div className="container mt-4">
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
-        <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
-        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Historial de Estados de Equipos</h2>
+    <div className="container mt-4" style={{ maxWidth: "1100px" }}>
+      <div style={{ textAlign: "center", marginBottom: "32px" }}>
+        <div style={{ height: "3px", width: "40px", background: "#0077B6", borderRadius: "99px", margin: "0 auto 12px" }} />
+        <h2 style={{ fontSize: "28px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Historial de Estados de Equipos</h2>
+        <p style={{ color: "#64748b", marginTop: "8px", fontSize: "14px" }}>
+          Registro cronológico de los cambios de estado de cada equipo en el sistema.
+        </p>
       </div>
       <div className="row mb-4 align-items-center">
         <div className="col-md-6">

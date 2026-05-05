@@ -9,7 +9,7 @@ class salidasService {
       include: [{
         model: movimientoreactivoModel,
         as: 'movimiento',
-        include: [{ model: reactivosModel, as: 'reactivo', attributes: ['nom_reactivo'] }]
+        include: [{ model: reactivosModel, as: 'reactivo', attributes: ['nom_reactivo', 'presentacion_reactivo'] }]
       }],
       order: [['createdAt', 'DESC']]
     });

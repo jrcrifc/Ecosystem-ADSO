@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import apiAxios from "../api/axiosConfig.js";
-import { io } from "socket.io-client";
+import socket from "../socket.js"; // ✅ Usar socket centralizado
 
 export default function Campanita({ userData, onAprobado, userRol }) {
   const [notificaciones, setNotificaciones] = useState([]);
@@ -18,24 +18,29 @@ export default function Campanita({ userData, onAprobado, userRol }) {
 
     cargar();
 
-    // ✅ Conexión Socket.io
-    const socket = io("http://localhost:8000"); // Asegúrate que el puerto coincida
-
-    socket.on("connect", () => {
+    // ✅ Unirse a sala privada
+    if (socket.connected) {
       socket.emit("join", id_usuario);
-    });
+    } else {
+      socket.on("connect", () => {
+        socket.emit("join", id_usuario);
+      });
+    }
 
-    socket.on("notification", (nueva) => {
+    const handleNotification = (nueva) => {
+      console.log("📥 Notificación recibida en tiempo real:", nueva);
       setNotificaciones(prev => [nueva, ...prev.slice(0, 4)]);
       
       // ✅ Si hay notificación de aprobado, avisar al App
       if (nueva.tipo === 'aprobado' && onAprobado && userRol !== 'Administrador') {
         onAprobado();
       }
-    });
+    };
+
+    socket.on("notification", handleNotification);
 
     return () => {
-      socket.disconnect();
+      socket.off("notification", handleNotification);
     };
   }, [id_usuario]);
 
@@ -81,24 +86,39 @@ export default function Campanita({ userData, onAprobado, userRol }) {
       } catch { }
     }
 
-    // ✅ Si es admin y la notificación es de solicitud de acceso, redirigir a gestión usuarios
+    // ✅ Redirigir según tipo de notificación
     if (esAdmin && n.tipo === 'solicitud_acceso') {
       setOpen(false);
       navigate('/gestion-usuarios');
+    } else if (n.tipo === 'nueva_solicitud') {
+      setOpen(false);
+      navigate(esAdmin ? '/gestion-solicitudes' : '/solicitud');
+    } else if (n.tipo === 'cambio_estado_solicitud') {
+      setOpen(false);
+      navigate('/solicitud');
+    } else if (n.tipo === 'aprobado') {
+      setOpen(false);
+      navigate('/perfil');
+    } else {
+      setOpen(false);
     }
   };
 
   const colorTipo = (tipo) => {
-    if (tipo === 'aprobado') return '#e8f5e9';
-    if (tipo === 'rechazado') return '#ffebee';
-    if (tipo === 'solicitud_acceso') return '#e3f2fd';
-    return '#f5f5f5';
+    if (tipo === 'aprobado') return '#f0fdf4'; // Verde muy claro
+    if (tipo === 'rechazado') return '#fef2f2'; // Rojo muy claro
+    if (tipo === 'solicitud_acceso') return '#eff6ff'; // Azul muy claro
+    if (tipo === 'nueva_solicitud') return '#fffbeb'; // Ambar muy claro
+    if (tipo === 'cambio_estado_solicitud') return '#f5f3ff'; // Violeta muy claro
+    return '#f8fafc';
   };
 
   const iconTipo = (tipo) => {
     if (tipo === 'aprobado') return '✅';
     if (tipo === 'rechazado') return '❌';
     if (tipo === 'solicitud_acceso') return '📋';
+    if (tipo === 'nueva_solicitud') return '📦';
+    if (tipo === 'cambio_estado_solicitud') return '🔄';
     return '🔔';
   };
 
@@ -158,8 +178,11 @@ export default function Campanita({ userData, onAprobado, userRol }) {
                 background: n.leida ? "#fff" : colorTipo(n.tipo),
                 borderBottom: "1px solid #f0f4f8",
                 cursor: "pointer",
-                transition: "background 0.15s ease"
-              }} onClick={() => handleNotificacionClick(n)}>
+                transition: "all 0.2s ease"
+              }} 
+              onMouseEnter={(e) => { e.currentTarget.style.background = "#f1f5f9"; e.currentTarget.style.transform = "translateX(4px)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = n.leida ? "#fff" : colorTipo(n.tipo); e.currentTarget.style.transform = "translateX(0)"; }}
+              onClick={() => handleNotificacionClick(n)}>
                 <div style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
                   <span style={{ fontSize: "18px", flexShrink: 0 }}>{iconTipo(n.tipo)}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -169,13 +192,20 @@ export default function Campanita({ userData, onAprobado, userRol }) {
                       <p style={{ margin: 0, fontSize: "11px", color: "#94a3b8" }}>
                         {new Date(n.createdAt).toLocaleString('es-CO')}
                       </p>
-                      {/* ✅ Indicador de acción para admin en solicitudes de acceso */}
+                      {/* ✅ Indicador de acción clickeable */}
                       {esAdmin && n.tipo === 'solicitud_acceso' && (
                         <span style={{
                           fontSize: "10px", fontWeight: "700", color: "#00A8CC",
                           background: "rgba(0,168,204,0.1)", padding: "2px 8px",
                           borderRadius: "99px", whiteSpace: "nowrap"
                         }}>Ver solicitud →</span>
+                      )}
+                      {(n.tipo === 'nueva_solicitud' || n.tipo === 'cambio_estado_solicitud') && (
+                        <span style={{
+                          fontSize: "10px", fontWeight: "700", color: "#0077B6",
+                          background: "rgba(0,119,182,0.1)", padding: "2px 8px",
+                          borderRadius: "99px", whiteSpace: "nowrap"
+                        }}>Ver solicitudes →</span>
                       )}
                     </div>
                   </div>

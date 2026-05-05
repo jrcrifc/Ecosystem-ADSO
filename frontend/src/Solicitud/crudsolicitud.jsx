@@ -5,10 +5,11 @@ import Swal from "sweetalert2";
 import * as bootstrap from "bootstrap";
 import SolicitudPrestamoForm from "./solicitudform.jsx";
 import { paginationComponentOptions, tableCustomStyles } from "../config/dataTableConfig";
+import socket from "../socket.js";
 
 const getBadgeEquipo = (estado) => ({
-  disponible:      { bg: "#d1fae5", color: "#065f46", label: "Disponible" },
-  mantenimiento:   { bg: "#fef3c7", color: "#92400e", label: "Mantenimiento" },
+  disponible: { bg: "#d1fae5", color: "#065f46", label: "Disponible" },
+  mantenimiento: { bg: "#fef3c7", color: "#92400e", label: "Mantenimiento" },
   "no disponible": { bg: "#fee2e2", color: "#991b1b", label: "No disponible" },
 }[estado] || { bg: "#f3f4f6", color: "#374151", label: estado || "Sin estado" });
 
@@ -51,10 +52,10 @@ const EquiposPills = ({ equipos }) => {
 };
 
 const CrudSolicitudPrestamos = () => {
-  const [solicitudes, setSolicitudes]       = useState([]);
-  const [filterText, setFilterText]         = useState("");
+  const [solicitudes, setSolicitudes] = useState([]);
+  const [filterText, setFilterText] = useState("");
   const [selectedSolicitud, setSelectedSolicitud] = useState(null);
-  const [verDetalle, setVerDetalle]         = useState(null); // modal detalle
+  const [verDetalle, setVerDetalle] = useState(null); // modal detalle
 
   const getToken = () => sessionStorage.getItem("token");
 
@@ -77,20 +78,24 @@ const CrudSolicitudPrestamos = () => {
       name: "Solicitante",
       selector: r => r.usuario?.nombres_apellidos || "-",
       sortable: true,
-      width: "160px",
-      omit: !esAdmin, // ✅ Solo admin ve esta columna
+      minWidth: "150px",
+      grow: 1,
+      wrap: true,
+      omit: !esAdmin,
     },
     {
       name: "Fecha Inicio",
       selector: r => r.fecha_inicio ? new Date(r.fecha_inicio).toLocaleString() : "-",
       sortable: true,
-      width: "160px",
+      width: "165px",
+      wrap: true
     },
     {
       name: "Fecha Fin",
       selector: r => r.fecha_fin ? new Date(r.fecha_fin).toLocaleString() : "-",
       sortable: true,
-      width: "160px",
+      width: "165px",
+      wrap: true
     },
     {
       name: "Equipos",
@@ -98,24 +103,24 @@ const CrudSolicitudPrestamos = () => {
       cell: r => <EquiposPills equipos={r.equipos} />,
     },
     {
-      name: "Estado Solicitud",
+      name: "Estado",
       width: "150px",
-      center: true,
       cell: r => {
         const colores = {
-          generado:   { bg: "#f1f5f9", color: "#475569" },
-          aceptado:   { bg: "#dbeafe", color: "#0077B6" },
-          prestado:   { bg: "#fffbeb", color: "#d97706" },
-          entregado:  { bg: "#ecfdf5", color: "#059669" },
-          devuelto:   { bg: "#ecfdf5", color: "#059669" },
-          cancelado:  { bg: "#fef2f2", color: "#dc2626" },
-          rechazado:  { bg: "#fef2f2", color: "#dc2626" },
+          generado: { bg: "#f1f5f9", color: "#475569" },
+          aceptado: { bg: "#dbeafe", color: "#0077B6" },
+          prestado: { bg: "#fffbeb", color: "#d97706" },
+          entregado: { bg: "#ecfdf5", color: "#059669" },
+          devuelto: { bg: "#ecfdf5", color: "#059669" },
+          cancelado: { bg: "#fef2f2", color: "#dc2626" },
+          rechazado: { bg: "#fef2f2", color: "#dc2626" },
         };
         const c = colores[r.ultimoEstado] || { bg: "#f3f4f6", color: "#374151" };
         return (
           <span style={{
-            padding: "3px 10px", borderRadius: 20, fontSize: "0.72rem",
-            fontWeight: 700, backgroundColor: c.bg, color: c.color
+            padding: "5px 12px", borderRadius: 20, fontSize: "0.75rem",
+            fontWeight: 700, backgroundColor: c.bg, color: c.color,
+            display: "inline-block"
           }}>
             {r.ultimoEstado || "generado"}
           </span>
@@ -167,7 +172,16 @@ const CrudSolicitudPrestamos = () => {
     },
   ];
 
-  useEffect(() => { cargarSolicitudes(); }, []);
+  useEffect(() => {
+    cargarSolicitudes();
+
+    // ✅ Escuchar cambios en tiempo real para refrescar la tabla
+    socket.on('solicitud_actualizada', cargarSolicitudes);
+
+    return () => {
+      socket.off('solicitud_actualizada', cargarSolicitudes);
+    };
+  }, []);
 
   const cargarSolicitudes = async () => {
     try {

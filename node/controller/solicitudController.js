@@ -2,6 +2,7 @@ import solicitudService from '../service/solicitudService.js';
 import NotificacionService from '../service/notificacionService.js';
 import solicitudModel from '../models/solicitudModel.js';
 import estadoSolicitudModel from '../models/Estado_solicitudModel.js';
+import { getIO } from '../socket.js'; // ✅ Importar para refresco en tiempo real
 
 export const getAll = async (req, res) => {
     try {
@@ -36,6 +37,9 @@ export const create = async (req, res) => {
                 mensaje: `Se ha creado una nueva solicitud de préstamo (ID: ${nuevaSolicitud.id_solicitud}). Revísala en Gestión de Solicitudes.`,
                 tipo: 'nueva_solicitud'
             });
+
+            // ✅ Emitir evento global de refresco para las tablas
+            getIO().emit('solicitud_actualizada');
         } catch (notifError) {
             console.error('Error al notificar:', notifError);
         }
@@ -81,6 +85,9 @@ export const cambiarEstado = async (req, res) => {
                     mensaje: `La solicitud #${req.params.id} cambió su estado a "${estadoNombre}". Revisa tu historial para más detalles.`,
                     tipo: 'cambio_estado_solicitud'
                 });
+
+                // ✅ Emitir evento global para refrescar las tablas de los usuarios
+                getIO().emit('solicitud_actualizada');
             }
         } catch (notifError) {
             console.error('Error al notificar cambio de estado:', notifError);

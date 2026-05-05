@@ -16,22 +16,30 @@ const CrudSalidasReactivos = () => {
     {
       name: "Reactivo",
       selector: (row) => row.movimiento?.reactivo?.nom_reactivo || "-",
-      sortable: true, width: "180px"
+      sortable: true, minWidth: "200px"
     },
     {
       name: "Lote",
       selector: (row) => row.movimiento?.lote || "-",
-      sortable: true, width: "120px"
+      sortable: true, minWidth: "150px"
     },
     {
       name: "Cantidad Salida",
-      selector: (row) => parseFloat(row.cantidad_salida).toFixed(3),
-      sortable: true, width: "150px"
+      sortable: true,
+      minWidth: "200px",
+      cell: (row) => (
+        <span>
+          {parseFloat(parseFloat(row.cantidad_salida || 0).toFixed(3)).toString()}{" "}
+          <span style={{ fontSize: "11px", color: "#0077B6", fontWeight: "600" }}>
+            {row.movimiento?.reactivo?.presentacion_reactivo || ""}
+          </span>
+        </span>
+      )
     },
     {
-      name: "Fecha de salida",
+      name: "Fecha Salida",
       selector: (row) => row.fecha_salida ? new Date(row.fecha_salida).toLocaleString('es-CO') : "-",
-      sortable: true, width: "180px"
+      sortable: true, minWidth: "250px"
     },
     {
       name: "Acciones", center: true, width: "130px",
@@ -109,10 +117,13 @@ const CrudSalidasReactivos = () => {
   );
 
   return (
-    <div className="mt-4" style={{ padding: "0 16px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
-        <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
-        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Salidas de Reactivos</h2>
+    <div className="container mt-4" style={{ maxWidth: "1000px" }}>
+      <div style={{ textAlign: "center", marginBottom: "32px" }}>
+        <div style={{ height: "3px", width: "40px", background: "#0077B6", borderRadius: "99px", margin: "0 auto 12px" }} />
+        <h2 style={{ fontSize: "28px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Salidas de Reactivos</h2>
+        <p style={{ color: "#64748b", marginTop: "8px", fontSize: "14px" }}>
+          Control detallado de los consumos y salidas de inventario.
+        </p>
       </div>
 
       <div className="row mb-3 align-items-center">

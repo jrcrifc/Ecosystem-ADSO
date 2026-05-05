@@ -21,8 +21,8 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
       setCantidadSalida(selectedSalida.cantidad_salida || "");
       setFechaSalida(
         selectedSalida.fecha_salida
-          ? new Date(selectedSalida.fecha_salida).toISOString().slice(0, 16)
-          : new Date().toISOString().slice(0, 16)
+          ? new Date(selectedSalida.fecha_salida).toISOString().slice(0, 10)
+          : new Date().toISOString().slice(0, 10)
       );
     } else {
       setIdReactivo("");
@@ -97,7 +97,7 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
         Swal.fire("✅ Actualizado", "Salida modificada correctamente", "success");
       } else {
         await apiAxios.post("/api/salidas", data);
-        Swal.fire("✅ Registrada", "Salida registrada con lógica FEFO", "success");
+        Swal.fire("✅ Registrada", "Salida registrada correctamente", "success");
       }
       refreshData();
       hideModal();
@@ -123,7 +123,7 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
             <option value="">Seleccione un reactivo...</option>
             {reactivos.map(r => (
               <option key={r.id_reactivo} value={r.id_reactivo}>
-                {r.nom_reactivo} — Stock total: {r.cantidad_inventario} {r.presentacion_reactivo}
+                {r.nom_reactivo} — Stock total: {parseFloat(parseFloat(r.cantidad_inventario || 0).toFixed(3)).toString()} {r.presentacion_reactivo}
               </option>
             ))}
           </select>
@@ -162,7 +162,7 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
                         {i > 0 && <span className="text-muted">{i + 1}</span>}
                       </td>
                       <td><strong>{l.lote}</strong></td>
-                      <td>{l.cantidad_disponible}</td>
+                      <td>{parseFloat(parseFloat(l.cantidad_disponible || 0).toFixed(3)).toString()}</td>
                       <td>{l.fecha_vencimiento ? new Date(l.fecha_vencimiento).toLocaleDateString('es-CO') : 'Sin fecha'}</td>
                       <td>
                         {l.dias_para_vencer !== null ? (
@@ -182,23 +182,11 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
                 <tfoot>
                   <tr className="table-info">
                     <td colSpan="2"><strong>Stock total disponible</strong></td>
-                    <td colSpan="4"><strong>{stockTotal.toFixed(3)}</strong></td>
+                    <td colSpan="4"><strong>{parseFloat(stockTotal.toFixed(3)).toString()}</strong></td>
                   </tr>
                 </tfoot>
               </table>
 
-              {loteFefo && (
-                <div className="alert alert-info mt-2 mb-0 py-2" style={{ fontSize: "13px" }}>
-                  🔔 El sistema usará primero el lote <strong>{loteFefo.lote}</strong> que vence el{" "}
-                  <strong>{loteFefo.fecha_vencimiento ? new Date(loteFefo.fecha_vencimiento).toLocaleDateString('es-CO') : 'sin fecha'}</strong>
-                  {" "}(disponible: <strong>{loteFefo.cantidad_disponible}</strong>).
-                  {parseFloat(cantidad_salida) > loteFefo.cantidad_disponible && parseFloat(cantidad_salida) <= stockTotal && (
-                    <span className="d-block mt-1 text-warning">
-                      ⚡ La cantidad pedida supera este lote — el sistema tomará del siguiente lote automáticamente.
-                    </span>
-                  )}
-                </div>
-              )}
             </div>
           </div>
         )}
@@ -206,18 +194,28 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
         {/* CANTIDAD */}
         <div className="col-md-6">
           <label className="form-label fw-semibold text-muted">Cantidad de salida</label>
-          <input
-            type="number"
-            className="form-control form-control-sm"
-            value={cantidad_salida}
-            onChange={(e) => setCantidadSalida(e.target.value)}
-            required min="0.001" step="0.001"
-            placeholder="Ej: 2.500"
-            max={stockTotal || undefined}
-          />
+          <div className="input-group input-group-sm">
+            <input
+              type="number"
+              className="form-control form-control-sm"
+              value={cantidad_salida}
+              onChange={(e) => setCantidadSalida(e.target.value)}
+              required min="0.001" step="0.001"
+              placeholder="Ej: 2.500"
+              max={stockTotal || undefined}
+            />
+            {id_reactivo && (() => {
+              const r = reactivos.find(x => x.id_reactivo === parseInt(id_reactivo));
+              return r ? (
+                <span className="input-group-text" style={{ background: "#e0f2fe", color: "#0077B6", fontWeight: "600", fontSize: "12px" }}>
+                  {r.presentacion_reactivo}
+                </span>
+              ) : null;
+            })()}
+          </div>
           {stockTotal > 0 && (
             <div className={`form-text fw-semibold ${parseFloat(cantidad_salida) > stockTotal ? 'text-danger' : 'text-success'}`}>
-              Stock total disponible: {stockTotal.toFixed(3)}
+              Stock total disponible: {parseFloat(stockTotal.toFixed(3)).toString()}
             </div>
           )}
         </div>

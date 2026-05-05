@@ -7,6 +7,8 @@ import {
   deletemovimientoreactivo 
 } from '../controller/movimientoreactivosController.js';
 import movimientoreactivoModel from '../models/movimientoreactivosModel.js';
+import proveedorModel from '../models/proveedoresModel.js';
+import salidasModel from '../models/salidasModel.js';
 import { adminOGestor } from '../middleware/roleMiddleware.js';
 
 const router = express.Router();
@@ -18,7 +20,11 @@ router.get('/stock-lotes/:id_reactivo', adminOGestor, async (req, res) => {
     const hoy = new Date();
 
     const movimientos = await movimientoreactivoModel.findAll({
-      where: { id_reactivo }
+      where: { id_reactivo },
+      include: [
+        { model: proveedorModel, as: 'proveedor' },
+        { model: salidasModel, as: 'salidas' }
+      ]
     });
 
     // Calcular cantidad disponible por lote
@@ -57,12 +63,43 @@ router.get('/stock-lotes/:id_reactivo', adminOGestor, async (req, res) => {
       l.dias_para_vencer !== null && l.dias_para_vencer <= 0
     );
 
+    // ✅ Historial de entradas (movimientos)
+    const entradas = movimientos.map(m => ({
+      id: m.id_movimiento_reactivo,
+      tipo: 'entrada',
+      lote: m.lote || 'Sin lote',
+      cantidad: parseFloat(m.cantidad_inicial || 0),
+      fecha: m.createdAt,
+      proveedor: m.proveedor ? `${m.proveedor.nom_proveedor} ${m.proveedor.apel_proveedor || ''}`.trim() : null,
+      fecha_vencimiento: m.fecha_vencimiento || null
+    }));
+
+    // ✅ Historial de salidas
+    const salidas = [];
+    movimientos.forEach(m => {
+      if (m.salidas && m.salidas.length > 0) {
+        m.salidas.forEach(s => {
+          salidas.push({
+            id: s.id_salida,
+            tipo: 'salida',
+            lote: m.lote || 'Sin lote',
+            cantidad: parseFloat(s.cantidad_salida || 0),
+            fecha: s.fecha_salida || s.createdAt
+          });
+        });
+      }
+    });
+
+    // Combinar y ordenar por fecha descendente
+    const historial = [...entradas, ...salidas].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
     res.json({
       lotes_disponibles,
       resumen_vencidos: {
         cantidad_lotes_vencidos: lotes_vencidos.length,
         detalles: lotes_vencidos
-      }
+      },
+      historial
     });
 
   } catch (error) {
@@ -70,6 +107,7 @@ router.get('/stock-lotes/:id_reactivo', adminOGestor, async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
 
 router.get('/', adminOGestor, getAllmovimientoreactivo);
 router.get('/:id', adminOGestor, getmovimientoreactivo);

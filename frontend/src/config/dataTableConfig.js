@@ -23,6 +23,7 @@ export const tableCustomStyles = {
   headCells: {
     style: {
       padding: '12px 16px',
+      justifyContent: 'start', // ✅ Alineado a la izquierda para coincidir con los datos
     },
   },
   rows: {

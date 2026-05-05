@@ -2,7 +2,12 @@ import db from "../database/db.js";
 import { DataTypes } from "sequelize";
 
 const reactivosModel = db.define('reactivos', {
-    id_reactivo: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    id_reactivo: { 
+        type: DataTypes.INTEGER, 
+        primaryKey: true, 
+        autoIncrement: true,
+        field: 'id_reactivo'
+    },
     presentacion_reactivo: {
         type: DataTypes.ENUM("kilogramos", "gramos", "litros", "sobres"),
         allowNull: false

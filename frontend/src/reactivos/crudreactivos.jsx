@@ -13,15 +13,15 @@ const CrudReactivos = () => {
   const [selectedReactivo, setSelectedReactivo] = useState(null);
 
   const columns = [
-    { name: "ID", selector: (row) => row.id_reactivo, sortable: true, width: "120px" },
-    { name: "Nombre", selector: (row) => row.nom_reactivo, sortable: true, width: "200px" },
-    { name: "Presentación", selector: (row) => row.presentacion_reactivo, sortable: true, width: "130px" },
-    { name: "Cantidad presentacion", selector: (row) => row.cantidad_presentacion, sortable: true, width: "180px" },
-    { name: "Stand / Col / Fila", selector: (row) => `${row.stand || "-"} / ${row.columna || "-"} / ${row.fila || "-"}`, sortable: false, width: "180px" },
-    { name: "Color Stand", selector: (row) => row.color_stand, sortable: true, width: "160px" },
-    { name: "Clasificación", selector: (row) => row.clasificacion_reactivo, sortable: true, width: "160px" },
+    { name: "ID", selector: (row) => row.id_reactivo, sortable: true, width: "80px", center: true },
+    { name: "Nombre", selector: (row) => row.nom_reactivo, sortable: true, minWidth: "220px" },
+    { name: "Presentación", selector: (row) => row.presentacion_reactivo, sortable: true, minWidth: "180px" },
+    { name: "Cantidad", selector: (row) => row.cantidad_presentacion, sortable: true, minWidth: "150px" },
+    { name: "Ubicación (S/C/F)", selector: (row) => `${row.stand || "-"} / ${row.columna || "-"} / ${row.fila || "-"}`, sortable: false, minWidth: "200px" },
+    { name: "Color Stand", selector: (row) => row.color_stand, sortable: true, minWidth: "150px" },
+    { name: "Clasificación", selector: (row) => row.clasificacion_reactivo, sortable: true, minWidth: "200px" },
     {
-      name: "Estado", width: "120px", center: true,
+      name: "Estado", width: "120px",
       cell: (row) => (
         <span className={`px-3 py-1 rounded-pill text-white fw-semibold ${row.estado === 1 ? "bg-success" : "bg-danger"}`} style={{ fontSize: "0.75rem" }}>
           {row.estado === 1 ? "ACTIVO" : "INACTIVO"}
@@ -92,10 +92,13 @@ const CrudReactivos = () => {
   );
 
   return (
-    <div className="container mt-4">
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
-        <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
-        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Gestión de Reactivos</h2>
+    <div className="container mt-4" style={{ maxWidth: "1200px" }}>
+      <div style={{ textAlign: "center", marginBottom: "32px" }}>
+        <div style={{ height: "3px", width: "40px", background: "#0077B6", borderRadius: "99px", margin: "0 auto 12px" }} />
+        <h2 style={{ fontSize: "28px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Gestión de Reactivos</h2>
+        <p style={{ color: "#64748b", marginTop: "8px", fontSize: "14px" }}>
+          Administra el inventario de reactivos, ubicaciones y clasificaciones.
+        </p>
       </div>
       <div className="row mb-3 align-items-center">
         <div className="col-md-5">

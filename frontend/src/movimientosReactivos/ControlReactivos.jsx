@@ -17,36 +17,42 @@ const ControlReactivos = () => {
       name: "ID",
       selector: (row) => row.id_reactivo,
       sortable: true,
-      width: "80px",
+      width: "70px",
+      center: true,
     },
     {
       name: "Reactivo",
       selector: (row) => row.nom_reactivo,
       sortable: true,
-      width: "200px",
+      width: "220px",
+      wrap: true
     },
     {
-      name: "Cantidad",
-      selector: (row) => row.cantidad_inventario,
+      name: "Stock Disponible",
       sortable: true,
-      width: "120px",
-    },
-    {
-      name: "Presentación",
-      selector: (row) => row.presentacion_reactivo,
-      sortable: true,
-      width: "130px",
+      width: "180px",
+      cell: (row) => {
+        const cant = parseFloat(row.cantidad_inventario || 0);
+        const formatted = parseFloat(cant.toFixed(3)).toString();
+        return (
+          <span className="fw-bold" style={{ whiteSpace: "normal" }}>
+            {formatted}{" "}
+            <span className="text-primary small" style={{ fontSize: "10px" }}>{row.presentacion_reactivo}</span>
+          </span>
+        );
+      },
     },
     {
       name: "Estado",
       sortable: true,
-      width: "120px",
+      width: "150px",
+      center: true,
       cell: (row) => (
         <span
           className={`badge ${
             row.estado_stock === "disponible" ? "bg-success" : "bg-danger"
           }`}
-          style={{ fontSize: "0.85rem" }}
+          style={{ fontSize: "0.75rem", padding: "5px 12px", borderRadius: "20px" }}
         >
           {row.estado_stock === "disponible" ? "✓ Disponible" : "✗ Agotado"}
         </span>
@@ -58,11 +64,12 @@ const ControlReactivos = () => {
       width: "150px",
       cell: (row) => (
         <button
-          className="btn btn-sm btn-primary"
+          className="btn btn-sm"
+          style={{ background: "#0077B6", color: "#fff", fontWeight: "600", borderRadius: "8px", fontSize: "12px" }}
           onClick={() => handleVerStock(row)}
-          title="Ver stock y lotes"
+          title="Ver stock y historial"
         >
-          <i className="fa-solid fa-boxes-stacked"></i> Stock Actual
+          <i className="fa-solid fa-eye me-1"></i> Detalle
         </button>
       ),
     },
@@ -78,11 +85,7 @@ const ControlReactivos = () => {
       setReactivos(res.data);
     } catch (error) {
       console.error("Error al cargar reactivos:", error);
-      Swal.fire(
-        "Error",
-        "No se pudo cargar los reactivos",
-        "error"
-      );
+      Swal.fire("Error", "No se pudo cargar los reactivos", "error");
     }
   };
 
@@ -91,9 +94,7 @@ const ControlReactivos = () => {
     setLoadingModal(true);
 
     try {
-      const res = await apiAxios.get(
-        `/api/movimientos/stock-lotes/${reactivo.id_reactivo}`
-      );
+      const res = await apiAxios.get(`/api/movimientos/stock-lotes/${reactivo.id_reactivo}`);
       setStockLotes(res.data);
 
       const modal = document.getElementById("modalStock");
@@ -123,38 +124,28 @@ const ControlReactivos = () => {
 
   const filtered = reactivos.filter((item) =>
     `${item.id_reactivo || ""}`.includes(filterText) ||
-    `${item.nom_reactivo || ""}`
-      .toLowerCase()
-      .includes(filterText.toLowerCase())
+    `${item.nom_reactivo || ""}`.toLowerCase().includes(filterText.toLowerCase())
   );
 
   return (
-    <div
-      className="mt-4"
-      style={{ padding: "0 16px" }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
-        <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
-        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>
-        Control de Reactivos
-      </h2>
-    </div>
+    <div className="container mt-4" style={{ maxWidth: "1000px" }}>
+      <div style={{ textAlign: "center", marginBottom: "32px" }}>
+        <div style={{ height: "3px", width: "40px", background: "#0077B6", borderRadius: "99px", margin: "0 auto 12px" }} />
+        <h2 style={{ fontSize: "28px", fontWeight: "800", color: "#0077B6", margin: 0 }}>
+          Control de Inventario (Reactivos)
+        </h2>
+      </div>
 
       <div className="row mb-3 align-items-center">
         <div className="col-md-6">
           <input
             type="text"
             className="form-control"
-            placeholder="Buscar por ID o nombre del reactivo..."
+            placeholder="Buscar reactivo..."
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
             style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
           />
-        </div>
-        <div className="col-md-6 text-end">
-          <span className="text-muted">
-            Total de reactivos: <strong>{filtered.length}</strong>
-          </span>
         </div>
       </div>
 
@@ -169,180 +160,141 @@ const ControlReactivos = () => {
           highlightOnHover
           striped
           responsive
-          noDataComponent={
-            <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
-              <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>
-              <p>No hay reactivos registrados</p>
-            </div>
-          }
         />
       </div>
 
-      {/* MODAL STOCK */}
+      {/* MODAL STOCK Y HISTORIAL */}
       <div className="modal fade" id="modalStock" tabIndex="-1">
         <div className="modal-dialog modal-xl">
-          <div className="modal-content">
-            <div className="modal-header bg-info text-white">
-              <h5 className="modal-title">
-                📦 Stock de {selectedReactivo?.nom_reactivo}
+          <div className="modal-content" style={{ borderRadius: "16px", border: "none" }}>
+            <div className="modal-header" style={{ background: "linear-gradient(135deg, #0077B6, #023E8A)", color: "#fff" }}>
+              <h5 className="modal-title fw-bold">
+                <i className="fa-solid fa-flask-vial me-2"></i>
+                Detalle de Inventario: {selectedReactivo?.nom_reactivo}
               </h5>
-              <button
-                type="button"
-                className="btn-close btn-close-white"
-                data-bs-dismiss="modal"
-                onClick={hideModal}
-              ></button>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" onClick={hideModal}></button>
             </div>
 
-            <div className="modal-body">
+            <div className="modal-body p-4">
               {loadingModal ? (
-                <div className="text-center">
-                  <div className="spinner-border" role="status">
-                    <span className="visually-hidden">Cargando...</span>
-                  </div>
+                <div className="text-center py-5">
+                  <div className="spinner-border text-primary" role="status"></div>
+                  <p className="mt-2 text-muted">Cargando información del lote...</p>
                 </div>
               ) : stockLotes ? (
-                <div>
-                  {/* TABLA LOTES DISPONIBLES */}
-                  <h6 className="mb-3 text-success">
-                    <i className="fa-solid fa-check-circle"></i> Lotes
-                    Disponibles
-                  </h6>
-                  <div className="table-responsive mb-4">
-                    <table className="table table-striped table-sm">
-                      <thead className="table-success">
-                        <tr>
-                          <th>Lote</th>
-                          <th>Cantidad</th>
-                          <th>Fecha Vencimiento</th>
-                          <th>Días para Vencer</th>
-                          <th>Estado</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {stockLotes.lotes_disponibles &&
-                        stockLotes.lotes_disponibles.length > 0 ? (
-                          stockLotes.lotes_disponibles.map((lote) => (
-                            <tr key={lote.id_movimiento_reactivo}>
-                              <td>
-                                <strong>{lote.lote}</strong>
-                              </td>
-                              <td>{lote.cantidad_disponible}</td>
-                              <td>{lote.fecha_vencimiento}</td>
-                              <td>
-                                <span
-                                  className={`badge ${
-                                    lote.dias_para_vencer <= 7
-                                      ? "bg-warning"
-                                      : "bg-success"
-                                  }`}
-                                >
-                                  {lote.dias_para_vencer} días
-                                </span>
-                              </td>
-                              <td>
-                                {lote.dias_para_vencer <= 0 ? (
-                                  <span className="badge bg-danger">
-                                    Vencido
-                                  </span>
-                                ) : lote.dias_para_vencer <= 7 ? (
-                                  <span className="badge bg-warning">
-                                    Próximo a Vencer
-                                  </span>
-                                ) : (
-                                  <span className="badge bg-success">
-                                    OK
-                                  </span>
-                                )}
-                              </td>
-                            </tr>
-                          ))
-                        ) : (
+                <div className="row">
+                  {/* COLUMNA IZQUIERDA: LOTES Y VENCIMIENTOS */}
+                  <div className="col-lg-7 border-end">
+                    <h6 className="mb-3 fw-bold text-success">
+                      <i className="fa-solid fa-boxes-stacked me-2"></i> Lotes Disponibles
+                    </h6>
+                    <div className="table-responsive mb-4" style={{ maxHeight: "300px" }}>
+                      <table className="table table-hover table-sm align-middle">
+                        <thead style={{ background: "#f1f5f9" }}>
                           <tr>
-                            <td colSpan="5" className="text-center text-muted">
-                              No hay lotes disponibles
-                            </td>
+                            <th>Lote</th>
+                            <th>Disponible</th>
+                            <th>Vencimiento</th>
+                            <th>Estado</th>
                           </tr>
-                        )}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {stockLotes.lotes_disponibles?.length > 0 ? (
+                            stockLotes.lotes_disponibles.map((lote) => (
+                              <tr key={lote.id_movimiento_reactivo}>
+                                <td className="fw-semibold">{lote.lote}</td>
+                                <td>{parseFloat(parseFloat(lote.cantidad_disponible || 0).toFixed(3)).toString()} <span className="text-muted small">{selectedReactivo?.presentacion_reactivo}</span></td>
+                                <td>{lote.fecha_vencimiento || "N/A"}</td>
+                                <td>
+                                  <span className={`badge ${lote.dias_para_vencer <= 7 ? "bg-warning" : "bg-success"}`}>
+                                    {lote.dias_para_vencer <= 0 ? "Vencido" : lote.dias_para_vencer <= 7 ? "Próximo" : "OK"}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr><td colSpan="4" className="text-center text-muted py-3">No hay lotes con stock disponible</td></tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {stockLotes.resumen_vencidos?.cantidad_lotes_vencidos > 0 && (
+                      <>
+                        <h6 className="mb-3 fw-bold text-danger">
+                          <i className="fa-solid fa-triangle-exclamation me-2"></i> Lotes Vencidos
+                        </h6>
+                        <div className="table-responsive mb-4" style={{ maxHeight: "200px" }}>
+                          <table className="table table-sm table-danger table-striped">
+                            <thead>
+                              <tr>
+                                <th>Lote</th>
+                                <th>Cant.</th>
+                                <th>Vencimiento</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {stockLotes.resumen_vencidos.detalles.map((lote) => (
+                                <tr key={lote.id_movimiento_reactivo}>
+                                  <td>{lote.lote}</td>
+                                  <td>{parseFloat(parseFloat(lote.cantidad_disponible || 0).toFixed(3)).toString()}</td>
+                                  <td>{lote.fecha_vencimiento}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </>
+                    )}
                   </div>
 
-                  {/* TABLA LOTES VENCIDOS */}
-                  <h6 className="mb-3 text-danger">
-                    <i className="fa-solid fa-times-circle"></i> Resumen de
-                    Lotes Vencidos
-                  </h6>
-                  <div className="table-responsive">
-                    <table className="table table-striped table-sm">
-                      <thead className="table-danger">
-                        <tr>
-                          <th>Lote</th>
-                          <th>Cantidad</th>
-                          <th>Fecha Vencimiento</th>
-                          <th>Días Vencido</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {stockLotes.resumen_vencidos &&
-                        stockLotes.resumen_vencidos.detalles &&
-                        stockLotes.resumen_vencidos.detalles.length > 0 ? (
-                          stockLotes.resumen_vencidos.detalles.map((lote) => (
-                            <tr key={lote.id_movimiento_reactivo}>
-                              <td>
-                                <strong>{lote.lote}</strong>
-                              </td>
-                              <td>{lote.cantidad_disponible}</td>
-                              <td>{lote.fecha_vencimiento}</td>
-                              <td>
-                                <span className="badge bg-danger">
-                                  {Math.abs(
-                                    Math.floor(
-                                      (new Date() -
-                                        new Date(lote.fecha_vencimiento)) /
-                                        (1000 * 60 * 60 * 24)
-                                    )
-                                  )}{" "}
-                                  días
+                  {/* COLUMNA DERECHA: HISTORIAL (ENTRADAS Y SALIDAS) */}
+                  <div className="col-lg-5">
+                    <h6 className="mb-3 fw-bold text-primary">
+                      <i className="fa-solid fa-clock-rotate-left me-2"></i> Historial de Movimientos
+                    </h6>
+                    <div style={{ maxHeight: "500px", overflowY: "auto", paddingRight: "10px" }}>
+                      {stockLotes.historial?.length > 0 ? (
+                        <div className="timeline-container">
+                          {stockLotes.historial.map((mov, idx) => (
+                            <div key={idx} className="d-flex mb-3 border-bottom pb-2">
+                              <div className="me-3 text-center" style={{ minWidth: "50px" }}>
+                                <div className={`rounded-circle d-flex align-items-center justify-content-center mx-auto`} 
+                                     style={{ width: "32px", height: "32px", background: mov.tipo === 'entrada' ? "#dcfce7" : "#fee2e2", color: mov.tipo === 'entrada' ? "#166534" : "#991b1b" }}>
+                                  <i className={`fa-solid ${mov.tipo === 'entrada' ? 'fa-arrow-down' : 'fa-arrow-up'} small`}></i>
+                                </div>
+                                <span className="small text-muted" style={{ fontSize: '10px' }}>
+                                  {new Date(mov.fecha).toLocaleDateString()}
                                 </span>
-                              </td>
-                            </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan="4" className="text-center text-muted">
-                              No hay lotes vencidos
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-
-                    {stockLotes.resumen_vencidos?.cantidad_lotes_vencidos >
-                      0 && (
-                      <div className="alert alert-warning mt-3" role="alert">
-                        <strong>Advertencia:</strong> Hay{" "}
-                        <strong>
-                          {stockLotes.resumen_vencidos.cantidad_lotes_vencidos}
-                        </strong>{" "}
-                        lote(s) vencido(s) que deben ser retirados del
-                        inventario.
-                      </div>
-                    )}
+                              </div>
+                              <div className="flex-grow-1">
+                                <div className="d-flex justify-content-between">
+                                  <span className={`fw-bold small ${mov.tipo === 'entrada' ? 'text-success' : 'text-danger'}`}>
+                                    {mov.tipo === 'entrada' ? 'INGRESO' : 'SALIDA'}
+                                  </span>
+                                  <span className="fw-bold text-dark">
+                                    {mov.tipo === 'entrada' ? '+' : '-'}{parseFloat(parseFloat(mov.cantidad || 0).toFixed(3)).toString()} <span className="small text-muted">{selectedReactivo?.presentacion_reactivo}</span>
+                                  </span>
+                                </div>
+                                <div className="text-muted" style={{ fontSize: "11px" }}>
+                                  <strong>Lote:</strong> {mov.lote}
+                                  {mov.proveedor && <> | <strong>Prov:</strong> {mov.proveedor}</>}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-center text-muted small py-4">No hay historial registrado</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               ) : null}
             </div>
 
-            <div className="modal-footer">
-              <button
-                type="button"
-                className="btn btn-secondary"
-                data-bs-dismiss="modal"
-                onClick={hideModal}
-              >
-                Cerrar
-              </button>
+            <div className="modal-footer bg-light" style={{ borderRadius: "0 0 16px 16px" }}>
+              <button type="button" className="btn btn-outline-secondary px-4" data-bs-dismiss="modal" onClick={hideModal}>Cerrar</button>
             </div>
           </div>
         </div>

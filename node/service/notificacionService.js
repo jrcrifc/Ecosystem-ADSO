@@ -36,15 +36,21 @@ class NotificacionService {
 
   // Notificar a todos los admins
   async notificarAdmins({ id_usuario_origen, titulo, mensaje, tipo }) {
-    const admins = await UserModel.findAll({
-      where: { rol: 'Administrador', estado: 'aprobado' }
-    });
-    for (const admin of admins) {
-      await this.crearNotificacion({
-        id_usuario_destino: admin.id_usuario,
-        id_usuario_origen,
-        titulo, mensaje, tipo
+    try {
+      const admins = await UserModel.findAll({
+        where: { rol: 'Administrador', estado: 'aprobado' }
       });
+      console.log(`🔔 Notificando a ${admins.length} administradores sobre: ${titulo}`);
+      for (const admin of admins) {
+        console.log(`   👉 Enviando a admin ID: ${admin.id_usuario}`);
+        await this.crearNotificacion({
+          id_usuario_destino: admin.id_usuario,
+          id_usuario_origen,
+          titulo, mensaje, tipo
+        });
+      }
+    } catch (error) {
+      console.error('❌ Error en notificarAdmins:', error);
     }
   }
 }

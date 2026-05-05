@@ -60,12 +60,13 @@ const Home = () => {
   };
 
   const cards = [
-    { show: esAprendiz || esPasante || esAdmin, icon: "📋", title: "Nueva Solicitud", desc: "Crea solicitudes de préstamo de equipos o materiales.", color: "#0077B6", href: "/solicitud" },
-    { show: esGestor || esAdmin, icon: "🧪", title: "Control de Inventario", desc: "Gestiona el stock de reactivos y movimientos.", color: "#00B4D8", href: "/movimientoreactivo" },
-    { show: esGestor || esAdmin || esInstructor, icon: "📊", title: "Gestión de Solicitudes", desc: "Revisa, aprueba o rechaza solicitudes pendientes.", color: "#0096C7", href: "/gestion-solicitudes" },
-    { show: esAdmin, icon: "👥", title: "Gestión de Usuarios", desc: "Aprueba, inactiva o administra los usuarios del sistema.", color: "#023E8A", href: "/gestion-usuarios" },
-    { show: esAdmin, icon: "🏢", title: "Proveedores", desc: "Administra proveedores vinculados al laboratorio.", color: "#0353A4", href: "/proveedor" },
-    { show: true, icon: "📁", title: "Mi Historial", desc: "Consulta el estado de tus solicitudes.", color: "#48CAE4", href: "/estadoxsolicitud" },
+    { show: esAprendiz || esInstructor, icon: "📋", title: "Nueva Solicitud", desc: "Crea solicitudes de préstamo de equipos o materiales.", color: "#0077B6", href: "/solicitud" },
+    { show: esAdmin, icon: "📊", title: "Gestión de Solicitudes", desc: "Revisa, aprueba o rechaza solicitudes pendientes.", color: "#0096C7", href: "/gestion-solicitudes" },
+    { show: esAdmin || esGestor || esPasante, icon: "🧪", title: "Inventario Reactivos", desc: "Gestiona el stock y movimientos de reactivos.", color: "#00B4D8", href: "/reactivos" },
+    { show: esAdmin || esGestor || esPasante, icon: "🔬", title: "Inventario Equipos", desc: "Consulta y administra la lista de equipos.", color: "#023E8A", href: "/equipos" },
+    { show: esAdmin, icon: "👥", title: "Gestión de Usuarios", desc: "Administra los usuarios y sus permisos.", color: "#0353A4", href: "/gestion-usuarios" },
+    { show: esAdmin, icon: "🏢", title: "Proveedores", desc: "Administra los proveedores del laboratorio.", color: "#48CAE4", href: "/proveedor" },
+    { show: esAprendiz || esInstructor, icon: "📁", title: "Mi Historial", desc: "Consulta el estado de tus solicitudes.", color: "#1d4ed8", href: "/estadoxsolicitud" },
   ];
 
   return (
@@ -123,17 +124,54 @@ const Home = () => {
           </p>
 
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-            <a href="/solicitud" style={{
-              background: "#fff", borderRadius: "10px", padding: "12px 28px",
-              color: "#023E8A", fontSize: "13px", fontWeight: "700", textDecoration: "none",
-              boxShadow: "0 4px 15px rgba(0,0,0,0.15)", transition: "transform 0.2s"
-            }}>📋 Nueva Solicitud</a>
-            <a href="/estadoxsolicitud" style={{
-              background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.25)",
-              borderRadius: "10px", padding: "12px 28px",
-              color: "#fff", fontSize: "13px", fontWeight: "600", textDecoration: "none",
-              transition: "all 0.2s"
-            }}>📁 Mi Historial</a>
+            {/* Botones dinámicos según el rol */}
+            {(esAprendiz || esInstructor) && (
+              <>
+                <a href="/solicitud" style={{
+                  background: "#fff", borderRadius: "10px", padding: "12px 28px",
+                  color: "#023E8A", fontSize: "13px", fontWeight: "700", textDecoration: "none",
+                  boxShadow: "0 4px 15px rgba(0,0,0,0.15)", transition: "transform 0.2s"
+                }}>📋 Nueva Solicitud</a>
+                <a href="/estadoxsolicitud" style={{
+                  background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.25)",
+                  borderRadius: "10px", padding: "12px 28px",
+                  color: "#fff", fontSize: "13px", fontWeight: "600", textDecoration: "none",
+                  transition: "all 0.2s"
+                }}>📁 Mi Historial</a>
+              </>
+            )}
+
+            {(esGestor || esPasante) && (
+              <>
+                <a href="/reactivos" style={{
+                  background: "#fff", borderRadius: "10px", padding: "12px 28px",
+                  color: "#023E8A", fontSize: "13px", fontWeight: "700", textDecoration: "none",
+                  boxShadow: "0 4px 15px rgba(0,0,0,0.15)", transition: "transform 0.2s"
+                }}>🧪 Reactivos</a>
+                <a href="/equipos" style={{
+                  background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.25)",
+                  borderRadius: "10px", padding: "12px 28px",
+                  color: "#fff", fontSize: "13px", fontWeight: "600", textDecoration: "none",
+                  transition: "all 0.2s"
+                }}>🔬 Equipos</a>
+              </>
+            )}
+
+            {esAdmin && (
+              <>
+                <a href="/gestion-usuarios" style={{
+                  background: "#fff", borderRadius: "10px", padding: "12px 28px",
+                  color: "#023E8A", fontSize: "13px", fontWeight: "700", textDecoration: "none",
+                  boxShadow: "0 4px 15px rgba(0,0,0,0.15)", transition: "transform 0.2s"
+                }}>👥 Usuarios</a>
+                <a href="/gestion-solicitudes" style={{
+                  background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.25)",
+                  borderRadius: "10px", padding: "12px 28px",
+                  color: "#fff", fontSize: "13px", fontWeight: "600", textDecoration: "none",
+                  transition: "all 0.2s"
+                }}>📋 Solicitudes</a>
+              </>
+            )}
           </div>
         </div>
 

@@ -85,20 +85,20 @@ export default function CrudEquipo() {
   };
 
   const columns = [
-    { name: "ID", selector: (row) => row.id_equipo, sortable: true, width: "80px" },
-    { name: "Grupo", selector: (row) => row.grupo_equipo, sortable: true, wrap: true, width: "220px" },
-    { name: "Nombre", selector: (row) => row.nom_equipo, sortable: true, wrap: true, width: "200px" },
-    { name: "Marca", selector: (row) => row.marca_equipo || "-", sortable: true, width: "140px" },
-    { name: "Placa/Serial", selector: (row) => row.no_placa || "-", sortable: true, width: "130px" },
+    { name: "ID", selector: (row) => row.id_equipo, sortable: true, width: "80px", center: true },
+    { name: "Grupo", selector: (row) => row.grupo_equipo, sortable: true, minWidth: "180px" },
+    { name: "Nombre", selector: (row) => row.nom_equipo, sortable: true, minWidth: "180px" },
+    { name: "Marca", selector: (row) => row.marca_equipo || "-", sortable: true, minWidth: "130px" },
+    { name: "Placa", selector: (row) => row.no_placa || "-", sortable: true, minWidth: "130px" },
 
-    // ✅ COLUMNA CORREGIDA
+    // ✅ COLUMNA SIMPLIFICADA
     {
       name: "Cuentadante",
       selector: (row) => row.cuentadante
         ? `${row.cuentadante.nom_cuentadante} ${row.cuentadante.apell_cuentadante}`
         : "-",
       sortable: true,
-      width: "180px"
+      minWidth: "200px"
     },
 
     {
@@ -187,10 +187,13 @@ export default function CrudEquipo() {
   });
 
   return (
-    <div className="container mt-4">
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
-        <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
-        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Gestión de Equipos</h2>
+    <div className="container mt-4" style={{ maxWidth: "1150px" }}>
+      <div style={{ textAlign: "center", marginBottom: "32px" }}>
+        <div style={{ height: "3px", width: "40px", background: "#0077B6", borderRadius: "99px", margin: "0 auto 12px" }} />
+        <h2 style={{ fontSize: "28px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Gestión de Equipos</h2>
+        <p style={{ color: "#64748b", marginTop: "8px", fontSize: "14px" }}>
+          Administra el inventario de equipos y herramientas del laboratorio.
+        </p>
       </div>
 
       <div className="row mb-4 align-items-center">

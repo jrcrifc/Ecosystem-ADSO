@@ -31,15 +31,16 @@ export const getDashboardStats = async (req, res) => {
     // Si no, lo sacamos de estadoxsolicitud (pero simplifiquemos por ahora si existe el campo)
     // Revisando App.jsx, parece que la gestión es compleja. 
     // Vamos a contar directamente de la tabla solicitud si tiene el estado.
+    // 3. Conteo de solicitudes por estado (usando el campo 'estado' de la tabla solicitud_prestamos)
     const solicitudesStats = await solicitudModel.findAll({
-      attributes: ['estado_solicitud', [solicitudModel.sequelize.fn('COUNT', solicitudModel.sequelize.col('id_solicitud')), 'count']],
-      group: ['estado_solicitud']
+      attributes: ['estado', [solicitudModel.sequelize.fn('COUNT', solicitudModel.sequelize.col('id_solicitud')), 'count']],
+      group: ['estado']
     });
 
     // 4. Conteo de equipos por estado
     const equiposStats = await equipoModel.findAll({
-      attributes: ['estado_equipo', [equipoModel.sequelize.fn('COUNT', equipoModel.sequelize.col('id_equipo')), 'count']],
-      group: ['estado_equipo']
+      attributes: ['estado', [equipoModel.sequelize.fn('COUNT', equipoModel.sequelize.col('id_equipo')), 'count']],
+      group: ['estado']
     });
 
     res.json({

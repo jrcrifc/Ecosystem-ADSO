@@ -12,13 +12,24 @@ const CrudmovimientoReactivo = () => {
   const [selectedMovimiento, setSelectedMovimiento] = useState(null);
 
   const columns = [
-    { name: "ID", selector: (row) => row.id_movimiento_reactivo, sortable: true, width: "80px" },
-    { name: "Reactivo", selector: (row) => row.reactivo?.nom_reactivo || "-", sortable: true, width: "180px" },
-    { name: "Cant. Inicial", selector: (row) => row.cantidad_inicial || 0, sortable: true, width: "130px" },
-    { name: "Lote", selector: (row) => row.lote || "-", sortable: true, width: "120px" },
-    { name: "Proveedor", selector: (row) => row.proveedor ? `${row.proveedor.nom_proveedor} ${row.proveedor.apel_proveedor}` : "-", sortable: true, width: "170px" },
-    { name: "Cant. Salida", selector: (row) => row.cantidad_salida || 0, sortable: true, width: "130px" },
-    { name: "Fecha Vencimiento", selector: (row) => row.fecha_vencimiento?.slice(0, 10) || "-", sortable: true, width: "160px" },
+    { name: "ID", selector: (row) => row.id_movimiento_reactivo, sortable: true, width: "80px", center: true },
+    { name: "Reactivo", selector: (row) => row.reactivo?.nom_reactivo || "-", sortable: true, minWidth: "200px" },
+    {
+      name: "Cant. Inicial",
+      sortable: true,
+      minWidth: "180px",
+      cell: (row) => (
+        <span>
+          {parseFloat(parseFloat(row.cantidad_inicial || 0).toFixed(3)).toString()}{" "}
+          <span style={{ fontSize: "11px", color: "#0077B6", fontWeight: "600" }}>
+            {row.reactivo?.presentacion_reactivo || ""}
+          </span>
+        </span>
+      )
+    },
+    { name: "Lote", selector: (row) => row.lote || "-", sortable: true, minWidth: "150px" },
+    { name: "Proveedor", selector: (row) => row.proveedor ? `${row.proveedor.nom_proveedor} ${row.proveedor.apel_proveedor}` : "-", sortable: true, minWidth: "200px" },
+    { name: "Vencimiento", selector: (row) => row.fecha_vencimiento?.slice(0, 10) || "-", sortable: true, minWidth: "160px" },
     {
       name: "Acciones",
       center: true,

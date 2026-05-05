@@ -38,7 +38,7 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
       ]
     },
     {
-      key: "solicitudes", icon: "📋", text: "Solicitudes", show: ['Aprendiz', 'Instructor'].includes(userRol),
+      key: "solicitudes", icon: "📋", text: "Solicitudes", show: ['Aprendiz', 'Instructor', 'Administrador'].includes(userRol),
       items: [
         { icon: "📝", text: "Nueva Solicitud", path: "/solicitud", show: true },
         { icon: "📜", text: "Historial", path: "/estadoxsolicitud", show: true },

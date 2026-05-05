@@ -1,17 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import Campanita from "./FormularioAcceso/Campanita.jsx";
 
 const TopBar = ({ userData, userRol, logOut, onAprobado }) => {
-  const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
-
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
-  }, [theme]);
-
-  const toggleTheme = () => setTheme(theme === "light" ? "dark" : "light");
-
   const esAdmin = userRol === 'Administrador';
   const esGestorPasante = ['Pasante', 'Gestor'].includes(userRol);
   const userName = userData?.nombres_apellidos;
@@ -31,13 +22,6 @@ const TopBar = ({ userData, userRol, logOut, onAprobado }) => {
       zIndex: 50,
       marginBottom: "8px",
     }}>
-      {/* Tema */}
-      <button onClick={toggleTheme} style={{
-        background: "transparent", border: "none", cursor: "pointer", fontSize: "20px"
-      }}>
-        {theme === "light" ? "🌙" : "☀️"}
-      </button>
-
       {/* Notificaciones */}
       <Campanita userData={userData} onAprobado={onAprobado} userRol={userRol} />
 

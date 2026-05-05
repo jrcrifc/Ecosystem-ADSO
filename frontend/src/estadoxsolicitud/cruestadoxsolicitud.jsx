@@ -60,39 +60,37 @@ export default function CrudEstadoxSolicitud() {
       selector: (row) => row.id_estadoxsolicitud, 
       sortable: true, 
       width: "80px",
-      center: true,
     },
     { 
       name: "Solicitante", 
       selector: (row) => row.solicitud?.usuario?.nombres_apellidos || "-", 
       sortable: true, 
-      width: "180px",
-      omit: !esAdmin, // ✅ Ocultar columna para no-admin (ellos solo ven sus propias)
+      minWidth: "220px",
+      omit: !esAdmin,
     },
     { 
       name: "Fecha Inicio", 
-      selector: (row) => row.solicitud?.fecha_inicio?.slice(0, 10) || "-", 
+      selector: (row) => row.solicitud?.fecha_inicio ? new Date(row.solicitud.fecha_inicio).toLocaleDateString() : "-", 
       sortable: true, 
-      width: "130px" 
+      minWidth: "150px"
     },
     { 
       name: "Fecha Fin", 
-      selector: (row) => row.solicitud?.fecha_fin?.slice(0, 10) || "-", 
+      selector: (row) => row.solicitud?.fecha_fin ? new Date(row.solicitud.fecha_fin).toLocaleDateString() : "-", 
       sortable: true, 
-      width: "130px" 
+      minWidth: "150px"
     },
     {
       name: "Estado",
       sortable: true,
-      width: "140px",
-      center: true,
+      width: "160px",
       cell: (row) => {
         const style = getBadgeStyle(row.estadoSolicitud?.estado);
         return (
           <span style={{
             background: style.bg, color: style.color,
             fontSize: "11px", fontWeight: "700",
-            padding: "4px 12px", borderRadius: "99px"
+            padding: "5px 15px", borderRadius: "99px",
           }}>
             {row.estadoSolicitud?.estado || "-"}
           </span>
@@ -101,9 +99,9 @@ export default function CrudEstadoxSolicitud() {
     },
     { 
       name: "Fecha Cambio", 
-      selector: (row) => row.createdat?.slice(0, 10) || "-", 
+      selector: (row) => row.createdat ? new Date(row.createdat).toLocaleString() : "-", 
       sortable: true, 
-      width: "130px" 
+      minWidth: "220px"
     },
   ];
 
@@ -116,19 +114,19 @@ export default function CrudEstadoxSolicitud() {
   );
 
   return (
-    <div className="container mt-4">
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
-        <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
-        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>
-        {esAdmin ? "Historial de Todas las Solicitudes" : "Mi Historial de Solicitudes"}
-      </h2>
-    </div>
-      <p style={{ color: "#64748b", marginBottom: "24px", fontSize: "14px" }}>
-        {esAdmin
-          ? "Vista completa de todos los cambios de estado de solicitudes del sistema."
-          : "Aquí puedes ver el estado de tus solicitudes realizadas."
-        }
-      </p>
+    <div className="container mt-4" style={{ maxWidth: "1000px" }}>
+      <div style={{ textAlign: "center", marginBottom: "32px" }}>
+        <div style={{ height: "3px", width: "40px", background: "#0077B6", borderRadius: "99px", margin: "0 auto 12px" }} />
+        <h2 style={{ fontSize: "28px", fontWeight: "800", color: "#0077B6", margin: 0 }}>
+          {esAdmin ? "Historial de Todas las Solicitudes" : "Mi Historial de Solicitudes"}
+        </h2>
+        <p style={{ color: "#64748b", marginTop: "8px", fontSize: "14px" }}>
+          {esAdmin
+            ? "Vista completa de todos los cambios de estado de solicitudes del sistema."
+            : "Aquí puedes ver el estado de tus solicitudes realizadas."
+          }
+        </p>
+      </div>
 
       <div className="row mb-3 align-items-center">
         <div className="col-md-6">

@@ -89,6 +89,14 @@ const AdminRoute = ({ isAuth, rol, userData, children }) => {
   return children;
 };
 
+// ✅ Solo quienes pueden HACER solicitudes (Aprendiz, Instructor, Admin)
+const SolicitanteRoute = ({ isAuth, rol, children }) => {
+  if (!isAuth) return <Navigate to="/UserLogin" replace />;
+  const rolesPermitidos = ['Aprendiz', 'Instructor', 'Administrador'];
+  if (!rolesPermitidos.includes(rol)) return <Navigate to="/home" replace />;
+  return children;
+};
+
 function App() {
   const [isAuth, setIsAuth] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -164,7 +172,7 @@ function App() {
             onAprobado={recargarUsuario}
           />
         )}
-        <div style={{ padding: "24px", maxWidth: "1100px", margin: "0 auto" }}>
+        <div style={{ padding: "24px 32px", maxWidth: "1200px", margin: "0 auto" }}>
           <Routes>
 
             {/* LOGIN */}
@@ -189,9 +197,11 @@ function App() {
 
             {/* SOLICITUDES — Aprendiz/Instructor aprobados y Admin */}
             <Route path="/solicitud" element={
-              <FormularioRoute isAuth={isAuth} userData={userData} userRol={userRol} logOut={logOut}>
-                <Crudsolicitud />
-              </FormularioRoute>
+              <SolicitanteRoute isAuth={isAuth} rol={userRol}>
+                <FormularioRoute isAuth={isAuth} userData={userData} userRol={userRol} logOut={logOut}>
+                  <Crudsolicitud />
+                </FormularioRoute>
+              </SolicitanteRoute>
             } />
             <Route path="/estadoxsolicitud" element={
               <FormularioRoute isAuth={isAuth} userData={userData} userRol={userRol} logOut={logOut}>

@@ -31,13 +31,13 @@ const DashboardCharts = () => {
 
   // Formatear datos para Pie Chart (Equipos por Estado)
   const dataEquipos = stats.equiposDistribucion.map(item => ({
-    name: item.estado_equipo || "Desconocido",
+    name: item.estado === 1 ? "Activos" : "Inactivos",
     value: parseInt(item.count)
   }));
 
   // Formatear datos para Bar Chart (Solicitudes por Estado)
   const dataSolicitudes = stats.solicitudes.map(item => ({
-    name: item.estado_solicitud || "Sin Estado",
+    name: item.estado === 1 ? "Activas" : "Inactivas",
     cantidad: parseInt(item.count)
   }));
 

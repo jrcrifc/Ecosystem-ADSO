@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
 import Swal from "sweetalert2";
 import { paginationComponentOptions, tableCustomStyles } from "../config/dataTableConfig";
+import socket from "../socket.js";
 
 const GestionSolicitudes = () => {
   const [solicitudes, setSolicitudes] = useState([]);
@@ -12,11 +13,11 @@ const GestionSolicitudes = () => {
 
   const getBadgeStyle = (estado) => {
     const map = {
-      generado:  { bg: "#f1f5f9", color: "#475569" },
-      aceptado:  { bg: "#dbeafe", color: "#0077B6" },
-      prestado:  { bg: "#fffbeb", color: "#d97706" },
+      generado: { bg: "#f1f5f9", color: "#475569" },
+      aceptado: { bg: "#dbeafe", color: "#0077B6" },
+      prestado: { bg: "#fffbeb", color: "#d97706" },
       entregado: { bg: "#ecfdf5", color: "#059669" },
-      devuelto:  { bg: "#ecfdf5", color: "#059669" },
+      devuelto: { bg: "#ecfdf5", color: "#059669" },
       cancelado: { bg: "#fef2f2", color: "#dc2626" },
       rechazado: { bg: "#fef2f2", color: "#dc2626" },
     };
@@ -24,9 +25,9 @@ const GestionSolicitudes = () => {
   };
 
   const estadosSiguientes = {
-    generado:  ["aceptado", "cancelado"],
-    aceptado:  ["prestado", "cancelado"],
-    prestado:  ["entregado", "cancelado"],
+    generado: ["aceptado", "cancelado"],
+    aceptado: ["prestado", "cancelado"],
+    prestado: ["entregado", "cancelado"],
     entregado: [],
     cancelado: [],
   };
@@ -37,24 +38,26 @@ const GestionSolicitudes = () => {
       name: "Solicitante",
       selector: (row) => row.usuario?.nombres_apellidos || "-",
       sortable: true,
-      width: "180px"
+      width: "140px",
+      wrap: true
     },
     {
       name: "Fecha Inicio",
       selector: (row) => row.fecha_inicio ? new Date(row.fecha_inicio).toLocaleString() : "-",
       sortable: true,
-      width: "170px"
+      width: "160px",
+      wrap: true
     },
     {
       name: "Fecha Fin",
       selector: (row) => row.fecha_fin ? new Date(row.fecha_fin).toLocaleString() : "-",
       sortable: true,
-      width: "170px"
+      width: "160px",
+      wrap: true
     },
     {
       name: "Estado Actual",
       width: "150px",
-      center: true,
       cell: (row) => {
         const style = getBadgeStyle(row.ultimoEstado);
         return (
@@ -101,7 +104,16 @@ const GestionSolicitudes = () => {
     }
   ];
 
-  useEffect(() => { cargarSolicitudes(); }, []);
+  useEffect(() => {
+    cargarSolicitudes();
+
+    // ✅ Escuchar cambios en tiempo real para refrescar la tabla del administrador
+    socket.on('solicitud_actualizada', cargarSolicitudes);
+
+    return () => {
+      socket.off('solicitud_actualizada', cargarSolicitudes);
+    };
+  }, []);
 
   const cargarSolicitudes = async () => {
     try {
@@ -119,9 +131,9 @@ const GestionSolicitudes = () => {
   const cambiarEstado = async (id_solicitud, nuevoEstado) => {
     // Mapeo de estado a id_estado_solicitud
     const mapaEstados = {
-      generado:  1,
-      aceptado:  2,
-      prestado:  3,
+      generado: 1,
+      aceptado: 2,
+      prestado: 3,
       entregado: 5,
       cancelado: 6
     };
@@ -172,7 +184,7 @@ const GestionSolicitudes = () => {
         <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
         <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Gestión de Solicitudes</h2>
       </div>
-      
+
 
       <div className="row mb-4 align-items-center">
         <div className="col-md-6">
