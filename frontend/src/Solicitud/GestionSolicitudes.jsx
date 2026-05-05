@@ -91,31 +91,55 @@ const GestionSolicitudes = () => {
         const siguientes = estadosSiguientes[estadoActual] || [];
         if (siguientes.length === 0) return <span className="text-muted small">Sin acciones</span>;
         return (
-          <div className="dropdown">
-            <button className="btn btn-sm text-white dropdown-toggle" style={{ background: "#0077B6" }} type="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <i className="fas fa-exchange-alt me-1"></i> Cambiar
-            </button>
-            <ul className="dropdown-menu">
-              {siguientes.map((estado) => (
-                <li key={estado}>
-                  <button className="dropdown-item" onClick={() => cambiarEstado(row.id_solicitud, estado)}>
-                    {estado === "aceptado" && "✅ Aceptado"}
-                    {estado === "prestado" && "📦 Prestado"}
-                    {estado === "entregado" && "🔄 Entregado"}
-                    {estado === "cancelado" && "❌ Cancelado"}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <button
+            className="btn btn-sm text-white fw-bold"
+            style={{ background: "#0077B6", borderRadius: "8px", padding: "5px 12px", fontSize: "11px" }}
+            onClick={() => abrirMenuAcciones(row)}
+          >
+            <i className="fas fa-ellipsis-v me-1"></i> Gestionar
+          </button>
         );
       },
       ignoreRowClick: true,
       allowOverflow: true,
       button: true,
-      width: "150px"
+      width: "120px"
     }
   ];
+
+  const abrirMenuAcciones = (row) => {
+    const estadoActual = row.ultimoEstado || "generado";
+    const siguientes = estadosSiguientes[estadoActual] || [];
+
+    const inputOptions = {};
+    siguientes.forEach(est => {
+      let label = est;
+      if (est === "aceptado") label = "✅ Aceptado";
+      if (est === "prestado") label = "📦 Prestado";
+      if (est === "entregado") label = "🔄 Entregado";
+      if (est === "cancelado") label = "❌ Cancelado";
+      inputOptions[est] = label;
+    });
+
+    Swal.fire({
+      title: "Gestionar Solicitud #" + row.id_solicitud,
+      text: "Estado actual: " + estadoActual.toUpperCase(),
+      input: "select",
+      inputOptions: inputOptions,
+      inputPlaceholder: "Seleccione el siguiente paso...",
+      showCancelButton: true,
+      confirmButtonText: "Aplicar Cambio",
+      cancelButtonText: "Cerrar",
+      confirmButtonColor: "#0077B6",
+      inputValidator: (value) => {
+        if (!value) return "Debes seleccionar una opción";
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        cambiarEstado(row.id_solicitud, result.value);
+      }
+    });
+  };
 
   useEffect(() => { cargarSolicitudes(); }, []);
 
