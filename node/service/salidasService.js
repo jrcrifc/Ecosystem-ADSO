@@ -110,16 +110,16 @@ class salidasService {
       cantidadRestante -= cantidadDeEsteLote;
     }
 
-    // Actualizar existencia del reactivo
-    const lotesActualizados = await this.getLotesFefo(id_reactivo);
-    const stockNuevo = lotesActualizados.reduce((acc, l) => acc + l.cantidad_disponible, 0);
-    const reactivo = await reactivosModel.findByPk(id_reactivo);
-    if (reactivo) {
-      await reactivo.update({
-        cantidad_inventario: stockNuevo,
-        existencia_reactivo: stockNuevo > 0 ? 'SI' : 'NO'
-      });
-    }
+    // Actualizar existencia del reactivo (Opcional: ya no se usa cantidad_inventario en tabla reactivos)
+    // const lotesActualizados = await this.getLotesFefo(id_reactivo);
+    // const stockNuevo = lotesActualizados.reduce((acc, l) => acc + l.cantidad_disponible, 0);
+    // const reactivo = await reactivosModel.findByPk(id_reactivo);
+    // if (reactivo) {
+    //   await reactivo.update({
+    //     cantidad_inventario: stockNuevo,
+    //     existencia_reactivo: stockNuevo > 0 ? 'SI' : 'NO'
+    //   });
+    // }
 
     return salidasCreadas;
   }
@@ -143,14 +143,14 @@ class salidasService {
       });
 
       const reactivo = await reactivosModel.findByPk(movimiento.id_reactivo);
-      if (reactivo) {
-        const lotes = await this.getLotesFefo(movimiento.id_reactivo);
-        const stockTotal = lotes.reduce((acc, l) => acc + l.cantidad_disponible, 0);
-        await reactivo.update({ 
-            cantidad_inventario: stockTotal,
-            existencia_reactivo: stockTotal > 0 ? 'SI' : 'NO' 
-        });
-      }
+      // if (reactivo) {
+      //   const lotes = await this.getLotesFefo(movimiento.id_reactivo);
+      //   const stockTotal = lotes.reduce((acc, l) => acc + l.cantidad_disponible, 0);
+      //   await reactivo.update({ 
+      //       cantidad_inventario: stockTotal,
+      //       existencia_reactivo: stockTotal > 0 ? 'SI' : 'NO' 
+      //   });
+      // }
     }
 
     const deleted = await salidasModel.destroy({ where: { id_salida: id } });

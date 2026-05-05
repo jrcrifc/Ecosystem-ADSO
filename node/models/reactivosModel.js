@@ -23,8 +23,7 @@ const reactivosModel = db.define('reactivos', {
     clasificacion_reactivo: {
         type: DataTypes.ENUM('Peligro de contacto', 'Peligro de reactividad', 'Peligro de inflamabilidad', 'Riesgo minimo', 'Peligro para salud', 'Evalué el almacenamiento individualmente')
     },
-    cantidad_inventario: { type: DataTypes.DECIMAL(10, 3), defaultValue: 0 },
-    existencia_reactivo: { type: DataTypes.ENUM("SI", "NO") },
+
     estado: {
         type: DataTypes.TINYINT,
         defaultValue: 1,

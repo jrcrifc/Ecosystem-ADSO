@@ -21,7 +21,7 @@ router.get('/stock/disponibilidad', adminOGestor, async (req, res) => {
     const movimientos = await movimientoreactivoModel.findAll();
 
     const resultado = reactivos.map(r => {
-      const movs = movimientos.filter(m => m.id_reactivo === r.id_reactivo);
+      const movs = movimientos.filter(m => String(m.id_reactivo) === String(r.id_reactivo));
 
       // Agrupar por lote para saber cuáles están vencidos
       const loteMap = {};

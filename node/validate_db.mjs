@@ -32,7 +32,7 @@ try {
     } else {
         console.log(`   ✅ Campos encontrados: ${reactivosColumns.length}`);
         
-        const requiredFields = ['id_reactivo', 'nom_reactivo', 'cantidad_inventario', 'existencia_reactivo'];
+        const requiredFields = ['id_reactivo', 'nom_reactivo'];
         requiredFields.forEach(field => {
             const fieldData = reactivosColumns.find(col => col.COLUMN_NAME === field);
             if (fieldData) {
@@ -92,8 +92,6 @@ try {
     }
 
     console.log('\n✅ Validación completada');
-    console.log('\n📝 Si cantidad_inventario está marcado con ❌, ejecuta:');
-    console.log('   En MySQL Workbench: Ver archivo add_cantidad_inventario.sql');
 
 } catch (error) {
     console.error('❌ Error durante la validación:', error.message);

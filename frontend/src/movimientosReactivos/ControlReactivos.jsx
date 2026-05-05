@@ -27,9 +27,27 @@ const ControlReactivos = () => {
     },
     {
       name: "Cantidad",
-      selector: (row) => row.cantidad_inventario,
       sortable: true,
-      width: "120px",
+      width: "140px",
+      cell: (row) => (
+        <span
+          className={`fw-bold ${
+            row.cantidad_inventario > 0 ? "text-dark" : "text-danger"
+          }`}
+          style={{
+            fontSize: "1rem",
+            padding: "4px 8px",
+            borderRadius: "6px",
+            backgroundColor: row.cantidad_inventario > 0 ? "transparent" : "#fff1f2",
+          }}
+        >
+          {row.cantidad_inventario > 0 ? (
+            `${row.cantidad_inventario} ${row.presentacion_reactivo}`
+          ) : (
+            <span className="badge bg-danger">Sin stock</span>
+          )}
+        </span>
+      ),
     },
     {
       name: "Presentación",

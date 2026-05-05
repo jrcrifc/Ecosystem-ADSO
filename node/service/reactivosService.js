@@ -12,10 +12,6 @@ class reactivosService {
     }
 
     async create(data) {
-        // Auto-ajustar existencia_reactivo basado en cantidad_inventario
-        if (data.cantidad_inventario !== undefined) {
-            data.existencia_reactivo = data.cantidad_inventario > 0 ? "SI" : "NO";
-        }
         try {
             return await reactivosModel.create(data);
         } catch (error) {
@@ -39,12 +35,7 @@ class reactivosService {
 
     async getAllconStock() {
         const reactivos = await reactivosModel.findAll();
-        return reactivos.map(reactivo => ({
-            ...reactivo.toJSON(),
-            estado_stock: reactivo.cantidad_inventario > 0 && reactivo.existencia_reactivo === "SI" 
-                ? "disponible" 
-                : "agotado"
-        }));
+        return reactivos;
     }
 }
 

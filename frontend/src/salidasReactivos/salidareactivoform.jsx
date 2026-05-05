@@ -35,7 +35,7 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
     try {
       const res = await apiAxios.get("/api/reactivos/stock/disponibilidad");
       // Solo mostrar reactivos disponibles
-      setReactivos(res.data.filter(r => r.estado_stock === 'disponible'));
+      setReactivos(res.data);
     } catch (error) {
       console.error("Error al cargar reactivos:", error);
     }
@@ -123,7 +123,7 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
             <option value="">Seleccione un reactivo...</option>
             {reactivos.map(r => (
               <option key={r.id_reactivo} value={r.id_reactivo}>
-                {r.nom_reactivo} — Stock total: {r.cantidad_inventario} {r.presentacion_reactivo}
+                {r.nom_reactivo} — {r.presentacion_reactivo}
               </option>
             ))}
           </select>
