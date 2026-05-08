@@ -21,6 +21,12 @@ class proveedoresService {
         if (updated === 0) throw new Error('Proveedor no encontrado')
         return true
     }
+
+    async cambiarEstado(id_proveedor, estado) {
+        const result = await proveedoreModel.update({ estado }, { where: { id_proveedor } })
+        if (result[0] === 0) throw new Error('Proveedor no encontrado')
+        return true
+    }
     async delete(id_proveedor) {
         const deleted = await proveedoreModel.destroy({ where: { id_proveedor } })
         if (!deleted) throw new Error('Proveedor no encontrado')

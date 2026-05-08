@@ -18,6 +18,10 @@ router.get('/stock-lotes/:id_reactivo', adminOGestor, async (req, res) => {
   try {
     const { id_reactivo } = req.params;
     const hoy = new Date();
+    // Ajustar zona horaria para obtener el 'YYYY-MM-DD' local
+    const offset = hoy.getTimezoneOffset() * 60000;
+    const localHoyStr = new Date(hoy - offset).toISOString().slice(0, 10);
+    const timeHoyLocal = new Date(localHoyStr).getTime();
 
     const movimientos = await movimientoreactivoModel.findAll({
       where: { id_reactivo },
@@ -45,7 +49,7 @@ router.get('/stock-lotes/:id_reactivo', adminOGestor, async (req, res) => {
 
     const todosLotes = Object.values(loteMap).map(l => {
       const diasParaVencer = l.fecha_vencimiento
-        ? Math.floor((new Date(l.fecha_vencimiento) - hoy) / (1000 * 60 * 60 * 24))
+        ? Math.round((new Date(l.fecha_vencimiento).getTime() - timeHoyLocal) / (1000 * 60 * 60 * 24))
         : null;
       return {
         ...l,
@@ -55,12 +59,13 @@ router.get('/stock-lotes/:id_reactivo', adminOGestor, async (req, res) => {
     });
 
     // Separar disponibles y vencidos
+    // ✅ CORRECCIÓN: Si dias_para_vencer == 0 (vence hoy), NO está vencido, es válido para usar hoy
     const lotes_disponibles = todosLotes.filter(l =>
-      l.cantidad_disponible > 0 && (l.dias_para_vencer === null || l.dias_para_vencer > 0)
+      l.cantidad_disponible > 0 && (l.dias_para_vencer === null || l.dias_para_vencer >= 0)
     );
 
     const lotes_vencidos = todosLotes.filter(l =>
-      l.dias_para_vencer !== null && l.dias_para_vencer <= 0
+      l.dias_para_vencer !== null && l.dias_para_vencer < 0
     );
 
     // ✅ Historial de entradas (movimientos)

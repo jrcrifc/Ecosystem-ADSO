@@ -13,6 +13,16 @@ const getBadgeEquipo = (estado) => ({
   "no disponible": { bg: "#fee2e2", color: "#991b1b", label: "No disponible" },
 }[estado] || { bg: "#f3f4f6", color: "#374151", label: estado || "Sin estado" });
 
+const formatDateTime = (isoString) => {
+  if (!isoString) return "-";
+  const d = new Date(isoString);
+  // Corrección de 7 PM: si fue guardado a medianoche UTC, forzamos 7:00 AM
+  if (isoString.includes("T00:00:00.000Z") || d.toTimeString().slice(0,5) === "19:00") {
+    return `${isoString.substring(0, 10)} 07:00 AM`;
+  }
+  return d.toLocaleString([], { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+};
+
 const EquiposPills = ({ equipos }) => {
   const [expandido, setExpandido] = useState(false);
   if (!equipos || equipos.length === 0)
@@ -85,16 +95,16 @@ const CrudSolicitudPrestamos = () => {
     },
     {
       name: "Fecha Inicio",
-      selector: r => r.fecha_inicio ? new Date(r.fecha_inicio).toLocaleString() : "-",
+      selector: r => formatDateTime(r.fecha_inicio),
       sortable: true,
-      width: "165px",
+      width: "155px",
       wrap: true
     },
     {
       name: "Fecha Fin",
-      selector: r => r.fecha_fin ? new Date(r.fecha_fin).toLocaleString() : "-",
+      selector: r => formatDateTime(r.fecha_fin),
       sortable: true,
-      width: "165px",
+      width: "155px",
       wrap: true
     },
     {
@@ -334,13 +344,13 @@ const CrudSolicitudPrestamos = () => {
                     <div className="col-6">
                       <span className="text-muted">Fecha inicio</span>
                       <div className="fw-semibold">
-                        {verDetalle.fecha_inicio ? new Date(verDetalle.fecha_inicio).toLocaleString() : "-"}
+                        {formatDateTime(verDetalle.fecha_inicio)}
                       </div>
                     </div>
                     <div className="col-6">
                       <span className="text-muted">Fecha fin</span>
                       <div className="fw-semibold">
-                        {verDetalle.fecha_fin ? new Date(verDetalle.fecha_fin).toLocaleString() : "-"}
+                        {formatDateTime(verDetalle.fecha_fin)}
                       </div>
                     </div>
                   </div>

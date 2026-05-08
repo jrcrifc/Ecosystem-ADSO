@@ -55,16 +55,32 @@ export default function Campanita({ userData, onAprobado, userRol }) {
       const res = await apiAxios.get(`/api/notificaciones/${id_usuario}`);
       const nuevas = res.data;
 
-      // ✅ Si hay notificación de aprobado no leída, avisar al App para recargar userData
-      // ⚠️ Solo para usuarios NO administradores (evita re-render innecesario del admin)
       const hayAprobacion = nuevas.some(n => n.tipo === 'aprobado' && !n.leida);
       if (hayAprobacion && onAprobado && userRol !== 'Administrador') {
         onAprobado();
       }
 
-      // ✅ Limitar a las últimas 5 notificaciones
-      const ultimasCinco = nuevas.slice(0, 5);
-      setNotificaciones(ultimasCinco);
+      // ✅ Inyectar notificaciones virtuales de reactivos por vencer
+      if (['Administrador', 'Gestor', 'Cuentadante', 'Pasante'].includes(userRol)) {
+        try {
+          const statsRes = await apiAxios.get('/api/dashboard/stats');
+          const venc = statsRes.data.vencimientos || [];
+          const virtualNotifs = venc.map(v => ({
+            id_notificacion: `venc-${v.id_movimiento_reactivo}`,
+            tipo: 'vencimiento_reactivo',
+            titulo: '⚠️ Reactivo por vencer',
+            mensaje: `El reactivo ${v.reactivo?.nom_reactivo} (Lote: ${v.lote || 'N/A'}) vence el ${new Date(v.fecha_vencimiento).toLocaleDateString()}.`,
+            leida: false,
+            createdAt: new Date().toISOString()
+          }));
+          nuevas = [...virtualNotifs, ...nuevas];
+        } catch (e) {
+          console.error("Error cargando stats en notificaciones", e);
+        }
+      }
+
+      // ✅ Limitar a las últimas 10 notificaciones (más espacio si hay vencimientos)
+      setNotificaciones(nuevas.slice(0, 10));
     } catch { }
   };
 
@@ -99,6 +115,9 @@ export default function Campanita({ userData, onAprobado, userRol }) {
     } else if (n.tipo === 'aprobado') {
       setOpen(false);
       navigate('/perfil');
+    } else if (n.tipo === 'vencimiento_reactivo') {
+      setOpen(false);
+      navigate('/control-reactivos');
     } else {
       setOpen(false);
     }
@@ -110,6 +129,7 @@ export default function Campanita({ userData, onAprobado, userRol }) {
     if (tipo === 'solicitud_acceso') return '#eff6ff'; // Azul muy claro
     if (tipo === 'nueva_solicitud') return '#fffbeb'; // Ambar muy claro
     if (tipo === 'cambio_estado_solicitud') return '#f5f3ff'; // Violeta muy claro
+    if (tipo === 'vencimiento_reactivo') return '#fff1f2'; // Rose muy claro (peligro)
     return '#f8fafc';
   };
 
@@ -119,6 +139,7 @@ export default function Campanita({ userData, onAprobado, userRol }) {
     if (tipo === 'solicitud_acceso') return '📋';
     if (tipo === 'nueva_solicitud') return '📦';
     if (tipo === 'cambio_estado_solicitud') return '🔄';
+    if (tipo === 'vencimiento_reactivo') return '⚠️';
     return '🔔';
   };
 
@@ -206,6 +227,13 @@ export default function Campanita({ userData, onAprobado, userRol }) {
                           background: "rgba(0,119,182,0.1)", padding: "2px 8px",
                           borderRadius: "99px", whiteSpace: "nowrap"
                         }}>Ver solicitudes →</span>
+                      )}
+                      {n.tipo === 'vencimiento_reactivo' && (
+                        <span style={{
+                          fontSize: "10px", fontWeight: "700", color: "#dc2626",
+                          background: "rgba(220,38,38,0.1)", padding: "2px 8px",
+                          borderRadius: "99px", whiteSpace: "nowrap"
+                        }}>Ir al control →</span>
                       )}
                     </div>
                   </div>

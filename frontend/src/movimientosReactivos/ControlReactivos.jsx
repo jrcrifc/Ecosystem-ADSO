@@ -11,6 +11,7 @@ const ControlReactivos = () => {
   const [selectedReactivo, setSelectedReactivo] = useState(null);
   const [stockLotes, setStockLotes] = useState(null);
   const [loadingModal, setLoadingModal] = useState(false);
+  const [tabHistorial, setTabHistorial] = useState("ingresos");
 
   const columns = [
     {
@@ -94,6 +95,7 @@ const ControlReactivos = () => {
     setLoadingModal(true);
 
     try {
+      setTabHistorial("ingresos"); // Resetear tab al abrir
       const res = await apiAxios.get(`/api/movimientos/stock-lotes/${reactivo.id_reactivo}`);
       setStockLotes(res.data);
 
@@ -206,8 +208,14 @@ const ControlReactivos = () => {
                                 <td>{parseFloat(parseFloat(lote.cantidad_disponible || 0).toFixed(3)).toString()} <span className="text-muted small">{selectedReactivo?.presentacion_reactivo}</span></td>
                                 <td>{lote.fecha_vencimiento || "N/A"}</td>
                                 <td>
-                                  <span className={`badge ${lote.dias_para_vencer <= 7 ? "bg-warning" : "bg-success"}`}>
-                                    {lote.dias_para_vencer <= 0 ? "Vencido" : lote.dias_para_vencer <= 7 ? "Próximo" : "OK"}
+                                  <span className="badge" style={{
+                                    backgroundColor: lote.dias_para_vencer === 0 ? "#f97316" : // Naranja brillante
+                                                     lote.dias_para_vencer < 0 ? "#dc2626" :   // Rojo
+                                                     lote.dias_para_vencer <= 7 ? "#eab308" :  // Amarillo oscuro
+                                                     "#16a34a",                                // Verde
+                                    color: "#fff"
+                                  }}>
+                                    {lote.dias_para_vencer === 0 ? "Vence Hoy" : lote.dias_para_vencer < 0 ? "Vencido" : lote.dias_para_vencer <= 7 ? "Próximo" : "OK"}
                                   </span>
                                 </td>
                               </tr>
@@ -248,15 +256,27 @@ const ControlReactivos = () => {
                     )}
                   </div>
 
-                  {/* COLUMNA DERECHA: HISTORIAL (ENTRADAS Y SALIDAS) */}
+                  {/* COLUMNA DERECHA: HISTORIAL (ENTRADAS Y SALIDAS SEPARADAS) */}
                   <div className="col-lg-5">
-                    <h6 className="mb-3 fw-bold text-primary">
-                      <i className="fa-solid fa-clock-rotate-left me-2"></i> Historial de Movimientos
+                    <h6 className="mb-3 fw-bold text-primary d-flex justify-content-between align-items-center">
+                      <span><i className="fa-solid fa-clock-rotate-left me-2"></i> Historial</span>
                     </h6>
-                    <div style={{ maxHeight: "500px", overflowY: "auto", paddingRight: "10px" }}>
-                      {stockLotes.historial?.length > 0 ? (
+                    <ul className="nav nav-tabs mb-3" style={{ fontSize: "14px" }}>
+                      <li className="nav-item">
+                        <button className={`nav-link ${tabHistorial === 'ingresos' ? 'active fw-bold text-success' : 'text-muted'}`} onClick={() => setTabHistorial('ingresos')} style={{ padding: "8px 12px" }}>
+                          Ingresos
+                        </button>
+                      </li>
+                      <li className="nav-item">
+                        <button className={`nav-link ${tabHistorial === 'salidas' ? 'active fw-bold text-danger' : 'text-muted'}`} onClick={() => setTabHistorial('salidas')} style={{ padding: "8px 12px" }}>
+                          Salidas
+                        </button>
+                      </li>
+                    </ul>
+                    <div style={{ maxHeight: "400px", overflowY: "auto", paddingRight: "10px" }}>
+                      {stockLotes.historial?.filter(m => m.tipo === (tabHistorial === 'ingresos' ? 'entrada' : 'salida')).length > 0 ? (
                         <div className="timeline-container">
-                          {stockLotes.historial.map((mov, idx) => (
+                          {stockLotes.historial.filter(m => m.tipo === (tabHistorial === 'ingresos' ? 'entrada' : 'salida')).map((mov, idx) => (
                             <div key={idx} className="d-flex mb-3 border-bottom pb-2">
                               <div className="me-3 text-center" style={{ minWidth: "50px" }}>
                                 <div className={`rounded-circle d-flex align-items-center justify-content-center mx-auto`} 
@@ -285,7 +305,7 @@ const ControlReactivos = () => {
                           ))}
                         </div>
                       ) : (
-                        <p className="text-center text-muted small py-4">No hay historial registrado</p>
+                        <p className="text-center text-muted small py-4">No hay historial de {tabHistorial} registrado</p>
                       )}
                     </div>
                   </div>

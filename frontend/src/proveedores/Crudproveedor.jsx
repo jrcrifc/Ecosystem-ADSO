@@ -23,20 +23,23 @@ const Crudproveedor = () => {
     }
   };
 
-  const eliminarProveedor = async (id) => {
+  const toggleEstado = async (id, estadoActual) => {
+    const nuevoEstado = estadoActual === 1 ? 0 : 1;
     const confirm = await Swal.fire({
-      title: "¿Eliminar proveedor?", text: "Esta acción no se puede deshacer",
+      title: "¿Cambiar estado?", 
+      text: `El proveedor pasará a ${nuevoEstado === 1 ? "ACTIVO" : "INACTIVO"}`,
       icon: "warning", showCancelButton: true,
-      confirmButtonColor: "#dc3545", cancelButtonColor: "#6c757d",
-      confirmButtonText: "Sí, eliminar", cancelButtonText: "Cancelar",
+      confirmButtonColor: nuevoEstado === 1 ? "#0077B6" : "#dc3545",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sí, cambiar", cancelButtonText: "Cancelar",
     });
     if (!confirm.isConfirmed) return;
     try {
-      await apiAxios.delete(`/api/proveedor/${id}`);
-      setProveedor(proveedor.filter((p) => p.id_proveedor !== id));
-      Swal.fire({ icon: "success", title: "Eliminado", text: "El proveedor fue eliminado correctamente", timer: 1800, showConfirmButton: false });
+      await apiAxios.put(`/api/proveedor/estado/${id}`, { estado: nuevoEstado });
+      setProveedor(proveedor.map((p) => p.id_proveedor === id ? { ...p, estado: nuevoEstado } : p));
+      Swal.fire({ icon: "success", title: "Actualizado", text: "El estado fue modificado correctamente", timer: 1500, showConfirmButton: false });
     } catch (error) {
-      Swal.fire("Error", "No se pudo eliminar", "error");
+      Swal.fire("Error", "No se pudo cambiar el estado", "error");
     }
   };
 
@@ -60,6 +63,14 @@ const Crudproveedor = () => {
     { name: "Teléfono",  selector: (row) => row.tel_proveedor,  sortable: true },
     { name: "Dirección", selector: (row) => row.dir_proveedor,  sortable: true },
     {
+      name: "Estado", width: "100px", center: true,
+      cell: (row) => (
+        <span className={`px-2 py-1 rounded-pill text-white fw-semibold ${row.estado === 1 ? "bg-success" : "bg-danger"}`} style={{ fontSize: "0.7rem" }}>
+          {row.estado === 1 ? "ACTIVO" : "INACTIVO"}
+        </span>
+      ),
+    },
+    {
       name: "Acciones", center: true, width: "120px",
       cell: (row) => (
         <div className="d-flex gap-2 justify-content-center">
@@ -67,9 +78,9 @@ const Crudproveedor = () => {
             data-bs-toggle="modal" data-bs-target="#modalProveedor" onClick={() => setSelectedProveedor(row)} title="Editar">
             <i className="fas fa-edit"></i>
           </button>
-          <button className="btn btn-sm" style={{ background: "#fee2e2", color: "#dc2626", border: "none" }}
-            onClick={() => eliminarProveedor(row.id_proveedor)} title="Eliminar">
-            <i className="fas fa-trash-alt"></i>
+          <button className="btn btn-sm" style={{ background: row.estado === 1 ? "#fee2e2" : "#dcfce7", color: row.estado === 1 ? "#dc2626" : "#16a34a", border: "none" }}
+            onClick={() => toggleEstado(row.id_proveedor, row.estado)} title={row.estado === 1 ? "Inactivar" : "Activar"}>
+            <i className={`fas ${row.estado === 1 ? "fa-ban" : "fa-check"}`}></i>
           </button>
         </div>
       ),

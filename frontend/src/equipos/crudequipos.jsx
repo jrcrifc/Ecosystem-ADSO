@@ -183,7 +183,7 @@ export default function CrudEquipo() {
       ? `${row.cuentadante.nom_cuentadante} ${row.cuentadante.apell_cuentadante}`
       : "";
     return [row.nom_equipo, row.grupo_equipo, row.marca_equipo, row.no_placa, nombreCuentadante]
-      .some((field) => field?.toString().toLowerCase().includes(filterText.toLowerCase()));
+      .some((field) => String(field ?? "").toLowerCase().includes(filterText.toLowerCase()));
   });
 
   return (

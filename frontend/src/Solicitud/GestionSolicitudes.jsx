@@ -43,16 +43,16 @@ const GestionSolicitudes = () => {
     },
     {
       name: "Fecha Inicio",
-      selector: (row) => row.fecha_inicio ? new Date(row.fecha_inicio).toLocaleString() : "-",
+      selector: (row) => row.fecha_inicio ? row.fecha_inicio.substring(0, 10) : "-",
       sortable: true,
-      width: "160px",
+      width: "120px",
       wrap: true
     },
     {
       name: "Fecha Fin",
-      selector: (row) => row.fecha_fin ? new Date(row.fecha_fin).toLocaleString() : "-",
+      selector: (row) => row.fecha_fin ? row.fecha_fin.substring(0, 10) : "-",
       sortable: true,
-      width: "160px",
+      width: "120px",
       wrap: true
     },
     {

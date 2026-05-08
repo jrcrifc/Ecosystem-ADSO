@@ -1,5 +1,14 @@
 import proveedoresService from '../service/proveedoresService.js';
 
+export const cambiarEstadoProveedor = async (req, res) => {
+    try {
+        await proveedoresService.cambiarEstado(req.params.id, req.body.estado);
+        res.status(200).json({ message: 'Estado del proveedor actualizado' });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
 export const getAllProveedores = async (req, res) => {
     try {
         const proveedores = await proveedoresService.getAll();

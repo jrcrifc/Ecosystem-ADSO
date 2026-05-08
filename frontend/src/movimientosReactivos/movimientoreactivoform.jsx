@@ -74,6 +74,18 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
       return;
     }
 
+    if (form.fecha_vencimiento) {
+      const hoy = new Date();
+      // Ajustamos a la zona horaria local restando el offset para obtener el 'YYYY-MM-DD' correcto local
+      const offset = hoy.getTimezoneOffset() * 60000;
+      const localHoyStr = (new Date(hoy - offset)).toISOString().slice(0, 10);
+
+      if (form.fecha_vencimiento <= localHoyStr) {
+        Swal.fire("⚠️ Fecha Inválida", "La fecha de vencimiento no puede ser hoy ni una fecha pasada.", "warning");
+        return;
+      }
+    }
+
     const dataToSend = {
       fecha_vencimiento: form.fecha_vencimiento || null,
       cantidad_inicial: parseFloat(form.cantidad_inicial),
@@ -172,7 +184,11 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
             className="form-control"
             value={form.fecha_vencimiento}
             onChange={handleChange}
-            min={new Date().toISOString().slice(0, 10)}
+            min={(() => {
+              const d = new Date();
+              d.setDate(d.getDate() + 1);
+              return d.toISOString().slice(0, 10);
+            })()}
             style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
           />
         </div>

@@ -26,6 +26,23 @@ const DashboardCharts = () => {
     }
   };
 
+  useEffect(() => {
+    if (stats && stats.vencimientos?.length > 0) {
+      import("sweetalert2").then(Swal => {
+        Swal.default.fire({
+          title: '¡Alerta de Vencimiento!',
+          text: `Reactivos en riesgo: ${stats.vencimientos.map(v => v.reactivo?.nom_reactivo).join(", ")}`,
+          icon: 'warning',
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 6000,
+          timerProgressBar: true
+        });
+      });
+    }
+  }, [stats]);
+
   if (loading) return <div style={{ textAlign: "center", padding: "20px" }}>Cargando métricas...</div>;
   if (!stats) return null;
 
@@ -49,6 +66,19 @@ const DashboardCharts = () => {
           Métricas del Laboratorio
         </p>
       </div>
+
+      {stats.vencimientos?.length > 0 && (
+        <div className="alert alert-danger d-flex align-items-center mb-4 shadow-sm" style={{ borderRadius: "12px", borderLeft: "5px solid #dc3545" }} role="alert">
+          <i className="fa-solid fa-triangle-exclamation fs-4 me-3"></i>
+          <div>
+            <h5 className="mb-1 fw-bold">Atención: Reactivos por vencer</h5>
+            <p className="mb-0 fs-6">
+              Hay <strong>{stats.vencimientos.length}</strong> lote(s) de reactivos que vencerán pronto:<br/>
+              <span className="fw-semibold text-danger">{stats.vencimientos.map(v => `${v.reactivo?.nom_reactivo} (Lote ${v.lote || 'N/A'})`).join(" • ")}</span>
+            </p>
+          </div>
+        </div>
+      )}
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "20px" }}>
         

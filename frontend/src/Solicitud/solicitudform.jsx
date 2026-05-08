@@ -7,6 +7,8 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
   const [hora_inicio, setHora_inicio]   = useState("07:00");
   const [fecha_fin, setFecha_fin]       = useState("");
   const [hora_fin, setHora_fin]         = useState("16:00");
+  const [loading, setLoading]           = useState(false);
+  const [errors, setErrors]             = useState({});
 
   // ✅ Horarios: 7 AM - 4 PM (Flexible)
   const isTimeValid = (time) => {
@@ -71,14 +73,31 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
   // Prellenar si es edición
   useEffect(() => {
     if (selectedSolicitud) {
-      setFecha_inicio(selectedSolicitud.fecha_inicio
-        ? new Date(selectedSolicitud.fecha_inicio).toISOString().slice(0, 10) : "");
-      setHora_inicio(selectedSolicitud.fecha_inicio
-        ? new Date(selectedSolicitud.fecha_inicio).toTimeString().slice(0, 5) : "07:00");
-      setFecha_fin(selectedSolicitud.fecha_fin
-        ? new Date(selectedSolicitud.fecha_fin).toISOString().slice(0, 10) : "");
-      setHora_fin(selectedSolicitud.fecha_fin
-        ? new Date(selectedSolicitud.fecha_fin).toTimeString().slice(0, 5) : "16:00");
+      const getLocalPart = (isoString) => {
+        if (!isoString) return { date: "", time: "07:00" };
+        const d = new Date(isoString);
+        if (isNaN(d)) return { date: "", time: "07:00" };
+        
+        let date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        let time = d.toTimeString().slice(0, 5);
+        
+        // Corrección: Si el backend envió medianoche UTC, en Colombia es 19:00.
+        // Forzamos la fecha original y un horario válido (7:00 AM)
+        if (time === "19:00" || isoString.includes("T00:00:00.000Z")) {
+           date = isoString.substring(0, 10);
+           time = "07:00";
+        }
+        return { date, time };
+      };
+
+      const start = getLocalPart(selectedSolicitud.fecha_inicio);
+      setFecha_inicio(start.date);
+      setHora_inicio(start.time);
+
+      const end = getLocalPart(selectedSolicitud.fecha_fin);
+      setFecha_fin(end.date);
+      setHora_fin(end.time);
+
       setEstado(selectedSolicitud.estado ?? 1);
       const idsActuales = (selectedSolicitud.equipos || []).map(e => e.id_equipo);
       setEquiposSeleccionados(idsActuales);
@@ -122,53 +141,39 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const nuevosErrores = {};
 
-    if (!fecha_inicio) {
-      Swal.fire("⚠️ Atención", "La fecha de inicio es obligatoria", "warning");
-      return;
-    }
-    if (!isTimeValid(hora_inicio)) {
-      Swal.fire("⚠️ Atención", "La hora de inicio debe estar entre 7:00 AM y 4:00 PM", "warning");
-      return;
-    }
+    if (!fecha_inicio) nuevosErrores.fecha_inicio = "Requerido";
+    if (!isTimeValid(hora_inicio)) nuevosErrores.hora_inicio = "7 AM - 4 PM";
 
     // ✅ Validaciones según rol
     if (esAprendiz) {
-      // Aprendiz: mismo día, validar hora fin
-      if (!isTimeValid(hora_fin)) {
-        Swal.fire("⚠️ Atención", "La hora de devolución debe estar entre 7:00 AM y 4:00 PM", "warning");
-        return;
-      }
+      if (!isTimeValid(hora_fin)) nuevosErrores.hora_fin = "7 AM - 4 PM";
       if (new Date(`${fecha_inicio}T${hora_fin}`) <= new Date(`${fecha_inicio}T${hora_inicio}`)) {
-        Swal.fire("⚠️ Atención", "La hora de devolución debe ser posterior a la de inicio", "warning");
-        return;
+        nuevosErrores.hora_fin = "Debe ser mayor a la hora de inicio";
       }
     } else if (esInstructor) {
-      // Instructor: necesita fecha fin (hasta 1 mes)
-      if (!fecha_fin) {
-        Swal.fire("⚠️ Atención", "Debe seleccionar la fecha de devolución", "warning");
-        return;
-      }
-      if (!isTimeValid(hora_fin)) {
-        Swal.fire("⚠️ Atención", "La hora de devolución debe estar entre 7:00 AM y 4:00 PM", "warning");
-        return;
-      }
+      if (!fecha_fin) nuevosErrores.fecha_fin = "Requerido";
+      if (!isTimeValid(hora_fin)) nuevosErrores.hora_fin = "7 AM - 4 PM";
       if (new Date(`${fecha_fin}T${hora_fin}`) <= new Date(`${fecha_inicio}T${hora_inicio}`)) {
-        Swal.fire("⚠️ Atención", "La fecha/hora de devolución debe ser posterior a la de inicio", "warning");
-        return;
+        nuevosErrores.hora_fin = "Debe ser posterior a inicio";
       }
     }
 
     if (!selectedSolicitud && equiposSeleccionados.length === 0) {
-      Swal.fire("⚠️ Atención", "Selecciona al menos un equipo", "warning");
-      return;
+      nuevosErrores.equipos = "Selecciona al menos un equipo";
     }
 
     // ✅ Admin debe seleccionar solicitante al crear
     if (esAdmin && !selectedSolicitud && !idUsuarioSolicitante) {
-      Swal.fire("⚠️ Atención", "Como administrador, debes seleccionar un solicitante", "warning");
+      nuevosErrores.solicitante = "Debes seleccionar un solicitante";
+    }
+
+    if (Object.keys(nuevosErrores).length > 0) {
+      setErrors(nuevosErrores);
       return;
     }
+    setErrors({});
 
     // ✅ Construir fecha_fin según rol
     let fechaFinISO;
@@ -196,21 +201,26 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
     }
 
     try {
+      setLoading(true);
       if (selectedSolicitud) {
         await apiAxios.put(
           `/api/solicitud/${selectedSolicitud.id_solicitud}`,
           data,
           { headers }
         );
-        Swal.fire("✅ Actualizado", "Solicitud modificada correctamente", "success");
+        hideModal(); // Ocultar modal de bootstrap PRIMERO
+        refreshData();
+        Swal.fire({ icon: "success", title: "✅ Actualizado", text: "Solicitud modificada correctamente", timer: 1500, showConfirmButton: false });
       } else {
         await apiAxios.post("/api/solicitud", data, { headers });
-        Swal.fire("✅ Registrada", "Solicitud creada correctamente", "success");
+        hideModal();
+        refreshData();
+        Swal.fire({ icon: "success", title: "✅ Registrada", text: "Solicitud creada correctamente", timer: 1500, showConfirmButton: false });
       }
-      refreshData();
-      hideModal();
     } catch (error) {
       Swal.fire("💀 Error", error.response?.data?.message || "No se pudo guardar", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -231,12 +241,13 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
             {/* Búsqueda */}
             <input
               type="text"
-              className="form-control form-control-sm mb-2"
+              className={`form-control form-control-sm mb-1 ${errors.solicitante ? 'is-invalid' : ''}`}
               placeholder="Buscar por nombre, documento o email..."
               value={busquedaUsuario}
-              onChange={e => setBusquedaUsuario(e.target.value)}
+              onChange={e => { setBusquedaUsuario(e.target.value); setErrors({...errors, solicitante: null}); }}
               style={{ borderColor: "#dbeafe" }}
             />
+            {errors.solicitante && <div className="invalid-feedback mb-2" style={{ display: 'block' }}>{errors.solicitante}</div>}
 
             {/* Usuario seleccionado */}
             {selectedUser && (
@@ -354,10 +365,14 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
                 <label className="form-label fw-semibold" style={{ color: "#023E8A", fontSize: "13px" }}>
                   📅 {esAprendiz ? "Fecha de Solicitud (Mismo día)" : "Fecha de Inicio"}
                 </label>
-                <input type="date" className="form-control form-control-sm"
-                  value={fecha_inicio} onChange={e => { setFecha_inicio(e.target.value); if (esAprendiz) setFecha_fin(e.target.value); }}
+                <input type="date" className={`form-control form-control-sm ${errors.fecha_inicio ? 'is-invalid' : ''}`}
+                  value={fecha_inicio} onChange={e => { setFecha_inicio(e.target.value); if (esAprendiz) setFecha_fin(e.target.value); setErrors({...errors, fecha_inicio: null}); }}
                   min={minStr} max={maxStr} required />
-                <small style={{ color: "#94a3b8", fontSize: "10px" }}>Solicitar con mín. 3 días de anticipación</small>
+                {errors.fecha_inicio ? (
+                  <div className="invalid-feedback" style={{ fontSize: "11px" }}>{errors.fecha_inicio}</div>
+                ) : (
+                  <small style={{ color: "#94a3b8", fontSize: "10px" }}>Solicitar con mín. 3 días de anticipación</small>
+                )}
               </div>
 
               {/* Instructor: Fecha de devolución */}
@@ -366,10 +381,14 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
                   <label className="form-label fw-semibold" style={{ color: "#023E8A", fontSize: "13px" }}>
                     📅 Fecha de Devolución
                   </label>
-                  <input type="date" className="form-control form-control-sm"
-                    value={fecha_fin} onChange={e => setFecha_fin(e.target.value)}
+                  <input type="date" className={`form-control form-control-sm ${errors.fecha_fin ? 'is-invalid' : ''}`}
+                    value={fecha_fin} onChange={e => { setFecha_fin(e.target.value); setErrors({...errors, fecha_fin: null}); }}
                     min={fecha_inicio || minStr} max={maxFinStr} required />
-                  <small style={{ color: "#94a3b8", fontSize: "10px" }}>Máx. 1 mes después del inicio</small>
+                  {errors.fecha_fin ? (
+                    <div className="invalid-feedback" style={{ fontSize: "11px" }}>{errors.fecha_fin}</div>
+                  ) : (
+                    <small style={{ color: "#94a3b8", fontSize: "10px" }}>Máx. 1 mes después del inicio</small>
+                  )}
                 </div>
               )}
 
@@ -381,16 +400,18 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
                 <div className="d-flex gap-2 align-items-center">
                   <div style={{ flex: 1 }}>
                     <small className="text-muted" style={{ fontSize: "10px" }}>Hora inicio</small>
-                    <input type="time" className="form-control form-control-sm"
-                      value={hora_inicio} onChange={e => setHora_inicio(e.target.value)}
+                    <input type="time" className={`form-control form-control-sm ${errors.hora_inicio ? 'is-invalid' : ''}`}
+                      value={hora_inicio} onChange={e => { setHora_inicio(e.target.value); setErrors({...errors, hora_inicio: null}); }}
                       min="07:00" max="16:00" required />
+                    {errors.hora_inicio && <div className="invalid-feedback" style={{ fontSize: "11px" }}>{errors.hora_inicio}</div>}
                   </div>
                   <span className="text-muted small" style={{ paddingTop: "16px" }}>a</span>
                   <div style={{ flex: 1 }}>
                     <small className="text-muted" style={{ fontSize: "10px" }}>Hora {esAprendiz ? "devolución" : "fin"}</small>
-                    <input type="time" className="form-control form-control-sm"
-                      value={hora_fin} onChange={e => setHora_fin(e.target.value)}
+                    <input type="time" className={`form-control form-control-sm ${errors.hora_fin ? 'is-invalid' : ''}`}
+                      value={hora_fin} onChange={e => { setHora_fin(e.target.value); setErrors({...errors, hora_fin: null}); }}
                       min="07:00" max="16:00" required />
+                    {errors.hora_fin && <div className="invalid-feedback" style={{ fontSize: "11px" }}>{errors.hora_fin}</div>}
                   </div>
                 </div>
                 <small style={{ color: "#0077B6", fontSize: "10px", fontWeight: "600" }}>
@@ -403,12 +424,13 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
 
         {/* Selector de equipos */}
         <div className="col-12">
-          <label className="form-label fw-semibold text-muted">
+          <label className="form-label fw-semibold text-muted mb-1">
             Equipos a solicitar
             {equiposSeleccionados.length > 0 && (
               <span className="badge ms-2" style={{ background: "#0077B6", color: "#fff" }}>{equiposSeleccionados.length} seleccionado(s)</span>
             )}
           </label>
+          {errors.equipos && <div className="text-danger mb-2" style={{ fontSize: "12px", fontWeight: "600" }}>{errors.equipos}</div>}
 
           <input
             type="text"
@@ -477,12 +499,19 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
 
         {/* Botón */}
         <div className="col-12 mt-2">
-          <button type="submit" className="btn w-100" style={{
+          <button type="submit" className="btn w-100" disabled={loading} style={{
             background: "linear-gradient(135deg, #0077B6, #023E8A)",
             color: "#fff", fontWeight: "700", border: "none",
-            padding: "10px", borderRadius: "10px", fontSize: "14px"
+            padding: "10px", borderRadius: "10px", fontSize: "14px",
+            opacity: loading ? 0.7 : 1
           }}>
-            {selectedSolicitud ? "Actualizar Solicitud" : "Registrar Solicitud"}
+            {loading ? (
+              <><span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Guardando...</>
+            ) : selectedSolicitud ? (
+              "Actualizar Solicitud"
+            ) : (
+              "Registrar Solicitud"
+            )}
           </button>
         </div>
 
