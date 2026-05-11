@@ -85,11 +85,14 @@ const CrudReactivos = () => {
     }
   };
 
-  const filtered = reactivos.filter((item) =>
-    String(item.id_reactivo || "").includes(filterText) ||
-    String(item.nom_reactivo || "").toLowerCase().includes(filterText.toLowerCase()) ||
-    String(item.nom_reactivo_ingles || "").toLowerCase().includes(filterText.toLowerCase())
-  );
+  const filtered = reactivos.filter((item) => {
+    const search = filterText.toLowerCase().trim();
+    return (
+      String(item.id_reactivo || "").includes(search) ||
+      String(item.nom_reactivo || "").toLowerCase().includes(search) ||
+      String(item.nom_reactivo_ingles || "").toLowerCase().includes(search)
+    );
+  });
 
   return (
     <div className="container mt-4" style={{ maxWidth: "1200px" }}>
@@ -125,7 +128,7 @@ const CrudReactivos = () => {
         </div>
       </div>
       <div style={{ borderRadius: "14px", overflow: "hidden", border: "1px solid #dbeafe" }}>
-        <DataTable columns={columns} data={filtered} pagination paginationPerPage={10} paginationComponentOptions={paginationComponentOptions} customStyles={tableCustomStyles} highlightOnHover striped responsive noDataComponent={
+        <DataTable columns={columns} data={filtered} pagination paginationPerPage={10} paginationComponentOptions={paginationComponentOptions} customStyles={tableCustomStyles} highlightOnHover striped responsive defaultSortFieldId={1} defaultSortAsc={false} noDataComponent={
           <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
             <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>
             <p>No hay reactivos registrados</p>

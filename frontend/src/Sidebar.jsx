@@ -7,7 +7,6 @@ import "./Sidebar.css";
 const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [openMenus, setOpenMenus] = useState({});
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const userData = Array.isArray(users) ? users[0] : (users?.user || users?.data || users);
@@ -16,10 +15,6 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
 
   const esAdmin = userRol === 'Administrador';
   const esGestorPasante = ['Pasante', 'Gestor'].includes(userRol);
-
-  const toggleMenu = (key) => {
-    setOpenMenus(prev => ({ ...prev, [key]: !prev[key] }));
-  };
 
   const handleNav = (path) => {
     if (!isAuth) { navigate("/UserLogin"); return; }
@@ -40,8 +35,7 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
     {
       key: "solicitudes", icon: "📋", text: "Solicitudes", show: ['Aprendiz', 'Instructor', 'Administrador'].includes(userRol),
       items: [
-        { icon: "📝", text: "Nueva Solicitud", path: "/solicitud", show: true },
-        { icon: "📜", text: "Historial", path: "/estadoxsolicitud", show: true },
+        { icon: "📝", text: "Mis Solicitudes", path: "/solicitud", show: true },
       ]
     },
     {
@@ -51,7 +45,6 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
         { icon: "⚗️", text: "Reactivos", path: "/reactivos", show: true },
         { icon: "🔄", text: "Movimiento Reactivos", path: "/movimientoreactivo", show: true },
         { icon: "📊", text: "Control Reactivos", path: "/control-reactivos", show: true },
-        { icon: "📤", text: "Salidas Reactivos", path: "/salidas", show: true },
       ]
     },
     {
@@ -107,21 +100,16 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
           </div>
         </div>
 
-        {/* Menu — Todo desplegable */}
+        {/* Menu — Todo ABIERTO */}
         <nav className="sidebar-menu">
           {menuGroups.filter(g => g.show).map((group) => {
             const hasActiveChild = group.items.some(i => isActive(i.path));
             return (
-              <div key={group.key} style={{ marginBottom: "2px" }}>
-                <button
-                  className={`sidebar-submenu-toggle ${openMenus[group.key] ? "open" : ""} ${hasActiveChild && !openMenus[group.key] ? "has-active" : ""}`}
-                  onClick={() => toggleMenu(group.key)}
-                >
-                  <span className="sidebar-item-icon">{group.icon}</span>
-                  <span className="sidebar-item-text">{group.text}</span>
-                  <span className="sidebar-submenu-arrow">▶</span>
-                </button>
-                <div className={`sidebar-submenu ${openMenus[group.key] ? "open" : ""}`}>
+              <div key={group.key} style={{ marginBottom: "10px" }}>
+                <div className="sidebar-group-header" style={{ padding: "10px 18px", color: "rgba(202, 240, 248, 0.5)", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>
+                  {group.text}
+                </div>
+                <div className="sidebar-submenu open" style={{ opacity: 1, maxHeight: "none" }}>
                   {group.items.filter(i => i.show).map((item, ii) => (
                     <div
                       key={ii}

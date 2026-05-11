@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import DataTable from "react-data-table-component";
 import apiAxios from "../api/axiosConfig";
 import Swal from "sweetalert2";
 import { paginationComponentOptions, tableCustomStyles } from "../config/dataTableConfig";
 
 export default function HistorialEstadoEquipo() {
+  const navigate = useNavigate();
   const [registros, setRegistros] = useState([]);
   const [filterText, setFilterText] = useState("");
 
@@ -49,10 +51,17 @@ export default function HistorialEstadoEquipo() {
     { name: "Fecha Cambio", selector: r => r.createdAt ? new Date(r.createdAt).toLocaleString() : "-", sortable: true, minWidth: "250px" },
   ];
 
-  const filtered = registros.filter(r =>
-    [r.equipo?.nom_equipo, r.equipo?.no_placa, r.estadoEquipo?.estado]
-      .some(f => f?.toLowerCase().includes(filterText.toLowerCase()))
-  );
+  const filtered = registros.filter(r => {
+    const search = filterText.toLowerCase().trim();
+    return (
+      String(r.id_estadoxequipo || "").includes(search) ||
+      String(r.id_equipo || "").includes(search) ||
+      String(r.equipo?.nom_equipo || "").toLowerCase().includes(search) ||
+      String(r.equipo?.marca_equipo || "").toLowerCase().includes(search) ||
+      String(r.equipo?.no_placa || "").toLowerCase().includes(search) ||
+      String(r.estadoEquipo?.estado || "").toLowerCase().includes(search)
+    );
+  });
 
   return (
     <div className="container mt-4" style={{ maxWidth: "1100px" }}>
@@ -64,16 +73,26 @@ export default function HistorialEstadoEquipo() {
         </p>
       </div>
       <div className="row mb-4 align-items-center">
-        <div className="col-md-6">
+        <div className="col-md-7">
           <input type="text" className="form-control"
-            placeholder="Buscar por equipo, placa o estado..."
+            placeholder="Buscar por ID, equipo, placa o estado..."
             value={filterText} onChange={e => setFilterText(e.target.value)}
             style={{ borderColor: "#dbeafe", borderRadius: "10px" }} />
         </div>
-        <div className="col-md-6 text-end">
-          <button className="btn btn-outline-primary" onClick={cargarRegistros}>
-            <i className="fas fa-sync me-2"></i>Actualizar
-          </button>
+        <div className="col-md-5 text-end">
+          <div className="btn-group" role="group" style={{ borderRadius: "10px", overflow: "hidden", border: "1px solid #0077B6" }}>
+            <button 
+              type="button" 
+              className="btn" 
+              style={{ background: "#fff", color: "#0077B6", fontWeight: "600", fontSize: "13px" }}
+              onClick={() => navigate("/gestion-equipo")}
+            >
+              <i className="fas fa-edit me-2"></i>Gestión
+            </button>
+            <button type="button" className="btn" style={{ background: "#0077B6", color: "#fff", fontWeight: "600", fontSize: "13px" }}>
+              <i className="fas fa-history me-2"></i>Historial
+            </button>
+          </div>
         </div>
       </div>
       <div style={{ borderRadius: "14px", overflow: "hidden", border: "1px solid #dbeafe" }}>
@@ -87,6 +106,8 @@ export default function HistorialEstadoEquipo() {
           highlightOnHover
           striped
           responsive
+          defaultSortFieldId={1}
+          defaultSortAsc={false}
           noDataComponent={
             <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
               <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>

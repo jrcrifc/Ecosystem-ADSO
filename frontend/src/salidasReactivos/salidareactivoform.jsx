@@ -1,6 +1,7 @@
 import apiAxios from "../api/axiosConfig.js";
 import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
+import socket from "../socket.js";
 
 const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
   const [reactivos, setReactivos] = useState([]);
@@ -10,6 +11,7 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
   const [fecha_salida, setFechaSalida] = useState("");
   const [hora_salida, setHoraSalida] = useState("07:00");
   const [loadingLotes, setLoadingLotes] = useState(false);
+  const [observaciones, setObservaciones] = useState("");
 
   useEffect(() => {
     cargarReactivos();
@@ -18,16 +20,23 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
 
   useEffect(() => {
     if (selectedSalida) {
+      // Si es una edición (tiene id_salida) o una pre-selección (tiene id_reactivo pero no id_salida)
+      if (selectedSalida.id_reactivo) {
+        handleReactivoChange({ target: { value: selectedSalida.id_reactivo } });
+      }
+      
       setCantidadSalida(selectedSalida.cantidad_salida || "");
       setFechaSalida(
         selectedSalida.fecha_salida
           ? new Date(selectedSalida.fecha_salida).toISOString().slice(0, 10)
           : new Date().toISOString().slice(0, 10)
       );
+      setObservaciones(selectedSalida.observaciones || "");
     } else {
       setIdReactivo("");
       setCantidadSalida("");
       setLotesFefo([]);
+      setObservaciones("");
     }
   }, [selectedSalida]);
 
@@ -77,7 +86,6 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
       Swal.fire("⚠️ Stock insuficiente", `Solo hay ${stockTotal.toFixed(3)} disponible en total`, "warning");
       return;
     }
-    // ✅ Validar hora entre 7:00 y 16:00
     const [hh, mm] = hora_salida.split(':').map(Number);
     const minutos = hh * 60 + mm;
     if (minutos < 420 || minutos > 960) { // 7*60=420, 16*60=960
@@ -85,10 +93,25 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
       return;
     }
 
+    // ✅ NUEVA VALIDACIÓN: No permitir fechas futuras que superen el vencimiento
+    if (loteFefo && loteFefo.fecha_vencimiento) {
+      const vencimiento = new Date(loteFefo.fecha_vencimiento);
+      const salida = new Date(`${fecha_salida}T${hora_salida}:00`);
+      if (salida > vencimiento) {
+        Swal.fire({
+          icon: "error",
+          title: "⚠️ Reactivo Vencido para esa fecha",
+          text: `El lote ${loteFefo.lote} vence el ${vencimiento.toLocaleDateString('es-CO')}. No puedes programar una salida para una fecha posterior.`
+        });
+        return;
+      }
+    }
+
     const data = {
       id_reactivo: parseInt(id_reactivo),
       cantidad_salida: parseFloat(cantidad_salida),
       fecha_salida: fecha_salida ? new Date(`${fecha_salida}T${hora_salida}:00`).toISOString() : new Date().toISOString(),
+      observaciones: observaciones.trim() || null,
     };
 
     try {
@@ -99,6 +122,11 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
         await apiAxios.post("/api/salidas", data);
         Swal.fire("✅ Registrada", "Salida registrada correctamente", "success");
       }
+      
+      // ✅ Sincronización en tiempo real
+      socket.emit("salida_actualizada");
+      socket.emit("movimiento_actualizado");
+
       refreshData();
       hideModal();
     } catch (error) {
@@ -118,7 +146,7 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
             value={id_reactivo}
             onChange={handleReactivoChange}
             required
-            disabled={!!selectedSalida}
+            disabled={!!selectedSalida?.id_salida}
           >
             <option value="">Seleccione un reactivo...</option>
             {reactivos.map(r => (
@@ -242,10 +270,26 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
           </small>
         </div>
 
+        {/* OBSERVACIONES */}
+        <div className="col-md-12">
+          <label className="form-label fw-semibold text-muted">📝 Observaciones</label>
+          <textarea
+            className="form-control form-control-sm"
+            value={observaciones}
+            onChange={(e) => setObservaciones(e.target.value)}
+            rows={3}
+            placeholder="Ingrese observaciones (opcional)..."
+            maxLength={500}
+          />
+          <small className="text-muted" style={{ fontSize: "11px" }}>
+            {observaciones.length}/500 caracteres
+          </small>
+        </div>
+
         {/* BOTÓN */}
         <div className="col-12 mt-3">
           <button type="submit" className="btn w-100" style={{ background: "#0077B6", color: "#fff", fontWeight: "600", border: "none", borderRadius: "10px" }}>
-            {selectedSalida ? "Actualizar Salida" : "Registrar Salida"}
+            {selectedSalida?.id_salida ? "Actualizar Salida" : "Registrar Salida"}
           </button>
         </div>
 

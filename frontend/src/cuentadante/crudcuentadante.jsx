@@ -98,11 +98,15 @@ export default function CrudCuentadante() {
     }
   ];
 
-  const filteredCuentadantes = cuentadantes.filter(row =>
-    `${row.nom_cuentadante} ${row.apell_cuentadante}`
-      .toLowerCase()
-      .includes(filterText.toLowerCase())
-  );
+  const filteredCuentadantes = cuentadantes.filter(row => {
+    const search = filterText.toLowerCase().trim();
+    return (
+      String(row.id_cuentadante || "").includes(search) ||
+      String(row.nom_cuentadante || "").toLowerCase().includes(search) ||
+      String(row.apell_cuentadante || "").toLowerCase().includes(search) ||
+      `${row.nom_cuentadante} ${row.apell_cuentadante}`.toLowerCase().includes(search)
+    );
+  });
 
   return (
   <div className="container mt-4">
@@ -116,7 +120,7 @@ export default function CrudCuentadante() {
           <input
             type="text"
             className="form-control"
-            placeholder="Buscar por nombre o apellido..."
+            placeholder="Buscar por ID, nombre o apellido..."
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
             style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
@@ -146,6 +150,8 @@ export default function CrudCuentadante() {
           highlightOnHover
           striped
           responsive
+          defaultSortFieldId={1}
+          defaultSortAsc={false}
           noDataComponent={
             <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
               <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>

@@ -1,5 +1,6 @@
 import apiAxios from "../api/axiosConfig.js";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import DataTable from "react-data-table-component";
 import Swal from "sweetalert2";
 import * as bootstrap from "bootstrap";
@@ -17,7 +18,7 @@ const formatDateTime = (isoString) => {
   if (!isoString) return "-";
   const d = new Date(isoString);
   // Corrección de 7 PM: si fue guardado a medianoche UTC, forzamos 7:00 AM
-  if (isoString.includes("T00:00:00.000Z") || d.toTimeString().slice(0,5) === "19:00") {
+  if (isoString.includes("T00:00:00.000Z") || d.toTimeString().slice(0, 5) === "19:00") {
     return `${isoString.substring(0, 10)} 07:00 AM`;
   }
   return d.toLocaleString([], { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
@@ -62,6 +63,7 @@ const EquiposPills = ({ equipos }) => {
 };
 
 const CrudSolicitudPrestamos = () => {
+  const navigate = useNavigate();
   const [solicitudes, setSolicitudes] = useState([]);
   const [filterText, setFilterText] = useState("");
   const [selectedSolicitud, setSelectedSolicitud] = useState(null);
@@ -79,6 +81,7 @@ const CrudSolicitudPrestamos = () => {
   const columns = [
     {
       name: "ID",
+      id: 1,
       selector: r => r.id_solicitud,
       sortable: true,
       width: "70px",
@@ -114,6 +117,8 @@ const CrudSolicitudPrestamos = () => {
     },
     {
       name: "Estado",
+      selector: r => r.ultimoEstado || "generado",
+      sortable: true,
       width: "150px",
       cell: r => {
         const colores = {
@@ -245,11 +250,18 @@ const CrudSolicitudPrestamos = () => {
     }
   };
 
-  const filtered = solicitudes.filter(item =>
-    String(item.id_solicitud || "").includes(filterText) ||
-    (item.usuario?.nombres_apellidos || "").toLowerCase().includes(filterText.toLowerCase()) ||
-    (item.equipos || []).some(e => e.nom_equipo?.toLowerCase().includes(filterText.toLowerCase()))
-  );
+  const filtered = solicitudes.filter(item => {
+    const search = filterText.toLowerCase().trim();
+    return (
+      String(item.id_solicitud || "").includes(search) ||
+      String(item.usuario?.nombres_apellidos || "").toLowerCase().includes(search) ||
+      (item.equipos || []).some(e => 
+        String(e.nom_equipo || "").toLowerCase().includes(search) ||
+        String(e.marca_equipo || "").toLowerCase().includes(search) ||
+        String(e.no_placa || "").toLowerCase().includes(search)
+      )
+    );
+  });
 
   return (
     <div className="mt-4" style={{ padding: "0 16px" }}>
@@ -266,7 +278,12 @@ const CrudSolicitudPrestamos = () => {
             value={filterText} onChange={e => setFilterText(e.target.value)}
           />
         </div>
-        <div className="col-md-7 text-end">
+        <div className="col-md-7 text-end d-flex gap-2 justify-content-end">
+          <button className="btn btn-outline-secondary"
+            style={{ fontWeight: "600", borderRadius: "10px" }}
+            onClick={() => navigate("/estadoxsolicitud")}>
+            📜 Ver Historial
+          </button>
           <button className="btn"
             style={{ background: "#0077B6", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }}
             data-bs-toggle="modal" data-bs-target="#modalSolicitud"
@@ -286,6 +303,8 @@ const CrudSolicitudPrestamos = () => {
           highlightOnHover
           striped
           responsive
+          defaultSortFieldId={1}
+          defaultSortAsc={false}
           noDataComponent={
             <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
               <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>

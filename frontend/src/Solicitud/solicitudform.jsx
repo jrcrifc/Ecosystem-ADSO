@@ -128,10 +128,11 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
     "no disponible": "#dc3545",
   }[estado] || "#6c757d");
 
-  const equiposFiltrados = equipos.filter(e =>
-    [e.nom_equipo, e.marca_equipo, e.no_placa]
-      .some(f => f?.toLowerCase().includes(busquedaEquipo.toLowerCase()))
-  );
+  const equiposFiltrados = equipos.filter(e => {
+    const search = busquedaEquipo.toLowerCase().trim();
+    return [e.nom_equipo, e.marca_equipo, e.no_placa]
+      .some(f => String(f || "").toLowerCase().includes(search));
+  });
 
   const usuariosFiltrados = usuarios.filter(u =>
     (u.nombres_apellidos || "").toLowerCase().includes(busquedaUsuario.toLowerCase()) ||

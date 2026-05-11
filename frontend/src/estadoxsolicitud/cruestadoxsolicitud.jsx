@@ -4,6 +4,15 @@ import apiAxios from "../api/axiosConfig";
 import Swal from "sweetalert2";
 import { paginationComponentOptions, tableCustomStyles } from "../config/dataTableConfig";
 
+// Parsea la fecha desde el string ISO sin conversión de zona horaria
+// Evita el bug de UTC que muestra un día menos en UTC-5 (Colombia)
+const formatFechaISO = (isoString) => {
+  if (!isoString) return "-";
+  const parte = isoString.substring(0, 10); // "YYYY-MM-DD"
+  const [year, month, day] = parte.split("-");
+  return `${parseInt(day)}/${parseInt(month)}/${year}`;
+};
+
 export default function CrudEstadoxSolicitud() {
   const [registros, setRegistros] = useState([]);
   const [filterText, setFilterText] = useState("");
@@ -43,11 +52,11 @@ export default function CrudEstadoxSolicitud() {
 
   const getBadgeStyle = (estado) => {
     const map = {
-      generado:  { bg: "#f1f5f9", color: "#475569" },
-      aceptado:  { bg: "#dbeafe", color: "#0077B6" },
-      prestado:  { bg: "#fffbeb", color: "#d97706" },
+      generado: { bg: "#f1f5f9", color: "#475569" },
+      aceptado: { bg: "#dbeafe", color: "#0077B6" },
+      prestado: { bg: "#fffbeb", color: "#d97706" },
       entregado: { bg: "#ecfdf5", color: "#059669" },
-      devuelto:  { bg: "#ecfdf5", color: "#059669" },
+      devuelto: { bg: "#ecfdf5", color: "#059669" },
       cancelado: { bg: "#fef2f2", color: "#dc2626" },
       rechazado: { bg: "#fef2f2", color: "#dc2626" },
     };
@@ -55,33 +64,34 @@ export default function CrudEstadoxSolicitud() {
   };
 
   const columns = [
-    { 
-      name: "ID", 
-      selector: (row) => row.id_estadoxsolicitud, 
-      sortable: true, 
+    {
+      name: "ID",
+      selector: (row) => row.id_estadoxsolicitud,
+      sortable: true,
       width: "80px",
     },
-    { 
-      name: "Solicitante", 
-      selector: (row) => row.solicitud?.usuario?.nombres_apellidos || "-", 
-      sortable: true, 
+    {
+      name: "Solicitante",
+      selector: (row) => row.solicitud?.usuario?.nombres_apellidos || "-",
+      sortable: true,
       minWidth: "220px",
       omit: !esAdmin,
     },
-    { 
-      name: "Fecha Inicio", 
-      selector: (row) => row.solicitud?.fecha_inicio ? new Date(row.solicitud.fecha_inicio).toLocaleDateString() : "-", 
-      sortable: true, 
+    {
+      name: "Fecha Inicio",
+      selector: (row) => formatFechaISO(row.solicitud?.fecha_inicio),
+      sortable: true,
       minWidth: "150px"
     },
-    { 
-      name: "Fecha Fin", 
-      selector: (row) => row.solicitud?.fecha_fin ? new Date(row.solicitud.fecha_fin).toLocaleDateString() : "-", 
-      sortable: true, 
+    {
+      name: "Fecha Fin",
+      selector: (row) => formatFechaISO(row.solicitud?.fecha_fin),
+      sortable: true,
       minWidth: "150px"
     },
     {
       name: "Estado",
+      selector: (row) => row.estadoSolicitud?.estado || "-",
       sortable: true,
       width: "160px",
       cell: (row) => {
@@ -97,10 +107,10 @@ export default function CrudEstadoxSolicitud() {
         );
       }
     },
-    { 
-      name: "Fecha Cambio", 
-      selector: (row) => row.createdat ? new Date(row.createdat).toLocaleString() : "-", 
-      sortable: true, 
+    {
+      name: "Fecha Cambio",
+      selector: (row) => row.createdat ? new Date(row.createdat).toLocaleString() : "-",
+      sortable: true,
       minWidth: "220px"
     },
   ];
@@ -139,18 +149,6 @@ export default function CrudEstadoxSolicitud() {
             style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
           />
         </div>
-        <div className="col-md-6 text-end">
-          <button
-            className="btn"
-            onClick={cargarRegistros}
-            style={{
-              background: "#eef2ff", color: "#0077B6",
-              fontWeight: "600", borderRadius: "10px", border: "1px solid #e0e7ff"
-            }}
-          >
-            🔄 Actualizar
-          </button>
-        </div>
       </div>
 
       <div style={{ borderRadius: "14px", overflow: "hidden", border: "1px solid #dbeafe" }}>
@@ -164,6 +162,8 @@ export default function CrudEstadoxSolicitud() {
           highlightOnHover
           striped
           responsive
+          defaultSortFieldId={1}
+          defaultSortAsc={false}
           noDataComponent={
             <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
               <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>

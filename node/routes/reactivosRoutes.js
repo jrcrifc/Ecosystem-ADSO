@@ -1,10 +1,10 @@
 import express from 'express';
-import { 
-    getAllreactivos, 
-    getreactivos, 
-    createreactivos, 
-    updatereactivos, 
-    deletereactivos 
+import {
+  getAllreactivos,
+  getreactivos,
+  createreactivos,
+  updatereactivos,
+  deletereactivos
 } from '../controller/reactivosController.js';
 import reactivosModel from '../models/reactivosModel.js';
 import movimientoreactivoModel from '../models/movimientoreactivosModel.js';
@@ -46,7 +46,7 @@ router.get('/stock/disponibilidad', adminOGestor, async (req, res) => {
       return {
         id_reactivo: r.id_reactivo,
         nom_reactivo: r.nom_reactivo,
-        presentacion_reactivo: r.presentacion_reactivo,
+
         cantidad_inventario: Math.max(0, parseFloat(cantidad_inventario.toFixed(3))),
         estado_stock: cantidad_inventario > 0 ? 'disponible' : 'agotado'
       };
@@ -68,16 +68,16 @@ router.delete('/:id', adminOGestor, deletereactivos);
 
 // Cambiar estado activo/inactivo
 router.put('/estado/:id', adminOGestor, async (req, res) => {
-    try {
-        const reactivo = await reactivosModel.findByPk(req.params.id);
-        if (!reactivo) return res.status(404).json({ message: "reactivo no encontrado" });
-        const nuevoEstado = reactivo.estado === 1 ? 0 : 1;
-        await reactivo.update({ estado: nuevoEstado });
-        res.json({ message: "Estado cambiado correctamente", estado: nuevoEstado });
-    } catch (error) {
-        console.error("Error al cambiar estado:", error);
-        res.status(500).json({ message: "Error del servidor" });
-    }
+  try {
+    const reactivo = await reactivosModel.findByPk(req.params.id);
+    if (!reactivo) return res.status(404).json({ message: "reactivo no encontrado" });
+    const nuevoEstado = reactivo.estado === 1 ? 0 : 1;
+    await reactivo.update({ estado: nuevoEstado });
+    res.json({ message: "Estado cambiado correctamente", estado: nuevoEstado });
+  } catch (error) {
+    console.error("Error al cambiar estado:", error);
+    res.status(500).json({ message: "Error del servidor" });
+  }
 });
 
 export default router;

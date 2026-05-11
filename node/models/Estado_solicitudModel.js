@@ -9,7 +9,7 @@ const estadosolicitudModel = db.define('estado_solicitud', {
     },
 
     estado: { 
-        type: DataTypes.ENUM("generado","aceptado","prestado","entregado","cancelado"),
+        type: DataTypes.ENUM("generado","aceptado","prestado","entregado","cancelado", "rechazado"),
         allowNull: false
     },
      activo: {

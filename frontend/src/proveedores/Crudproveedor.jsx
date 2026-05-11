@@ -87,10 +87,16 @@ const Crudproveedor = () => {
     },
   ];
 
-  const listaFiltrada = proveedor.filter((p) =>
-    [p.nom_proveedor, p.apel_proveedor, p.tel_proveedor, p.dir_proveedor]
-      .some((field) => field?.toLowerCase().includes(filterText.toLowerCase()))
-  );
+  const listaFiltrada = proveedor.filter((p) => {
+    const search = filterText.toLowerCase().trim();
+    return (
+      String(p.id_proveedor || "").includes(search) ||
+      String(p.nom_proveedor || "").toLowerCase().includes(search) ||
+      String(p.apel_proveedor || "").toLowerCase().includes(search) ||
+      String(p.tel_proveedor || "").toLowerCase().includes(search) ||
+      String(p.dir_proveedor || "").toLowerCase().includes(search)
+    );
+  });
 
   return (
     <div className="mt-4" style={{ padding: "0 16px" }}>
@@ -102,7 +108,7 @@ const Crudproveedor = () => {
 
       <div className="row mb-3 align-items-center">
         <div className="col-md-7">
-          <input type="text" className="form-control" placeholder="Buscar por nombre, apellido, teléfono..."
+          <input type="text" className="form-control" placeholder="Buscar por ID, nombre, apellido, teléfono..."
             value={filterText} onChange={(e) => setFilterText(e.target.value)}
             style={{ borderColor: "#dbeafe", borderRadius: "10px" }} />
         </div>
@@ -125,6 +131,8 @@ const Crudproveedor = () => {
           highlightOnHover
           striped
           responsive
+          defaultSortFieldId={1}
+          defaultSortAsc={false}
           noDataComponent={
             <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
               <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>

@@ -5,6 +5,7 @@ import Swal from "sweetalert2";
 import * as bootstrap from "bootstrap";
 import { paginationComponentOptions, tableCustomStyles } from "../config/dataTableConfig";
 import SalidaReactivoForm from "./salidareactivoform.jsx";
+import socket from "../socket.js";
 
 const CrudSalidasReactivos = () => {
   const [salidas, setSalidas] = useState([]);
@@ -37,9 +38,16 @@ const CrudSalidasReactivos = () => {
       )
     },
     {
+      id: 5,
       name: "Fecha Salida",
       selector: (row) => row.fecha_salida ? new Date(row.fecha_salida).toLocaleString('es-CO') : "-",
       sortable: true, minWidth: "250px"
+    },
+    {
+      name: "Observaciones",
+      selector: (row) => row.observaciones || "-",
+      sortable: true, minWidth: "200px",
+      wrap: true
     },
     {
       name: "Acciones", center: true, width: "130px",
@@ -66,7 +74,18 @@ const CrudSalidasReactivos = () => {
     },
   ]; // ✅ Cierre del array columns
 
-  useEffect(() => { cargarSalidas(); }, []);
+  useEffect(() => { 
+    cargarSalidas(); 
+    
+    // ✅ Sincronización en tiempo real
+    socket.on("salida_actualizada", cargarSalidas);
+    socket.on("movimiento_actualizado", cargarSalidas);
+
+    return () => {
+      socket.off("salida_actualizada", cargarSalidas);
+      socket.off("movimiento_actualizado", cargarSalidas);
+    };
+  }, []);
 
   const cargarSalidas = async () => {
     try {
@@ -110,11 +129,14 @@ const CrudSalidasReactivos = () => {
     }
   };
 
-  const filtered = salidas.filter(item =>
-    String(item.id_salida || "").includes(filterText) ||
-    (item.movimiento?.reactivo?.nom_reactivo || "").toLowerCase().includes(filterText.toLowerCase()) ||
-    (item.movimiento?.lote || "").toLowerCase().includes(filterText.toLowerCase())
-  );
+  const filtered = salidas.filter(item => {
+    const search = filterText.toLowerCase().trim();
+    return (
+      String(item.id_salida || "").includes(search) ||
+      String(item.movimiento?.reactivo?.nom_reactivo || "").toLowerCase().includes(search) ||
+      String(item.movimiento?.lote || "").toLowerCase().includes(search)
+    );
+  });
 
   return (
     <div className="container mt-4" style={{ maxWidth: "1000px" }}>
@@ -130,7 +152,7 @@ const CrudSalidasReactivos = () => {
         <div className="col-md-5">
           <input
             type="text" className="form-control"
-            placeholder="Buscar por reactivo, lote o ID..."
+            placeholder="Buscar por ID, reactivo o lote..."
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
             style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
@@ -144,7 +166,7 @@ const CrudSalidasReactivos = () => {
             data-bs-target="#modalSalida"
             onClick={() => setSelectedSalida(null)}
           >
-            + Nueva Salida
+            Nueva Salida
           </button>
         </div>
       </div>
@@ -160,6 +182,8 @@ const CrudSalidasReactivos = () => {
           highlightOnHover
           striped
           responsive
+          defaultSortFieldId={5}
+          defaultSortAsc={false}
           noDataComponent={
             <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
               <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>

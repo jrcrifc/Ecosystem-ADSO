@@ -25,6 +25,11 @@ const salidasModel = db.define('salidas_reactivos', {
     fecha_salida: {
         type: DataTypes.DATE
     },
+    observaciones: {
+        type: DataTypes.STRING(500),
+        allowNull: true,
+        defaultValue: null
+    },
 }, {
     freezeTableName: true,
     timestamps: true,

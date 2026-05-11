@@ -11,7 +11,7 @@ class salidasService {
         as: 'movimiento',
         include: [{ model: reactivosModel, as: 'reactivo', attributes: ['nom_reactivo', 'presentacion_reactivo'] }]
       }],
-      order: [['createdAt', 'DESC']]
+      order: [['fecha_salida', 'DESC'], ['id_salida', 'DESC']]
     });
   }
 
@@ -70,7 +70,7 @@ class salidasService {
   }
 
   async create(data) {
-    const { id_reactivo, cantidad_salida, fecha_salida } = data;
+    const { id_reactivo, cantidad_salida, fecha_salida, observaciones } = data;
 
     if (!cantidad_salida || cantidad_salida <= 0)
       throw new Error('La cantidad de salida debe ser mayor a 0');
@@ -91,9 +91,15 @@ class salidasService {
     // ✅ Distribuir la salida entre lotes FEFO
     let cantidadRestante = parseFloat(cantidad_salida);
     const salidasCreadas = [];
+    const fechaSalidaDate = new Date(fecha_salida || new Date());
 
     for (const lote of lotes) {
       if (cantidadRestante <= 0) break;
+
+      // ✅ VALIDACIÓN EXTRA: No permitir programar salida si para esa fecha ya venció
+      if (lote.fecha_vencimiento && new Date(lote.fecha_vencimiento) < fechaSalidaDate) {
+        throw new Error(`El lote ${lote.lote} vence el ${new Date(lote.fecha_vencimiento).toLocaleDateString('es-CO')}. No se puede programar una salida para una fecha posterior.`);
+      }
 
       const cantidadDeEsteLote = Math.min(cantidadRestante, lote.cantidad_disponible);
 
@@ -102,6 +108,7 @@ class salidasService {
         id_movimiento_reactivo: lote.id_movimiento_reactivo,
         cantidad_salida: cantidadDeEsteLote,
         fecha_salida: fecha_salida || new Date(),
+        observaciones: observaciones || null,
         estado: 1
       });
 

@@ -124,10 +124,13 @@ const ControlReactivos = () => {
     }
   };
 
-  const filtered = reactivos.filter((item) =>
-    `${item.id_reactivo || ""}`.includes(filterText) ||
-    `${item.nom_reactivo || ""}`.toLowerCase().includes(filterText.toLowerCase())
-  );
+  const filtered = reactivos.filter((item) => {
+    const search = filterText.toLowerCase().trim();
+    return (
+      String(item.id_reactivo || "").includes(search) ||
+      String(item.nom_reactivo || "").toLowerCase().includes(search)
+    );
+  });
 
   return (
     <div className="container mt-4" style={{ maxWidth: "1000px" }}>
@@ -143,7 +146,7 @@ const ControlReactivos = () => {
           <input
             type="text"
             className="form-control"
-            placeholder="Buscar reactivo..."
+            placeholder="Buscar por ID o nombre..."
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
             style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
@@ -206,7 +209,7 @@ const ControlReactivos = () => {
                               <tr key={lote.id_movimiento_reactivo}>
                                 <td className="fw-semibold">{lote.lote}</td>
                                 <td>{parseFloat(parseFloat(lote.cantidad_disponible || 0).toFixed(3)).toString()} <span className="text-muted small">{selectedReactivo?.presentacion_reactivo}</span></td>
-                                <td>{lote.fecha_vencimiento || "N/A"}</td>
+                                <td>{lote.fecha_vencimiento ? new Date(lote.fecha_vencimiento).toLocaleDateString('es-CO') : "N/A"}</td>
                                 <td>
                                   <span className="badge" style={{
                                     backgroundColor: lote.dias_para_vencer === 0 ? "#f97316" : // Naranja brillante
@@ -246,7 +249,7 @@ const ControlReactivos = () => {
                                 <tr key={lote.id_movimiento_reactivo}>
                                   <td>{lote.lote}</td>
                                   <td>{parseFloat(parseFloat(lote.cantidad_disponible || 0).toFixed(3)).toString()}</td>
-                                  <td>{lote.fecha_vencimiento}</td>
+                                  <td>{lote.fecha_vencimiento ? new Date(lote.fecha_vencimiento).toLocaleDateString('es-CO') : "N/A"}</td>
                                 </tr>
                               ))}
                             </tbody>
@@ -276,7 +279,10 @@ const ControlReactivos = () => {
                     <div style={{ maxHeight: "400px", overflowY: "auto", paddingRight: "10px" }}>
                       {stockLotes.historial?.filter(m => m.tipo === (tabHistorial === 'ingresos' ? 'entrada' : 'salida')).length > 0 ? (
                         <div className="timeline-container">
-                          {stockLotes.historial.filter(m => m.tipo === (tabHistorial === 'ingresos' ? 'entrada' : 'salida')).map((mov, idx) => (
+                          {stockLotes.historial
+                            .filter(m => m.tipo === (tabHistorial === 'ingresos' ? 'entrada' : 'salida'))
+                            .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
+                            .map((mov, idx) => (
                             <div key={idx} className="d-flex mb-3 border-bottom pb-2">
                               <div className="me-3 text-center" style={{ minWidth: "50px" }}>
                                 <div className={`rounded-circle d-flex align-items-center justify-content-center mx-auto`} 

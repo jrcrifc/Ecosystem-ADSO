@@ -74,7 +74,7 @@ export const cambiarEstado = async (req, res) => {
 
                 const emojiMap = {
                     'generado': '📝', 'aceptado': '✅', 'prestado': '📦',
-                    'entregado': '🎉', 'cancelado': '❌'
+                    'entregado': '🎉', 'cancelado': '❌', 'rechazado': '🚫'
                 };
                 const emoji = emojiMap[estadoNombre] || '🔔';
 

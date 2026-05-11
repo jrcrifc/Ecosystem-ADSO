@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import DataTable from "react-data-table-component";
 import apiAxios from "../api/axiosConfig";
 import EquipoForm from "./EquiposForm.jsx";
@@ -8,6 +9,7 @@ import { exportToPDF, exportToExcel } from "../api/ExportUtils.js";
 import { paginationComponentOptions, tableCustomStyles } from "../config/dataTableConfig";
 
 export default function CrudEquipo() {
+  const navigate = useNavigate();
   const [equipos, setEquipos] = useState([]);
   const [filterText, setFilterText] = useState("");
   const [selectedEquipo, setSelectedEquipo] = useState(null);
@@ -179,11 +181,19 @@ export default function CrudEquipo() {
 
   // ✅ FILTRO CORREGIDO
   const filteredEquipos = equipos.filter((row) => {
+    const search = filterText.toLowerCase().trim();
     const nombreCuentadante = row.cuentadante
       ? `${row.cuentadante.nom_cuentadante} ${row.cuentadante.apell_cuentadante}`
       : "";
-    return [row.nom_equipo, row.grupo_equipo, row.marca_equipo, row.no_placa, nombreCuentadante]
-      .some((field) => String(field ?? "").toLowerCase().includes(filterText.toLowerCase()));
+    
+    return (
+      String(row.id_equipo || "").includes(search) ||
+      String(row.nom_equipo || "").toLowerCase().includes(search) ||
+      String(row.grupo_equipo || "").toLowerCase().includes(search) ||
+      String(row.marca_equipo || "").toLowerCase().includes(search) ||
+      String(row.no_placa || "").toLowerCase().includes(search) ||
+      nombreCuentadante.toLowerCase().includes(search)
+    );
   });
 
   return (
@@ -201,13 +211,20 @@ export default function CrudEquipo() {
           <input
             type="text"
             className="form-control"
-            placeholder="Buscar por nombre, grupo, marca, placa o cuentadante..."
+            placeholder="Buscar por ID, nombre, grupo, marca, placa o cuentadante..."
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
             style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
           />
         </div>
         <div className="col-md-6 text-end d-flex gap-2 justify-content-end">
+          <button 
+            className="btn btn-outline-primary" 
+            style={{ fontWeight: "600", borderRadius: "10px" }}
+            onClick={() => navigate("/gestion-equipo")}
+          >
+            <i className="fas fa-exchange-alt me-2"></i>Estados
+          </button>
           <button className="btn btn-outline-danger" onClick={() => {
             const cols = [
               { header: "ID", dataKey: "id_equipo" },
@@ -246,6 +263,8 @@ export default function CrudEquipo() {
           highlightOnHover
           striped
           responsive
+          defaultSortFieldId={1}
+          defaultSortAsc={false}
           noDataComponent={
             <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
               <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>

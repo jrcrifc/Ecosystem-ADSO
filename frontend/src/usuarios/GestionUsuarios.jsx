@@ -5,6 +5,7 @@ import Swal from "sweetalert2";
 export default function GestionUsuarios() {
   const [usuariosPendientes, setUsuariosPendientes] = useState([]);
   const [todosUsuarios, setTodosUsuarios] = useState([]);
+  const [filterText, setFilterText] = useState("");
   const [tab, setTab] = useState("pendientes");
   const token = sessionStorage.getItem("token");
   const headers = { Authorization: `Bearer ${token}` };
@@ -198,6 +199,20 @@ export default function GestionUsuarios() {
       </div>
       <p style={{ color: "#64748b", marginBottom: "24px" }}>Aprueba, rechaza, activa o inactiva usuarios del sistema</p>
 
+      {/* Buscador */}
+      <div className="row mb-4">
+        <div className="col-md-5">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Buscar por ID, nombre, documento o email..."
+            value={filterText}
+            onChange={(e) => setFilterText(e.target.value)}
+            style={{ borderColor: "#dbeafe", borderRadius: "10px", padding: "10px 15px" }}
+          />
+        </div>
+      </div>
+
       {/* Tabs */}
       <div style={{ display: "flex", gap: "8px", marginBottom: "24px", flexWrap: "wrap" }}>
         {[["pendientes", "⏳ Pendientes"], ["todas", "📋 Todas"], ["gestion", "👥 Gestión"]].map(([key, label]) => (
@@ -208,11 +223,6 @@ export default function GestionUsuarios() {
             color: tab === key ? "#818cf8" : "#64748b"
           }}>{label}</button>
         ))}
-        <button onClick={cargar} style={{
-          marginLeft: "auto", padding: "8px 16px", borderRadius: "10px",
-          border: "1px solid #e2e8f0", background: "#fff",
-          cursor: "pointer", fontSize: "13px", color: "#64748b"
-        }}>🔄 Actualizar</button>
       </div>
 
       {/* ✅ Pestaña Gestión — Separada por roles */}
@@ -225,7 +235,15 @@ export default function GestionUsuarios() {
             </div>
           ) : (
             rolSections.map(section => {
-              const usuarios = todosUsuarios.filter(u => u.rol === section.key);
+              const usuarios = todosUsuarios.filter(u => {
+                const search = filterText.toLowerCase().trim();
+                return u.rol === section.key && (
+                  String(u.id_usuario || "").includes(search) ||
+                  String(u.nombres_apellidos || "").toLowerCase().includes(search) ||
+                  String(u.documento || "").includes(search) ||
+                  String(u.email || "").toLowerCase().includes(search)
+                );
+              });
               if (usuarios.length === 0) return null;
 
               return (
@@ -309,13 +327,23 @@ export default function GestionUsuarios() {
       )}
 
           {/* ✅ Sección Usuarios (pendientes/todas) */}
-          {tab !== "gestion" && usuariosPendientes.length > 0 && (
+          {tab !== "gestion" && (
             <div style={{ marginBottom: "24px" }}>
               <p style={{
                 fontSize: "11px", fontWeight: "700", color: "#0077B6",
                 letterSpacing: "1px", textTransform: "uppercase", marginBottom: "12px"
               }}>⚙️ Lista de Usuarios</p>
-              {usuariosPendientes.map(u => cardUsuario(u))}
+              {usuariosPendientes
+                .filter(u => {
+                  const search = filterText.toLowerCase().trim();
+                  return (
+                    String(u.id_usuario || "").includes(search) ||
+                    String(u.nombres_apellidos || "").toLowerCase().includes(search) ||
+                    String(u.documento || "").includes(search) ||
+                    String(u.email || "").toLowerCase().includes(search)
+                  );
+                })
+                .map(u => cardUsuario(u))}
             </div>
           )}
 

@@ -87,6 +87,7 @@ const GestionSolicitudes = () => {
                 <li key={estado}>
                   <button className="dropdown-item" onClick={() => cambiarEstado(row.id_solicitud, estado)}>
                     {estado === "aceptado" && "✅ Aceptado"}
+                    {estado === "rechazado" && "🚫 Rechazado"}
                     {estado === "prestado" && "📦 Prestado"}
                     {estado === "entregado" && "🔄 Entregado"}
                     {estado === "cancelado" && "❌ Cancelado"}
@@ -172,11 +173,14 @@ const GestionSolicitudes = () => {
     }
   };
 
-  const filtered = solicitudes.filter((item) =>
-    String(item.id_solicitud || "").includes(filterText) ||
-    (item.usuario?.nombres_apellidos || "").toLowerCase().includes(filterText.toLowerCase()) ||
-    (item.ultimoEstado || "").toLowerCase().includes(filterText.toLowerCase())
-  );
+  const filtered = solicitudes.filter((item) => {
+    const search = filterText.toLowerCase().trim();
+    return (
+      String(item.id_solicitud || "").includes(search) ||
+      String(item.usuario?.nombres_apellidos || "").toLowerCase().includes(search) ||
+      String(item.ultimoEstado || "").toLowerCase().includes(search)
+    );
+  });
 
   return (
     <div className="container mt-4">
@@ -197,11 +201,6 @@ const GestionSolicitudes = () => {
             style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
           />
         </div>
-        <div className="col-md-6 text-end">
-          <button className="btn btn-outline-primary" onClick={cargarSolicitudes}>
-            <i className="fas fa-sync me-2"></i>Actualizar
-          </button>
-        </div>
       </div>
 
       <div style={{ borderRadius: "14px", overflow: "hidden", border: "1px solid #dbeafe" }}>
@@ -215,6 +214,8 @@ const GestionSolicitudes = () => {
           highlightOnHover
           striped
           responsive
+          defaultSortFieldId={1}
+          defaultSortAsc={false}
           noDataComponent={
             <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
               <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>
