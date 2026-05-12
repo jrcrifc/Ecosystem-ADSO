@@ -41,6 +41,7 @@ const PerfilUsuario = () => {
   };
 
   if (loading) return <div className="text-center mt-5">Cargando perfil...</div>;
+  if (!user) return <div className="text-center mt-5">No se pudo cargar la información del usuario.</div>;
 
   return (
     <div className="container mt-4 d-flex justify-content-center">

@@ -202,7 +202,7 @@ function App() {
               </FormularioRoute>
             } />
 
-            {/* SOLICITUDES — Aprendiz/Instructor aprobados y Admin */}
+            {/* SOLICITUDES */}
             <Route path="/solicitud" element={
               <SolicitanteRoute isAuth={isAuth} rol={userRol}>
                 <FormularioRoute isAuth={isAuth} userData={userData} userRol={userRol} logOut={logOut}>
