@@ -11,18 +11,20 @@ const PerfilUsuario = () => {
   useEffect(() => {
     cargarPerfil();
   }, []);
-
   const cargarPerfil = async () => {
     try {
       const res = await apiAxios.get("/api/auth/profile/me");
-      setUser(res.data);
-      setFormData({ nombres_apellidos: res.data.nombres_apellidos, email: res.data.email });
+      if (res.data) {
+        setUser(res.data);
+        setFormData({ nombres_apellidos: res.data.nombres_apellidos, email: res.data.email });
+      }
     } catch (error) {
-      Swal.fire("Error", "No se pudo cargar el perfil", "error");
+      console.error("Error al cargar perfil:", error);
+      const msg = error.response?.data?.message || error.message;
+      Swal.fire("Error de Perfil", `No se pudo obtener tu información: ${msg}`, "error");
     } finally {
       setLoading(false);
     }
-  };
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
