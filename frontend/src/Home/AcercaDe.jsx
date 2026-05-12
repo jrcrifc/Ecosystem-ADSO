@@ -18,12 +18,12 @@ const AcercaDe = () => {
           <div className="card border-0 shadow-sm p-4" style={{ borderRadius: "20px" }}>
             <h3 style={{ fontWeight: "700", color: "#0A1628" }}>Nuestro Proyecto</h3>
             <p className="mt-3" style={{ lineHeight: "1.8", color: "#475569" }}>
-              <strong>Ecosystem</strong> es una solución tecnológica desarrollada como proyecto integrador por los aprendices del programa <strong>Análisis y Desarrollo de Software (ADSO)</strong> del SENA Centro de Industria y Construcción - Regional Tolima.
+              <strong>Ecosystem</strong> es una solución tecnológica desarrollada como proyecto integrador por los aprendices del programa <strong>Análisis y Desarrollo de Software (ADSO)</strong> del SENA Centro Agropecuario "La Granja" - Regional Tolima.
             </p>
             <p style={{ lineHeight: "1.8", color: "#475569" }}>
               Este software nace de la necesidad de modernizar y automatizar los procesos internos del <strong>Laboratorio Ambiental</strong>, permitiendo un control preciso de inventarios, gestión de equipos y trazabilidad total de las solicitudes de préstamo.
             </p>
-            
+
             <div className="mt-4 p-3" style={{ background: "#f0f7ff", borderRadius: "14px", border: "1px solid #dbeafe" }}>
               <h5 style={{ fontSize: "14px", fontWeight: "700", color: "#0077B6" }}>🎯 Objetivo Principal</h5>
               <p className="mb-0" style={{ fontSize: "13px", color: "#334155" }}>
@@ -40,9 +40,9 @@ const AcercaDe = () => {
             <div className="mt-4">
               {[
                 { r: "Gerente de Proyecto", n: "Miguel Santiago Bocanegra", e: "👨‍💼" },
-                { r: "Subgerente", n: "Equipo ADSO", e: "👩‍💻" },
-                { r: "Especialista Frontend", n: "Desarrollo Web", e: "🎨" },
-                { r: "Especialista Backend", n: "Arquitectura de Datos", e: "⚙️" }
+                { r: "Subgerente", n: "Luis Fernando Pinto Niño", e: "👩‍💻" },
+                { r: "Especialista Frontend", n: "Cristiam Ivan Mosquera Cantor", e: "🎨" },
+                { r: "Especialista Backend", n: "Juan Pablo Tocarema Avila", e: "⚙️" }
               ].map((m, i) => (
                 <div key={i} className="d-flex align-items-center gap-3 mb-3">
                   <div style={{ width: "40px", height: "40px", background: "#f1f5f9", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px" }}>
@@ -74,7 +74,7 @@ const AcercaDe = () => {
       </div>
 
       <footer className="text-center mt-5 text-muted" style={{ fontSize: "12px" }}>
-        <p>SENA - Centro de Industria y Construcción<br/>Ficha ADSO - Regional Tolima<br/>Versión 1.0.0 (Blindaje Hacker)</p>
+        <p>SENA - Centro Agropecuario "La Granja"<br />Ficha 3140221 ADSO - Regional Tolima</p>
       </footer>
     </div>
   );

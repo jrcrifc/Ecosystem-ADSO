@@ -50,22 +50,6 @@ const CrudmovimientoReactivo = () => {
           >
             <i className="fa-solid fa-pencil"></i>
           </button>
-          <button
-            className="btn btn-sm btn-danger"
-            data-bs-toggle="modal"
-            data-bs-target="#modalSalida"
-            onClick={() => {
-              // Pre-seleccionar el reactivo en el formulario de salida
-              setSelectedSalida({
-                id_reactivo: row.id_reactivo,
-                // Podemos pasar el objeto completo si el formulario lo soporta
-                movimiento: row 
-              });
-            }}
-            title="Registrar Salida"
-          >
-            <i className="fa-solid fa-upload"></i>
-          </button>
         </div>
       ),
     },

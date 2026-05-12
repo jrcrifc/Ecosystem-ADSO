@@ -27,9 +27,10 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
   // ===== MENU — TODO DESPLEGABLE =====
   const menuGroups = [
     {
-      key: "principal", icon: "🏠", text: "Principal", show: true,
+      key: "general", icon: "🏠", text: "General", show: true,
       items: [
         { icon: "🏠", text: "Inicio", path: "/home", show: true },
+        { icon: "ℹ️", text: "Acerca de Ecosystem", path: "/acerca-de", show: true },
       ]
     },
     {
@@ -71,12 +72,6 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
         { icon: "👥", text: "Gestión Usuarios", path: "/gestion-usuarios", show: true },
         { icon: "📑", text: "Gestión Solicitudes", path: "/gestion-solicitudes", show: true },
         { icon: "🏷️", text: "Estados Solicitud", path: "/estadoSolicitud", show: true },
-      ]
-    },
-    {
-      key: "mas", icon: "➕", text: "Más", show: true,
-      items: [
-        { icon: "ℹ️", text: "Acerca de Ecosystem", path: "/acerca-de", show: true },
       ]
     },
   ];

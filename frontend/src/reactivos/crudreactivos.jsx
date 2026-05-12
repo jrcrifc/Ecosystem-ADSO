@@ -21,22 +21,11 @@ const CrudReactivos = () => {
     { name: "Color Stand", selector: (row) => row.color_stand, sortable: true, minWidth: "150px" },
     { name: "Clasificación", selector: (row) => row.clasificacion_reactivo, sortable: true, minWidth: "200px" },
     {
-      name: "Estado", width: "120px",
-      cell: (row) => (
-        <span className={`px-3 py-1 rounded-pill text-white fw-semibold ${row.estado === 1 ? "bg-success" : "bg-danger"}`} style={{ fontSize: "0.75rem" }}>
-          {row.estado === 1 ? "ACTIVO" : "INACTIVO"}
-        </span>
-      ),
-    },
-    {
-      name: "Acciones", center: true, width: "130px",
+      name: "Acciones", center: true, width: "100px",
       cell: (row) => (
         <div className="d-flex gap-1 justify-content-center">
           <button className="btn btn-sm" style={{ background: "#dbeafe", color: "#0077B6", border: "none" }} data-bs-toggle="modal" data-bs-target="#modalReactivo" onClick={() => setSelectedReactivo(row)}>
             <i className="fa-solid fa-pencil"></i>
-          </button>
-          <button className="btn btn-sm" style={{ background: row.estado === 1 ? "#fee2e2" : "#dcfce7", color: row.estado === 1 ? "#dc2626" : "#16a34a", border: "none" }} onClick={() => toggleEstado(row.id_reactivo, row.estado)}>
-            <i className={`fas ${row.estado === 1 ? "fa-ban" : "fa-check"}`}></i>
           </button>
         </div>
       ),
@@ -51,24 +40,6 @@ const CrudReactivos = () => {
       setReactivos(res.data);
     } catch (error) {
       Swal.fire("Error", "No se pudieron cargar los reactivos", "error");
-    }
-  };
-
-  const toggleEstado = async (id, estadoActual) => {
-    const nuevoEstado = estadoActual === 1 ? 0 : 1;
-    const result = await Swal.fire({
-      title: "¿Cambiar estado?",
-      text: `El reactivo pasará a ${nuevoEstado === 1 ? "ACTIVO" : "INACTIVO"}`,
-      icon: "question", showCancelButton: true,
-      confirmButtonText: "Sí, cambiar", cancelButtonText: "Cancelar",
-    });
-    if (!result.isConfirmed) return;
-    try {
-      await apiAxios.put(`/api/reactivos/estado/${id}`, { estado: nuevoEstado });
-      setReactivos((prev) => prev.map((item) => item.id_reactivo === id ? { ...item, estado: nuevoEstado } : item));
-      Swal.fire("Correcto", "Estado actualizado", "success");
-    } catch (error) {
-      Swal.fire("Error", "No se pudo cambiar el estado", "error");
     }
   };
 

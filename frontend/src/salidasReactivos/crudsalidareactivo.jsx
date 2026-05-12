@@ -50,7 +50,7 @@ const CrudSalidasReactivos = () => {
       wrap: true
     },
     {
-      name: "Acciones", center: true, width: "130px",
+      name: "Acciones", center: true, width: "100px",
       cell: (row) => (
         <div className="d-flex gap-1 justify-content-center">
           <button
@@ -61,13 +61,6 @@ const CrudSalidasReactivos = () => {
             title="Editar"
           >
             <i className="fas fa-pencil"></i>
-          </button>
-          <button
-            className="btn btn-sm btn-danger"
-            onClick={() => eliminar(row.id_salida)}
-            title="Eliminar"
-          >
-            <i className="fas fa-trash"></i>
           </button>
         </div>
       ),
@@ -94,26 +87,6 @@ const CrudSalidasReactivos = () => {
     } catch (error) {
       console.error("Error al cargar salidas:", error);
       Swal.fire("Error", "No se pudieron cargar las salidas", "error");
-    }
-  };
-
-  const eliminar = async (id) => {
-    const result = await Swal.fire({
-      title: "¿Eliminar salida?",
-      text: "El stock será devuelto al inventario",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar"
-    });
-    if (!result.isConfirmed) return;
-    try {
-      await apiAxios.delete(`/api/salidas/${id}`);
-      Swal.fire("Eliminado", "Salida eliminada y stock restaurado", "success");
-      cargarSalidas();
-    } catch (error) {
-      Swal.fire("Error", error.response?.data?.message || "No se pudo eliminar", "error");
     }
   };
 
@@ -159,15 +132,7 @@ const CrudSalidasReactivos = () => {
           />
         </div>
         <div className="col-md-7 text-end">
-          <button
-            className="btn"
-            style={{ background: "#0077B6", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }}
-            data-bs-toggle="modal"
-            data-bs-target="#modalSalida"
-            onClick={() => setSelectedSalida(null)}
-          >
-            Nueva Salida
-          </button>
+          {/* Botón removido por redundancia */}
         </div>
       </div>
 

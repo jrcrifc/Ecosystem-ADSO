@@ -202,7 +202,7 @@ const Home = () => {
       </div>
 
       <footer className="text-center py-4" style={{ borderTop: "1px solid #e2e8f0", color: "#94a3b8", fontSize: "12px" }}>
-        <p className="mb-1">© 2025 Ecosystem - SENA Centro de Industria y Construcción</p>
+        <p className="mb-1">© 2025 Ecosystem - SENA Centro Agropecuario "La Granja"</p>
         <p>Para más información, consulta la sección <a href="/acerca-de" style={{ color: "#0077B6", fontWeight: "700", textDecoration: "none" }}>Acerca de Ecosystem</a></p>
       </footer>
 
