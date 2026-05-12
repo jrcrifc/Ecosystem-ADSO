@@ -7,16 +7,18 @@ import { paginationComponentOptions, tableCustomStyles } from "../config/dataTab
 
 const estadoConfig = {
   disponible:      { icon: "✅", color: "#0077B6", bg: "#e0f2fe", border: "#bae6fd", label: "Disponible" },
-  "no disponible": { icon: "🚫", color: "#dc2626", bg: "#fee2e2", border: "#fecaca", label: "No Disponible" },
   mantenimiento:   { icon: "🔧", color: "#d97706", bg: "#fef3c7", border: "#fde68a", label: "Mantenimiento" },
+  solicitado:      { icon: "⏳", color: "#6366f1", bg: "#eef2ff", border: "#c7d2fe", label: "Solicitado" },
+  prestado:        { icon: "🤝", color: "#8b5cf6", bg: "#f5f3ff", border: "#ddd6fe", label: "Prestado" },
 };
 
-const mapaEstados = { disponible: 1, "no disponible": 2, mantenimiento: 3 };
+const mapaEstados = { disponible: 1, mantenimiento: 3 };
 
 export default function GestionEstadoEquipo() {
   const navigate = useNavigate();
   const [equipos, setEquipos] = useState([]);
   const [filterText, setFilterText] = useState("");
+  const [activeTab, setActiveTab] = useState("todos"); // todos, disponibles, ocupados, mantenimiento
 
   const token = sessionStorage.getItem("token");
   const headers = { Authorization: `Bearer ${token}` };
@@ -60,13 +62,19 @@ export default function GestionEstadoEquipo() {
 
   const filtered = equipos.filter(r => {
     const search = filterText.toLowerCase().trim();
-    return (
+    const matchesSearch = (
       String(r.id_equipo || "").includes(search) ||
       String(r.nom_equipo || "").toLowerCase().includes(search) ||
       String(r.no_placa || "").toLowerCase().includes(search) ||
       String(r.marca_equipo || "").toLowerCase().includes(search) ||
       String(r.ultimoEstado || "").toLowerCase().includes(search)
     );
+
+    if (activeTab === "disponibles") return matchesSearch && r.ultimoEstado === "disponible";
+    if (activeTab === "ocupados") return matchesSearch && (r.ultimoEstado === "solicitado" || r.ultimoEstado === "prestado");
+    if (activeTab === "mantenimiento") return matchesSearch && r.ultimoEstado === "mantenimiento";
+    
+    return matchesSearch;
   });
 
   const columns = [
@@ -105,39 +113,44 @@ export default function GestionEstadoEquipo() {
     },
     {
       name: "Acciones",
-      cell: row => (
-        <div className="dropdown">
-          <button 
-            className="btn btn-sm text-white dropdown-toggle" 
-            style={{ 
-              background: row.estaOcupado ? "#94a3b8" : "#0077B6",
-              cursor: row.estaOcupado ? "not-allowed" : "pointer"
-            }} 
-            type="button" 
-            data-bs-toggle={row.estaOcupado ? "" : "dropdown"} 
-            aria-expanded="false"
-            title={row.estaOcupado ? "El equipo está solicitado o prestado" : "Cambiar estado"}
-            onClick={() => {
-              if (row.estaOcupado) {
-                Swal.fire("Acción bloqueada", "No se puede cambiar el estado de un equipo que está prestado o solicitado.", "warning");
-              }
-            }}
-          >
-            <i className={`fas ${row.estaOcupado ? "fa-lock" : "fa-exchange-alt"} me-1`}></i> {row.estaOcupado ? "Bloqueado" : "Cambiar"}
-          </button>
-          {!row.estaOcupado && (
-            <ul className="dropdown-menu">
-              <li><button className="dropdown-item" onClick={() => cambiarEstado(row.id_equipo, "disponible")}>✅ Disponible</button></li>
-              <li><button className="dropdown-item" onClick={() => cambiarEstado(row.id_equipo, "mantenimiento")}>🔧 Mantenimiento</button></li>
-              <li><button className="dropdown-item" onClick={() => cambiarEstado(row.id_equipo, "no disponible")}>🚫 No Disponible</button></li>
-            </ul>
-          )}
-        </div>
-      ),
+      center: true,
+      width: "180px",
+      cell: row => {
+        if (row.estaOcupado) {
+          return (
+            <button 
+              className="btn btn-sm" 
+              style={{ background: "#f1f5f9", color: "#94a3b8", border: "1px solid #e2e8f0", cursor: "not-allowed" }}
+              onClick={() => Swal.fire("Equipo en uso", "No se puede cambiar el estado mientras esté solicitado o prestado.", "info")}
+            >
+              <i className="fas fa-lock me-1"></i> Bloqueado
+            </button>
+          );
+        }
+
+        return (
+          <div className="d-flex gap-2">
+            {row.ultimoEstado === "disponible" ? (
+              <button 
+                className="btn btn-sm" 
+                style={{ background: "#fef3c7", color: "#d97706", border: "1px solid #fde68a", fontWeight: "700" }}
+                onClick={() => cambiarEstado(row.id_equipo, "mantenimiento")}
+              >
+                <i className="fas fa-tools me-1"></i> Mantenimiento
+              </button>
+            ) : (
+              <button 
+                className="btn btn-sm" 
+                style={{ background: "#dcfce7", color: "#16a34a", border: "1px solid #bbf7d0", fontWeight: "700" }}
+                onClick={() => cambiarEstado(row.id_equipo, "disponible")}
+              >
+                <i className="fas fa-check-circle me-1"></i> Disponible
+              </button>
+            )}
+          </div>
+        );
+      },
       ignoreRowClick: true,
-      allowOverflow: true,
-      button: true,
-      width: "150px"
     }
   ];
 
@@ -148,16 +161,52 @@ export default function GestionEstadoEquipo() {
         <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Gestión de Estado de Equipos</h2>
       </div>
 
+      {/* Tabs de Filtro */}
+      <div className="d-flex gap-2 mb-4">
+        {[
+          { id: "todos", label: "Todos", icon: "list" },
+          { id: "disponibles", label: "Disponibles", icon: "check-circle" },
+          { id: "ocupados", label: "En Uso / Solicitados", icon: "user-clock" },
+          { id: "mantenimiento", label: "Mantenimiento", icon: "tools" }
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            style={{
+              padding: "8px 16px",
+              borderRadius: "12px",
+              fontSize: "13px",
+              fontWeight: "600",
+              transition: "all 0.2s",
+              border: "1px solid",
+              background: activeTab === tab.id ? "#0077B6" : "#fff",
+              color: activeTab === tab.id ? "#fff" : "#64748b",
+              borderColor: activeTab === tab.id ? "#0077B6" : "#e2e8f0",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              boxShadow: activeTab === tab.id ? "0 4px 12px rgba(0, 119, 182, 0.2)" : "none"
+            }}
+          >
+            <i className={`fas fa-${tab.icon}`}></i>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       <div className="row mb-4 align-items-center">
         <div className="col-md-7">
-          <input 
-            type="text" 
-            className="form-control" 
-            placeholder="Buscar por ID, nombre, placa, marca o estado..." 
-            value={filterText}
-            onChange={(e) => setFilterText(e.target.value)}
-            style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
-          />
+          <div className="position-relative">
+            <i className="fas fa-search position-absolute top-50 translate-middle-y ms-3" style={{ color: "#94a3b8" }}></i>
+            <input 
+              type="text" 
+              className="form-control ps-5" 
+              placeholder="Buscar por nombre, placa, marca..." 
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
+              style={{ borderColor: "#dbeafe", borderRadius: "12px", height: "45px" }}
+            />
+          </div>
         </div>
         <div className="col-md-5 text-end">
           <div className="btn-group" role="group" style={{ borderRadius: "10px", overflow: "hidden", border: "1px solid #0077B6" }}>
@@ -176,14 +225,26 @@ export default function GestionEstadoEquipo() {
         </div>
       </div>
           
-      <div style={{ borderRadius: "14px", overflow: "hidden", border: "1px solid #dbeafe" }}>
+      <div style={{ 
+        borderRadius: "14px", 
+        overflow: "visible", // Permitir que el dropdown flote
+        border: "1px solid #dbeafe",
+        marginBottom: "120px" // Espacio de seguridad para el menú
+      }}>
         <DataTable 
           columns={columns} 
           data={filtered} 
           pagination 
           paginationPerPage={10}
           paginationComponentOptions={paginationComponentOptions}
-          customStyles={tableCustomStyles}
+          customStyles={{
+            ...tableCustomStyles,
+            rows: {
+              style: {
+                minHeight: '72px', // Filas más cómodas
+              },
+            },
+          }}
           highlightOnHover 
           striped
           responsive 

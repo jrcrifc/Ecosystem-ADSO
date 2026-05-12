@@ -124,14 +124,22 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
 
   const getBadgeColor = (estado) => ({
     disponible:      "#2D8A4E",
-    mantenimiento:   "#D4A843",
-    "no disponible": "#dc3545",
+    mantenimiento:   "#d97706",
+    solicitado:      "#6366f1",
+    prestado:        "#8b5cf6",
   }[estado] || "#6c757d");
 
   const equiposFiltrados = equipos.filter(e => {
     const search = busquedaEquipo.toLowerCase().trim();
-    return [e.nom_equipo, e.marca_equipo, e.no_placa]
+    const matchesSearch = [e.nom_equipo, e.marca_equipo, e.no_placa]
       .some(f => String(f || "").toLowerCase().includes(search));
+    
+    // Solo mostramos los que no están en mantenimiento si es una nueva solicitud
+    // O si ya están seleccionados (para edición)
+    if (!selectedSolicitud) {
+        return matchesSearch && e.ultimoEstado !== 'mantenimiento';
+    }
+    return matchesSearch;
   });
 
   const usuariosFiltrados = usuarios.filter(u =>
@@ -449,20 +457,22 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
               <p className="text-muted text-center small mt-2">No se encontraron equipos</p>
             ) : (
               equiposFiltrados.map(equipo => {
-                const disponible  = equipo.ultimoEstado === "disponible";
+                // Solo se puede seleccionar si el estado es exactamente 'disponible'
+                const estaDisponibleFisicamente = equipo.ultimoEstado === "disponible";
                 const seleccionado = equiposSeleccionados.includes(equipo.id_equipo);
 
                 return (
                   <div
                     key={equipo.id_equipo}
-                    onClick={() => disponible && toggleEquipo(equipo.id_equipo)}
+                    onClick={() => estaDisponibleFisicamente && toggleEquipo(equipo.id_equipo)}
                     style={{
                       display: "flex", alignItems: "center", gap: "12px",
                       padding: "10px 12px", marginBottom: "4px",
-                      borderRadius: "8px", cursor: disponible ? "pointer" : "not-allowed",
+                      borderRadius: "8px", 
+                      cursor: estaDisponibleFisicamente ? "pointer" : "not-allowed",
                       border: `2px solid ${seleccionado ? "#0077B6" : "#e9ecef"}`,
-                      backgroundColor: seleccionado ? "#dbeafe" : disponible ? "#fff" : "#f8f9fa",
-                      opacity: disponible ? 1 : 0.6,
+                      backgroundColor: seleccionado ? "#dbeafe" : estaDisponibleFisicamente ? "#fff" : "#f1f5f9",
+                      opacity: estaDisponibleFisicamente || seleccionado ? 1 : 0.6,
                       transition: "all 0.15s",
                     }}
                   >

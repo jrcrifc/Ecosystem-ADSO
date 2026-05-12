@@ -9,7 +9,7 @@ const estadoEquipoModel = db.define('estado_equipo', {
     },
 
     estado: { 
-        type: DataTypes.ENUM("disponible","no disponible","mantenimiento"),
+        type: DataTypes.ENUM("disponible","mantenimiento", "solicitado", "prestado"),
         allowNull: false
     },
     

@@ -64,16 +64,32 @@ class EstadoxequipoService {
       const ordenados = (eq.estadosEquipo || []).sort(
         (a, b) => b.id_estadoxequipo - a.id_estadoxequipo
       );
-      const ultimoEstado = ordenados[0]?.estadoEquipo?.estado || 'disponible';
+      let ultimoEstado = ordenados[0]?.estadoEquipo?.estado || 'disponible';
       
-      // Solo bloqueamos si el estado físico es 'disponible' y tiene un préstamo/solicitud activo
+      // Verificamos si hay solicitudes activas para cambiar el estado visual
       let estaOcupado = false;
       if (ultimoEstado === 'disponible') {
-        estaOcupado = (eq.solicitudes || []).some(s => {
+        const ahora = new Date();
+        
+        // Buscamos si existe ALGUNA solicitud que actualmente bloquee al equipo
+        const solicitudActiva = (eq.solicitudes || []).find(s => {
           const estadosSol = (s.estados || []).sort((a, b) => b.id_estadoxsolicitud - a.id_estadoxsolicitud);
           const ultimoEstadoSol = estadosSol[0]?.estadoSolicitud?.estado;
-          return ['aceptado', 'prestado'].includes(ultimoEstadoSol);
+          
+          // Solo bloqueamos si el ÚLTIMO estado es aceptado o prestado
+          const tieneEstadoBloqueante = ['aceptado', 'prestado'].includes(ultimoEstadoSol);
+          // Y si el tiempo no ha expirado
+          const tiempoExpirado = s.fecha_fin && new Date(s.fecha_fin) < ahora;
+          
+          return tieneEstadoBloqueante && !tiempoExpirado;
         });
+
+        if (solicitudActiva) {
+          estaOcupado = true;
+          // Obtenemos el estado de esa solicitud específica para el label
+          const ultimoEstadoSol = (solicitudActiva.estados || []).sort((a, b) => b.id_estadoxsolicitud - a.id_estadoxsolicitud)[0]?.estadoSolicitud?.estado;
+          ultimoEstado = ultimoEstadoSol === 'aceptado' ? 'solicitado' : 'prestado';
+        }
       }
 
       return { ...eq, ultimoEstado, estaOcupado };
@@ -112,10 +128,13 @@ class EstadoxequipoService {
 
     let estaOcupado = false;
     if (ultimoEstadoEq === 'disponible') {
+      const ahora = new Date();
       estaOcupado = (equipo.solicitudes || []).some(s => {
         const estadosSol = (s.estados || []).sort((a, b) => b.id_estadoxsolicitud - a.id_estadoxsolicitud);
         const ultimoEstadoSol = estadosSol[0]?.estadoSolicitud?.estado;
-        return ['aceptado', 'prestado'].includes(ultimoEstadoSol);
+        const tiempoExpirado = s.fecha_fin && new Date(s.fecha_fin) < ahora;
+        
+        return ['aceptado', 'prestado'].includes(ultimoEstadoSol) && !tiempoExpirado;
       });
     }
 

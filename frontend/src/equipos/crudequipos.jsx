@@ -86,7 +86,14 @@ export default function CrudEquipo() {
     }
   };
 
-  const columns = [
+    const estadoConfig = {
+      disponible:      { icon: "✅", color: "#0077B6", bg: "#e0f2fe", border: "#bae6fd", label: "Disponible" },
+      mantenimiento:   { icon: "🔧", color: "#d97706", bg: "#fef3c7", border: "#fde68a", label: "Mantenimiento" },
+      solicitado:      { icon: "⏳", color: "#6366f1", bg: "#eef2ff", border: "#c7d2fe", label: "Solicitado" },
+      prestado:        { icon: "🤝", color: "#8b5cf6", bg: "#f5f3ff", border: "#ddd6fe", label: "Prestado" },
+    };
+
+    const columns = [
     { name: "ID", selector: (row) => row.id_equipo, sortable: true, width: "80px", center: true },
     { name: "Grupo", selector: (row) => row.grupo_equipo, sortable: true, minWidth: "180px" },
     { name: "Nombre", selector: (row) => row.nom_equipo, sortable: true, minWidth: "180px" },
@@ -139,18 +146,23 @@ export default function CrudEquipo() {
     },
     {
       name: "Estado",
+      selector: (row) => row.estadoReal || "disponible",
+      sortable: true,
       center: true,
-      width: "120px",
-      cell: (row) => (
-        <span
-          className={`px-3 py-1 rounded-pill text-white fw-semibold ${
-            row.estado === 1 ? "bg-success" : "bg-danger"
-          }`}
-          style={{ fontSize: "0.75rem" }}
-        >
-          {row.estado === 1 ? "ACTIVO" : "INACTIVO"}
-        </span>
-      ),
+      minWidth: "150px",
+      cell: (row) => {
+        const estado = row.estadoReal || "disponible";
+        const cfg = estadoConfig[estado] || estadoConfig.disponible;
+        return (
+          <span style={{
+            background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`,
+            padding: "4px 12px", borderRadius: "99px", fontSize: "12px",
+            fontWeight: "700"
+          }}>
+            {cfg.icon} {cfg.label.toUpperCase()}
+          </span>
+        );
+      },
     },
     {
       name: "Acciones",
@@ -159,20 +171,44 @@ export default function CrudEquipo() {
       cell: (row) => (
         <div className="d-flex gap-2 justify-content-center">
           <button
-            className="btn btn-sm" style={{ background: "#dbeafe", color: "#0077B6", border: "none" }}
-            data-bs-toggle="modal"
-            data-bs-target="#modalEquipo"
-            onClick={() => setSelectedEquipo(row)}
-            title="Editar equipo"
+            className="btn btn-sm" 
+            style={{ 
+              background: row.estaOcupado ? "#f1f5f9" : "#dbeafe", 
+              color: row.estaOcupado ? "#94a3b8" : "#0077B6", 
+              border: "none",
+              cursor: row.estaOcupado ? "not-allowed" : "pointer"
+            }}
+            data-bs-toggle={row.estaOcupado ? "" : "modal"}
+            data-bs-target={row.estaOcupado ? "" : "#modalEquipo"}
+            onClick={() => {
+              if (row.estaOcupado) {
+                Swal.fire("Equipo en uso", "No se puede editar un equipo que está solicitado o prestado.", "info");
+              } else {
+                setSelectedEquipo(row);
+              }
+            }}
+            title={row.estaOcupado ? "Equipo en uso" : "Editar equipo"}
           >
-            <i className="fas fa-edit"></i>
+            <i className={`fas ${row.estaOcupado ? "fa-lock" : "fa-edit"}`}></i>
           </button>
           <button
-            className="btn btn-sm" style={{ background: row.estado === 1 ? "#fee2e2" : "#dcfce7", color: row.estado === 1 ? "#dc2626" : "#16a34a", border: "none" }}
-            onClick={() => cambiarEstado(row)}
-            title={row.estado === 1 ? "Inactivar" : "Activar"}
+            className="btn btn-sm" 
+            style={{ 
+              background: row.estaOcupado ? "#f1f5f9" : (row.estado === 1 ? "#fee2e2" : "#dcfce7"), 
+              color: row.estaOcupado ? "#94a3b8" : (row.estado === 1 ? "#dc2626" : "#16a34a"), 
+              border: "none",
+              cursor: row.estaOcupado ? "not-allowed" : "pointer"
+            }}
+            onClick={() => {
+              if (row.estaOcupado) {
+                Swal.fire("Equipo en uso", "No se puede cambiar el estado de un equipo que está solicitado o prestado.", "info");
+              } else {
+                cambiarEstado(row);
+              }
+            }}
+            title={row.estaOcupado ? "Equipo en uso" : (row.estado === 1 ? "Inactivar" : "Activar")}
           >
-            <i className={`fas ${row.estado === 1 ? "fa-ban" : "fa-check"}`}></i>
+            <i className={`fas ${row.estaOcupado ? "fa-lock" : (row.estado === 1 ? "fa-ban" : "fa-check")}`}></i>
           </button>
         </div>
       ),
