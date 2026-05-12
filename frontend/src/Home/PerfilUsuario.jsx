@@ -25,6 +25,7 @@ const PerfilUsuario = () => {
     } finally {
       setLoading(false);
     }
+  };
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
