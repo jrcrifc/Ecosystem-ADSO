@@ -129,6 +129,15 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
               className="form-control ps-5" placeholder="Contraseña" required style={inputStyle} />
           </div>
 
+          <div className="text-end mb-3">
+            <span 
+              onClick={() => navigate("/olvidar-password")}
+              style={{ color: "#64748b", fontSize: "13px", cursor: "pointer", textDecoration: "underline" }}
+            >
+              ¿Olvidaste tu contraseña?
+            </span>
+          </div>
+
           <button type="submit" className="btn w-100 fw-bold mt-2" disabled={loading}
             style={{ background: "#0077B6", borderRadius: "20px", padding: "12px", color: "#fff", border: "none" }}>
             {loading ? "Ingresando..." : "Iniciar Sesión"}

@@ -4,16 +4,16 @@ import {
     getcuentadante, 
     createcuentadante, 
     updatecuentadante, 
-    deletecuentadante 
+    toggleEstadoCuentadante 
 } from '../controller/cuentadanteController.js';
 import { adminOGestor } from '../middleware/roleMiddleware.js';
 
 const router = express.Router();
 
 router.get('/', adminOGestor, getAllcuentadante);
-router.get('/:id', adminOGestor, getcuentadante);
 router.post('/', adminOGestor, createcuentadante);
+router.put('/toggle-estado/:id', adminOGestor, toggleEstadoCuentadante);
+router.get('/:id', adminOGestor, getcuentadante);
 router.put('/:id', adminOGestor, updatecuentadante);
-router.delete('/:id', adminOGestor, deletecuentadante);
 
 export default router;

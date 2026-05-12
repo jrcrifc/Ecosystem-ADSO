@@ -60,6 +60,26 @@ const ControlReactivos = () => {
       ),
     },
     {
+      name: "Vencidos",
+      center: true,
+      width: "150px",
+      cell: (row) => {
+        if (!row.lotes_vencidos || row.lotes_vencidos === 0) {
+          return <span className="text-muted small">—</span>;
+        }
+        return (
+          <div style={{ textAlign: "center" }}>
+            <span className="badge bg-danger" style={{ fontSize: "0.75rem", padding: "5px 10px", borderRadius: "20px" }}>
+              ⚠️ {row.lotes_vencidos} lote{row.lotes_vencidos > 1 ? 's' : ''}
+            </span>
+            <div className="text-danger small fw-bold" style={{ fontSize: "10px", marginTop: "2px" }}>
+              {parseFloat(row.cantidad_vencida || 0).toString()} {row.presentacion_reactivo}
+            </div>
+          </div>
+        );
+      }
+    },
+    {
       name: "Acciones",
       center: true,
       width: "150px",

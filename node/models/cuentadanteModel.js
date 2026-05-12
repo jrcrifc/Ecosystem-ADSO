@@ -21,6 +21,12 @@ const cuentadanteModel = db.define('cuentadantes', {
 
     tel_cuentadante: {
         type: DataTypes.INTEGER
+    },
+
+    estado: {
+        type: DataTypes.STRING(10),
+        allowNull: false,
+        defaultValue: 'activo'
     }
 
 }, {

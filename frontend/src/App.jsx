@@ -25,6 +25,8 @@ import GestionUsuarios from "./usuarios/GestionUsuarios.jsx";
 import SalidasReactivos from "./salidasReactivos/crudsalidareactivo.jsx";
 import TopBar from "./TopBar.jsx";
 import PerfilUsuario from "./Home/PerfilUsuario.jsx";
+import OlvidarPassword from "./Home/OlvidarPassword.jsx";
+import AcercaDe from "./Home/AcercaDe.jsx";
 
 // ✅ Aprendiz/Instructor → formulario | Pasante/Gestor → pantalla espera
 const FormularioRoute = ({ isAuth, userData, userRol, logOut, children }) => {
@@ -181,7 +183,11 @@ function App() {
             {/* REGISTER */}
             <Route path="/register" element={isAuth ? <Navigate to="/home" replace /> : <Register />} />
 
+            {/* OLVIDAR PASSWORD */}
+            <Route path="/olvidar-password" element={isAuth ? <Navigate to="/home" replace /> : <OlvidarPassword />} />
+
             {/* HOME */}
+            <Route path="/acerca-de" element={<AcercaDe />} />
             <Route path="/home" element={
               <FormularioRoute isAuth={isAuth} userData={userData} userRol={userRol} logOut={logOut}>
                 <Home />

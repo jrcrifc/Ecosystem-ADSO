@@ -68,7 +68,6 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
     }
   };
 
-  const stockTotal = lotesFefo.reduce((acc, l) => acc + l.cantidad_disponible, 0);
   const loteFefo = lotesFefo[0]; // El primero es el más próximo a vencer
 
   const handleSubmit = async (e) => {
@@ -82,8 +81,16 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
       Swal.fire("⚠️ Atención", "La cantidad debe ser mayor a 0", "warning");
       return;
     }
-    if (parseFloat(cantidad_salida) > stockTotal) {
-      Swal.fire("⚠️ Stock insuficiente", `Solo hay ${stockTotal.toFixed(3)} disponible en total`, "warning");
+    if (!loteFefo) {
+      Swal.fire("⚠️ Sin lotes", "No hay lotes disponibles (no vencidos) para este reactivo", "warning");
+      return;
+    }
+    if (parseFloat(cantidad_salida) > loteFefo.cantidad_disponible) {
+      Swal.fire({
+        icon: "warning",
+        title: "⚠️ Cantidad excede el lote",
+        html: `El lote <strong>${loteFefo.lote}</strong> solo tiene <strong>${parseFloat(loteFefo.cantidad_disponible.toFixed(3))}</strong> disponible.<br/>Registra solo esa cantidad y luego crea otra salida para el siguiente lote.`
+      });
       return;
     }
     const [hh, mm] = hora_salida.split(':').map(Number);
@@ -157,64 +164,64 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
           </select>
         </div>
 
-        {/* LOTES FEFO */}
+        {/* LOTE FEFO — Solo el más próximo a vencer */}
         {loadingLotes && (
           <div className="col-12 text-center text-muted">
             <div className="spinner-border spinner-border-sm me-2" />
-            Cargando lotes...
+            Cargando lote...
           </div>
         )}
 
-        {lotesFefo.length > 0 && (
+        {loteFefo && (
           <div className="col-12">
             <label className="form-label fw-semibold text-muted">
-              Lotes disponibles <span className="text-success">(ordenados por vencimiento)</span>
+              Lote asignado <span className="text-success">(FEFO — primero en vencer, primero en salir)</span>
             </label>
-            <div style={{ background: "#f8fafc", borderRadius: "10px", padding: "12px" }}>
-              <table className="table table-sm table-striped mb-0">
-                <thead className="table-success">
-                  <tr>
-                    <th>#</th>
-                    <th>Lote</th>
-                    <th>Disponible</th>
-                    <th>Vencimiento</th>
-                    <th>Días</th>
-                    <th>Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {lotesFefo.map((l, i) => (
-                    <tr key={l.id_movimiento_reactivo} style={{ background: i === 0 ? "#e8f5e9" : "" }}>
-                      <td>
-                        {i === 0 && <span className="badge bg-warning text-dark">⭐ FEFO</span>}
-                        {i > 0 && <span className="text-muted">{i + 1}</span>}
-                      </td>
-                      <td><strong>{l.lote}</strong></td>
-                      <td>{parseFloat(parseFloat(l.cantidad_disponible || 0).toFixed(3)).toString()}</td>
-                      <td>{l.fecha_vencimiento ? new Date(l.fecha_vencimiento).toLocaleDateString('es-CO') : 'Sin fecha'}</td>
-                      <td>
-                        {l.dias_para_vencer !== null ? (
-                          <span className={`badge ${l.dias_para_vencer <= 7 ? 'bg-danger' : l.dias_para_vencer <= 30 ? 'bg-warning text-dark' : 'bg-success'}`}>
-                            {l.dias_para_vencer} días
-                          </span>
-                        ) : '-'}
-                      </td>
-                      <td>
-                        {l.dias_para_vencer !== null && l.dias_para_vencer <= 7
-                          ? <span className="badge bg-danger">⚠️ Urgente</span>
-                          : <span className="badge bg-success">OK</span>}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr className="table-info">
-                    <td colSpan="2"><strong>Stock total disponible</strong></td>
-                    <td colSpan="4"><strong>{parseFloat(stockTotal.toFixed(3)).toString()}</strong></td>
-                  </tr>
-                </tfoot>
-              </table>
+            <div style={{
+              background: "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)",
+              borderRadius: "12px",
+              padding: "16px",
+              border: "1px solid #bbf7d0"
+            }}>
+              <div className="d-flex justify-content-between align-items-start">
+                <div>
+                  <div className="d-flex align-items-center gap-2 mb-2">
+                    <span className="badge bg-warning text-dark" style={{ fontSize: "12px" }}>⭐ FEFO</span>
+                    <strong style={{ fontSize: "15px", color: "#0A1628" }}>Lote: {loteFefo.lote}</strong>
+                  </div>
+                  <div className="d-flex gap-4">
+                    <div>
+                      <small className="text-muted d-block">Disponible</small>
+                      <strong style={{ fontSize: "18px", color: "#059669" }}>
+                        {parseFloat(parseFloat(loteFefo.cantidad_disponible || 0).toFixed(3)).toString()}
+                      </strong>
+                      <span className="text-muted ms-1" style={{ fontSize: "12px" }}>
+                        {reactivos.find(x => x.id_reactivo === parseInt(id_reactivo))?.presentacion_reactivo}
+                      </span>
+                    </div>
+                    <div>
+                      <small className="text-muted d-block">Vencimiento</small>
+                      <strong style={{ fontSize: "14px", color: "#0A1628" }}>
+                        {loteFefo.fecha_vencimiento ? new Date(loteFefo.fecha_vencimiento).toLocaleDateString('es-CO') : 'Sin fecha'}
+                      </strong>
+                    </div>
+                    <div>
+                      <small className="text-muted d-block">Días restantes</small>
+                      <span className={`badge ${loteFefo.dias_para_vencer !== null && loteFefo.dias_para_vencer <= 7 ? 'bg-danger' : loteFefo.dias_para_vencer !== null && loteFefo.dias_para_vencer <= 30 ? 'bg-warning text-dark' : 'bg-success'}`}>
+                        {loteFefo.dias_para_vencer !== null ? `${loteFefo.dias_para_vencer} días` : 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
+              {/* Aviso si hay más lotes */}
+              {lotesFefo.length > 1 && (
+                <div className="mt-2 pt-2" style={{ borderTop: "1px dashed #86efac", fontSize: "12px", color: "#64748b" }}>
+                  <i className="fas fa-info-circle me-1 text-info"></i>
+                  Hay <strong>{lotesFefo.length - 1} lote(s) más</strong> disponible(s). Si necesitas más cantidad de la disponible en este lote, registra otra salida después.
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -230,7 +237,7 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
               onChange={(e) => setCantidadSalida(e.target.value)}
               required min="0.001" step="0.001"
               placeholder="Ej: 2.500"
-              max={stockTotal || undefined}
+              max={loteFefo ? loteFefo.cantidad_disponible : undefined}
             />
             {id_reactivo && (() => {
               const r = reactivos.find(x => x.id_reactivo === parseInt(id_reactivo));
@@ -241,10 +248,17 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
               ) : null;
             })()}
           </div>
-          {stockTotal > 0 && (
-            <div className={`form-text fw-semibold ${parseFloat(cantidad_salida) > stockTotal ? 'text-danger' : 'text-success'}`}>
-              Stock total disponible: {parseFloat(stockTotal.toFixed(3)).toString()}
-            </div>
+          {loteFefo && (
+            <>
+              <div className={`form-text fw-semibold ${parseFloat(cantidad_salida) > loteFefo.cantidad_disponible ? 'text-danger' : 'text-success'}`}>
+                Máximo de este lote: {parseFloat(parseFloat(loteFefo.cantidad_disponible).toFixed(3)).toString()}
+              </div>
+              {parseFloat(cantidad_salida) > loteFefo.cantidad_disponible && (
+                <div className="form-text text-danger fw-bold" style={{ fontSize: "12px" }}>
+                  ⚠️ La cantidad excede el lote actual ({parseFloat(parseFloat(loteFefo.cantidad_disponible).toFixed(3)).toString()}). Registra solo lo disponible y luego otra salida para el siguiente lote.
+                </div>
+              )}
+            </>
           )}
         </div>
 

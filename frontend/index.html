@@ -4,7 +4,17 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ecosystem · Laboratorio Ambiental</title>
+    <title>Ecosystem - Laboratorio Ambiental</title>
+    <script>
+      // 🛡️ Blindaje de Seguridad ECOSYSTEM
+      document.addEventListener('contextmenu', event => event.preventDefault()); // Bloquea clic derecho
+      document.onkeydown = function(e) {
+        if (e.keyCode == 123) return false; // Bloquea F12
+        if (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false; // Bloquea Ctrl+Shift+I
+        if (e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false; // Bloquea Ctrl+Shift+J
+        if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; // Bloquea Ctrl+U (Ver código fuente)
+      };
+    </script>
 
     <!-- CSS de Bootstrap -->
      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">

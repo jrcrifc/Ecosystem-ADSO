@@ -73,6 +73,12 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
         { icon: "🏷️", text: "Estados Solicitud", path: "/estadoSolicitud", show: true },
       ]
     },
+    {
+      key: "mas", icon: "➕", text: "Más", show: true,
+      items: [
+        { icon: "ℹ️", text: "Acerca de Ecosystem", path: "/acerca-de", show: true },
+      ]
+    },
   ];
 
   const avatarClass = esAdmin ? "admin" : esGestorPasante ? "gestor" : "default";

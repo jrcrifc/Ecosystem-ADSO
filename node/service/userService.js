@@ -31,14 +31,27 @@ class UserService {
   }
 
  async registerUser(data) {
-    const { documento, nombres_apellidos, email, password, rol } = data;
+    let { documento, nombres_apellidos, email, password, rol } = data;
+
+    // ✅ BLINDAJE: Limpieza y Normalización
+    documento = (documento || "").trim();
+    nombres_apellidos = (nombres_apellidos || "").trim();
+    email = (email || "").trim().toLowerCase();
+
+    // ✅ VALIDACIONES DE SERVIDOR
+    if (!/^\d+$/.test(documento)) throw new Error("El documento debe contener solo números");
+    if (nombres_apellidos.split(" ").length < 2) throw new Error("Por favor ingresa nombres y apellidos completos");
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) throw new Error("El formato del correo electrónico no es válido");
+
+    if (password.length < 8) throw new Error("La contraseña debe tener al menos 8 caracteres");
 
     const existUser = await UserModel.findOne({ where: { email } });
-    if (existUser) throw new Error("El usuario ya existe");
+    if (existUser) throw new Error("El correo electrónico ya está registrado");
 
-    // Verificar documento duplicado
     const existDoc = await UserModel.findOne({ where: { documento } });
-    if (existDoc) throw new Error("Ya existe un usuario con ese documento");
+    if (existDoc) throw new Error("Ya existe un usuario con ese número de documento");
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await UserModel.create({
@@ -59,6 +72,21 @@ class UserService {
         mensaje: `${nombres_apellidos} se registró como ${rol} y está esperando aprobación para acceder al sistema.`,
         tipo: 'solicitud_acceso'
       });
+
+      // ✅ ENVÍO DE EMAIL A ADMINS
+      try {
+        const admins = await UserModel.findAll({ where: { rol: 'Administrador', estado: 'aprobado' } });
+        for (const admin of admins) {
+          await emailService.notifyAdminNewUser(admin.email, {
+            documento,
+            nombres_apellidos,
+            email,
+            rol
+          });
+        }
+      } catch (emailError) {
+        console.error("❌ Error al enviar email de notificación a los admins:", emailError);
+      }
     }
 
     const { password: _, ...userSinPassword } = user.toJSON();

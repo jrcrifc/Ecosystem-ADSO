@@ -31,6 +31,20 @@ const UserModel = sequelize.define('usuarios', {
     type: DataTypes.ENUM('pendiente', 'aprobado', 'rechazado', 'inactivo'),
     allowNull: false,
     defaultValue: 'pendiente'
+  },
+  reset_code: {
+    type: DataTypes.STRING(6),
+    allowNull: true,
+    defaultValue: null
+  },
+  reset_code_expires: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    defaultValue: null
+  },
+  failed_attempts: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0
   }
 }, {
   freezeTableName: true,

@@ -37,10 +37,10 @@ export const updatecuentadante = async (req, res) => {
     }
 };
 
-export const deletecuentadante = async (req, res) => {
+export const toggleEstadoCuentadante = async (req, res) => {
     try {
-        await cuentadanteService.deletecuentadante(req.params.id); // ← fix
-        res.json({ message: "Registro eliminado correctamente" });
+        const nuevoEstado = await cuentadanteService.toggleEstadoCuentadante(req.params.id);
+        res.json({ message: `Cuentadante ${nuevoEstado === 'activo' ? 'activado' : 'inactivado'} correctamente`, estado: nuevoEstado });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

@@ -37,18 +37,30 @@ router.get('/stock/disponibilidad', adminOGestor, async (req, res) => {
       });
 
       // Solo contar lotes NO vencidos para el inventario disponible
-      const cantidad_inventario = Object.values(loteMap).reduce((acc, l) => {
+      let cantidad_inventario = 0;
+      let lotes_vencidos_count = 0;
+      let cantidad_vencida = 0;
+
+      Object.values(loteMap).forEach(l => {
+        const disponible = parseFloat(l.cantidad_disponible.toFixed(3));
+        if (disponible <= 0) return;
         const vencido = l.fecha_vencimiento && new Date(l.fecha_vencimiento) <= hoy;
-        if (vencido) return acc; // No contar lotes vencidos
-        return acc + l.cantidad_disponible;
-      }, 0);
+        if (vencido) {
+          lotes_vencidos_count++;
+          cantidad_vencida += disponible;
+        } else {
+          cantidad_inventario += disponible;
+        }
+      });
 
       return {
         id_reactivo: r.id_reactivo,
         nom_reactivo: r.nom_reactivo,
-
+        presentacion_reactivo: r.presentacion_reactivo,
         cantidad_inventario: Math.max(0, parseFloat(cantidad_inventario.toFixed(3))),
-        estado_stock: cantidad_inventario > 0 ? 'disponible' : 'agotado'
+        estado_stock: cantidad_inventario > 0 ? 'disponible' : 'agotado',
+        lotes_vencidos: lotes_vencidos_count,
+        cantidad_vencida: parseFloat(cantidad_vencida.toFixed(3))
       };
     });
 

@@ -26,6 +26,8 @@ import cuentadanteRoutes from './routes/cuentandanteRoutes.js';
 import notificacionRoutes from './routes/notificacionRoutes.js';
 import solicitudAccesoRoutes from './routes/solicitudAccesoRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
+import passwordResetRoutes from './routes/passwordResetRoutes.js';
+import configRoutes from './routes/configRoutes.js';
 
 
 // =============================
@@ -78,6 +80,8 @@ app.use("/api/admin", adminRoutes);
 app.use('/api/notificaciones', notificacionRoutes);
 app.use('/api/solicitud-acceso', solicitudAccesoRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/password-reset', passwordResetRoutes);
+app.use('/api/config', configRoutes);
 
 app.get('/', (req, res) => {
     res.send('Bienvenido a la API de Equipos - Laboratorio Ambiental');

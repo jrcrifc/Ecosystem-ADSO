@@ -40,14 +40,15 @@ export default function CrudCuentadante() {
     }
   };
 
-  const eliminarCuentadante = async (id) => {
+  const toggleEstado = async (id, estadoActual) => {
+    const nuevoEstado = estadoActual === 'activo' ? 'inactivo' : 'activo';
     const result = await Swal.fire({
-      title: "¿Eliminar cuentadante?",
-      text: "Esta acción no se puede deshacer",
-      icon: "warning",
+      title: `¿${nuevoEstado === 'activo' ? 'Activar' : 'Inactivar'} cuentadante?`,
+      text: `El cuentadante será marcado como ${nuevoEstado}`,
+      icon: "question",
       showCancelButton: true,
-      confirmButtonColor: "#dc3545",
-      confirmButtonText: "Sí, eliminar",
+      confirmButtonColor: nuevoEstado === 'activo' ? "#10b981" : "#f59e0b",
+      confirmButtonText: nuevoEstado === 'activo' ? "Sí, activar" : "Sí, inactivar",
       cancelButtonText: "Cancelar"
     });
 
@@ -55,13 +56,19 @@ export default function CrudCuentadante() {
 
     try {
       const token = sessionStorage.getItem("token");
-      await apiAxios.delete(`/api/cuentadante/${id}`, {
+      await apiAxios.put(`/api/cuentadante/toggle-estado/${id}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      Swal.fire({ icon: "success", title: "Eliminado", timer: 1500, showConfirmButton: false });
+      Swal.fire({
+        icon: "success",
+        title: nuevoEstado === 'activo' ? "Activado" : "Inactivado",
+        text: `Cuentadante ${nuevoEstado} correctamente`,
+        timer: 1500,
+        showConfirmButton: false
+      });
       cargarCuentadantes();
     } catch (error) {
-      Swal.fire("Error", "No se pudo eliminar el cuentadante", "error");
+      Swal.fire("Error", "No se pudo cambiar el estado del cuentadante", "error");
     }
   };
 
@@ -72,29 +79,65 @@ export default function CrudCuentadante() {
     { name: "Nombre Completo", selector: row => `${row.nom_cuentadante} ${row.apell_cuentadante}`, wrap: true },
     { name: "Telefono", selector: row => row.tel_cuentadante, sortable: true },
     {
+      name: "Estado",
+      center: true,
+      width: "130px",
+      cell: (row) => {
+        const activo = (row.estado || 'activo') === 'activo';
+        return (
+          <span style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
+            padding: "4px 12px",
+            borderRadius: "99px",
+            fontSize: "12px",
+            fontWeight: "700",
+            background: activo ? "rgba(16,185,129,0.1)" : "rgba(245,158,11,0.1)",
+            color: activo ? "#059669" : "#d97706",
+            border: `1px solid ${activo ? "rgba(16,185,129,0.2)" : "rgba(245,158,11,0.2)"}`,
+          }}>
+            <span style={{
+              width: "8px", height: "8px", borderRadius: "50%",
+              background: activo ? "#10b981" : "#f59e0b"
+            }} />
+            {activo ? "Activo" : "Inactivo"}
+          </span>
+        );
+      }
+    },
+    {
       name: "Acciones",
       center: true,
       width: "140px",
-      cell: (row) => (
-        <div className="d-flex gap-2 justify-content-center">
-          <button
-            className="btn btn-sm btn-warning"
-            data-bs-toggle="modal"
-            data-bs-target="#modalCuentadante"
-            onClick={() => setSelectedCuentadante(row)}
-            title="Editar"
-          >
-            <i className="fas fa-edit"></i>
-          </button>
-          <button
-            className="btn btn-sm btn-danger"
-            onClick={() => eliminarCuentadante(row.id_cuentadante)}
-            title="Eliminar"
-          >
-            <i className="fas fa-trash"></i>
-          </button>
-        </div>
-      )
+      cell: (row) => {
+        const activo = (row.estado || 'activo') === 'activo';
+        return (
+          <div className="d-flex gap-2 justify-content-center">
+            <button
+              className="btn btn-sm btn-warning"
+              data-bs-toggle="modal"
+              data-bs-target="#modalCuentadante"
+              onClick={() => setSelectedCuentadante(row)}
+              title="Editar"
+            >
+              <i className="fas fa-edit"></i>
+            </button>
+            <button
+              className={`btn btn-sm ${activo ? 'btn-outline-secondary' : 'btn-outline-success'}`}
+              onClick={() => toggleEstado(row.id_cuentadante, row.estado || 'activo')}
+              title={activo ? "Inactivar" : "Activar"}
+              style={{
+                borderRadius: "8px",
+                minWidth: "34px",
+              }}
+            >
+              <i className={`fas ${activo ? 'fa-toggle-on' : 'fa-toggle-off'}`} 
+                 style={{ fontSize: "16px", color: activo ? "#10b981" : "#94a3b8" }}></i>
+            </button>
+          </div>
+        );
+      }
     }
   ];
 

@@ -11,6 +11,7 @@ const Register = () => {
     nombres_apellidos: "",
     email: "",
     password: "",
+    confirmPassword: "",
     rol: "Aprendiz"
   });
 
@@ -19,38 +20,51 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    
+    // Validación en tiempo real para documento (solo números)
+    if (name === "documento" && value !== "" && !/^\d+$/.test(value)) return;
+    
+    // Validación en tiempo real para nombres (no números)
+    if (name === "nombres_apellidos" && /\d/.test(value)) return;
+
+    setForm({ ...form, [name]: value });
   };
 
   const registrarUsuario = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
+    
+    // Validaciones extra "a prueba de tontos"
+    const docTrim = form.documento.trim();
+    const nombreTrim = form.nombres_apellidos.trim();
+    const emailTrim = form.email.trim().toLowerCase();
+    
+    if (docTrim.length < 5) return setError("El documento es demasiado corto.");
+    if (nombreTrim.split(" ").length < 2) return setError("Por favor, ingresa nombres y apellidos completos.");
+    if (form.password !== form.confirmPassword) return setError("Las contraseñas no coinciden.");
+    if (form.password.length < 8) return setError("La contraseña debe tener mínimo 8 caracteres.");
+
     setLoading(true);
 
     try {
       const data = {
-        documento: form.documento.trim(),
-        nombres_apellidos: form.nombres_apellidos.trim(),
-        email: form.email.trim(),
-        password: form.password.trim(),
+        documento: docTrim,
+        nombres_apellidos: nombreTrim,
+        email: emailTrim,
+        password: form.password,
         rol: form.rol
       };
 
-      if (data.password.length < 8) {
-        setError("La contraseña debe tener mínimo 8 caracteres");
-        setLoading(false);
-        return;
-      }
-
       await apiAxios.post("/api/auth", data);
 
-      setSuccess("✅ Registro exitoso. Espera a que el administrador apruebe tu cuenta.");
-      setForm({ documento: "", nombres_apellidos: "", email: "", password: "", rol: "Aprendiz" });
+      setSuccess("✅ Registro exitoso. Tu cuenta está en revisión por el administrador.");
+      setForm({ documento: "", nombres_apellidos: "", email: "", password: "", confirmPassword: "", rol: "Aprendiz" });
 
-      setTimeout(() => navigate("/UserLogin"), 3000);
+      setTimeout(() => navigate("/UserLogin"), 4000);
     } catch (err) {
-      setError(err.response?.data?.message || "Error al registrar el usuario");
+      setError(err.response?.data?.message || "Error al registrar el usuario. Revisa los datos.");
     } finally {
       setLoading(false);
     }
@@ -68,33 +82,34 @@ const Register = () => {
       }}
     >
       <div style={{
-        width: "100%", maxWidth: "380px", padding: "20px 25px",
-        borderRadius: "20px", background: "#ffffff", color: "#1f2937",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
-        maxHeight: "96vh", overflowY: "auto"
+        width: "100%", maxWidth: "420px", padding: "25px 30px",
+        borderRadius: "24px", background: "rgba(255,255,255,0.95)", color: "#1f2937",
+        boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
+        maxHeight: "96vh", overflowY: "auto", backdropFilter: "blur(10px)"
       }}>
-        <h2 className="text-center mb-3" style={{ fontWeight: "bold", fontSize: "20px", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
-          <span style={{ fontSize: "24px" }}>🚀</span> Crear Cuenta
+        <h2 className="text-center mb-3" style={{ fontWeight: "800", fontSize: "22px", color: "#0077B6" }}>
+          🚀 Crear Cuenta
         </h2>
 
-        {error && <div className="alert alert-danger p-2" style={{ fontSize: "12px", textAlign: "center" }}>{error}</div>}
-        {success && <div className="alert alert-success p-2" style={{ fontSize: "12px", textAlign: "center" }}>{success}</div>}
+        {error && <div className="alert alert-danger p-2 mb-3" style={{ fontSize: "12px", textAlign: "center", borderRadius: "10px", border: "none", background: "#fee2e2", color: "#991b1b" }}>{error}</div>}
+        {success && <div className="alert alert-success p-2 mb-3" style={{ fontSize: "12px", textAlign: "center", borderRadius: "10px", border: "none", background: "#dcfce7", color: "#166534" }}>{success}</div>}
 
         <form onSubmit={registrarUsuario}>
-          {/* Tipo de usuario — sin Administrador */}
-          <div className="mb-2">
-            <label style={{ fontSize: "12px", color: "#6b7280", fontWeight: "500" }}>Tipo de usuario</label>
-            <div style={{ display: "flex", gap: "6px", marginTop: "6px" }}>
+          {/* Tipo de usuario */}
+          <div className="mb-3">
+            <label style={{ fontSize: "12px", color: "#64748b", fontWeight: "600", marginBottom: "8px", d: "block" }}>¿Cuál es tu rol?</label>
+            <div style={{ display: "flex", gap: "8px" }}>
               {["Aprendiz", "Pasante", "Gestor", "Instructor"].map((rolValue) => (
                 <div
                   key={rolValue}
                   onClick={() => setForm({ ...form, rol: rolValue })}
                   style={{
-                    flex: 1, padding: "8px 3px", borderRadius: "8px",
-                    textAlign: "center", cursor: "pointer", fontSize: "11px", fontWeight: "600",
-                    border: form.rol === rolValue ? "2px solid #0077B6" : "2px solid #e5e7eb",
-                    background: form.rol === rolValue ? "#0077B6" : "#f9fafb",
-                    color: form.rol === rolValue ? "#fff" : "#374151"
+                    flex: 1, padding: "10px 4px", borderRadius: "12px",
+                    textAlign: "center", cursor: "pointer", fontSize: "11px", fontWeight: "700",
+                    border: form.rol === rolValue ? "2px solid #0077B6" : "2px solid #f1f5f9",
+                    background: form.rol === rolValue ? "#0077B6" : "#f8fafc",
+                    color: form.rol === rolValue ? "#fff" : "#64748b",
+                    transition: "all 0.2s ease"
                   }}
                 >
                   {rolValue}
@@ -103,45 +118,55 @@ const Register = () => {
             </div>
           </div>
 
-          <div className="mb-2">
-            <label className="mb-1" style={{ fontSize: "12px", fontWeight: "500" }}>Documento</label>
-            <input className="form-control" name="documento" placeholder="Ej: 123456789"
-              value={form.documento} onChange={handleChange} required style={inputStyle} />
+          <div className="row g-2 mb-2">
+            <div className="col-12">
+              <label className="mb-1" style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Documento de Identidad</label>
+              <input className="form-control" name="documento" placeholder="Ingresa solo números"
+                value={form.documento} onChange={handleChange} required style={inputStyle} />
+            </div>
           </div>
 
           <div className="mb-2">
-            <label className="mb-1" style={{ fontSize: "12px", fontWeight: "500" }}>Nombres y Apellidos</label>
-            <input className="form-control" name="nombres_apellidos" placeholder="Ej: Miguel Santiago Bocanegra"
+            <label className="mb-1" style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Nombres y Apellidos Completos</label>
+            <input className="form-control" name="nombres_apellidos" placeholder="Ej: Juan Pérez"
               value={form.nombres_apellidos} onChange={handleChange} required style={inputStyle} />
           </div>
 
           <div className="mb-2">
-            <label className="mb-1" style={{ fontSize: "12px", fontWeight: "500" }}>Correo</label>
-            <input className="form-control" type="email" name="email" placeholder="correo@email.com"
+            <label className="mb-1" style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Correo Electrónico</label>
+            <input className="form-control" type="email" name="email" placeholder="ejemplo@gmail.com"
               value={form.email} onChange={handleChange} required style={inputStyle} />
           </div>
 
-          <div className="mb-3">
-            <label className="mb-1" style={{ fontSize: "12px", fontWeight: "500" }}>Contraseña</label>
-            <input className="form-control" type="password" name="password" placeholder="Mínimo 8 caracteres"
-              value={form.password} onChange={handleChange} required style={inputStyle} />
+          <div className="row g-2 mb-4">
+            <div className="col-6">
+              <label className="mb-1" style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Contraseña</label>
+              <input className="form-control" type="password" name="password" placeholder="Mínimo 8"
+                value={form.password} onChange={handleChange} required style={inputStyle} />
+            </div>
+            <div className="col-6">
+              <label className="mb-1" style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Repetir</label>
+              <input className="form-control" type="password" name="confirmPassword" placeholder="Confirma"
+                value={form.confirmPassword} onChange={handleChange} required style={inputStyle} />
+            </div>
           </div>
 
-          <button type="submit" className="btn w-100" disabled={loading}
+          <button type="submit" className="btn w-100 py-3" disabled={loading}
             style={{
               background: "#0077B6",
-              color: "#fff", fontWeight: "bold", borderRadius: "10px",
-              padding: "10px", fontSize: "14px", border: "none",
-              boxShadow: "0 5px 15px rgba(0,119,182,0.25)"
+              color: "#fff", fontWeight: "800", borderRadius: "14px",
+              fontSize: "15px", border: "none",
+              boxShadow: "0 10px 20px rgba(0,119,182,0.2)",
+              transition: "transform 0.2s"
             }}>
-            {loading ? "Registrando..." : "Registrarse"}
+            {loading ? "Creando cuenta..." : "Crear mi Cuenta"}
           </button>
 
-          <p className="mt-3 text-center" style={{ fontSize: "13px", color: "#64748b" }}>
+          <p className="mt-4 text-center" style={{ fontSize: "13px", color: "#64748b" }}>
             ¿Ya tienes cuenta?{" "}
-            <span style={{ color: "#0077B6", cursor: "pointer", fontWeight: "600" }}
+            <span style={{ color: "#0077B6", cursor: "pointer", fontWeight: "700", textDecoration: "underline" }}
               onClick={() => navigate("/UserLogin")}>
-              Iniciar sesión
+              Inicia sesión aquí
             </span>
           </p>
         </form>

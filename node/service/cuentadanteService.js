@@ -25,12 +25,15 @@ class cuentadanteService {
     return true;
   }
 
-  async deletecuentadante(id) {
-    const deleted = await cuentadante.destroy(
+  async toggleEstadoCuentadante(id) {
+    const registro = await cuentadante.findByPk(id);
+    if (!registro) throw new Error("Registro no encontrado");
+    const nuevoEstado = registro.estado === 'activo' ? 'inactivo' : 'activo';
+    await cuentadante.update(
+      { estado: nuevoEstado },
       { where: { id_cuentadante: id } }
     );
-    if (!deleted) throw new Error("Registro no encontrado");
-    return true;
+    return nuevoEstado;
   }
 }
 

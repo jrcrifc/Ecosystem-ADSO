@@ -6,6 +6,7 @@ import socket from "../socket.js"; // ✅ Usar socket centralizado
 export default function Campanita({ userData, onAprobado, userRol }) {
   const [notificaciones, setNotificaciones] = useState([]);
   const [open, setOpen] = useState(false);
+  const [verTodas, setVerTodas] = useState(false);
   const ref = useRef();
   const navigate = useNavigate();
 
@@ -29,8 +30,27 @@ export default function Campanita({ userData, onAprobado, userRol }) {
 
     const handleNotification = (nueva) => {
       console.log("📥 Notificación recibida en tiempo real:", nueva);
-      setNotificaciones(prev => [nueva, ...prev.slice(0, 4)]);
+      setNotificaciones(prev => [nueva, ...prev]);
       
+      // ✅ Si el admin está conectado, mostrar aviso inmediato tipo Toast
+      if (esAdmin && nueva.tipo === 'solicitud_acceso') {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'info',
+          title: '👤 Nuevo registro',
+          text: nueva.mensaje,
+          showConfirmButton: true,
+          confirmButtonText: 'Ver',
+          timer: 10000,
+          timerProgressBar: true
+        }).then((result) => {
+          if (result.isConfirmed) {
+            navigate('/gestion-usuarios');
+          }
+        });
+      }
+
       // ✅ Si hay notificación de aprobado, avisar al App
       if (nueva.tipo === 'aprobado' && onAprobado && userRol !== 'Administrador') {
         onAprobado();
@@ -79,8 +99,8 @@ export default function Campanita({ userData, onAprobado, userRol }) {
         }
       }
 
-      // ✅ Limitar a las últimas 10 notificaciones (más espacio si hay vencimientos)
-      setNotificaciones(nuevas.slice(0, 10));
+      // ✅ Guardar todas las notificaciones
+      setNotificaciones(nuevas);
     } catch { }
   };
 
@@ -145,7 +165,7 @@ export default function Campanita({ userData, onAprobado, userRol }) {
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
-      <button onClick={() => setOpen(!open)} style={{
+      <button onClick={() => { setOpen(!open); setVerTodas(false); }} style={{
         background: "transparent", border: "none", cursor: "pointer",
         position: "relative", padding: "6px"
       }}>
@@ -163,12 +183,13 @@ export default function Campanita({ userData, onAprobado, userRol }) {
 
       {open && (
         <div style={{
-          position: "fixed", left: "290px", top: "auto",
-          width: "360px", maxHeight: "420px",
-          background: "#fff", borderRadius: "16px",
-          boxShadow: "0 10px 40px rgba(0,0,0,0.2)",
-          border: "1px solid #f0f4f8", zIndex: 9999,
-          overflow: "hidden", display: "flex", flexDirection: "column"
+          position: "absolute", right: "0", top: "calc(100% + 12px)",
+          width: "380px", maxHeight: "480px",
+          background: "#fff", borderRadius: "20px",
+          boxShadow: "0 15px 50px rgba(0,0,0,0.15)",
+          border: "1px solid #f1f5f9", zIndex: 9999,
+          overflow: "hidden", display: "flex", flexDirection: "column",
+          animation: "fadeInScale 0.2s ease-out"
         }}>
           <div style={{
             padding: "16px 20px", borderBottom: "1px solid #f0f4f8",
@@ -193,7 +214,7 @@ export default function Campanita({ userData, onAprobado, userRol }) {
                 <div style={{ fontSize: "32px", marginBottom: "8px" }}>🔕</div>
                 <p style={{ margin: 0, fontSize: "14px" }}>Sin notificaciones</p>
               </div>
-            ) : notificaciones.map(n => (
+            ) : (verTodas ? notificaciones : notificaciones.slice(0, 5)).map(n => (
               <div key={n.id_notificacion} style={{
                 padding: "14px 20px",
                 background: n.leida ? "#fff" : colorTipo(n.tipo),
@@ -241,6 +262,24 @@ export default function Campanita({ userData, onAprobado, userRol }) {
                 </div>
               </div>
             ))}
+
+            {/* ✅ Botón Ver todas / Ver menos */}
+            {notificaciones.length > 5 && (
+              <button
+                onClick={() => setVerTodas(prev => !prev)}
+                style={{
+                  width: "100%", padding: "12px", border: "none",
+                  background: "#f8fafc", color: "#0077B6",
+                  fontSize: "13px", fontWeight: "600",
+                  cursor: "pointer", transition: "background 0.2s ease",
+                  borderTop: "1px solid #f0f4f8"
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "#e2e8f0"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "#f8fafc"; }}
+              >
+                {verTodas ? `Mostrar menos ▲` : `Ver todas (${notificaciones.length}) ▼`}
+              </button>
+            )}
           </div>
         </div>
       )}
