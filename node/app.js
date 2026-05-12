@@ -28,6 +28,7 @@ import solicitudAccesoRoutes from './routes/solicitudAccesoRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import passwordResetRoutes from './routes/passwordResetRoutes.js';
 import configRoutes from './routes/configRoutes.js';
+import logRoutes from "./routes/logRoutes.js";
 
 
 // =============================
@@ -82,6 +83,7 @@ app.use('/api/solicitud-acceso', solicitudAccesoRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/password-reset', passwordResetRoutes);
 app.use('/api/config', configRoutes);
+app.use('/api/auditoria', logRoutes);
 
 app.get('/', (req, res) => {
     res.send('Bienvenido a la API de Equipos - Laboratorio Ambiental');

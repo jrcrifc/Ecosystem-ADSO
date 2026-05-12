@@ -30,6 +30,7 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
       key: "general", icon: "🏠", text: "General", show: true,
       items: [
         { icon: "🏠", text: "Inicio", path: "/home", show: true },
+        { icon: "👤", text: "Mi Perfil", path: "/perfil", show: true },
         { icon: "ℹ️", text: "Acerca de Ecosystem", path: "/acerca-de", show: true },
       ]
     },
@@ -70,6 +71,7 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
       key: "admin", icon: "👑", text: "Administración", show: esAdmin,
       items: [
         { icon: "👥", text: "Gestión Usuarios", path: "/gestion-usuarios", show: true },
+        { icon: "📜", text: "Auditoría", path: "/auditoria", show: true },
         { icon: "📑", text: "Gestión Solicitudes", path: "/gestion-solicitudes", show: true },
         { icon: "🏷️", text: "Estados Solicitud", path: "/estadoSolicitud", show: true },
       ]

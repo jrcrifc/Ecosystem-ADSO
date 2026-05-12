@@ -22,6 +22,7 @@ import GestionEstadoEquipo from "./estadoequipo/GestionEstadoEquipo.jsx";
 import ControlReactivos from "./movimientosReactivos/ControlReactivos.jsx";
 import FormularioAcceso from "./FormularioAcceso/FormularioAcceso.jsx";
 import GestionUsuarios from "./usuarios/GestionUsuarios.jsx";
+import LogActividades from "./usuarios/LogActividades.jsx";
 import SalidasReactivos from "./salidasReactivos/crudsalidareactivo.jsx";
 import TopBar from "./TopBar.jsx";
 import PerfilUsuario from "./Home/PerfilUsuario.jsx";
@@ -217,6 +218,7 @@ function App() {
 
             {/* SOLO ADMINISTRADOR */}
             <Route path="/gestion-usuarios" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><GestionUsuarios /></SoloAdminRoute>} />
+            <Route path="/auditoria" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><LogActividades /></SoloAdminRoute>} />
             <Route path="/gestion-solicitudes" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><GestionSolicitudes /></SoloAdminRoute>} />
             <Route path="/estadoSolicitud" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Crudestadosolicitud /></SoloAdminRoute>} />
 

@@ -94,6 +94,44 @@ const PerfilUsuario = () => {
               <i className="fas fa-save me-2"></i> Guardar Cambios
             </button>
           </form>
+
+          <hr className="my-5" style={{ opacity: 0.1 }} />
+
+          <h5 className="fw-bold mb-4" style={{ color: "#d90429" }}>Cambiar Contraseña</h5>
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            const passwordActual = e.target.passwordActual.value;
+            const passwordNueva = e.target.passwordNueva.value;
+            const confirm = e.target.confirmPassword.value;
+
+            if(passwordNueva !== confirm) {
+              return Swal.fire("Error", "Las contraseñas no coinciden", "error");
+            }
+
+            try {
+              await apiAxios.put("/api/auth/profile/change-password", { passwordActual, passwordNueva });
+              Swal.fire("¡Éxito!", "Contraseña actualizada", "success");
+              e.target.reset();
+            } catch (error) {
+              Swal.fire("Error", error.response?.data?.message || "No se pudo cambiar", "error");
+            }
+          }}>
+            <div className="mb-3">
+              <label className="form-label small fw-bold text-muted">Contraseña Actual</label>
+              <input name="passwordActual" type="password" required className="form-control" style={{ borderRadius: "10px", padding: "10px" }} />
+            </div>
+            <div className="mb-3">
+              <label className="form-label small fw-bold text-muted">Nueva Contraseña</label>
+              <input name="passwordNueva" type="password" required className="form-control" style={{ borderRadius: "10px", padding: "10px" }} />
+            </div>
+            <div className="mb-4">
+              <label className="form-label small fw-bold text-muted">Confirmar Nueva Contraseña</label>
+              <input name="confirmPassword" type="password" required className="form-control" style={{ borderRadius: "10px", padding: "10px" }} />
+            </div>
+            <button type="submit" className="btn btn-outline-danger w-100 fw-bold" style={{ borderRadius: "10px", padding: "12px" }}>
+              Actualizar Contraseña
+            </button>
+          </form>
         </div>
       </div>
     </div>

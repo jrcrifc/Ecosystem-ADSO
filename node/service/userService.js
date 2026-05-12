@@ -4,6 +4,8 @@ import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import NotificacionService from "./notificacionService.js";
 import emailService from "./emailService.js";
+import { registrarLog } from "./logService.js";
+
 class UserService {
 
   // ✅ Crea el admin predeterminado si no existe
@@ -64,6 +66,8 @@ class UserService {
       estado: 'pendiente'
     });
 
+    await registrarLog(email, 'REGISTRO', 'AUTH', `Usuario registrado como ${rol}`);
+
     // ✅ Notificar al admin si requiere aprobación
     if (['Pasante', 'Gestor', 'Aprendiz', 'Instructor'].includes(rol)) {
       await NotificacionService.notificarAdmins({
@@ -121,6 +125,8 @@ class UserService {
     user.token = token;
     await user.save();
 
+    await registrarLog(user.email, 'LOGIN', 'AUTH', `Inicio de sesión exitoso`);
+
     const { password: _, ...userSinPassword } = user.toJSON();
     return { token, user: userSinPassword };
   }
@@ -157,6 +163,8 @@ class UserService {
 
     // Enviar correo de aprobación
     await emailService.sendAprovalEmail(user.email, user.nombres_apellidos);
+
+    await registrarLog('ADMIN', 'APROBAR_USUARIO', 'GESTION_USUARIOS', `Aprobado usuario: ${user.email}`);
 
     return user;
   }
@@ -206,6 +214,9 @@ class UserService {
 
     const hashedPassword = await bcrypt.hash(passwordNueva, 10);
     await user.update({ password: hashedPassword });
+
+    await registrarLog(user.email, 'CAMBIO_PASSWORD', 'PERFIL', `Contraseña actualizada correctamente`);
+
     return true;
   }
 }
