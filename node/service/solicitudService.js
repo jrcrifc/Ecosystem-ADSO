@@ -100,10 +100,40 @@ class solicitudService {
     async cambiarEstado(id_solicitud, id_estado_solicitud) {
         const solicitud = await solicitudModel.findByPk(id_solicitud);
         if (!solicitud) throw new Error('Solicitud no encontrada');
+
+        // Registrar el nuevo estado
         await Estadoxsolicitud.create({
             id_solicitud,
             id_estado_solicitud
         });
+
+        // Buscar los equipos vinculados directamente en la tabla intermedia
+        const vinculos = await solicitudxequipoModel.findAll({
+            where: { id_solicitud }
+        });
+
+        if (vinculos && vinculos.length > 0) {
+            let nuevoEstadoEquipo = null;
+
+            // id_estado_solicitud: 3 (prestado) -> Equipo estado 2 (Prestado)
+            // id_estado_solicitud: 5 (entregado) -> Equipo estado 1 (Disponible)
+            // id_estado_solicitud: 6 (cancelado) -> Equipo estado 1 (Disponible)
+
+            if (id_estado_solicitud === 3) {
+                nuevoEstadoEquipo = 2; // Prestado
+            } else if (id_estado_solicitud === 5 || id_estado_solicitud === 6) {
+                nuevoEstadoEquipo = 1; // Disponible
+            }
+
+            if (nuevoEstadoEquipo !== null) {
+                const idsEquipos = vinculos.map(v => v.id_equipo);
+                await equipoModel.update(
+                    { estado: nuevoEstadoEquipo },
+                    { where: { id_equipo: idsEquipos } }
+                );
+            }
+        }
+
         return true;
     }
 

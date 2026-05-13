@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 
 const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) => {
+  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     fecha_vencimiento: "",
     cantidad_inicial: "",
@@ -66,30 +67,47 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
     e.preventDefault();
 
     if (!form.cantidad_inicial || !form.id_reactivo) {
-      Swal.fire("Campos obligatorios", "Cantidad inicial y reactivo son requeridos", "warning");
+      Swal.fire("⚠️ Campos obligatorios", "El reactivo y la cantidad son requeridos para el ingreso.", "warning");
       return;
     }
-    if (parseFloat(form.cantidad_inicial) <= 0) {
-      Swal.fire("⚠️ Atención", "La cantidad inicial debe ser mayor a 0", "warning");
+    
+    const cantidad = parseFloat(form.cantidad_inicial);
+    if (isNaN(cantidad) || cantidad <= 0) {
+      Swal.fire("⚠️ Cantidad Inválida", "La cantidad de ingreso debe ser un número mayor a 0", "warning");
       return;
     }
 
     if (form.fecha_vencimiento) {
       const hoy = new Date();
-      // Ajustamos a la zona horaria local restando el offset para obtener el 'YYYY-MM-DD' correcto local
       const offset = hoy.getTimezoneOffset() * 60000;
       const localHoyStr = (new Date(hoy - offset)).toISOString().slice(0, 10);
 
       if (form.fecha_vencimiento <= localHoyStr) {
-        Swal.fire("⚠️ Fecha Inválida", "La fecha de vencimiento no puede ser hoy ni una fecha pasada.", "warning");
+        Swal.fire("⚠️ Fecha de Vencimiento", "La fecha de vencimiento no puede ser hoy ni una fecha pasada.", "warning");
         return;
       }
     }
 
+    // Segunda confirmación para evitar errores de dedo en ingresos grandes
+    const reactivoNombre = reactivos.find(r => r.id_reactivo === parseInt(form.id_reactivo))?.nom_reactivo;
+    const confirm = await Swal.fire({
+      title: '¿Confirmar Ingreso?',
+      text: `Vas a registrar ${cantidad} unidades de "${reactivoNombre}". ¿Los datos son correctos?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, registrar',
+      cancelButtonText: 'Revisar',
+      confirmButtonColor: '#0077B6'
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    setLoading(true);
+
     const dataToSend = {
       fecha_vencimiento: form.fecha_vencimiento || null,
-      cantidad_inicial: parseFloat(form.cantidad_inicial),
-      lote: form.lote || null,
+      cantidad_inicial: cantidad,
+      lote: form.lote.trim() || null,
       id_reactivo: parseInt(form.id_reactivo),
       id_proveedor: form.id_proveedor ? parseInt(form.id_proveedor) : null,
     };
@@ -97,35 +115,43 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
     try {
       if (selectedMovimiento) {
         await apiAxios.put(`/api/movimientos/${selectedMovimiento.id_movimiento_reactivo}`, dataToSend);
-        Swal.fire("✅ Actualizado", "Movimiento modificado correctamente", "success");
+        Swal.fire({ icon: 'success', title: '✅ Actualizado', text: 'Ingreso modificado con éxito', timer: 2000, showConfirmButton: false });
       } else {
         await apiAxios.post("/api/movimientos", dataToSend);
-        Swal.fire("✅ Registrado", "Movimiento creado correctamente", "success");
+        Swal.fire({ icon: 'success', title: '✅ Registrado', text: 'Nuevo ingreso de reactivo completado', timer: 2000, showConfirmButton: false });
       }
       refreshData();
       hideModal();
     } catch (err) {
       console.error(err);
-      const msg = err.response?.data?.message || "No se pudo guardar el registro";
+      const msg = err.response?.data?.message || "Hubo un problema al guardar el registro de inventario";
       Swal.fire("Error", msg, "error");
+    } finally {
+      setLoading(false);
     }
   };
 
   const selectedReactivo = reactivos.find(x => x.id_reactivo === parseInt(form.id_reactivo));
 
+  const inputStyle = {
+    borderRadius: "10px",
+    borderColor: "#dbeafe",
+    transition: "all 0.2s ease"
+  };
+
   return (
     <form onSubmit={handleSubmit} className="needs-validation" noValidate>
       <div className="row g-3">
-        {/* REACTIVO (MOVIDO ARRIBA) */}
+        {/* REACTIVO */}
         <div className="col-12">
-          <label className="form-label fw-semibold" style={{ color: "#023E8A" }}>Reactivo <span className="text-danger">*</span></label>
+          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Reactivo <span className="text-danger">*</span></label>
           <select
             name="id_reactivo"
-            className="form-select"
+            className="form-select py-2"
             value={form.id_reactivo}
             onChange={handleChange}
             required
-            style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
+            style={inputStyle}
           >
             <option value="">Seleccione el reactivo que ingresa...</option>
             {reactivos.map((r) => (
@@ -136,7 +162,7 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
           </select>
         </div>
 
-        {/* CANTIDAD INICIAL (ADAPTADA) */}
+        {/* CANTIDAD INICIAL */}
         <div className="col-md-6">
           <label className="form-label fw-semibold text-muted">Cantidad de Ingreso</label>
           <div className="input-group">
@@ -149,17 +175,17 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
               value={form.cantidad_inicial}
               onChange={handleChange}
               required
-              placeholder={selectedReactivo?.presentacion_reactivo?.toLowerCase().includes('lit') ? "Ej: 1.5 (Litros)" : "Ej: 500 (Gramos)"}
-              style={{ borderColor: "#dbeafe", borderTopLeftRadius: "10px", borderBottomLeftRadius: "10px" }}
+              placeholder="0.00"
+              style={{ ...inputStyle, borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
             />
             {selectedReactivo && (
-              <span className="input-group-text fw-bold" style={{ background: "#e0f2fe", color: "#0077B6", borderColor: "#dbeafe", borderTopRightRadius: "10px", borderBottomRightRadius: "10px" }}>
+              <span className="input-group-text fw-bold" style={{ background: "#f1f5f9", borderColor: "#dbeafe", borderTopRightRadius: "10px", borderBottomRightRadius: "10px", color: "#0077B6", fontSize: "12px" }}>
                 {selectedReactivo.presentacion_reactivo}
               </span>
             )}
           </div>
-          <small className="text-muted" style={{ fontSize: '11px' }}>
-            Indique la cantidad exacta en {selectedReactivo?.presentacion_reactivo || 'unidades'}.
+          <small className="text-muted" style={{ fontSize: '10px' }}>
+            Indique el contenido total recibido.
           </small>
         </div>
 
@@ -171,8 +197,8 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
             className="form-control"
             value={form.lote}
             onChange={handleChange}
-            placeholder="N° de Lote"
-            style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
+            placeholder="N° de Lote / Batch"
+            style={inputStyle}
           />
         </div>
 
@@ -189,7 +215,7 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
               d.setDate(d.getDate() + 1);
               return d.toISOString().slice(0, 10);
             })()}
-            style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
+            style={inputStyle}
           />
         </div>
 
@@ -200,7 +226,7 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
             className="form-select"
             value={form.id_proveedor}
             onChange={handleChange}
-            style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
+            style={inputStyle}
           >
             <option value="">Sin proveedor (opcional)</option>
             {proveedores.map((p) => (
@@ -212,9 +238,17 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
         </div>
 
         <div className="col-12 mt-4">
-          <button type="submit" className="btn w-100 py-2" style={{ background: "linear-gradient(135deg, #0077B6, #023E8A)", color: "#fff", fontWeight: "700", border: "none", borderRadius: "10px" }}>
-            <i className="fa-solid fa-plus-circle me-2"></i>
-            {selectedMovimiento ? "Actualizar Registro" : "Registrar Ingreso de Reactivo"}
+          <button 
+            type="submit" 
+            className="btn btn-primary w-100 py-3 shadow-sm" 
+            disabled={loading}
+            style={{ borderRadius: "12px", fontWeight: "700", background: "linear-gradient(135deg, #0077B6, #023E8A)", border: "none" }}
+          >
+            {loading ? (
+              <><span className="spinner-border spinner-border-sm me-2"></span> Procesando...</>
+            ) : (
+              <><i className="fa-solid fa-plus-circle me-2"></i> {selectedMovimiento ? "Actualizar Registro" : "Completar Ingreso de Reactivo"}</>
+            )}
           </button>
         </div>
       </div>

@@ -88,6 +88,7 @@ export const cambiarEstado = async (req, res) => {
 
                 // ✅ Emitir evento global para refrescar las tablas de los usuarios
                 getIO().emit('solicitud_actualizada');
+                getIO().emit('equipo_actualizado');
             }
         } catch (notifError) {
             console.error('Error al notificar cambio de estado:', notifError);

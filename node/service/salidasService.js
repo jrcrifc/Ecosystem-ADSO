@@ -108,7 +108,7 @@ class salidasService {
         id_movimiento_reactivo: lote.id_movimiento_reactivo,
         cantidad_salida: cantidadDeEsteLote,
         fecha_salida: fecha_salida || new Date(),
-        observaciones: observaciones || null,
+        observaciones: observaciones || "",
         estado: 1
       });
 

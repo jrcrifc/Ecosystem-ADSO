@@ -80,6 +80,9 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
 
   const avatarClass = esAdmin ? "admin" : esGestorPasante ? "gestor" : "default";
 
+  const userEstado = userData?.estado || userData?.user?.estado;
+  const esAprobado = userEstado === 'aprobado' || esAdmin;
+
   return (
     <>
       {/* Mobile Toggle */}
@@ -103,30 +106,36 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
           </div>
         </div>
 
-        {/* Menu — Todo ABIERTO */}
+        {/* Menu */}
         <nav className="sidebar-menu">
-          {menuGroups.filter(g => g.show).map((group) => {
-            const hasActiveChild = group.items.some(i => isActive(i.path));
-            return (
-              <div key={group.key} style={{ marginBottom: "10px" }}>
-                <div className="sidebar-group-header" style={{ padding: "10px 18px", color: "rgba(202, 240, 248, 0.5)", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>
-                  {group.text}
+          {menuGroups
+            .filter(g => {
+              if (!g.show) return false;
+              // Si no está aprobado y no es admin, solo mostrar grupo General
+              if (!esAprobado && g.key !== 'general') return false;
+              return true;
+            })
+            .map((group) => {
+              return (
+                <div key={group.key} style={{ marginBottom: "10px" }}>
+                  <div className="sidebar-group-header" style={{ padding: "10px 18px", color: "rgba(202, 240, 248, 0.5)", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>
+                    {group.text}
+                  </div>
+                  <div className="sidebar-submenu open" style={{ opacity: 1, maxHeight: "none" }}>
+                    {group.items.filter(i => i.show).map((item, ii) => (
+                      <div
+                        key={ii}
+                        className={`sidebar-item ${isActive(item.path) ? "active" : ""}`}
+                        onClick={() => handleNav(item.path)}
+                      >
+                        <span className="sidebar-item-icon" style={{ fontSize: "14px" }}>{item.icon}</span>
+                        <span className="sidebar-item-text">{item.text}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="sidebar-submenu open" style={{ opacity: 1, maxHeight: "none" }}>
-                  {group.items.filter(i => i.show).map((item, ii) => (
-                    <div
-                      key={ii}
-                      className={`sidebar-item ${isActive(item.path) ? "active" : ""}`}
-                      onClick={() => handleNav(item.path)}
-                    >
-                      <span className="sidebar-item-icon" style={{ fontSize: "14px" }}>{item.icon}</span>
-                      <span className="sidebar-item-text">{item.text}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
         </nav>
       </aside>
     </>

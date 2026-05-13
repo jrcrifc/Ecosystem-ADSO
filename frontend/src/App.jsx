@@ -153,7 +153,19 @@ function App() {
 
   const userRol = userData?.rol || userData?.user?.rol;
 
-  if (isLoading) return <div className="text-center mt-5">Cargando...</div>;
+  if (isLoading) return (
+    <div style={{
+      height: "100vh", display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center", background: "#f0f9ff"
+    }}>
+      <div className="spinner-border text-primary" style={{ width: "3rem", height: "3rem" }} role="status">
+        <span className="visually-hidden">Cargando...</span>
+      </div>
+      <p style={{ marginTop: "16px", color: "#0077B6", fontWeight: "600", fontSize: "14px" }}>
+        Iniciando Ecosystem...
+      </p>
+    </div>
+  );
 
   return (
     <div className="sidebar-layout">

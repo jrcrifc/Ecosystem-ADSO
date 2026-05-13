@@ -13,21 +13,20 @@ const GestionSolicitudes = () => {
 
   const getBadgeStyle = (estado) => {
     const map = {
-      generado: { bg: "#f1f5f9", color: "#475569" },
-      aceptado: { bg: "#dbeafe", color: "#0077B6" },
-      prestado: { bg: "#fffbeb", color: "#d97706" },
-      entregado: { bg: "#ecfdf5", color: "#059669" },
-      devuelto: { bg: "#ecfdf5", color: "#059669" },
-      cancelado: { bg: "#fef2f2", color: "#dc2626" },
-      rechazado: { bg: "#fef2f2", color: "#dc2626" },
+      generado: { bg: "#f1f5f9", color: "#475569", label: "Generado" },
+      aceptado: { bg: "#dbeafe", color: "#0077B6", label: "Solicitado" },
+      prestado: { bg: "#fffbeb", color: "#d97706", label: "Prestado" },
+      entregado: { bg: "#ecfdf5", color: "#059669", label: "Disponible" },
+      cancelado: { bg: "#fef2f2", color: "#dc2626", label: "Cancelado" },
+      rechazado: { bg: "#fef2f2", color: "#dc2626", label: "Rechazado" },
     };
-    return map[estado] || { bg: "#f1f5f9", color: "#475569" };
+    return map[estado] || { bg: "#f1f5f9", color: "#475569", label: estado };
   };
 
   const estadosSiguientes = {
     generado: ["aceptado", "cancelado"],
-    aceptado: ["prestado", "cancelado"],
-    prestado: ["entregado", "cancelado"],
+    aceptado: ["prestado"],
+    prestado: ["entregado"],
     entregado: [],
     cancelado: [],
   };
@@ -66,7 +65,7 @@ const GestionSolicitudes = () => {
             fontSize: "11px", fontWeight: "700",
             padding: "4px 12px", borderRadius: "99px"
           }}>
-            {row.ultimoEstado || "generado"}
+            {style.label}
           </span>
         );
       }
@@ -76,21 +75,20 @@ const GestionSolicitudes = () => {
       cell: (row) => {
         const estadoActual = row.ultimoEstado || "generado";
         const siguientes = estadosSiguientes[estadoActual] || [];
-        if (siguientes.length === 0) return <span className="text-muted small">Sin acciones</span>;
+        if (siguientes.length === 0) return <span className="text-muted small">Finalizado</span>;
         return (
           <div className="dropdown">
             <button className="btn btn-sm text-white dropdown-toggle" style={{ background: "#0077B6" }} type="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <i className="fas fa-exchange-alt me-1"></i> Cambiar
+              <i className="fas fa-exchange-alt me-1"></i> Gestionar
             </button>
-            <ul className="dropdown-menu">
+            <ul className="dropdown-menu shadow">
               {siguientes.map((estado) => (
                 <li key={estado}>
-                  <button className="dropdown-item" onClick={() => cambiarEstado(row.id_solicitud, estado)}>
-                    {estado === "aceptado" && "✅ Aceptado"}
-                    {estado === "rechazado" && "🚫 Rechazado"}
-                    {estado === "prestado" && "📦 Prestado"}
-                    {estado === "entregado" && "🔄 Entregado"}
-                    {estado === "cancelado" && "❌ Cancelado"}
+                  <button className="dropdown-item py-2" onClick={() => cambiarEstado(row.id_solicitud, estado)}>
+                    {estado === "aceptado" && <><i className="fas fa-check-circle text-primary me-2"></i>Aceptar Solicitud</>}
+                    {estado === "prestado" && <><i className="fas fa-box text-warning me-2"></i>Entregar Equipo (Prestar)</>}
+                    {estado === "entregado" && <><i className="fas fa-undo text-success me-2"></i>Recibir Equipo (Liberar)</>}
+                    {estado === "cancelado" && <><i className="fas fa-times-circle text-danger me-2"></i>Cancelar</>}
                   </button>
                 </li>
               ))}

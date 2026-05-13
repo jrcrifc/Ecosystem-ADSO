@@ -5,6 +5,7 @@ import apiAxios from "../api/axiosConfig";
 import EquipoForm from "./EquiposForm.jsx";
 import Swal from "sweetalert2";
 import * as bootstrap from "bootstrap";
+import socket from "../socket.js";
 import { exportToPDF, exportToExcel } from "../api/ExportUtils.js";
 import { paginationComponentOptions, tableCustomStyles } from "../config/dataTableConfig";
 
@@ -17,6 +18,13 @@ export default function CrudEquipo() {
 
   useEffect(() => {
     getAllEquipos();
+
+    // ✅ Escuchar cambios en tiempo real
+    socket.on('equipo_actualizado', getAllEquipos);
+
+    return () => {
+      socket.off('equipo_actualizado', getAllEquipos);
+    };
   }, []);
 
   const getAllEquipos = async () => {

@@ -2,7 +2,9 @@ import reactivosModel from "../models/reactivosModel.js";
 
 class reactivosService {
     async  getAll(){
-        return await reactivosModel.findAll()
+        return await reactivosModel.findAll({
+            order: [['id_reactivo', 'DESC']]
+        })
     }
 async getById(id_reactivo){
     const reactivos = await reactivosModel.findByPk(id_reactivo)

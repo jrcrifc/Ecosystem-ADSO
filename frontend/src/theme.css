@@ -33,6 +33,41 @@ body {
   color: var(--text-muted) !important;
 }
 
+.form-control, .form-select {
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  padding: 10px 14px;
+  font-size: 14px;
+  transition: all 0.2s ease-in-out;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 4px rgba(0, 119, 182, 0.1) !important;
+  background-color: #fff !important;
+}
+
+.btn-premium {
+  background: linear-gradient(135deg, #0077B6, #00B4D8);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-weight: 700;
+  padding: 12px 24px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 119, 182, 0.2);
+}
+
+.btn-premium:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 119, 182, 0.3);
+  filter: brightness(1.1);
+}
+
+.btn-premium:active {
+  transform: translateY(0);
+}
+
 @keyframes fadeInScale {
   from {
     opacity: 0;

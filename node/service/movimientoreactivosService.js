@@ -9,7 +9,7 @@ class movimientoreactivoService {
         { model: reactivosModel, as: "reactivo", attributes: ["nom_reactivo", "presentacion_reactivo"] },
         { model: proveedoresModel, as: "proveedor", attributes: ["nom_proveedor", "apel_proveedor"] },
       ],
-      order: [["createdAt", "DESC"]]
+      order: [["id_movimiento_reactivo", "DESC"]]
     });
     const todos = await movimientoreactivoModel.findAll();
     const stockPorReactivo = {};

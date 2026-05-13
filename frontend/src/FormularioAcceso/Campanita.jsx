@@ -73,7 +73,7 @@ export default function Campanita({ userData, onAprobado, userRol }) {
   const cargar = async () => {
     try {
       const res = await apiAxios.get(`/api/notificaciones/${id_usuario}`);
-      const nuevas = res.data;
+      let nuevas = res.data;
 
       const hayAprobacion = nuevas.some(n => n.tipo === 'aprobado' && !n.leida);
       if (hayAprobacion && onAprobado && userRol !== 'Administrador') {

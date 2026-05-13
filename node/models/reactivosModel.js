@@ -12,7 +12,6 @@ const reactivosModel = db.define('reactivos', {
         type: DataTypes.ENUM("kilogramos", "gramos", "litros", "sobres"),
         allowNull: false
     },
-    cantidad_presentacion: { type: DataTypes.INTEGER },
     nom_reactivo: { type: DataTypes.STRING },
     nom_reactivo_ingles: { type: DataTypes.STRING },
     formula_reactivo: { type: DataTypes.STRING },
