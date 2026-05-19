@@ -69,9 +69,43 @@ const CrudmovimientoReactivo = () => {
     socket.on("movimiento_actualizado", cargarMovimientos);
     socket.on("salida_actualizada", cargarMovimientos);
 
+    // ✅ Event listeners para modales de Bootstrap para limpieza garantizada
+    const modalIngreso = document.getElementById("modalIngreso");
+    const modalSalida = document.getElementById("modalSalida");
+
+    const cleanupBackdrop = () => {
+      document.body.classList.remove("modal-open");
+      document.body.style.removeProperty("overflow");
+      document.body.style.removeProperty("padding-right");
+      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+    };
+
+    const handleIngresoHidden = () => {
+      setSelectedMovimiento(null);
+      cleanupBackdrop();
+    };
+
+    const handleSalidaHidden = () => {
+      setSelectedSalida(null);
+      cleanupBackdrop();
+    };
+
+    if (modalIngreso) {
+      modalIngreso.addEventListener("hidden.bs.modal", handleIngresoHidden);
+    }
+    if (modalSalida) {
+      modalSalida.addEventListener("hidden.bs.modal", handleSalidaHidden);
+    }
+
     return () => {
       socket.off("movimiento_actualizado", cargarMovimientos);
       socket.off("salida_actualizada", cargarMovimientos);
+      if (modalIngreso) {
+        modalIngreso.removeEventListener("hidden.bs.modal", handleIngresoHidden);
+      }
+      if (modalSalida) {
+        modalSalida.removeEventListener("hidden.bs.modal", handleSalidaHidden);
+      }
     };
   }, []);
 
@@ -128,12 +162,12 @@ const CrudmovimientoReactivo = () => {
         const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
         bsModal.hide();
       }
-      setTimeout(() => {
-        document.body.classList.remove("modal-open");
-        document.body.style.removeProperty("overflow");
-        document.body.style.removeProperty("padding-right");
-        document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
-      }, 350);
+      
+      // ✅ Limpieza inmediata para evitar backdrops huérfanos por re-renders rápidos de React
+      document.body.classList.remove("modal-open");
+      document.body.style.removeProperty("overflow");
+      document.body.style.removeProperty("padding-right");
+      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
     }
   };
 
@@ -147,12 +181,12 @@ const CrudmovimientoReactivo = () => {
         const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
         bsModal.hide();
       }
-      setTimeout(() => {
-        document.body.classList.remove("modal-open");
-        document.body.style.removeProperty("overflow");
-        document.body.style.removeProperty("padding-right");
-        document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
-      }, 350);
+      
+      // ✅ Limpieza inmediata para evitar backdrops huérfanos por re-renders rápidos de React
+      document.body.classList.remove("modal-open");
+      document.body.style.removeProperty("overflow");
+      document.body.style.removeProperty("padding-right");
+      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
     }
   };
 

@@ -50,25 +50,49 @@ const CrudSalidasReactivos = () => {
       wrap: true
     },
     {
+      name: "Estado",
+      selector: (row) => row.estado,
+      sortable: true,
+      width: "120px",
+      center: true,
+      cell: (row) => (
+        <span className={`badge ${row.estado === 1 ? "bg-success" : "bg-danger"}`} style={{ fontSize: "11px", padding: "5px 10px", borderRadius: "8px" }}>
+          {row.estado === 1 ? "✅ Activa" : "❌ Inactiva"}
+        </span>
+      )
+    },
+    {
       name: "Acciones", center: true, width: "120px",
       cell: (row) => (
         <div className="d-flex gap-1 justify-content-center">
           <button
             className="btn btn-sm btn-warning"
-            data-bs-toggle="modal"
-            data-bs-target="#modalSalida"
-            onClick={() => setSelectedSalida(row)}
-            title="Editar"
+            data-bs-toggle={row.estado === 1 ? "modal" : ""}
+            data-bs-target={row.estado === 1 ? "#modalSalida" : ""}
+            onClick={() => row.estado === 1 && setSelectedSalida(row)}
+            title={row.estado === 1 ? "Editar" : "No se puede editar una salida inactiva"}
+            disabled={row.estado === 0}
+            style={{ opacity: row.estado === 0 ? 0.5 : 1 }}
           >
             <i className="fas fa-pencil"></i>
           </button>
-          <button
-            className="btn btn-sm btn-danger"
-            onClick={() => inactivarSalida(row.id_salida)}
-            title="Inactivar"
-          >
-            <i className="fas fa-ban"></i>
-          </button>
+          {row.estado === 1 ? (
+            <button
+              className="btn btn-sm btn-danger"
+              onClick={() => inactivarSalida(row.id_salida)}
+              title="Inactivar"
+            >
+              <i className="fas fa-ban"></i>
+            </button>
+          ) : (
+            <button
+              className="btn btn-sm btn-success"
+              onClick={() => activarSalida(row.id_salida)}
+              title="Activar"
+            >
+              <i className="fas fa-check"></i>
+            </button>
+          )}
         </div>
       ),
     },
@@ -81,9 +105,31 @@ const CrudSalidasReactivos = () => {
     socket.on("salida_actualizada", cargarSalidas);
     socket.on("movimiento_actualizado", cargarSalidas);
 
+    // ✅ Event listener para modal de Bootstrap para limpieza garantizada
+    const modalSalida = document.getElementById("modalSalida");
+
+    const cleanupBackdrop = () => {
+      document.body.classList.remove("modal-open");
+      document.body.style.removeProperty("overflow");
+      document.body.style.removeProperty("padding-right");
+      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+    };
+
+    const handleSalidaHidden = () => {
+      setSelectedSalida(null);
+      cleanupBackdrop();
+    };
+
+    if (modalSalida) {
+      modalSalida.addEventListener("hidden.bs.modal", handleSalidaHidden);
+    }
+
     return () => {
       socket.off("salida_actualizada", cargarSalidas);
       socket.off("movimiento_actualizado", cargarSalidas);
+      if (modalSalida) {
+        modalSalida.removeEventListener("hidden.bs.modal", handleSalidaHidden);
+      }
     };
   }, []);
 
@@ -123,6 +169,32 @@ const CrudSalidasReactivos = () => {
     }
   };
 
+  const activarSalida = async (id) => {
+    const result = await Swal.fire({
+      title: "¿Activar Salida?",
+      text: "Se volverá a activar esta salida y se descontará la cantidad de reactivo del lote correspondiente.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#198754",
+      confirmButtonText: "Sí, activar",
+      cancelButtonText: "Cancelar"
+    });
+    if (!result.isConfirmed) return;
+
+    try {
+      await apiAxios.put(`/api/salidas/estado/${id}`);
+      
+      // ✅ Emitir eventos socket
+      socket.emit("salida_actualizada");
+      socket.emit("movimiento_actualizado");
+
+      cargarSalidas();
+      Swal.fire({ icon: 'success', title: '✅ Activada', text: 'Salida activada y stock descontado correctamente', timer: 2000, showConfirmButton: false });
+    } catch (error) {
+      Swal.fire("Error", error.response?.data?.message || "No se pudo activar la salida", "error");
+    }
+  };
+
   const hideModal = () => {
     const modal = document.getElementById("modalSalida");
     if (modal) {
@@ -133,12 +205,12 @@ const CrudSalidasReactivos = () => {
         const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
         bsModal.hide();
       }
-      setTimeout(() => {
-        document.body.classList.remove("modal-open");
-        document.body.style.removeProperty("overflow");
-        document.body.style.removeProperty("padding-right");
-        document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
-      }, 350);
+      
+      // ✅ Limpieza inmediata para evitar backdrops huérfanos por re-renders rápidos de React
+      document.body.classList.remove("modal-open");
+      document.body.style.removeProperty("overflow");
+      document.body.style.removeProperty("padding-right");
+      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
     }
   };
 

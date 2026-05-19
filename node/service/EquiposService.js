@@ -24,6 +24,8 @@ class EquiposService {
                 {
                     model: SolicitudModel,
                     as: 'solicitudes',
+                    where: { estado: 1 },
+                    required: false,
                     include: [{
                         model: EstadoxsolicitudModel,
                         as: 'estados',
@@ -50,8 +52,8 @@ class EquiposService {
                     const estadosSol = (s.estados || []).sort((a, b) => b.id_estadoxsolicitud - a.id_estadoxsolicitud);
                     const ultimoEstado = estadosSol[0]?.estadoSolicitud?.estado;
                     
-                    // Solo bloqueamos si el ÚLTIMO estado es aceptado o prestado
-                    const tieneEstadoBloqueante = ['aceptado', 'prestado'].includes(ultimoEstado);
+                    // Solo bloqueamos si el ÚLTIMO estado es generado, aceptado o prestado
+                    const tieneEstadoBloqueante = ['generado', 'aceptado', 'prestado'].includes(ultimoEstado);
                     // Y si el tiempo no ha expirado
                     const tiempoExpirado = s.fecha_fin && new Date(s.fecha_fin) < ahora;
                     
@@ -62,7 +64,7 @@ class EquiposService {
                     estaOcupado = true;
                     // Obtenemos el estado de esa solicitud específica para el label
                     const ultimoEstadoSol = (solicitudActiva.estados || []).sort((a, b) => b.id_estadoxsolicitud - a.id_estadoxsolicitud)[0]?.estadoSolicitud?.estado;
-                    estadoReal = ultimoEstadoSol === 'aceptado' ? 'solicitado' : 'prestado';
+                    estadoReal = ['generado', 'aceptado'].includes(ultimoEstadoSol) ? 'solicitado' : 'prestado';
                 }
             }
 

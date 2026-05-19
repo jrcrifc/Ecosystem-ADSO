@@ -9,12 +9,22 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const userData = Array.isArray(users) ? users[0] : (users?.user || users?.data || users);
-  const userName = userData?.nombres_apellidos;
-  const userRol = rol || userData?.rol;
+  // Helper to extract the flat user object from potentially nested structures
+  const extractUser = (val) => {
+    if (!val) return null;
+    if (Array.isArray(val)) return extractUser(val[0]);
+    if (val.user && typeof val.user === 'object') return extractUser(val.user);
+    if (val.data && typeof val.data === 'object') return extractUser(val.data);
+    return val;
+  };
 
-  const esAdmin = String(userRol || "").toLowerCase() === 'administrador';
-  const esGestorPasante = ['pasante', 'gestor'].includes(String(userRol || "").toLowerCase());
+  const userData = extractUser(users) || {};
+  const userName = userData?.nombres_apellidos || "";
+  const rawRol = rol || userData?.rol || "";
+  const userRolClean = String(rawRol).trim().toLowerCase();
+
+  const esAdmin = userRolClean === 'administrador';
+  const esGestorPasante = ['pasante', 'gestor'].includes(userRolClean);
 
   const handleNav = (path) => {
     if (!isAuth) { navigate("/UserLogin"); return; }
@@ -35,7 +45,7 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
       ]
     },
     {
-      key: "solicitudes", icon: "📋", text: "Solicitudes", show: true,
+      key: "solicitudes", icon: "📋", text: "Solicitudes", show: !esGestorPasante,
       items: [
         { icon: "📝", text: "Mis Solicitudes",      path: "/solicitud",           show: !esAdmin },
         { icon: "📝", text: "Nueva Solicitud",       path: "/solicitud",           show: esAdmin },

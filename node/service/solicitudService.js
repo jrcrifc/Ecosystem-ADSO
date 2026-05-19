@@ -29,7 +29,7 @@ class solicitudService {
                 {
                     model: equipoModel,
                     as: 'equipos',
-                    attributes: ['id_equipo', 'nom_equipo', 'marca_equipo', 'no_placa']
+                    attributes: ['id_equipo', 'nom_equipo', 'marca_equipo', 'no_placa', 'foto_equipo']
                 }
             ],
             order: [
@@ -82,9 +82,36 @@ class solicitudService {
     }
 
     async update(id, data) {
-        const result = await solicitudModel.update(data, { where: { id_solicitud: id } });
-        if (result[0] === 0) throw new Error('Solicitud no encontrada');
-        
+        const solicitud = await solicitudModel.findByPk(id, {
+            include: [
+                {
+                    model: Estadoxsolicitud,
+                    as: 'estados',
+                    include: [{
+                        model: estadoSolicitudModel,
+                        as: 'estadoSolicitud',
+                        attributes: ['estado']
+                    }],
+                    attributes: ['id_estadoxsolicitud']
+                }
+            ]
+        });
+        if (!solicitud) throw new Error('Solicitud no encontrada');
+
+        const estadosOrdenados = (solicitud.estados || []).sort(
+            (a, b) => b.id_estadoxsolicitud - a.id_estadoxsolicitud
+        );
+        const ultimoEstado = estadosOrdenados[0]?.estadoSolicitud?.estado || "generado";
+
+        // Si no está en generado o aceptado, lanzar un error claro
+        if (!['generado', 'aceptado'].includes(ultimoEstado)) {
+            throw new Error(`No se puede modificar una solicitud en estado ${ultimoEstado.toUpperCase()}`);
+        }
+
+        // Actualizar datos de la solicitud
+        await solicitud.update(data);
+
+        // Actualizar equipos
         if (data.equipos_ids && Array.isArray(data.equipos_ids)) {
             await solicitudxequipoModel.destroy({ where: { id_solicitud: id } });
             for (const id_equipo of data.equipos_ids) {
@@ -94,8 +121,18 @@ class solicitudService {
                 });
             }
         }
-        
-        return true;
+
+        // Si el estado previo era 'aceptado', demotar automáticamente a 'generado' (id_estado_solicitud: 1)
+        let demotado = false;
+        if (ultimoEstado === 'aceptado') {
+            await Estadoxsolicitud.create({
+                id_solicitud: id,
+                id_estado_solicitud: 1 // generado
+            });
+            demotado = true;
+        }
+
+        return { demotado, id_usuario: solicitud.id_usuario };
     }
 
     async cambiarEstado(id_solicitud, id_estado_solicitud) {

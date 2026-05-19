@@ -22,8 +22,42 @@ export default function CrudEquipo() {
     // ✅ Escuchar cambios en tiempo real
     socket.on('equipo_actualizado', getAllEquipos);
 
+    // ✅ Event listeners para modales de Bootstrap para limpieza garantizada
+    const modalEquipo = document.getElementById("modalEquipo");
+    const largePhotoModal = document.getElementById("largePhotoModal");
+
+    const cleanupBackdrop = () => {
+      document.body.classList.remove("modal-open");
+      document.body.style.removeProperty("overflow");
+      document.body.style.removeProperty("padding-right");
+      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+    };
+
+    const handleEquipoHidden = () => {
+      setSelectedEquipo(null);
+      cleanupBackdrop();
+    };
+
+    const handlePhotoHidden = () => {
+      setLargePhoto(null);
+      cleanupBackdrop();
+    };
+
+    if (modalEquipo) {
+      modalEquipo.addEventListener("hidden.bs.modal", handleEquipoHidden);
+    }
+    if (largePhotoModal) {
+      largePhotoModal.addEventListener("hidden.bs.modal", handlePhotoHidden);
+    }
+
     return () => {
       socket.off('equipo_actualizado', getAllEquipos);
+      if (modalEquipo) {
+        modalEquipo.removeEventListener("hidden.bs.modal", handleEquipoHidden);
+      }
+      if (largePhotoModal) {
+        largePhotoModal.removeEventListener("hidden.bs.modal", handlePhotoHidden);
+      }
     };
   }, []);
 
@@ -85,8 +119,15 @@ export default function CrudEquipo() {
   const hideModal = (modalId) => {
     const modal = document.getElementById(modalId);
     if (modal) {
-      const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
-      bsModal.hide();
+      const closeBtn = modal.querySelector(".btn-close");
+      if (closeBtn) {
+        closeBtn.click();
+      } else {
+        const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
+        bsModal.hide();
+      }
+      
+      // ✅ Limpieza inmediata para evitar backdrops huérfanos por re-renders rápidos de React
       document.body.classList.remove("modal-open");
       document.body.style.removeProperty("overflow");
       document.body.style.removeProperty("padding-right");
@@ -137,7 +178,7 @@ export default function CrudEquipo() {
         <div style={{ padding: "5px", cursor: row.foto_equipo ? "pointer" : "default" }}>
           {row.foto_equipo ? (
             <img
-              src={`http://localhost:8000/uploads/${row.foto_equipo}?v=${Date.now()}`}
+              src={`http://localhost:8000/uploads/${row.foto_equipo}`}
               alt={row.nom_equipo || "Foto del equipo"}
               style={{
                 width: "80px",
@@ -152,7 +193,7 @@ export default function CrudEquipo() {
               onMouseOut={(e) => (e.target.style.transform = "scale(1)")}
               onClick={() => {
                 setLargePhoto(row.foto_equipo);
-                const modal = new bootstrap.Modal(document.getElementById("largePhotoModal"));
+                const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("largePhotoModal"));
                 modal.show();
               }}
               onError={(e) => { e.target.src = "/img/no-image.png"; }}
@@ -333,8 +374,8 @@ export default function CrudEquipo() {
       <div className="modal fade" id="modalEquipo" tabIndex="-1" aria-labelledby="modalEquipoLabel" aria-hidden="true">
         <div className="modal-dialog modal-lg">
           <div className="modal-content">
-            <div className="modal-header bg-primary text-white">
-              <h5 className="modal-title" id="modalEquipoLabel">
+            <div className="modal-header text-white" style={{ background: "#023E8A" }}>
+              <h5 className="modal-title" id="modalEquipoLabel" style={{ fontWeight: "700" }}>
                 {selectedEquipo ? "Editar Equipo" : "Registrar Nuevo Equipo"}
               </h5>
               <button
@@ -373,7 +414,7 @@ export default function CrudEquipo() {
             <div className="modal-body text-center" style={{ padding: "20px 40px 40px" }}>
               {largePhoto && (
                 <img
-                  src={`http://localhost:8000/uploads/${largePhoto}?v=${Date.now()}`}
+                  src={`http://localhost:8000/uploads/${largePhoto}`}
                   alt="Foto del equipo"
                   style={{
                     maxWidth: "100%",

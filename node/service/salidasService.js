@@ -6,7 +6,6 @@ import { Op } from "sequelize";
 class salidasService {
   async getAll() {
     return await salidasModel.findAll({
-      where: { estado: 1 },
       include: [{
         model: movimientoreactivoModel,
         as: 'movimiento',
@@ -141,14 +140,59 @@ class salidasService {
   }
 
   async update(id, data) {
-    const [updated] = await salidasModel.update(data, { where: { id_salida: id } });
-    if (updated === 0) throw new Error('No se pudo actualizar');
+    const salida = await salidasModel.findByPk(id);
+    if (!salida) throw new Error('Salida no encontrada');
+
+    const nuevaCantidad = parseFloat(data.cantidad_salida);
+    if (isNaN(nuevaCantidad) || nuevaCantidad <= 0) {
+      throw new Error('La cantidad de salida debe ser mayor a 0');
+    }
+
+    if (salida.estado === 1) {
+      const diff = nuevaCantidad - parseFloat(salida.cantidad_salida || 0);
+
+      if (diff !== 0) {
+        const movimiento = await movimientoreactivoModel.findByPk(salida.id_movimiento_reactivo);
+        if (!movimiento) throw new Error('Movimiento asociado no encontrado');
+
+        if (diff > 0) {
+          const disponible = parseFloat(movimiento.cantidad_inicial || 0) - parseFloat(movimiento.cantidad_salida || 0);
+          if (diff > disponible) {
+            throw new Error(`Stock insuficiente en el lote ${movimiento.lote || 'Sin lote'} para realizar este cambio. Disponible: ${disponible.toFixed(3)}`);
+          }
+        }
+
+        const nuevaCantidadSalida = parseFloat(movimiento.cantidad_salida || 0) + diff;
+        const nuevaDisponible = parseFloat(movimiento.cantidad_inicial || 0) - nuevaCantidadSalida;
+        await movimiento.update({
+          cantidad_salida: nuevaCantidadSalida,
+          estado_inventario: nuevaDisponible > 0 ? 'en stock' : 'agotado'
+        });
+
+        const reactivo = await reactivosModel.findByPk(movimiento.id_reactivo);
+        if (reactivo) {
+          const lotes = await this.getLotesFefo(movimiento.id_reactivo);
+          const stockTotal = lotes.reduce((acc, l) => acc + l.cantidad_disponible, 0);
+          await reactivo.update({ existencia_reactivo: stockTotal > 0 ? 'SI' : 'NO' });
+        }
+      }
+    }
+
+    // Actualizar salida
+    await salida.update({
+      cantidad_salida: nuevaCantidad,
+      fecha_salida: data.fecha_salida || salida.fecha_salida,
+      observaciones: data.observaciones !== undefined ? data.observaciones : salida.observaciones
+    });
+
     return true;
   }
 
   async delete(id) {
     const salida = await salidasModel.findByPk(id);
     if (!salida) throw new Error('Salida no encontrada');
+
+    if (salida.estado === 0) return true; // Ya está inactiva
 
     // Devolver stock al movimiento
     const movimiento = await movimientoreactivoModel.findByPk(salida.id_movimiento_reactivo);
@@ -163,13 +207,47 @@ class salidasService {
       const reactivo = await reactivosModel.findByPk(movimiento.id_reactivo);
       if (reactivo) {
         const lotes = await this.getLotesFefo(movimiento.id_reactivo);
-        const stockTotal = lotes.reduce((acc, l) => acc + l.cantidad_disponible, 0) + parseFloat(salida.cantidad_salida);
+        const stockTotal = lotes.reduce((acc, l) => acc + l.cantidad_disponible, 0);
         await reactivo.update({ existencia_reactivo: stockTotal > 0 ? 'SI' : 'NO' });
       }
     }
 
     const deleted = await salidasModel.update({ estado: 0 }, { where: { id_salida: id } });
     if (deleted[0] === 0) throw new Error('No se pudo inactivar');
+    return true;
+  }
+
+  async activar(id) {
+    const salida = await salidasModel.findByPk(id);
+    if (!salida) throw new Error('Salida no encontrada');
+    if (salida.estado === 1) return true; // Ya está activa
+
+    const movimiento = await movimientoreactivoModel.findByPk(salida.id_movimiento_reactivo);
+    if (!movimiento) throw new Error('Movimiento asociado no encontrado');
+
+    const disponible = parseFloat(movimiento.cantidad_inicial || 0) - parseFloat(movimiento.cantidad_salida || 0);
+    if (parseFloat(salida.cantidad_salida) > disponible) {
+      throw new Error(`Stock insuficiente en el lote ${movimiento.lote || 'Sin lote'} para reactivar esta salida. Disponible: ${disponible.toFixed(3)}`);
+    }
+
+    // Actualizar movimiento
+    const nuevaCantidadSalida = parseFloat(movimiento.cantidad_salida || 0) + parseFloat(salida.cantidad_salida);
+    const nuevaDisponible = parseFloat(movimiento.cantidad_inicial || 0) - nuevaCantidadSalida;
+    await movimiento.update({
+      cantidad_salida: nuevaCantidadSalida,
+      estado_inventario: nuevaDisponible > 0 ? 'en stock' : 'agotado'
+    });
+
+    // Actualizar reactivo
+    const reactivo = await reactivosModel.findByPk(movimiento.id_reactivo);
+    if (reactivo) {
+      const lotes = await this.getLotesFefo(movimiento.id_reactivo);
+      const stockTotal = lotes.reduce((acc, l) => acc + l.cantidad_disponible, 0);
+      await reactivo.update({ existencia_reactivo: stockTotal > 0 ? 'SI' : 'NO' });
+    }
+
+    // Cambiar estado a 1 (activo)
+    await salida.update({ estado: 1 });
     return true;
   }
 }

@@ -72,8 +72,26 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
     }
   };
 
-  const loteFefo = lotesFefo[0];
-  const stockTotalDisponible = lotesFefo.reduce((acc, l) => acc + l.cantidad_disponible, 0);
+  const lotesFefoProcesados = [...lotesFefo];
+  if (selectedSalida && lotesFefoProcesados.length > 0) {
+    const idx = lotesFefoProcesados.findIndex(l => l.id_movimiento_reactivo === selectedSalida.id_movimiento_reactivo);
+    if (idx !== -1) {
+      lotesFefoProcesados[idx] = {
+        ...lotesFefoProcesados[idx],
+        cantidad_disponible: lotesFefoProcesados[idx].cantidad_disponible + parseFloat(selectedSalida.cantidad_salida || 0)
+      };
+    } else {
+      lotesFefoProcesados.unshift({
+        id_movimiento_reactivo: selectedSalida.id_movimiento_reactivo,
+        lote: selectedSalida.movimiento?.lote || 'Sin lote',
+        fecha_vencimiento: selectedSalida.movimiento?.fecha_vencimiento,
+        cantidad_disponible: parseFloat(selectedSalida.cantidad_salida || 0)
+      });
+    }
+  }
+
+  const loteFefo = lotesFefoProcesados[0];
+  const stockTotalDisponible = lotesFefoProcesados.reduce((acc, l) => acc + l.cantidad_disponible, 0);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -87,7 +105,7 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
       Swal.fire("⚠️ Atención", "La cantidad debe ser un número mayor a 0", "warning");
       return;
     }
-    if (lotesFefo.length === 0) {
+    if (lotesFefoProcesados.length === 0) {
       Swal.fire("⚠️ Sin stock", "No hay lotes disponibles para este reactivo", "warning");
       return;
     }
@@ -96,7 +114,7 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
       Swal.fire({
         icon: "warning",
         title: "⚠️ Stock Insuficiente",
-        text: `Solo tienes ${parseFloat(stockTotalDisponible.toFixed(3))} unidades disponibles en total entre todos los lotes.`
+        text: `Solo tienes ${parseFloat(stockTotalDisponible.toFixed(3))} unidades disponibles en total para esta salida.`
       });
       return;
     }
@@ -122,7 +140,7 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
     }
 
     // Confirmación si se van a usar varios lotes
-    if (cantidad > loteFefo.cantidad_disponible) {
+    if (!selectedSalida && cantidad > loteFefo.cantidad_disponible) {
       const confirm = await Swal.fire({
         title: '¿Múltiples Lotes?',
         text: `La cantidad (${cantidad}) supera lo disponible en el primer lote (${parseFloat(loteFefo.cantidad_disponible.toFixed(3))}). El sistema tomará el restante de los siguientes lotes automáticamente. ¿Deseas continuar?`,
@@ -238,7 +256,7 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
                 </div>
               </div>
 
-              {lotesFefo.length > 1 && (
+              {lotesFefoProcesados.length > 1 && (
                 <div className="mt-3 pt-2 text-center" style={{ borderTop: "1px dashed #86efac", fontSize: "11px", color: "#047857", fontWeight: "600" }}>
                   💡 Si tu salida supera las {parseFloat(loteFefo.cantidad_disponible.toFixed(3))} unidades, el sistema usará los demás lotes automáticamente.
                 </div>
@@ -259,7 +277,6 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
               onChange={(e) => setCantidadSalida(e.target.value)}
               required min="0.001" step="0.001"
               placeholder="0.000"
-              disabled={!!selectedSalida?.id_salida}
             />
             {id_reactivo && (
               <span className="input-group-text fw-bold" style={{ background: "#f1f5f9", borderTopRightRadius: "10px", borderBottomRightRadius: "10px", fontSize: "12px", color: "#0077B6" }}>
@@ -272,7 +289,7 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
               {parseFloat(cantidad_salida) > stockTotalDisponible 
                 ? `❌ Insuficiente (Máx Total: ${parseFloat(stockTotalDisponible.toFixed(3))})`
                 : parseFloat(cantidad_salida) > loteFefo.cantidad_disponible 
-                  ? `🔀 Se distribuirá entre ${lotesFefo.length} lotes`
+                  ? `🔀 Se distribuirá entre ${lotesFefoProcesados.length} lotes`
                   : `✅ Se tomará del lote #${loteFefo.lote}`
               }
             </div>

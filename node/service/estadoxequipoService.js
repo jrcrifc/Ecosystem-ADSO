@@ -49,6 +49,8 @@ class EstadoxequipoService {
         {
           model: SolicitudModel,
           as: 'solicitudes',
+          where: { estado: 1 },
+          required: false,
           include: [{
             model: EstadoxsolicitudModel,
             as: 'estados',
@@ -108,6 +110,8 @@ class EstadoxequipoService {
         {
           model: SolicitudModel,
           as: 'solicitudes',
+          where: { estado: 1 },
+          required: false,
           include: [{
             model: EstadoxsolicitudModel,
             as: 'estados',

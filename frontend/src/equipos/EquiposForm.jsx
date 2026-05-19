@@ -124,15 +124,15 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
         await apiAxios.post("/api/equipos", data, config);
       }
 
+      if (hideModal) hideModal();
+      if (refreshParent) refreshParent();
+
       Swal.fire({
         icon: "success",
         title: selectedEquipo ? "¡Actualizado!" : "¡Guardado!",
         timer: 1800,
         showConfirmButton: false
       });
-
-      if (refreshParent) refreshParent();
-      if (hideModal) hideModal();
 
       // Limpiar formulario después de guardar
       setForm({
@@ -240,7 +240,7 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
       <button
         type="button"
         className="btn w-100 mt-4"
-        style={{ background: "#0077B6", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }}
+        style={{ background: "#023E8A", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }}
         onClick={saveData}
         disabled={loading}
       >

@@ -8,6 +8,10 @@ import {
     remove 
 } from '../controller/solicitudController.js';
 import solicitudModel from '../models/solicitudModel.js';
+import solicitudxequipoModel from '../models/solicitudxequipoModel.js';
+import equipoModel from '../models/EquiposModel.js';
+import Estadoxequipo from '../models/estadoxequipoModel.js';
+import { getIO } from '../socket.js';
 import authMiddleware from '../middleware/authMiddleware.js'; // ← importa el middleware
 import { todosLosRoles } from '../middleware/roleMiddleware.js';
 
@@ -30,8 +34,43 @@ router.put('/estado/:id',  todosLosRoles, async (req, res) => {
         }
         const nuevoEstado = solicitud.estado === 1 ? 0 : 1;
         await solicitud.update({ estado: nuevoEstado });
+
+        // Si se inactiva (cancela) la solicitud, liberar automáticamente los equipos vinculados
+        if (nuevoEstado === 0) {
+            const vinculos = await solicitudxequipoModel.findAll({
+                where: { id_solicitud: id }
+            });
+
+            if (vinculos && vinculos.length > 0) {
+                const idsEquipos = vinculos.map(v => v.id_equipo);
+                
+                // 1. Asegurar que los equipos sigan estando ACTIVOS (estado: 1)
+                await equipoModel.update(
+                    { estado: 1 },
+                    { where: { id_equipo: idsEquipos } }
+                );
+
+                // 2. Registrar el estado disponible en el historial de estados de equipos
+                for (const id_equipo of idsEquipos) {
+                    await Estadoxequipo.create({
+                        id_equipo,
+                        id_estado_equipo: 1 // disponible
+                    });
+                }
+            }
+        }
+
+        // Emitir eventos globales de refresco en tiempo real
+        try {
+            getIO().emit('solicitud_actualizada');
+            getIO().emit('equipo_actualizado');
+        } catch (socketError) {
+            console.error('Error al emitir eventos de socket:', socketError);
+        }
+
         res.json({ message: "Estado cambiado correctamente", estado: nuevoEstado });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ message: "Error del servidor" });
     }
 });

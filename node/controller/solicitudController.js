@@ -52,7 +52,30 @@ export const create = async (req, res) => {
 
 export const update = async (req, res) => {
     try {
-        await solicitudService.update(req.params.id, req.body);
+        const result = await solicitudService.update(req.params.id, req.body);
+        
+        // Si fue demotada, notificar al administrador
+        if (result && result.demotado) {
+            try {
+                await NotificacionService.notificarAdmins({
+                    id_usuario_origen: result.id_usuario,
+                    titulo: '⚠️ Solicitud de préstamo modificada',
+                    mensaje: `La solicitud #${req.params.id} fue modificada por el usuario después de haber sido aceptada. Se requiere una nueva aprobación.`,
+                    tipo: 'nueva_solicitud'
+                });
+            } catch (notifError) {
+                console.error('Error al notificar modificación de solicitud:', notifError);
+            }
+        }
+
+        // ✅ Emitir eventos globales de refresco en tiempo real
+        try {
+            getIO().emit('solicitud_actualizada');
+            getIO().emit('equipo_actualizado');
+        } catch (socketError) {
+            console.error('Error al emitir eventos de socket:', socketError);
+        }
+
         res.json({ success: true, message: 'Solicitud actualizada correctamente' });
     } catch (error) {
         res.status(400).json({ success: false, message: error.message });

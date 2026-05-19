@@ -177,10 +177,22 @@ const CrudSolicitudPrestamos = () => {
           </button>
           <button
             className="btn btn-sm btn-warning"
-            data-bs-toggle="modal"
-            data-bs-target="#modalSolicitud"
-            onClick={() => setSelectedSolicitud(r)}
-            title="Editar"
+            data-bs-toggle={['generado', 'aceptado'].includes(r.ultimoEstado) ? "modal" : ""}
+            data-bs-target={['generado', 'aceptado'].includes(r.ultimoEstado) ? "#modalSolicitud" : ""}
+            onClick={() => {
+              if (!['generado', 'aceptado'].includes(r.ultimoEstado)) {
+                Swal.fire({
+                  icon: "info",
+                  title: "Edición no permitida",
+                  text: `No se puede editar una solicitud que ya está en estado ${r.ultimoEstado.toUpperCase()}.`
+                });
+              } else {
+                setSelectedSolicitud(r);
+              }
+            }}
+            disabled={!['generado', 'aceptado'].includes(r.ultimoEstado)}
+            style={{ opacity: ['generado', 'aceptado'].includes(r.ultimoEstado) ? 1 : 0.5 }}
+            title={['generado', 'aceptado'].includes(r.ultimoEstado) ? "Editar" : `No se puede editar en estado ${r.ultimoEstado}`}
           >
             <i className="fa-solid fa-pencil"></i>
           </button>
@@ -202,8 +214,30 @@ const CrudSolicitudPrestamos = () => {
     // ✅ Escuchar cambios en tiempo real para refrescar la tabla
     socket.on('solicitud_actualizada', cargarSolicitudes);
 
+    // ✅ Event listener para modal de Bootstrap para limpieza garantizada
+    const modalSolicitud = document.getElementById("modalSolicitud");
+
+    const cleanupBackdrop = () => {
+      document.body.classList.remove("modal-open");
+      document.body.style.removeProperty("overflow");
+      document.body.style.removeProperty("padding-right");
+      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+    };
+
+    const handleSolicitudHidden = () => {
+      setSelectedSolicitud(null);
+      cleanupBackdrop();
+    };
+
+    if (modalSolicitud) {
+      modalSolicitud.addEventListener("hidden.bs.modal", handleSolicitudHidden);
+    }
+
     return () => {
       socket.off('solicitud_actualizada', cargarSolicitudes);
+      if (modalSolicitud) {
+        modalSolicitud.removeEventListener("hidden.bs.modal", handleSolicitudHidden);
+      }
     };
   }, []);
 
@@ -257,12 +291,12 @@ const CrudSolicitudPrestamos = () => {
         const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
         bsModal.hide();
       }
-      setTimeout(() => {
-        document.body.classList.remove("modal-open");
-        document.body.style.removeProperty("overflow");
-        document.body.style.removeProperty("padding-right");
-        document.querySelectorAll(".modal-backdrop").forEach(el => el.remove());
-      }, 350);
+      
+      // ✅ Limpieza inmediata para evitar backdrops huérfanos por re-renders rápidos de React
+      document.body.classList.remove("modal-open");
+      document.body.style.removeProperty("overflow");
+      document.body.style.removeProperty("padding-right");
+      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
     }
   };
 
@@ -356,62 +390,82 @@ const CrudSolicitudPrestamos = () => {
       {/* Modal detalle de equipos */}
       {verDetalle && (
         <div className="modal show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-          <div className="modal-dialog modal-md">
-            <div className="modal-content">
-              <div className="modal-header bg-info text-white">
-                <h5 className="modal-title">
-                  Detalle — Solicitud #{verDetalle.id_solicitud}
+          <div className="modal-dialog modal-md modal-dialog-centered">
+            <div className="modal-content" style={{ borderRadius: "16px", overflow: "hidden", border: "none" }}>
+              <div className="modal-header text-white" style={{ background: "#023E8A" }}>
+                <h5 className="modal-title" style={{ fontWeight: "700" }}>
+                  🔍 Detalle — Solicitud #{verDetalle.id_solicitud}
                 </h5>
                 <button className="btn-close btn-close-white" onClick={() => setVerDetalle(null)}></button>
               </div>
-              <div className="modal-body">
+              <div className="modal-body" style={{ padding: "20px" }}>
 
                 <div className="mb-3 p-3 rounded" style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0" }}>
                   <div className="row g-2 small">
                     <div className="col-6">
-                      <span className="text-muted">Solicitante</span>
-                      <div className="fw-semibold">{verDetalle.usuario?.nombres_apellidos || "-"}</div>
+                      <span className="text-muted d-block" style={{ fontSize: "11px", fontWeight: "600" }}>SOLICITANTE</span>
+                      <div className="fw-bold" style={{ color: "#0f172a", fontSize: "13px" }}>{verDetalle.usuario?.nombres_apellidos || "-"}</div>
                     </div>
                     <div className="col-6">
-                      <span className="text-muted">Estado</span>
-                      <div className="fw-semibold text-capitalize">{verDetalle.ultimoEstado || "generado"}</div>
+                      <span className="text-muted d-block" style={{ fontSize: "11px", fontWeight: "600" }}>ESTADO</span>
+                      <div className="fw-bold text-capitalize" style={{ color: "#0f172a", fontSize: "13px" }}>{verDetalle.ultimoEstado || "generado"}</div>
                     </div>
-                    <div className="col-6">
-                      <span className="text-muted">Fecha inicio</span>
-                      <div className="fw-semibold">
+                    <div className="col-6 mt-2">
+                      <span className="text-muted d-block" style={{ fontSize: "11px", fontWeight: "600" }}>FECHA INICIO</span>
+                      <div className="fw-bold" style={{ color: "#0f172a", fontSize: "13px" }}>
                         {formatDateTime(verDetalle.fecha_inicio)}
                       </div>
                     </div>
-                    <div className="col-6">
-                      <span className="text-muted">Fecha fin</span>
-                      <div className="fw-semibold">
+                    <div className="col-6 mt-2">
+                      <span className="text-muted d-block" style={{ fontSize: "11px", fontWeight: "600" }}>FECHA FIN</span>
+                      <div className="fw-bold" style={{ color: "#0f172a", fontSize: "13px" }}>
                         {formatDateTime(verDetalle.fecha_fin)}
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <h6 className="fw-bold mb-2">
-                  Equipos solicitados
-                  <span className="badge bg-primary ms-2">{verDetalle.equipos?.length || 0}</span>
+                <h6 className="fw-bold mb-3" style={{ color: "#023E8A", fontSize: "14px", display: "flex", alignItems: "center" }}>
+                  📦 Equipos solicitados
+                  <span className="badge ms-2" style={{ background: "#e0f2fe", color: "#0369a1", fontSize: "11px" }}>{verDetalle.equipos?.length || 0}</span>
                 </h6>
 
                 {(!verDetalle.equipos || verDetalle.equipos.length === 0) ? (
-                  <p className="text-muted small">No hay equipos asignados</p>
+                  <p className="text-muted small text-center my-3">No hay equipos asignados</p>
                 ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     {verDetalle.equipos.map(eq => {
-                      const badge = getBadgeEquipo(eq.ultimoEstado);
+                      const placa = (eq.no_placa && eq.no_placa !== 0 && eq.no_placa !== '0') ? eq.no_placa : null;
                       return (
                         <div key={eq.id_equipo} style={{
-                          display: "flex", alignItems: "center", justifyContent: "space-between",
-                          padding: "10px 14px", borderRadius: "10px",
-                          border: "1px solid #e2e8f0", backgroundColor: "#fff"
+                          display: "flex", alignItems: "center", gap: "14px",
+                          padding: "12px 16px", borderRadius: "12px",
+                          border: "1px solid #e2e8f0", backgroundColor: "#fff",
+                          boxShadow: "0 2px 6px rgba(0,0,0,0.03)"
                         }}>
-                          <div>
-                            <div className="fw-semibold" style={{ fontSize: "0.85rem", color: "#0f172a" }}>{eq.nom_equipo}</div>
-                            <div className="text-muted" style={{ fontSize: "0.75rem", color: "#64748b" }}>
-                              {eq.marca_equipo || "Sin marca"} · {eq.no_placa || "Sin placa"}
+                          <img
+                            src={eq.foto_equipo ? `http://localhost:8000/uploads/${eq.foto_equipo}` : "/img/no-image.png"}
+                            alt={eq.nom_equipo || "Foto del equipo"}
+                            style={{
+                              width: "60px",
+                              height: "60px",
+                              objectFit: "cover",
+                              borderRadius: "8px",
+                              border: "1px solid #dbeafe"
+                            }}
+                            onError={(e) => { e.target.src = "/img/no-image.png"; }}
+                          />
+                          <div style={{ flex: 1 }}>
+                            <div className="fw-bold" style={{ fontSize: "0.95rem", color: "#023E8A" }}>{eq.nom_equipo}</div>
+                            <div style={{ fontSize: "0.8rem", color: "#475569", marginTop: "2px" }}>
+                              <span className="fw-semibold">Marca:</span> {eq.marca_equipo || "Sin marca"}
+                            </div>
+                            <div style={{ fontSize: "0.8rem", color: "#475569" }}>
+                              <span className="fw-semibold">Placa:</span> {placa ? (
+                                <span className="badge bg-secondary ms-1" style={{ fontSize: "10px" }}>{placa}</span>
+                              ) : (
+                                <span className="text-muted italic ms-1" style={{ fontSize: "11px" }}>Sin placa</span>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -420,8 +474,8 @@ const CrudSolicitudPrestamos = () => {
                   </div>
                 )}
               </div>
-              <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => setVerDetalle(null)}>Cerrar</button>
+              <div className="modal-footer" style={{ borderTop: "1px solid #e2e8f0" }}>
+                <button className="btn text-white" style={{ background: "#023E8A", fontWeight: "600", borderRadius: "8px" }} onClick={() => setVerDetalle(null)}>Cerrar</button>
               </div>
             </div>
           </div>

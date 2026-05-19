@@ -8,6 +8,7 @@ import {
 } from '../controller/salidasController.js';
 import salidasModel from '../models/salidasModel.js';
 import salidasService from "../service/salidasService.js";
+import { getIO } from '../socket.js';
 import { adminOGestor } from '../middleware/roleMiddleware.js';
 const router = express.Router();
 
@@ -28,7 +29,20 @@ router.put('/estado/:id', adminOGestor, async (req, res) => {
         }
 
         const nuevoEstado = salidas.estado === 1 ? 0 : 1;
-        await salidas.update({ estado: nuevoEstado });
+
+        if (nuevoEstado === 0) {
+            await salidasService.delete(id);
+        } else {
+            await salidasService.activar(id);
+        }
+
+        // Emitir eventos globales de refresco en tiempo real
+        try {
+            getIO().emit('salida_actualizada');
+            getIO().emit('movimiento_actualizado');
+        } catch (socketError) {
+            console.error('Error al emitir eventos de socket:', socketError);
+        }
 
         res.json({ 
             message: "Estado cambiado correctamente",
@@ -36,7 +50,7 @@ router.put('/estado/:id', adminOGestor, async (req, res) => {
         });
     } catch (error) {
         console.error("Error al cambiar estado:", error);
-        res.status(500).json({ message: "Error del servidor" });
+        res.status(500).json({ message: error.message || "Error del servidor" });
     }
 });
 
