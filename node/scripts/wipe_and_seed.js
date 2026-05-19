@@ -158,60 +158,13 @@ async function run() {
     }
 
     // ==========================================
-    // SEED: SOLICITUDES DE PRÉSTAMO (10 REGISTROS)
+    // SEED: SOLICITUDES DE PRÉSTAMO (VACÍAS PARA PRUEBAS DEL USUARIO)
     // ==========================================
-    console.log("📋 Creando 10 Solicitudes de préstamo de equipos...");
-    for (let i = 1; i <= 10; i++) {
-      const fechaInicio = new Date();
-      fechaInicio.setDate(fechaInicio.getDate() + i);
-      const fechaFin = new Date(fechaInicio);
-      fechaFin.setHours(fechaFin.getHours() + 4);
-
-      const [solicitudId] = await db.query(
-        `INSERT INTO solicitud_prestamos (id_usuario, fecha_inicio, fecha_fin, estado, createdAt, updatedAt) 
-         VALUES (?, ?, ?, 1, NOW(), NOW());`,
-        { replacements: [id_usuario, fechaInicio, fechaFin] }
-      );
-
-      // Determinar estado de la solicitud
-      // 1-4: Generado (ID 1)
-      // 5-7: Aceptado/Solicitado (ID 2)
-      // 8-9: Prestado (ID 3)
-      // 10: Disponible/Entregado (ID 5)
-      let idEstadoSolicitud = 1; 
-      if (i >= 5 && i <= 7) idEstadoSolicitud = 2; // aceptado (solicitado)
-      if (i >= 8 && i <= 9) idEstadoSolicitud = 3; // prestado
-      if (i === 10) idEstadoSolicitud = 5;         // entregado (disponible)
-
-      await db.query(
-        `INSERT INTO estadoxsolicitud (id_solicitud, id_estado_solicitud, createdAt, updatedAt) 
-         VALUES (?, ?, NOW(), NOW());`,
-        { replacements: [solicitudId, idEstadoSolicitud] }
-      );
-
-      // Vincular a uno o dos equipos
-      const eqIndex1 = (i - 1) % idsEquiposCreados.length;
-      const eqIndex2 = i % idsEquiposCreados.length;
-
-      await db.query(
-        `INSERT INTO solicitudxequipo (id_solicitud, id_equipo, createdAt, updatedAt) 
-         VALUES (?, ?, NOW(), NOW());`,
-        { replacements: [solicitudId, idsEquiposCreados[eqIndex1]] }
-      );
-
-      // Si la solicitud está en estado prestado, registrar el equipo como prestado (ID 4)
-      if (idEstadoSolicitud === 3) {
-        await db.query(
-          `INSERT INTO estadoxequipo (id_equipo, id_estado_equipo, createdAt, updatedAt) 
-           VALUES (?, 4, NOW(), NOW());`,
-          { replacements: [idsEquiposCreados[eqIndex1]] }
-        );
-      }
-    }
+    console.log("📋 Dejando solicitudes y movimientos vacíos para tus pruebas...");
 
     // 6. Volver a activar validaciones de llaves foráneas
     await db.query("SET FOREIGN_KEY_CHECKS = 1;");
-    console.log("🎉 ¡Base de Datos limpiada y re-semillada exitosamente con 10 registros nuevos por tabla!");
+    console.log("🎉 ¡Base de Datos limpiada con éxito! Equipos y Reactivos creados listos para tus propias pruebas.");
     process.exit(0);
 
   } catch (error) {
