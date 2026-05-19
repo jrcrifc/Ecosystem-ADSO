@@ -161,6 +161,29 @@ export default function GestionUsuarios() {
         </p>
       </div>
 
+      {(u.numero_ficha || u.nombre_ficha) && (
+        <div style={{
+          marginTop: "10px", background: "#f0fdf4", borderRadius: "10px",
+          padding: "10px 14px", border: "1px solid #dcfce7", display: "flex", gap: "16px", flexWrap: "wrap"
+        }}>
+          {u.numero_ficha && (
+            <span style={{ fontSize: "12px", color: "#166534" }}>
+              🆔 <strong>Ficha:</strong> {u.numero_ficha}
+            </span>
+          )}
+          {u.nombre_ficha && (
+            <span style={{ fontSize: "12px", color: "#166534" }}>
+              📋 <strong>Nombre Ficha:</strong> {u.nombre_ficha}
+            </span>
+          )}
+          {u.es_sena_empresa !== undefined && (
+            <span style={{ fontSize: "12px", color: "#166534" }}>
+              🏢 <strong>SENA Empresa:</strong> {u.es_sena_empresa ? "Sí" : "No"}
+            </span>
+          )}
+        </div>
+      )}
+
       <div style={{ display: "flex", gap: "10px", marginTop: "14px", flexWrap: "wrap" }}>
         {u.estado === 'pendiente' && (
           <>
@@ -289,6 +312,11 @@ export default function GestionUsuarios() {
                       <div style={{ flex: 1, minWidth: "200px" }}>
                         <div style={{ fontWeight: "700", color: "#0f172a", fontSize: "14px" }}>{u.nombres_apellidos}</div>
                         <div style={{ fontSize: "12px", color: "#64748b" }}>{u.email} · {u.documento}</div>
+                        {(u.numero_ficha || u.nombre_ficha) && (
+                          <div style={{ fontSize: "11px", color: "#0077B6", marginTop: "4px", fontWeight: "600" }}>
+                            🆔 Ficha: {u.numero_ficha || "N/A"} · Ficha Nombre: {u.nombre_ficha || "N/A"} · SENA Empresa: {u.es_sena_empresa ? "Sí" : "No"}
+                          </div>
+                        )}
                       </div>
                       {estadoBadge(u.estado)}
                       {(u.estado === 'aprobado' || u.estado === 'inactivo') && (

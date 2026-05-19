@@ -94,6 +94,22 @@ const PerfilUsuario = () => {
                 <input type="text" className="form-control" value={user.rol} disabled style={{ borderRadius: "10px", padding: "12px", background: "#f8fafc", border: "1px solid #e2e8f0" }} />
               </div>
             </div>
+            {(user.numero_ficha || user.nombre_ficha) && (
+              <div className="row">
+                <div className="col-md-4 mb-4">
+                  <label className="form-label small fw-bold text-muted">Número de Ficha</label>
+                  <input type="text" className="form-control" value={user.numero_ficha || ""} disabled style={{ borderRadius: "10px", padding: "12px", background: "#f8fafc", border: "1px solid #e2e8f0" }} />
+                </div>
+                <div className="col-md-4 mb-4">
+                  <label className="form-label small fw-bold text-muted">Nombre de la Ficha</label>
+                  <input type="text" className="form-control" value={user.nombre_ficha || ""} disabled style={{ borderRadius: "10px", padding: "12px", background: "#f8fafc", border: "1px solid #e2e8f0" }} />
+                </div>
+                <div className="col-md-4 mb-4">
+                  <label className="form-label small fw-bold text-muted">¿SENA Empresa?</label>
+                  <input type="text" className="form-control" value={user.es_sena_empresa ? "Sí 🏢" : "No"} disabled style={{ borderRadius: "10px", padding: "12px", background: "#f8fafc", border: "1px solid #e2e8f0" }} />
+                </div>
+              </div>
+            )}
             <button type="submit" className="btn w-100 text-white fw-bold mt-2" style={{ background: "#0077B6", borderRadius: "10px", padding: "12px" }}>
               <i className="fas fa-save me-2"></i> Guardar Cambios
             </button>

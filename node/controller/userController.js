@@ -2,11 +2,20 @@ import UserService from "../service/userService.js";
 
 export const RegisterUser = async (req, res) => {
   try {
-    const { documento, nombres_apellidos, email, password, rol } = req.body;
+    const { documento, nombres_apellidos, email, password, rol, numero_ficha, nombre_ficha, es_sena_empresa } = req.body;
     if (!documento || !nombres_apellidos || !email || !password || !rol) {
       return res.status(400).json({ message: "Todos los campos son obligatorios" });
     }
-    const user = await UserService.registerUser({ documento, nombres_apellidos, email, password, rol });
+    const user = await UserService.registerUser({ 
+      documento, 
+      nombres_apellidos, 
+      email, 
+      password, 
+      rol, 
+      numero_ficha, 
+      nombre_ficha, 
+      es_sena_empresa 
+    });
     res.status(201).json({ message: "Usuario registrado correctamente", user });
   } catch (error) {
     res.status(500).json({ message: error.message });

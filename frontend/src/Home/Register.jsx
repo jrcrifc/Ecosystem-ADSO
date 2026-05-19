@@ -12,7 +12,10 @@ const Register = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    rol: "Aprendiz"
+    rol: "Aprendiz",
+    numero_ficha: "",
+    nombre_ficha: "",
+    es_sena_empresa: false
   });
 
   const [error, setError] = useState("");
@@ -20,7 +23,7 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     
     // Validación en tiempo real para documento (solo números)
     if (name === "documento" && value !== "" && !/^\d+$/.test(value)) return;
@@ -28,7 +31,8 @@ const Register = () => {
     // Validación en tiempo real para nombres (no números)
     if (name === "nombres_apellidos" && /\d/.test(value)) return;
 
-    setForm({ ...form, [name]: value });
+    const val = type === "checkbox" ? checked : value;
+    setForm({ ...form, [name]: val });
   };
 
   const registrarUsuario = async (e) => {
@@ -46,6 +50,12 @@ const Register = () => {
     if (form.password !== form.confirmPassword) return setError("Las contraseñas no coinciden.");
     if (form.password.length < 8) return setError("La contraseña debe tener mínimo 8 caracteres.");
 
+    // Validar campos de ficha si el rol es Aprendiz
+    if (form.rol === "Aprendiz") {
+      if (!form.numero_ficha.trim()) return setError("El número de ficha es obligatorio.");
+      if (!form.nombre_ficha.trim()) return setError("El nombre de la ficha es obligatorio.");
+    }
+
     setLoading(true);
 
     try {
@@ -54,13 +64,26 @@ const Register = () => {
         nombres_apellidos: nombreTrim,
         email: emailTrim,
         password: form.password,
-        rol: form.rol
+        rol: form.rol,
+        numero_ficha: form.rol === "Aprendiz" ? form.numero_ficha.trim() : null,
+        nombre_ficha: form.rol === "Aprendiz" ? form.nombre_ficha.trim() : null,
+        es_sena_empresa: form.rol === "Aprendiz" ? form.es_sena_empresa : false
       };
 
       await apiAxios.post("/api/auth", data);
 
       setSuccess("✅ Registro exitoso. Tu cuenta está en revisión por el administrador.");
-      setForm({ documento: "", nombres_apellidos: "", email: "", password: "", confirmPassword: "", rol: "Aprendiz" });
+      setForm({ 
+        documento: "", 
+        nombres_apellidos: "", 
+        email: "", 
+        password: "", 
+        confirmPassword: "", 
+        rol: "Aprendiz",
+        numero_ficha: "",
+        nombre_ficha: "",
+        es_sena_empresa: false
+      });
 
       setTimeout(() => navigate("/UserLogin"), 4000);
     } catch (err) {
@@ -137,6 +160,30 @@ const Register = () => {
             <input className="form-control" type="email" name="email" placeholder="ejemplo@gmail.com"
               value={form.email} onChange={handleChange} required style={inputStyle} />
           </div>
+
+          {form.rol === "Aprendiz" && (
+            <div className="mb-2" style={{ animation: "fadeIn 0.3s ease-out" }}>
+              <div className="row g-2 mb-2">
+                <div className="col-6">
+                  <label className="mb-1" style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Número de Ficha</label>
+                  <input className="form-control" name="numero_ficha" placeholder="Ej: 2558832"
+                    value={form.numero_ficha} onChange={handleChange} required style={inputStyle} />
+                </div>
+                <div className="col-6">
+                  <label className="mb-1" style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Nombre de la Ficha</label>
+                  <input className="form-control" name="nombre_ficha" placeholder="Ej: ADSO"
+                    value={form.nombre_ficha} onChange={handleChange} required style={inputStyle} />
+                </div>
+              </div>
+              <div className="form-check d-flex align-items-center gap-2 mb-3 mt-2" style={{ paddingLeft: "5px" }}>
+                <input className="form-check-input" type="checkbox" name="es_sena_empresa" id="es_sena_empresa"
+                  checked={form.es_sena_empresa} onChange={handleChange} style={{ width: "17px", height: "17px", cursor: "pointer", border: "1px solid #cbd5e1" }} />
+                <label className="form-check-label" htmlFor="es_sena_empresa" style={{ fontSize: "12px", fontWeight: "600", color: "#475569", cursor: "pointer", userSelect: "none" }}>
+                  ¿Es SENA Empresa? 🏢
+                </label>
+              </div>
+            </div>
+          )}
 
           <div className="row g-2 mb-4">
             <div className="col-6">

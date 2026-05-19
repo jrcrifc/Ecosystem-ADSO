@@ -33,12 +33,15 @@ class UserService {
   }
 
  async registerUser(data) {
-    let { documento, nombres_apellidos, email, password, rol } = data;
+    let { documento, nombres_apellidos, email, password, rol, numero_ficha, nombre_ficha, es_sena_empresa } = data;
 
     // ✅ BLINDAJE: Limpieza y Normalización
     documento = (documento || "").trim();
     nombres_apellidos = (nombres_apellidos || "").trim();
     email = (email || "").trim().toLowerCase();
+    numero_ficha = numero_ficha ? String(numero_ficha).trim() : null;
+    nombre_ficha = nombre_ficha ? String(nombre_ficha).trim() : null;
+    const esSenaEmpresa = !!es_sena_empresa;
 
     // ✅ VALIDACIONES DE SERVIDOR
     if (!/^\d+$/.test(documento)) throw new Error("El documento debe contener solo números");
@@ -63,7 +66,10 @@ class UserService {
       email,
       password: hashedPassword,
       rol,
-      estado: 'pendiente'
+      estado: 'pendiente',
+      numero_ficha,
+      nombre_ficha,
+      es_sena_empresa: esSenaEmpresa
     });
 
     await registrarLog(email, 'REGISTRO', 'AUTH', `Usuario registrado como ${rol}`);

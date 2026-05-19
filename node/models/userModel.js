@@ -45,6 +45,21 @@ const UserModel = sequelize.define('usuarios', {
   failed_attempts: {
     type: DataTypes.INTEGER,
     defaultValue: 0
+  },
+  numero_ficha: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: null
+  },
+  nombre_ficha: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: null
+  },
+  es_sena_empresa: {
+    type: DataTypes.BOOLEAN,
+    allowNull: true,
+    defaultValue: false
   }
 }, {
   freezeTableName: true,

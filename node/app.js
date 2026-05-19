@@ -95,8 +95,10 @@ app.get('/', (req, res) => {
 try {
     await db.authenticate();
     console.log('✅ Conexión a la base de datos establecida');
+    await db.sync({ alter: true });
+    console.log('✅ Modelos de la base de datos sincronizados/alterados correctamente');
 } catch (error) {
-    console.error('❌ Error al conectar a la base de datos:', error);
+    console.error('❌ Error al conectar o sincronizar la base de datos:', error);
     process.exit(1);
 }
 
