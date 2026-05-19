@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import apiAxios from "../api/axiosConfig.js";
 import socket from "../socket.js"; // ✅ Usar socket centralizado
+import Swal from "sweetalert2";
 
 export default function Campanita({ userData, onAprobado, userRol }) {
   const [notificaciones, setNotificaciones] = useState([]);
