@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import apiAxios from "../api/axiosConfig";
-import fondoRegistro from "../Home/fondo.jpeg";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -97,11 +96,51 @@ const Register = () => {
       style={{
         position: "fixed", top: 0, left: 0,
         height: "100vh", width: "100vw",
-        backgroundImage: `url(${fondoRegistro})`,
-        backgroundSize: "cover", backgroundPosition: "center",
-        padding: "10px", overflow: "hidden"
+        background: "linear-gradient(-45deg, #0077B6, #00B4D8, #03045E, #90E0EF)",
+        backgroundSize: "400% 400%",
+        animation: "gradientBG 15s ease infinite",
+        padding: "10px", overflow: "hidden",
+        zIndex: 9999
       }}
     >
+      <style>{`
+        @keyframes gradientBG {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        @keyframes floatParticles {
+          0% { transform: translateY(0px) rotate(0deg); opacity: 0; }
+          50% { opacity: 0.4; }
+          100% { transform: translateY(-120vh) rotate(360deg); opacity: 0; }
+        }
+      `}</style>
+
+      {/* Floating Animated Bubbles Background */}
+      <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", overflow: "hidden", zIndex: -1, pointerEvents: "none" }}>
+        {[...Array(15)].map((_, i) => {
+          const size = Math.random() * 80 + 20;
+          const delay = Math.random() * 8;
+          const duration = Math.random() * 20 + 10;
+          const left = Math.random() * 100;
+          return (
+            <div
+              key={i}
+              style={{
+                position: "absolute",
+                bottom: "-150px",
+                left: `${left}%`,
+                width: `${size}px`,
+                height: `${size}px`,
+                background: "rgba(255, 255, 255, 0.12)",
+                borderRadius: "50%",
+                animation: `floatParticles ${duration}s infinite linear`,
+                animationDelay: `${delay}s`,
+              }}
+            />
+          );
+        })}
+      </div>
       <div style={{
         width: "100%", maxWidth: "420px", padding: "25px 30px",
         borderRadius: "24px", background: "rgba(255,255,255,0.95)", color: "#1f2937",
