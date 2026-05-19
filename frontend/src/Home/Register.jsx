@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import apiAxios from "../api/axiosConfig";
+import fondoRegistro from "../Home/fondo.jpeg";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -96,8 +97,8 @@ const Register = () => {
       style={{
         position: "fixed", top: 0, left: 0,
         height: "100vh", width: "100vw",
-        background: "linear-gradient(-45deg, #0077B6, #00B4D8, #03045E, #90E0EF)",
-        backgroundSize: "400% 400%",
+        backgroundImage: `linear-gradient(-45deg, rgba(0, 119, 182, 0.45), rgba(0, 180, 216, 0.45), rgba(3, 4, 94, 0.55), rgba(144, 224, 239, 0.45)), url(${fondoRegistro})`,
+        backgroundSize: "cover", backgroundPosition: "center",
         animation: "gradientBG 15s ease infinite",
         padding: "10px", overflow: "hidden",
         zIndex: 9999

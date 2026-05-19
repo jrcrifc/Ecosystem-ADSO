@@ -4,6 +4,7 @@ import apiAxios from "../api/axiosConfig.js";
 import Swal from "sweetalert2";
 import { FaEnvelope, FaKey, FaLock, FaArrowLeft } from "react-icons/fa";
 import logo from "../Home/ecosystem_logo.png";
+import fondoLaboratorio from "../Home/fondo.jpeg";
 
 const OlvidarPassword = () => {
   const navigate = useNavigate();
@@ -72,8 +73,8 @@ const OlvidarPassword = () => {
   const containerStyle = {
     position: "fixed", top: 0, left: 0,
     minHeight: "100vh", width: "100vw",
-    background: "linear-gradient(-45deg, #0077B6, #00B4D8, #03045E, #90E0EF)",
-    backgroundSize: "400% 400%",
+    backgroundImage: `linear-gradient(-45deg, rgba(0, 119, 182, 0.45), rgba(0, 180, 216, 0.45), rgba(3, 4, 94, 0.55), rgba(144, 224, 239, 0.45)), url(${fondoLaboratorio})`,
+    backgroundSize: "cover", backgroundPosition: "center",
     animation: "gradientBG 15s ease infinite",
     display: "flex", alignItems: "center", justifyContent: "center",
     zIndex: 9999,
