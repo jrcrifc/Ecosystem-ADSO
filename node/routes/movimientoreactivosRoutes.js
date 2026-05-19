@@ -24,10 +24,10 @@ router.get('/stock-lotes/:id_reactivo', adminOGestor, async (req, res) => {
     const timeHoyLocal = new Date(localHoyStr).getTime();
 
     const movimientos = await movimientoreactivoModel.findAll({
-      where: { id_reactivo },
+      where: { id_reactivo, estado: 1 },
       include: [
         { model: proveedorModel, as: 'proveedor' },
-        { model: salidasModel, as: 'salidas' }
+        { model: salidasModel, as: 'salidas', where: { estado: 1 }, required: false }
       ]
     });
 

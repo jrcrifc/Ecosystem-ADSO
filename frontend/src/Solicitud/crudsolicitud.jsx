@@ -17,11 +17,20 @@ const getBadgeEquipo = (estado) => ({
 const formatDateTime = (isoString) => {
   if (!isoString) return "-";
   const d = new Date(isoString);
-  // Corrección de 7 PM: si fue guardado a medianoche UTC, forzamos 7:00 AM
-  if (isoString.includes("T00:00:00.000Z") || d.toTimeString().slice(0, 5) === "19:00") {
+  
+  // Si la fecha fue guardada con hora 00:00:00 UTC (solo fecha, sin hora)
+  if (isoString.endsWith("T00:00:00.000Z") || isoString.includes("T00:00:00")) {
     return `${isoString.substring(0, 10)} 07:00 AM`;
   }
-  return d.toLocaleString([], { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+  
+  return d.toLocaleString('es-CO', { 
+    year: 'numeric', 
+    month: '2-digit', 
+    day: '2-digit', 
+    hour: '2-digit', 
+    minute: '2-digit',
+    hour12: true 
+  });
 };
 
 const EquiposPills = ({ equipos }) => {
@@ -241,12 +250,19 @@ const CrudSolicitudPrestamos = () => {
   const hideModal = () => {
     const modal = document.getElementById("modalSolicitud");
     if (modal) {
-      const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
-      bsModal.hide();
-      document.body.classList.remove("modal-open");
-      document.body.style.removeProperty("overflow");
-      document.body.style.removeProperty("padding-right");
-      document.querySelectorAll(".modal-backdrop").forEach(el => el.remove());
+      const closeBtn = modal.querySelector(".btn-close");
+      if (closeBtn) {
+        closeBtn.click();
+      } else {
+        const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
+        bsModal.hide();
+      }
+      setTimeout(() => {
+        document.body.classList.remove("modal-open");
+        document.body.style.removeProperty("overflow");
+        document.body.style.removeProperty("padding-right");
+        document.querySelectorAll(".modal-backdrop").forEach(el => el.remove());
+      }, 350);
     }
   };
 

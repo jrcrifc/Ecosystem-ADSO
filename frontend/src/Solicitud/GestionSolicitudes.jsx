@@ -5,6 +5,22 @@ import Swal from "sweetalert2";
 import { paginationComponentOptions, tableCustomStyles } from "../config/dataTableConfig";
 import socket from "../socket.js";
 
+const formatDateTime = (isoString) => {
+  if (!isoString) return "-";
+  const d = new Date(isoString);
+  if (isoString.endsWith("T00:00:00.000Z") || isoString.includes("T00:00:00")) {
+    return `${isoString.substring(0, 10)} 07:00 AM`;
+  }
+  return d.toLocaleString('es-CO', { 
+    year: 'numeric', 
+    month: '2-digit', 
+    day: '2-digit', 
+    hour: '2-digit', 
+    minute: '2-digit',
+    hour12: true 
+  });
+};
+
 const GestionSolicitudes = () => {
   const [solicitudes, setSolicitudes] = useState([]);
   const [filterText, setFilterText] = useState("");
@@ -56,16 +72,16 @@ const GestionSolicitudes = () => {
     },
     {
       name: "Fecha Inicio",
-      selector: (row) => row.fecha_inicio ? row.fecha_inicio.substring(0, 10) : "-",
+      selector: (row) => formatDateTime(row.fecha_inicio),
       sortable: true,
-      width: "120px",
+      width: "155px",
       wrap: true
     },
     {
       name: "Fecha Fin",
-      selector: (row) => row.fecha_fin ? row.fecha_fin.substring(0, 10) : "-",
+      selector: (row) => formatDateTime(row.fecha_fin),
       sortable: true,
-      width: "120px",
+      width: "155px",
       wrap: true
     },
     {
@@ -91,29 +107,54 @@ const GestionSolicitudes = () => {
         const siguientes = estadosSiguientes[estadoActual] || [];
         if (siguientes.length === 0) return <span className="text-muted small">Finalizado</span>;
         return (
-          <div className="dropdown">
-            <button className="btn btn-sm text-white dropdown-toggle" style={{ background: "#0077B6" }} type="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <i className="fas fa-exchange-alt me-1"></i> Gestionar
-            </button>
-            <ul className="dropdown-menu shadow">
-              {siguientes.map((estado) => (
-                <li key={estado}>
-                  <button className="dropdown-item py-2" onClick={() => cambiarEstado(row.id_solicitud, estado)}>
-                    {estado === "aceptado" && <><i className="fas fa-check-circle text-primary me-2"></i>Aceptar Solicitud</>}
-                    {estado === "prestado" && <><i className="fas fa-box text-warning me-2"></i>Entregar Equipo (Prestar)</>}
-                    {estado === "entregado" && <><i className="fas fa-undo text-success me-2"></i>Recibir Equipo (Liberar)</>}
-                    {estado === "cancelado" && <><i className="fas fa-times-circle text-danger me-2"></i>Cancelar</>}
-                  </button>
-                </li>
-              ))}
-            </ul>
+          <div className="d-flex gap-1 py-1">
+            {siguientes.includes("aceptado") && (
+              <button
+                className="btn btn-sm text-white fw-bold d-flex align-items-center gap-1 shadow-sm"
+                style={{ background: "#0077B6", borderRadius: "8px", border: "none", fontSize: "11px", padding: "6px 10px" }}
+                onClick={() => cambiarEstado(row.id_solicitud, "aceptado")}
+                title="Aceptar Solicitud"
+              >
+                <i className="fas fa-check-circle"></i> Aceptar
+              </button>
+            )}
+            {siguientes.includes("cancelado") && (
+              <button
+                className="btn btn-sm text-white fw-bold d-flex align-items-center gap-1 shadow-sm"
+                style={{ background: "#dc2626", borderRadius: "8px", border: "none", fontSize: "11px", padding: "6px 10px" }}
+                onClick={() => cambiarEstado(row.id_solicitud, "cancelado")}
+                title="Rechazar/Cancelar"
+              >
+                <i className="fas fa-times-circle"></i> Rechazar
+              </button>
+            )}
+            {siguientes.includes("prestado") && (
+              <button
+                className="btn btn-sm text-white fw-bold d-flex align-items-center gap-1 shadow-sm"
+                style={{ background: "#d97706", borderRadius: "8px", border: "none", fontSize: "11px", padding: "6px 10px" }}
+                onClick={() => cambiarEstado(row.id_solicitud, "prestado")}
+                title="Entregar Equipo (Prestar)"
+              >
+                <i className="fas fa-box"></i> Prestar
+              </button>
+            )}
+            {siguientes.includes("entregado") && (
+              <button
+                className="btn btn-sm text-white fw-bold d-flex align-items-center gap-1 shadow-sm"
+                style={{ background: "#059669", borderRadius: "8px", border: "none", fontSize: "11px", padding: "6px 10px" }}
+                onClick={() => cambiarEstado(row.id_solicitud, "entregado")}
+                title="Recibir Equipo (Liberar)"
+              >
+                <i className="fas fa-undo"></i> Liberar
+              </button>
+            )}
           </div>
         );
       },
       ignoreRowClick: true,
       allowOverflow: true,
       button: true,
-      width: "150px"
+      width: "200px"
     }
   ];
 

@@ -20,16 +20,23 @@ export default function GestionEstadoEquipo() {
   const [filterText, setFilterText] = useState("");
   const [activeTab, setActiveTab] = useState("todos"); // todos, disponibles, ocupados, mantenimiento
 
-  const token = sessionStorage.getItem("token");
-  const headers = { Authorization: `Bearer ${token}` };
+
 
   useEffect(() => { cargarEquipos(); }, []);
 
   const cargarEquipos = async () => {
     try {
-      const res = await apiAxios.get("/api/estadoxequipo/ultimos/estados", { headers });
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        Swal.fire("Sesión expirada", "Por favor inicia sesión nuevamente", "warning");
+        return;
+      }
+      const res = await apiAxios.get("/api/estadoxequipo/ultimos/estados", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setEquipos(res.data);
-    } catch {
+    } catch (error) {
+      console.error("Error al cargar equipos:", error);
       Swal.fire("Error", "No se pudieron cargar los equipos", "error");
     }
   };
@@ -49,14 +56,16 @@ export default function GestionEstadoEquipo() {
     if (!result.isConfirmed) return;
     
     try {
+      const token = sessionStorage.getItem("token");
       await apiAxios.post("/api/estadoxequipo/cambiarEstado",
         { id_equipo, id_estado_equipo: mapaEstados[nuevoEstado] },
-        { headers }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       Swal.fire({ icon: "success", title: "¡Estado actualizado!", timer: 1500, showConfirmButton: false });
       cargarEquipos();
-    } catch {
-      Swal.fire("Error", "No se pudo cambiar el estado", "error");
+    } catch (error) {
+      console.error("Error al cambiar estado:", error);
+      Swal.fire("Error", error.response?.data?.message || "No se pudo cambiar el estado", "error");
     }
   };
 
@@ -85,12 +94,17 @@ export default function GestionEstadoEquipo() {
     },
     {
       name: "Placa",
-      selector: row => row.no_placa,
+      selector: row => row.no_placa && row.no_placa !== '0' && row.no_placa !== 0 ? row.no_placa : "Sin placa",
       sortable: true,
+      cell: row => (
+        <span style={{ color: (!row.no_placa || row.no_placa === '0' || row.no_placa === 0) ? "#94a3b8" : "inherit", fontStyle: (!row.no_placa || row.no_placa === '0' || row.no_placa === 0) ? "italic" : "normal" }}>
+          {row.no_placa && row.no_placa !== '0' && row.no_placa !== 0 ? row.no_placa : "Sin placa"}
+        </span>
+      )
     },
     {
       name: "Marca",
-      selector: row => row.marca_equipo,
+      selector: row => row.marca_equipo || "—",
       sortable: true,
     },
     {

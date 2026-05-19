@@ -13,44 +13,44 @@ export default function Campanita({ userData, onAprobado, userRol }) {
 
   const id_usuario = userData?.id_usuario || userData?.user?.id_usuario;
   const noLeidas = notificaciones.filter(n => !n.leida).length;
-  const esAdmin = userRol === 'Administrador';
+  const esAdmin = String(userRol || "").toLowerCase() === 'administrador';
 
   useEffect(() => {
     if (!id_usuario) return;
 
     cargar();
 
-    // ✅ Unirse a sala privada
-    if (socket.connected) {
+    const emitJoin = () => {
+      console.log(`🔌 Emitiendo join para usuario ${id_usuario}`);
       socket.emit("join", id_usuario);
-    } else {
-      socket.on("connect", () => {
-        socket.emit("join", id_usuario);
-      });
+    };
+
+    if (socket.connected) {
+      emitJoin();
     }
+
+    socket.on("connect", emitJoin);
 
     const handleNotification = (nueva) => {
       console.log("📥 Notificación recibida en tiempo real:", nueva);
       setNotificaciones(prev => [nueva, ...prev]);
       
-      // ✅ Si el admin está conectado, mostrar aviso inmediato tipo Toast
-      if (esAdmin && nueva.tipo === 'solicitud_acceso') {
-        Swal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'info',
-          title: '👤 Nuevo registro',
-          text: nueva.mensaje,
-          showConfirmButton: true,
-          confirmButtonText: 'Ver',
-          timer: 10000,
-          timerProgressBar: true
-        }).then((result) => {
-          if (result.isConfirmed) {
-            navigate('/gestion-usuarios');
-          }
-        });
-      }
+      // ✅ Mostrar un aviso Toast inmediato con redirección al hacer click en "Ver"
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'info',
+        title: nueva.titulo || '🔔 Nueva Notificación',
+        text: nueva.mensaje,
+        showConfirmButton: true,
+        confirmButtonText: 'Ver',
+        timer: 10000,
+        timerProgressBar: true
+      }).then((result) => {
+        if (result.isConfirmed) {
+          handleNotificacionClick(nueva);
+        }
+      });
 
       // ✅ Si hay notificación de aprobado, avisar al App
       if (nueva.tipo === 'aprobado' && onAprobado && userRol !== 'Administrador') {
@@ -61,6 +61,7 @@ export default function Campanita({ userData, onAprobado, userRol }) {
     socket.on("notification", handleNotification);
 
     return () => {
+      socket.off("connect", emitJoin);
       socket.off("notification", handleNotification);
     };
   }, [id_usuario]);

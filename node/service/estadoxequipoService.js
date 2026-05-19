@@ -68,6 +68,7 @@ class EstadoxequipoService {
       
       // Verificamos si hay solicitudes activas para cambiar el estado visual
       let estaOcupado = false;
+      let fecha_disponible = null;
       if (ultimoEstado === 'disponible') {
         const ahora = new Date();
         
@@ -76,8 +77,8 @@ class EstadoxequipoService {
           const estadosSol = (s.estados || []).sort((a, b) => b.id_estadoxsolicitud - a.id_estadoxsolicitud);
           const ultimoEstadoSol = estadosSol[0]?.estadoSolicitud?.estado;
           
-          // Solo bloqueamos si el ÚLTIMO estado es aceptado o prestado
-          const tieneEstadoBloqueante = ['aceptado', 'prestado'].includes(ultimoEstadoSol);
+          // Solo bloqueamos si el ÚLTIMO estado es generado, aceptado o prestado
+          const tieneEstadoBloqueante = ['generado', 'aceptado', 'prestado'].includes(ultimoEstadoSol);
           // Y si el tiempo no ha expirado
           const tiempoExpirado = s.fecha_fin && new Date(s.fecha_fin) < ahora;
           
@@ -88,11 +89,12 @@ class EstadoxequipoService {
           estaOcupado = true;
           // Obtenemos el estado de esa solicitud específica para el label
           const ultimoEstadoSol = (solicitudActiva.estados || []).sort((a, b) => b.id_estadoxsolicitud - a.id_estadoxsolicitud)[0]?.estadoSolicitud?.estado;
-          ultimoEstado = ultimoEstadoSol === 'aceptado' ? 'solicitado' : 'prestado';
+          ultimoEstado = ['generado', 'aceptado'].includes(ultimoEstadoSol) ? 'solicitado' : 'prestado';
+          fecha_disponible = solicitudActiva.fecha_fin ? new Date(solicitudActiva.fecha_fin).toISOString().slice(0, 10) : null;
         }
       }
 
-      return { ...eq, ultimoEstado, estaOcupado };
+      return { ...eq, ultimoEstado, estaOcupado, fecha_disponible };
     });
   }
 
@@ -134,7 +136,7 @@ class EstadoxequipoService {
         const ultimoEstadoSol = estadosSol[0]?.estadoSolicitud?.estado;
         const tiempoExpirado = s.fecha_fin && new Date(s.fecha_fin) < ahora;
         
-        return ['aceptado', 'prestado'].includes(ultimoEstadoSol) && !tiempoExpirado;
+        return ['generado', 'aceptado', 'prestado'].includes(ultimoEstadoSol) && !tiempoExpirado;
       });
     }
 

@@ -106,7 +106,18 @@ export default function CrudEquipo() {
     { name: "Grupo", selector: (row) => row.grupo_equipo, sortable: true, minWidth: "180px" },
     { name: "Nombre", selector: (row) => row.nom_equipo, sortable: true, minWidth: "180px" },
     { name: "Marca", selector: (row) => row.marca_equipo || "-", sortable: true, minWidth: "130px" },
-    { name: "Placa", selector: (row) => row.no_placa || "-", sortable: true, minWidth: "130px" },
+    {
+      name: "Placa",
+      selector: (row) => (row.no_placa && row.no_placa !== 0 && row.no_placa !== '0') ? row.no_placa : "Sin placa",
+      sortable: true,
+      minWidth: "130px",
+      cell: (row) => {
+        const placa = (row.no_placa && row.no_placa !== 0 && row.no_placa !== '0') ? row.no_placa : null;
+        return placa
+          ? <span>{placa}</span>
+          : <span style={{ color: "#94a3b8", fontStyle: "italic", fontSize: "12px" }}>Sin placa</span>;
+      }
+    },
 
     // ✅ COLUMNA SIMPLIFICADA
     {

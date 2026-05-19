@@ -51,6 +51,7 @@ const Home = () => {
 
   const cards = [
     { show: esAprendiz || esInstructor, icon: "📋", title: "Nueva Solicitud", desc: "Crea solicitudes de préstamo.", color: "#0077B6", href: "/solicitud" },
+    { show: esAdmin, icon: "📋", title: "Nueva Solicitud", desc: "Registra solicitud por un solicitante.", color: "#0077B6", href: "/solicitud" },
     { show: esAdmin, icon: "📊", title: "Gestión Solicitudes", desc: "Revisa y aprueba solicitudes.", color: "#0096C7", href: "/gestion-solicitudes" },
     { show: esAdmin || esGestor || esPasante, icon: "🧪", title: "Reactivos", desc: "Gestión de stock de reactivos.", color: "#00B4D8", href: "/reactivos" },
     { show: esAdmin || esGestor || esPasante, icon: "🔬", title: "Equipos", desc: "Administración de equipos.", color: "#023E8A", href: "/equipos" },

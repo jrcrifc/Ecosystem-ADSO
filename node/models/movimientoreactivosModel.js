@@ -31,7 +31,11 @@ const movimientoreactivoModel = db.define('movimientos_reactivos', {
         allowNull: true,
         defaultValue: 0
     },
-    // ←←← YA NO ESTÁ estado_inventario
+    estado: {
+        type: DataTypes.TINYINT,
+        allowNull: false,
+        defaultValue: 1
+    },
 }, {
     freezeTableName: true,
     timestamps: true

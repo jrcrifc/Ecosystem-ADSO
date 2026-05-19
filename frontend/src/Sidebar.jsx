@@ -13,8 +13,8 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
   const userName = userData?.nombres_apellidos;
   const userRol = rol || userData?.rol;
 
-  const esAdmin = userRol === 'Administrador';
-  const esGestorPasante = ['Pasante', 'Gestor'].includes(userRol);
+  const esAdmin = String(userRol || "").toLowerCase() === 'administrador';
+  const esGestorPasante = ['pasante', 'gestor'].includes(String(userRol || "").toLowerCase());
 
   const handleNav = (path) => {
     if (!isAuth) { navigate("/UserLogin"); return; }
@@ -35,9 +35,12 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
       ]
     },
     {
-      key: "solicitudes", icon: "📋", text: "Solicitudes", show: ['Aprendiz', 'Instructor', 'Administrador'].includes(userRol),
+      key: "solicitudes", icon: "📋", text: "Solicitudes", show: true,
       items: [
-        { icon: "📝", text: "Mis Solicitudes", path: "/solicitud", show: true },
+        { icon: "📝", text: "Mis Solicitudes",      path: "/solicitud",           show: !esAdmin },
+        { icon: "📝", text: "Nueva Solicitud",       path: "/solicitud",           show: esAdmin },
+        { icon: "📑", text: "Gestión Solicitudes",   path: "/gestion-solicitudes", show: esAdmin },
+        { icon: "🏷️", text: "Estados Solicitud",    path: "/estadoSolicitud",     show: esAdmin },
       ]
     },
     {
@@ -72,8 +75,6 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
       items: [
         { icon: "👥", text: "Gestión Usuarios", path: "/gestion-usuarios", show: true },
         { icon: "📜", text: "Auditoría", path: "/auditoria", show: true },
-        { icon: "📑", text: "Gestión Solicitudes", path: "/gestion-solicitudes", show: true },
-        { icon: "🏷️", text: "Estados Solicitud", path: "/estadoSolicitud", show: true },
       ]
     },
   ];

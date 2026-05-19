@@ -50,7 +50,7 @@ const CrudSalidasReactivos = () => {
       wrap: true
     },
     {
-      name: "Acciones", center: true, width: "100px",
+      name: "Acciones", center: true, width: "120px",
       cell: (row) => (
         <div className="d-flex gap-1 justify-content-center">
           <button
@@ -61,6 +61,13 @@ const CrudSalidasReactivos = () => {
             title="Editar"
           >
             <i className="fas fa-pencil"></i>
+          </button>
+          <button
+            className="btn btn-sm btn-danger"
+            onClick={() => inactivarSalida(row.id_salida)}
+            title="Inactivar"
+          >
+            <i className="fas fa-ban"></i>
           </button>
         </div>
       ),
@@ -90,15 +97,48 @@ const CrudSalidasReactivos = () => {
     }
   };
 
+  const inactivarSalida = async (id) => {
+    const result = await Swal.fire({
+      title: "¿Inactivar Salida?",
+      text: "Se desactivará esta salida y se restaurará la cantidad de reactivo al lote correspondiente.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#dc3545",
+      confirmButtonText: "Sí, inactivar",
+      cancelButtonText: "Cancelar"
+    });
+    if (!result.isConfirmed) return;
+
+    try {
+      await apiAxios.delete(`/api/salidas/${id}`);
+      
+      // ✅ Emitir eventos socket
+      socket.emit("salida_actualizada");
+      socket.emit("movimiento_actualizado");
+
+      cargarSalidas();
+      Swal.fire({ icon: 'success', title: '✅ Inactivada', text: 'Salida inactivada y stock restaurado correctamente', timer: 2000, showConfirmButton: false });
+    } catch (error) {
+      Swal.fire("Error", "No se pudo inactivar la salida", "error");
+    }
+  };
+
   const hideModal = () => {
     const modal = document.getElementById("modalSalida");
     if (modal) {
-      const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
-      bsModal.hide();
-      document.body.classList.remove("modal-open");
-      document.body.style.removeProperty("overflow");
-      document.body.style.removeProperty("padding-right");
-      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+      const closeBtn = modal.querySelector(".btn-close");
+      if (closeBtn) {
+        closeBtn.click();
+      } else {
+        const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
+        bsModal.hide();
+      }
+      setTimeout(() => {
+        document.body.classList.remove("modal-open");
+        document.body.style.removeProperty("overflow");
+        document.body.style.removeProperty("padding-right");
+        document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+      }, 350);
     }
   };
 
@@ -160,8 +200,14 @@ const CrudSalidasReactivos = () => {
 
       <div className="modal fade" id="modalSalida" tabIndex="-1">
         <div className="modal-dialog modal-lg">
-          <div className="modal-content">
-            <div className="modal-header bg-primary text-white">
+          <div className="modal-content" style={{ borderRadius: "16px", overflow: "hidden" }}>
+            <div className="modal-header" style={{ 
+              background: selectedSalida 
+                ? "linear-gradient(135deg, #0077B6, #023E8A)" 
+                : "linear-gradient(135deg, #DC3545, #A4161A)", 
+              color: "#fff",
+              border: "none"
+            }}>
               <h5 className="modal-title">
                 {selectedSalida ? "Editar" : "Nueva"} Salida de Reactivo
               </h5>

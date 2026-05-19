@@ -6,6 +6,7 @@ import { Op } from "sequelize";
 class salidasService {
   async getAll() {
     return await salidasModel.findAll({
+      where: { estado: 1 },
       include: [{
         model: movimientoreactivoModel,
         as: 'movimiento',
@@ -26,7 +27,7 @@ class salidasService {
     const hoy = new Date();
 
     const movimientos = await movimientoreactivoModel.findAll({
-      where: { id_reactivo }
+      where: { id_reactivo, estado: 1 }
     });
 
     // Calcular cantidad disponible por lote
@@ -167,8 +168,8 @@ class salidasService {
       }
     }
 
-    const deleted = await salidasModel.destroy({ where: { id_salida: id } });
-    if (!deleted) throw new Error('No se pudo eliminar');
+    const deleted = await salidasModel.update({ estado: 0 }, { where: { id_salida: id } });
+    if (deleted[0] === 0) throw new Error('No se pudo inactivar');
     return true;
   }
 }

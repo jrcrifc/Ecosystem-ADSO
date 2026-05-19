@@ -38,7 +38,7 @@ const CrudmovimientoReactivo = () => {
     {
       name: "Acciones",
       center: true,
-      width: "100px",
+      width: "120px",
       cell: (row) => (
         <div className="d-flex gap-2 justify-content-center">
           <button
@@ -49,6 +49,13 @@ const CrudmovimientoReactivo = () => {
             title="Editar"
           >
             <i className="fa-solid fa-pencil"></i>
+          </button>
+          <button
+            className="btn btn-sm btn-danger"
+            onClick={() => inactivarMovimiento(row.id_movimiento_reactivo)}
+            title="Inactivar"
+          >
+            <i className="fas fa-ban"></i>
           </button>
         </div>
       ),
@@ -78,15 +85,74 @@ const CrudmovimientoReactivo = () => {
     }
   };
 
+  const inactivarMovimiento = async (id) => {
+    const result = await Swal.fire({
+      title: "¿Inactivar Ingreso de Reactivo?",
+      text: "Se desactivará este lote de ingreso. Cualquier salida asociada a este lote también quedará inactiva y se recalculará el stock total del reactivo automáticamente.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#dc3545",
+      confirmButtonText: "Sí, inactivar",
+      cancelButtonText: "Cancelar"
+    });
+    if (!result.isConfirmed) return;
+
+    try {
+      await apiAxios.delete(`/api/movimientos/${id}`);
+
+      // ✅ Emitir eventos socket
+      socket.emit("movimiento_actualizado");
+      socket.emit("salida_actualizada");
+
+      cargarMovimientos();
+      Swal.fire({
+        icon: "success",
+        title: "✅ Inactivado",
+        text: "El movimiento ha sido inactivado y el stock recalculado correctamente",
+        timer: 2000,
+        showConfirmButton: false
+      });
+    } catch (error) {
+      console.error(error);
+      Swal.fire("Error", "No se pudo inactivar el movimiento", "error");
+    }
+  };
+
   const hideModal = () => {
     const modal = document.getElementById("modalIngreso");
     if (modal) {
-      const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
-      bsModal.hide();
-      document.body.classList.remove("modal-open");
-      document.body.style.removeProperty("overflow");
-      document.body.style.removeProperty("padding-right");
-      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+      const closeBtn = modal.querySelector(".btn-close");
+      if (closeBtn) {
+        closeBtn.click();
+      } else {
+        const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
+        bsModal.hide();
+      }
+      setTimeout(() => {
+        document.body.classList.remove("modal-open");
+        document.body.style.removeProperty("overflow");
+        document.body.style.removeProperty("padding-right");
+        document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+      }, 350);
+    }
+  };
+
+  const hideModalSalida = () => {
+    const modal = document.getElementById("modalSalida");
+    if (modal) {
+      const closeBtn = modal.querySelector(".btn-close");
+      if (closeBtn) {
+        closeBtn.click();
+      } else {
+        const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
+        bsModal.hide();
+      }
+      setTimeout(() => {
+        document.body.classList.remove("modal-open");
+        document.body.style.removeProperty("overflow");
+        document.body.style.removeProperty("padding-right");
+        document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+      }, 350);
     }
   };
 
@@ -171,8 +237,8 @@ const CrudmovimientoReactivo = () => {
       {/* Modal Ingreso */}
       <div className="modal fade" id="modalIngreso" tabIndex="-1">
         <div className="modal-dialog modal-lg">
-          <div className="modal-content">
-            <div className="modal-header bg-primary text-white">
+          <div className="modal-content" style={{ borderRadius: "16px", overflow: "hidden" }}>
+            <div className="modal-header" style={{ background: "linear-gradient(135deg, #0077B6, #023E8A)", color: "#fff", border: "none" }}>
               <h5 className="modal-title">
                 {selectedMovimiento ? "Editar" : "Nuevo"} Movimiento de Reactivo
               </h5>
@@ -197,35 +263,21 @@ const CrudmovimientoReactivo = () => {
       {/* Modal Salida */}
       <div className="modal fade" id="modalSalida" tabIndex="-1">
         <div className="modal-dialog modal-lg">
-          <div className="modal-content">
-            <div className="modal-header bg-danger text-white">
+          <div className="modal-content" style={{ borderRadius: "16px", overflow: "hidden" }}>
+            <div className="modal-header" style={{ background: "linear-gradient(135deg, #DC3545, #A4161A)", color: "#fff", border: "none" }}>
               <h5 className="modal-title">Nueva Salida de Reactivo</h5>
               <button
                 type="button"
                 className="btn-close btn-close-white"
                 data-bs-dismiss="modal"
-                onClick={() => {
-                  const modal = document.getElementById("modalSalida");
-                  if (modal) {
-                    const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
-                    bsModal.hide();
-                    document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
-                  }
-                }}
+                onClick={hideModalSalida}
               ></button>
             </div>
             <div className="modal-body">
               <SalidaReactivoForm
                 selectedSalida={selectedSalida}
                 refreshData={cargarMovimientos}
-                hideModal={() => {
-                  const modal = document.getElementById("modalSalida");
-                  if (modal) {
-                    const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
-                    bsModal.hide();
-                    document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
-                  }
-                }}
+                hideModal={hideModalSalida}
               />
             </div>
           </div>

@@ -30,6 +30,11 @@ const salidasModel = db.define('salidas_reactivos', {
         allowNull: true,
         defaultValue: null
     },
+    estado: {
+        type: DataTypes.TINYINT,
+        allowNull: false,
+        defaultValue: 1
+    },
 }, {
     freezeTableName: true,
     timestamps: true,

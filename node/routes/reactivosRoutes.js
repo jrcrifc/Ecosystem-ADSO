@@ -17,7 +17,7 @@ router.get('/stock/disponibilidad', adminOGestor, async (req, res) => {
   try {
     const hoy = new Date();
     const reactivos = await reactivosModel.findAll({ where: { estado: 1 } });
-    const movimientos = await movimientoreactivoModel.findAll();
+    const movimientos = await movimientoreactivoModel.findAll({ where: { estado: 1 } });
 
     const resultado = reactivos.map(r => {
       const movs = movimientos.filter(m => m.id_reactivo === r.id_reactivo);

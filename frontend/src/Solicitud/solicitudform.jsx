@@ -1,6 +1,7 @@
 import apiAxios from "../api/axiosConfig.js";
 import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
+import socket from "../socket.js";
 
 const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) => {
   const [fecha_inicio, setFecha_inicio] = useState("");
@@ -53,10 +54,18 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
 
   // Cargar equipos disponibles
   useEffect(() => {
-    apiAxios
-      .get("/api/estadoxequipo/ultimos/estados", { headers })
-      .then(res => setEquipos(res.data))
-      .catch(() => Swal.fire("Error", "No se pudieron cargar los equipos", "error"));
+    const cargarEquipos = () => {
+      apiAxios
+        .get("/api/estadoxequipo/ultimos/estados", { headers })
+        .then(res => setEquipos(res.data))
+        .catch(() => {});
+    };
+
+    cargarEquipos();
+
+    // ✅ Escuchar en tiempo real cambios de equipos y solicitudes para actualizar la disponibilidad
+    socket.on('equipo_actualizado', cargarEquipos);
+    socket.on('solicitud_actualizada', cargarEquipos);
 
     // ✅ Si es admin, cargar lista de usuarios aprobados
     if (esAdmin) {
@@ -68,7 +77,12 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
         })
         .catch(() => {});
     }
-  }, []);
+
+    return () => {
+      socket.off('equipo_actualizado', cargarEquipos);
+      socket.off('solicitud_actualizada', cargarEquipos);
+    };
+  }, [selectedSolicitud]);
 
   // Prellenar si es edición
   useEffect(() => {
@@ -359,12 +373,16 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
           const minStr = minDate.toISOString().slice(0, 10);
           const maxStr = maxDate.toISOString().slice(0, 10);
 
-          // Para instructor: fecha fin máxima = fecha_inicio + 1 mes
+          // Para instructor: fecha fin máxima = fecha_inicio + 1 mes (30 días)
           let maxFinStr = maxStr;
           if (fecha_inicio && esInstructor) {
-            const maxFin = new Date(fecha_inicio);
-            maxFin.setMonth(maxFin.getMonth() + 1);
-            maxFinStr = maxFin.toISOString().slice(0, 10);
+            const [yyyy, mm, dd] = fecha_inicio.split("-").map(Number);
+            const maxFin = new Date(yyyy, mm - 1, dd);
+            maxFin.setDate(maxFin.getDate() + 30); // 30 días exactos
+            const y = maxFin.getFullYear();
+            const m = String(maxFin.getMonth() + 1).padStart(2, '0');
+            const d = String(maxFin.getDate()).padStart(2, '0');
+            maxFinStr = `${y}-${m}-${d}`;
           }
 
           return (
@@ -375,7 +393,19 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
                   📅 {esAprendiz ? "Fecha de Solicitud (Mismo día)" : "Fecha de Inicio"}
                 </label>
                 <input type="date" className={`form-control form-control-sm ${errors.fecha_inicio ? 'is-invalid' : ''}`}
-                  value={fecha_inicio} onChange={e => { setFecha_inicio(e.target.value); if (esAprendiz) setFecha_fin(e.target.value); setErrors({...errors, fecha_inicio: null}); }}
+                  value={fecha_inicio} 
+                  onChange={e => { 
+                    const newStart = e.target.value;
+                    setFecha_inicio(newStart); 
+                    if (esAprendiz) {
+                      setFecha_fin(newStart); 
+                    } else if (esInstructor) {
+                      if (!fecha_fin || fecha_fin < newStart) {
+                        setFecha_fin(newStart);
+                      }
+                    }
+                    setErrors({...errors, fecha_inicio: null}); 
+                  }}
                   min={minStr} max={maxStr} required />
                 {errors.fecha_inicio ? (
                   <div className="invalid-feedback" style={{ fontSize: "11px" }}>{errors.fecha_inicio}</div>
@@ -492,6 +522,11 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
                       <div className="text-muted" style={{ fontSize: "0.75rem" }}>
                         {equipo.marca_equipo || "Sin marca"} · {equipo.no_placa || "Sin placa"}
                       </div>
+                      {equipo.fecha_disponible && (
+                        <div style={{ color: "#d97706", fontSize: "0.7rem", fontWeight: "700", marginTop: "2px" }}>
+                          📅 Ocupado (Disponible el: {new Date(equipo.fecha_disponible + "T00:00:00").toLocaleDateString('es-CO')})
+                        </div>
+                      )}
                     </div>
 
                     <span style={{

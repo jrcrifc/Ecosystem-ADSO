@@ -15,14 +15,26 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
   const [observaciones, setObservaciones] = useState("");
 
   useEffect(() => {
-    cargarReactivos();
+    const fetchReactivos = async () => {
+      try {
+        const res = await apiAxios.get("/api/reactivos/stock/disponibilidad");
+        const activeReactivoId = selectedSalida?.movimiento?.id_reactivo;
+        const list = res.data.filter(r => r.estado_stock === 'disponible' || r.id_reactivo === activeReactivoId);
+        setReactivos(list);
+      } catch (error) {
+        console.error("Error al cargar reactivos:", error);
+      }
+    };
+    
+    fetchReactivos();
     setFechaSalida(new Date().toISOString().slice(0, 10));
-  }, []);
+  }, [selectedSalida]);
 
   useEffect(() => {
     if (selectedSalida) {
-      if (selectedSalida.id_reactivo) {
-        handleReactivoChange({ target: { value: selectedSalida.id_reactivo } });
+      const activeReactivoId = selectedSalida.movimiento?.id_reactivo;
+      if (activeReactivoId) {
+        handleReactivoChange({ target: { value: activeReactivoId } }, true);
       }
       
       setCantidadSalida(selectedSalida.cantidad_salida || "");
@@ -40,20 +52,13 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
     }
   }, [selectedSalida]);
 
-  const cargarReactivos = async () => {
-    try {
-      const res = await apiAxios.get("/api/reactivos/stock/disponibilidad");
-      setReactivos(res.data.filter(r => r.estado_stock === 'disponible'));
-    } catch (error) {
-      console.error("Error al cargar reactivos:", error);
-    }
-  };
-
-  const handleReactivoChange = async (e) => {
+  const handleReactivoChange = async (e, keepQuantity = false) => {
     const val = e.target.value;
     setIdReactivo(val);
     setLotesFefo([]);
-    setCantidadSalida("");
+    if (!keepQuantity) {
+      setCantidadSalida("");
+    }
     if (!val) return;
 
     setLoadingLotes(true);
@@ -254,6 +259,7 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
               onChange={(e) => setCantidadSalida(e.target.value)}
               required min="0.001" step="0.001"
               placeholder="0.000"
+              disabled={!!selectedSalida?.id_salida}
             />
             {id_reactivo && (
               <span className="input-group-text fw-bold" style={{ background: "#f1f5f9", borderTopRightRadius: "10px", borderBottomRightRadius: "10px", fontSize: "12px", color: "#0077B6" }}>
@@ -319,7 +325,14 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
             type="submit" 
             className="btn btn-primary w-100 py-3 shadow-sm" 
             disabled={loading || (loteFefo && parseFloat(cantidad_salida) > stockTotalDisponible)}
-            style={{ borderRadius: "12px", fontWeight: "700", background: "linear-gradient(135deg, #0077B6, #00B4D8)", border: "none" }}
+            style={{ 
+              borderRadius: "12px", 
+              fontWeight: "700", 
+              background: selectedSalida?.id_salida
+                ? "linear-gradient(135deg, #0077B6, #023E8A)" 
+                : "linear-gradient(135deg, #DC3545, #A4161A)", 
+              border: "none" 
+            }}
           >
             {loading ? (
               <><span className="spinner-border spinner-border-sm me-2" /> Procesando...</>

@@ -1,17 +1,19 @@
 import movimientoreactivoModel from "../models/movimientoreactivosModel.js";
 import reactivosModel from "../models/reactivosModel.js";
 import proveedoresModel from "../models/proveedoresModel.js";
+import salidasModel from "../models/salidasModel.js";
 
 class movimientoreactivoService {
   async getAll() {
     const movimientos = await movimientoreactivoModel.findAll({
+      where: { estado: 1 },
       include: [
         { model: reactivosModel, as: "reactivo", attributes: ["nom_reactivo", "presentacion_reactivo"] },
         { model: proveedoresModel, as: "proveedor", attributes: ["nom_proveedor", "apel_proveedor"] },
       ],
       order: [["id_movimiento_reactivo", "DESC"]]
     });
-    const todos = await movimientoreactivoModel.findAll();
+    const todos = await movimientoreactivoModel.findAll({ where: { estado: 1 } });
     const stockPorReactivo = {};
     todos.forEach(m => {
       const id = m.id_reactivo;
@@ -50,7 +52,7 @@ class movimientoreactivoService {
 
   // Traemos todos los movimientos actuales del reactivo
   const movimientos = await movimientoreactivoModel.findAll({
-    where: { id_reactivo: data.id_reactivo }
+    where: { id_reactivo: data.id_reactivo, estado: 1 }
   });
 
   const stockActual = movimientos.reduce((acc, m) => {
@@ -175,7 +177,7 @@ class movimientoreactivoService {
   if (idReactivoOriginal !== idReactivoNuevo) {
     // Si cambia de reactivo, calculamos stock del reactivo original sin este movimiento
     const movsOriginal = await movimientoreactivoModel.findAll({
-      where: { id_reactivo: idReactivoOriginal }
+      where: { id_reactivo: idReactivoOriginal, estado: 1 }
     });
     stockAntesOriginal = movsOriginal.reduce((acc, m) => {
       if (m.id_movimiento_reactivo === id) return acc;
@@ -185,7 +187,7 @@ class movimientoreactivoService {
 
   // 2. Calcular stock del reactivo nuevo (para validaciones)
   const movsNuevo = await movimientoreactivoModel.findAll({
-    where: { id_reactivo: idReactivoNuevo }
+    where: { id_reactivo: idReactivoNuevo, estado: 1 }
   });
 
   const stockActualNuevo = movsNuevo.reduce((acc, m) => {
@@ -270,10 +272,27 @@ class movimientoreactivoService {
 }
 
   async delete(id) {
-    const deleted = await movimientoreactivoModel.destroy({
-      where: { id_movimiento_reactivo: id }
-    });
-    if (!deleted) throw new Error("No se pudo eliminar");
+    const movimiento = await movimientoreactivoModel.findByPk(id);
+    if (!movimiento) throw new Error("Movimiento no encontrado");
+
+    // 1. Soft-deactivate the movement itself
+    await movimiento.update({ estado: 0 });
+
+    // 2. Soft-deactivate any outputs associated with this movement
+    await salidasModel.update({ estado: 0 }, { where: { id_movimiento_reactivo: id } });
+
+    // 3. Recalculate existence flag of the associated reagent
+    const reactivo = await reactivosModel.findByPk(movimiento.id_reactivo);
+    if (reactivo) {
+      const movimientosActivos = await movimientoreactivoModel.findAll({
+        where: { id_reactivo: movimiento.id_reactivo, estado: 1 }
+      });
+      const stockTotal = movimientosActivos.reduce((acc, m) => {
+        return acc + parseFloat(m.cantidad_inicial || 0) - parseFloat(m.cantidad_salida || 0);
+      }, 0);
+      await reactivo.update({ existencia_reactivo: stockTotal > 0 ? 'SI' : 'NO' });
+    }
+
     return true;
   }
 }

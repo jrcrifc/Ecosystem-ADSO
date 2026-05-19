@@ -50,7 +50,7 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
         grupo_equipo: selectedEquipo.grupo_equipo || "",
         nom_equipo: selectedEquipo.nom_equipo || "",
         marca_equipo: selectedEquipo.marca_equipo || "",
-        no_placa: selectedEquipo.no_placa || "",
+        no_placa: (selectedEquipo.no_placa && selectedEquipo.no_placa !== 0 && selectedEquipo.no_placa !== '0') ? selectedEquipo.no_placa : "",
         id_cuentadante: selectedEquipo.id_cuentadante || "",
         observaciones: selectedEquipo.observaciones || "",
         foto_equipo: null,

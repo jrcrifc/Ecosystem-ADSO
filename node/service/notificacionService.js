@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import NotificacionModel from "../models/notificacionModel.js";
 import UserModel from "../models/userModel.js";
 import { sendNotification } from "../socket.js";
@@ -38,7 +39,12 @@ class NotificacionService {
   async notificarAdmins({ id_usuario_origen, titulo, mensaje, tipo }) {
     try {
       const admins = await UserModel.findAll({
-        where: { rol: 'Administrador', estado: 'aprobado' }
+        where: {
+          rol: {
+            [Op.or]: ['Administrador', 'administrador', 'admin', 'Admin']
+          },
+          estado: 'aprobado'
+        }
       });
       console.log(`🔔 Notificando a ${admins.length} administradores sobre: ${titulo}`);
       for (const admin of admins) {
