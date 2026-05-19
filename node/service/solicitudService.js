@@ -13,7 +13,7 @@ class solicitudService {
                 {
                     model: userModel,
                     as: 'usuario',
-                    attributes: ['id_usuario', 'nombres_apellidos', 'rol']
+                    attributes: ['id_usuario', 'nombres_apellidos', 'rol', 'numero_ficha', 'nombre_ficha', 'es_sena_empresa']
                 },
                 {
                     model: Estadoxsolicitud,
