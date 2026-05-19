@@ -205,7 +205,10 @@ class UserService {
     if (!user) throw new Error("Usuario no encontrado");
     await user.update({
       nombres_apellidos: data.nombres_apellidos,
-      email: data.email
+      email: data.email,
+      numero_ficha: data.numero_ficha ? String(data.numero_ficha).trim() : null,
+      nombre_ficha: data.nombre_ficha ? String(data.nombre_ficha).trim() : null,
+      es_sena_empresa: !!data.es_sena_empresa
     });
     return user;
   }
