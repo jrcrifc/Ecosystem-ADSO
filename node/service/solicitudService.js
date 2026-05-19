@@ -5,6 +5,7 @@ import estadoSolicitudModel from "../models/Estado_solicitudModel.js";
 import { Sequelize } from "sequelize";
 import equipoModel from "../models/EquiposModel.js";
 import solicitudxequipoModel from "../models/solicitudxequipoModel.js";
+import Estadoxequipo from "../models/estadoxequipoModel.js";
 
 class solicitudService {
     async getAll() {
@@ -113,24 +114,35 @@ class solicitudService {
         });
 
         if (vinculos && vinculos.length > 0) {
-            let nuevoEstadoEquipo = null;
+            let idEstadoEquipo = null;
 
-            // id_estado_solicitud: 3 (prestado) -> Equipo estado 2 (Prestado)
-            // id_estado_solicitud: 5 (entregado) -> Equipo estado 1 (Disponible)
-            // id_estado_solicitud: 6 (cancelado) -> Equipo estado 1 (Disponible)
+            // id_estado_solicitud: 3 (prestado) -> Equipo estado 4 (prestado)
+            // id_estado_solicitud: 5 (entregado) -> Equipo estado 1 (disponible)
+            // id_estado_solicitud: 6 (cancelado) -> Equipo estado 1 (disponible)
+            // id_estado_solicitud: 4 (rechazado) -> Equipo estado 1 (disponible)
 
             if (id_estado_solicitud === 3) {
-                nuevoEstadoEquipo = 2; // Prestado
-            } else if (id_estado_solicitud === 5 || id_estado_solicitud === 6) {
-                nuevoEstadoEquipo = 1; // Disponible
+                idEstadoEquipo = 4; // prestado
+            } else if (id_estado_solicitud === 5 || id_estado_solicitud === 6 || id_estado_solicitud === 4) {
+                idEstadoEquipo = 1; // disponible
             }
 
-            if (nuevoEstadoEquipo !== null) {
+            if (idEstadoEquipo !== null) {
                 const idsEquipos = vinculos.map(v => v.id_equipo);
+                
+                // 1. Asegurar que los equipos sigan estando ACTIVOS (estado: 1) en el sistema
                 await equipoModel.update(
-                    { estado: nuevoEstadoEquipo },
+                    { estado: 1 },
                     { where: { id_equipo: idsEquipos } }
                 );
+
+                // 2. Registrar el nuevo estado en la tabla de historial de estados de equipos (estadoxequipo)
+                for (const id_equipo of idsEquipos) {
+                    await Estadoxequipo.create({
+                        id_equipo,
+                        id_estado_equipo: idEstadoEquipo
+                    });
+                }
             }
         }
 
