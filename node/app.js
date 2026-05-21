@@ -37,9 +37,9 @@ import logRoutes from "./routes/logRoutes.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Cargamos el .env desde la raíz del proyecto (más seguro)
+// Cargamos el .env desde la carpeta node
 dotenv.config({ 
-    path: path.resolve(__dirname, '../.env') 
+    path: path.resolve(__dirname, '.env') 
 });
 
 console.log("🔑 JWT_SECRET cargado:", process.env.JWT_SECRET ? "✅ SÍ" : "❌ NO CARGADO");

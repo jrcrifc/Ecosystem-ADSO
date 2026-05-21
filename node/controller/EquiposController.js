@@ -34,9 +34,9 @@ export const createEquipos = async (req, res) => {
     const data = { ...req.body };
 
     // Foto SOLO si multer la procesó
-    if (req.file && req.file.filename) {
-      data.foto_equipo = req.file.filename;
-      console.log('Foto asignada a BD:', req.file.filename);
+    if (req.file && req.file.path) {
+      data.foto_equipo = req.file.path; // Cloudinary guarda la URL completa aquí
+      console.log('Foto asignada a BD (Cloudinary):', req.file.path);
     } else {
       data.foto_equipo = null;
       console.log('Sin foto → null en BD');
@@ -65,9 +65,9 @@ export const updateEquipos = async (req, res) => {
 
     const data = { ...req.body };
 
-    if (req.file && req.file.filename) {
-      data.foto_equipo = req.file.filename;
-      console.log('Nueva foto asignada:', req.file.filename);
+    if (req.file && req.file.path) {
+      data.foto_equipo = req.file.path;
+      console.log('Nueva foto asignada (Cloudinary):', req.file.path);
     } else {
       delete data.foto_equipo;
       console.log('Manteniendo foto anterior');
