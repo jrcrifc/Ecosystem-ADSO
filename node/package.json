@@ -4,10 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "start": "node app.js",
+    "dev": "node app.js",
+    "lint": "eslint ."
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
