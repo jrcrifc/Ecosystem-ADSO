@@ -487,22 +487,24 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
               <p className="text-muted text-center small mt-2">No se encontraron equipos</p>
             ) : (
               equiposFiltrados.map(equipo => {
-                // Solo se puede seleccionar si el estado es exactamente 'disponible'
+                // Solo se puede seleccionar si el estado es exactamente 'disponible' Y el equipo está activo
                 const estaDisponibleFisicamente = equipo.ultimoEstado === "disponible";
+                const estaActivo = equipo.estado !== 0;
+                const puedeSeleccionarse = estaDisponibleFisicamente && estaActivo;
                 const seleccionado = equiposSeleccionados.includes(equipo.id_equipo);
 
                 return (
                   <div
                     key={equipo.id_equipo}
-                    onClick={() => estaDisponibleFisicamente && toggleEquipo(equipo.id_equipo)}
+                    onClick={() => puedeSeleccionarse && toggleEquipo(equipo.id_equipo)}
                     style={{
                       display: "flex", alignItems: "center", gap: "12px",
                       padding: "10px 12px", marginBottom: "4px",
                       borderRadius: "8px", 
-                      cursor: estaDisponibleFisicamente ? "pointer" : "not-allowed",
+                      cursor: puedeSeleccionarse ? "pointer" : "not-allowed",
                       border: `2px solid ${seleccionado ? "#0077B6" : "#e9ecef"}`,
-                      backgroundColor: seleccionado ? "#dbeafe" : estaDisponibleFisicamente ? "#fff" : "#f1f5f9",
-                      opacity: estaDisponibleFisicamente || seleccionado ? 1 : 0.6,
+                      backgroundColor: seleccionado ? "#dbeafe" : !estaActivo ? "#f8d7da" : puedeSeleccionarse ? "#fff" : "#f1f5f9",
+                      opacity: puedeSeleccionarse || seleccionado ? 1 : 0.6,
                       transition: "all 0.15s",
                     }}
                   >
@@ -522,20 +524,35 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
                       <div className="text-muted" style={{ fontSize: "0.75rem" }}>
                         {equipo.marca_equipo || "Sin marca"} · {equipo.no_placa || "Sin placa"}
                       </div>
-                      {equipo.fecha_disponible && (
+                      {!estaActivo && (
+                        <div style={{ color: "#dc3545", fontSize: "0.7rem", fontWeight: "700", marginTop: "2px" }}>
+                          🚫 Equipo inactivo — No disponible para solicitudes
+                        </div>
+                      )}
+                      {estaActivo && equipo.fecha_disponible && (
                         <div style={{ color: "#d97706", fontSize: "0.7rem", fontWeight: "700", marginTop: "2px" }}>
                           📅 Ocupado (Disponible el: {new Date(equipo.fecha_disponible + "T00:00:00").toLocaleDateString('es-CO')})
                         </div>
                       )}
                     </div>
 
-                    <span style={{
-                      padding: "2px 10px", borderRadius: 20, fontSize: "0.7rem",
-                      fontWeight: 600, color: "#fff", flexShrink: 0,
-                      backgroundColor: getBadgeColor(equipo.ultimoEstado)
-                    }}>
-                      {equipo.ultimoEstado || "Sin estado"}
-                    </span>
+                    {!estaActivo ? (
+                      <span style={{
+                        padding: "2px 10px", borderRadius: 20, fontSize: "0.7rem",
+                        fontWeight: 600, color: "#fff", flexShrink: 0,
+                        backgroundColor: "#dc3545"
+                      }}>
+                        Inactivo
+                      </span>
+                    ) : (
+                      <span style={{
+                        padding: "2px 10px", borderRadius: 20, fontSize: "0.7rem",
+                        fontWeight: 600, color: "#fff", flexShrink: 0,
+                        backgroundColor: getBadgeColor(equipo.ultimoEstado)
+                      }}>
+                        {equipo.ultimoEstado || "Sin estado"}
+                      </span>
+                    )}
                   </div>
                 );
               })

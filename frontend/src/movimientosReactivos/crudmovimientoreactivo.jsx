@@ -36,13 +36,31 @@ const CrudmovimientoReactivo = () => {
     { name: "Proveedor", selector: (row) => row.proveedor ? `${row.proveedor.nom_proveedor} ${row.proveedor.apel_proveedor}` : "-", sortable: true, minWidth: "200px" },
     { name: "Vencimiento", selector: (row) => row.fecha_vencimiento?.slice(0, 10) || "-", sortable: true, minWidth: "160px" },
     {
-      name: "Acciones",
+      name: "Estado",
+      selector: (row) => row.estado,
+      sortable: true,
       center: true,
       width: "120px",
       cell: (row) => (
+        <span style={{
+          background: row.estado === 1 ? "#dcfce7" : "#fee2e2",
+          color: row.estado === 1 ? "#16a34a" : "#dc2626",
+          padding: "4px 12px", borderRadius: "99px", fontSize: "11px", fontWeight: "700",
+          border: `1px solid ${row.estado === 1 ? "#bbf7d0" : "#fecaca"}`
+        }}>
+          {row.estado === 1 ? "Activo" : "Inactivo"}
+        </span>
+      ),
+    },
+    {
+      name: "Acciones",
+      center: true,
+      width: "140px",
+      cell: (row) => (
         <div className="d-flex gap-2 justify-content-center">
           <button
-            className="btn btn-sm btn-warning"
+            className="btn btn-sm"
+            style={{ background: "#dbeafe", color: "#0077B6", border: "none" }}
             data-bs-toggle="modal"
             data-bs-target="#modalIngreso"
             onClick={() => setSelectedMovimiento(row)}
@@ -51,11 +69,16 @@ const CrudmovimientoReactivo = () => {
             <i className="fa-solid fa-pencil"></i>
           </button>
           <button
-            className="btn btn-sm btn-danger"
-            onClick={() => inactivarMovimiento(row.id_movimiento_reactivo)}
-            title="Inactivar"
+            className="btn btn-sm"
+            style={{
+              background: row.estado === 1 ? "#fee2e2" : "#dcfce7",
+              color: row.estado === 1 ? "#dc2626" : "#16a34a",
+              border: "none"
+            }}
+            onClick={() => toggleEstadoMovimiento(row)}
+            title={row.estado === 1 ? "Inactivar" : "Activar"}
           >
-            <i className="fas fa-ban"></i>
+            <i className={`fas ${row.estado === 1 ? "fa-ban" : "fa-check"}`}></i>
           </button>
         </div>
       ),
@@ -119,20 +142,35 @@ const CrudmovimientoReactivo = () => {
     }
   };
 
-  const inactivarMovimiento = async (id) => {
+  const toggleEstadoMovimiento = async (movimiento) => {
+    const nuevoEstado = movimiento.estado === 1 ? 0 : 1;
+    const accion = nuevoEstado === 1 ? "ACTIVAR" : "INACTIVAR";
     const result = await Swal.fire({
-      title: "¿Inactivar Ingreso de Reactivo?",
-      text: "Se desactivará este lote de ingreso. Cualquier salida asociada a este lote también quedará inactiva y se recalculará el stock total del reactivo automáticamente.",
-      icon: "warning",
+      title: `¿${accion} Ingreso de Reactivo?`,
+      text: nuevoEstado === 0
+        ? "Se desactivará este lote de ingreso. Ya no contará en el stock del reactivo ni en el control de inventario."
+        : "Se reactivará este lote de ingreso. Volverá a contar en el stock del reactivo.",
+      icon: "question",
       showCancelButton: true,
-      confirmButtonColor: "#dc3545",
-      confirmButtonText: "Sí, inactivar",
+      confirmButtonColor: nuevoEstado === 1 ? "#0077B6" : "#dc3545",
+      confirmButtonText: `Sí, ${accion.toLowerCase()}`,
       cancelButtonText: "Cancelar"
     });
     if (!result.isConfirmed) return;
 
     try {
-      await apiAxios.delete(`/api/movimientos/${id}`);
+      if (nuevoEstado === 0) {
+        // Inactivar usando el endpoint existente (DELETE)
+        await apiAxios.delete(`/api/movimientos/${movimiento.id_movimiento_reactivo}`);
+      } else {
+        // Activar: usar PUT para cambiar estado a 1
+        await apiAxios.put(`/api/movimientos/${movimiento.id_movimiento_reactivo}`, {
+          ...movimiento,
+          estado: 1,
+          id_reactivo: movimiento.id_reactivo || movimiento.reactivo?.id_reactivo,
+          cantidad_inicial: movimiento.cantidad_inicial,
+        });
+      }
 
       // ✅ Emitir eventos socket
       socket.emit("movimiento_actualizado");
@@ -141,14 +179,16 @@ const CrudmovimientoReactivo = () => {
       cargarMovimientos();
       Swal.fire({
         icon: "success",
-        title: "✅ Inactivado",
-        text: "El movimiento ha sido inactivado y el stock recalculado correctamente",
+        title: nuevoEstado === 1 ? "✅ Activado" : "✅ Inactivado",
+        text: nuevoEstado === 1
+          ? "El movimiento ha sido reactivado y el stock recalculado"
+          : "El movimiento ha sido inactivado y el stock recalculado correctamente",
         timer: 2000,
         showConfirmButton: false
       });
     } catch (error) {
       console.error(error);
-      Swal.fire("Error", "No se pudo inactivar el movimiento", "error");
+      Swal.fire("Error", `No se pudo ${accion.toLowerCase()} el movimiento`, "error");
     }
   };
 

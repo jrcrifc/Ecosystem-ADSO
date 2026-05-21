@@ -18,9 +18,26 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
     const fetchReactivos = async () => {
       try {
         const res = await apiAxios.get("/api/reactivos/stock/disponibilidad");
+        // Cargar también los reactivos inactivos para mostrarlos deshabilitados
+        let reactivosInactivos = [];
+        try {
+          const resAll = await apiAxios.get("/api/reactivos");
+          reactivosInactivos = resAll.data.filter(r => r.estado !== 1).map(r => ({
+            id_reactivo: r.id_reactivo,
+            nom_reactivo: r.nom_reactivo,
+            presentacion_reactivo: r.presentacion_reactivo,
+            cantidad_inventario: 0,
+            estado_stock: 'inactivo',
+            _inactivo: true
+          }));
+        } catch (e) { /* ignorar */ }
+
         const activeReactivoId = selectedSalida?.movimiento?.id_reactivo;
         const list = res.data.filter(r => r.estado_stock === 'disponible' || r.id_reactivo === activeReactivoId);
-        setReactivos(list);
+        // Combinar activos con inactivos (evitar duplicados)
+        const idsActivos = new Set(list.map(r => r.id_reactivo));
+        const inactivosSinDuplicar = reactivosInactivos.filter(r => !idsActivos.has(r.id_reactivo));
+        setReactivos([...list, ...inactivosSinDuplicar]);
       } catch (error) {
         console.error("Error al cargar reactivos:", error);
       }
@@ -205,9 +222,13 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
             disabled={!!selectedSalida?.id_salida}
           >
             <option value="">Seleccione un reactivo...</option>
-            {reactivos.map(r => (
-              <option key={r.id_reactivo} value={r.id_reactivo}>
-                {r.nom_reactivo} — Total: {parseFloat(parseFloat(r.cantidad_inventario || 0).toFixed(3)).toString()} {r.presentacion_reactivo}
+            {[...reactivos].sort((a, b) => {
+              if (!a._inactivo && b._inactivo) return -1;
+              if (a._inactivo && !b._inactivo) return 1;
+              return a.id_reactivo - b.id_reactivo;
+            }).map(r => (
+              <option key={r.id_reactivo} value={r.id_reactivo} disabled={r._inactivo === true}>
+                {r.nom_reactivo} — Total: {parseFloat(parseFloat(r.cantidad_inventario || 0).toFixed(3)).toString()} {r.presentacion_reactivo}{r._inactivo ? " — 🚫 Inactivo" : ""}
               </option>
             ))}
           </select>

@@ -154,9 +154,13 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
             style={inputStyle}
           >
             <option value="">Seleccione el reactivo que ingresa...</option>
-            {reactivos.map((r) => (
-              <option key={r.id_reactivo} value={r.id_reactivo}>
-                {r.nom_reactivo} — ({r.presentacion_reactivo})
+            {[...reactivos].sort((a, b) => {
+              if (a.estado === 1 && b.estado !== 1) return -1;
+              if (a.estado !== 1 && b.estado === 1) return 1;
+              return a.id_reactivo - b.id_reactivo;
+            }).map((r) => (
+              <option key={r.id_reactivo} value={r.id_reactivo} disabled={r.estado !== 1}>
+                {r.nom_reactivo} — ({r.presentacion_reactivo}){r.estado !== 1 ? " — 🚫 Inactivo" : ""}
               </option>
             ))}
           </select>

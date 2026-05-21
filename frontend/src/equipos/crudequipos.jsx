@@ -275,6 +275,21 @@ export default function CrudEquipo() {
     },
   ];
 
+  // ── Formatear datos para exportación (sin createdat/updatedat, nombres legibles) ──
+  const formatEquiposForExport = (data) => {
+    return data.map(row => ({
+      "ID": row.id_equipo,
+      "Grupo": row.grupo_equipo || "-",
+      "Nombre": row.nom_equipo || "-",
+      "Marca": row.marca_equipo || "-",
+      "Placa": (row.no_placa && row.no_placa !== 0 && row.no_placa !== '0') ? row.no_placa : "Sin placa",
+      "Cuentadante": row.cuentadante ? `${row.cuentadante.nom_cuentadante} ${row.cuentadante.apell_cuentadante}` : "-",
+      "Observaciones": row.observaciones || "-",
+      "Estado Equipo": row.estado === 1 ? "Activo" : "Inactivo",
+      "Estado Operativo": (row.estadoReal || "disponible").charAt(0).toUpperCase() + (row.estadoReal || "disponible").slice(1),
+    }));
+  };
+
   // ✅ FILTRO CORREGIDO
   const filteredEquipos = equipos.filter((row) => {
     const search = filterText.toLowerCase().trim();
@@ -323,17 +338,21 @@ export default function CrudEquipo() {
           </button>
           <button className="btn btn-outline-danger" onClick={() => {
             const cols = [
-              { header: "ID", dataKey: "id_equipo" },
-              { header: "Grupo", dataKey: "grupo_equipo" },
-              { header: "Nombre", dataKey: "nom_equipo" },
-              { header: "Marca", dataKey: "marca_equipo" },
-              { header: "Placa", dataKey: "no_placa" }
+              { header: "ID", dataKey: "ID" },
+              { header: "Grupo", dataKey: "Grupo" },
+              { header: "Nombre", dataKey: "Nombre" },
+              { header: "Marca", dataKey: "Marca" },
+              { header: "Placa", dataKey: "Placa" },
+              { header: "Cuentadante", dataKey: "Cuentadante" },
+              { header: "Observaciones", dataKey: "Observaciones" },
+              { header: "Estado Equipo", dataKey: "Estado Equipo" },
+              { header: "Estado Operativo", dataKey: "Estado Operativo" },
             ];
-            exportToPDF(filteredEquipos, cols, "Inventario_Equipos", "INVENTARIO DE EQUIPOS");
+            exportToPDF(formatEquiposForExport(filteredEquipos), cols, "Inventario_Equipos", "INVENTARIO DE EQUIPOS");
           }}>
             <i className="fa-solid fa-file-pdf me-2"></i> PDF
           </button>
-          <button className="btn btn-outline-success" onClick={() => exportToExcel(filteredEquipos, "Inventario_Equipos")}>
+          <button className="btn btn-outline-success" onClick={() => exportToExcel(formatEquiposForExport(filteredEquipos), "Inventario_Equipos")}>
             <i className="fa-solid fa-file-excel me-2"></i> Excel
           </button>
           <button

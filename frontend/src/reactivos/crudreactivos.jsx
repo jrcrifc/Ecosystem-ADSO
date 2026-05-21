@@ -21,11 +21,40 @@ const CrudReactivos = () => {
     { name: "Color Stand", selector: (row) => row.color_stand, sortable: true, minWidth: "150px" },
     { name: "Clasificación", selector: (row) => row.clasificacion_reactivo, sortable: true, minWidth: "200px" },
     {
-      name: "Acciones", center: true, width: "100px",
+      name: "Estado",
+      selector: (row) => row.estado,
+      sortable: true,
+      center: true,
+      width: "120px",
+      cell: (row) => (
+        <span style={{
+          background: row.estado === 1 ? "#dcfce7" : "#fee2e2",
+          color: row.estado === 1 ? "#16a34a" : "#dc2626",
+          padding: "4px 12px", borderRadius: "99px", fontSize: "11px", fontWeight: "700",
+          border: `1px solid ${row.estado === 1 ? "#bbf7d0" : "#fecaca"}`
+        }}>
+          {row.estado === 1 ? "Activo" : "Inactivo"}
+        </span>
+      ),
+    },
+    {
+      name: "Acciones", center: true, width: "140px",
       cell: (row) => (
         <div className="d-flex gap-1 justify-content-center">
           <button className="btn btn-sm" style={{ background: "#dbeafe", color: "#0077B6", border: "none" }} data-bs-toggle="modal" data-bs-target="#modalReactivo" onClick={() => setSelectedReactivo(row)}>
             <i className="fa-solid fa-pencil"></i>
+          </button>
+          <button
+            className="btn btn-sm"
+            style={{
+              background: row.estado === 1 ? "#fee2e2" : "#dcfce7",
+              color: row.estado === 1 ? "#dc2626" : "#16a34a",
+              border: "none"
+            }}
+            onClick={() => cambiarEstado(row)}
+            title={row.estado === 1 ? "Inactivar" : "Activar"}
+          >
+            <i className={`fas ${row.estado === 1 ? "fa-ban" : "fa-check"}`}></i>
           </button>
         </div>
       ),
@@ -40,6 +69,35 @@ const CrudReactivos = () => {
       setReactivos(res.data);
     } catch (error) {
       Swal.fire("Error", "No se pudieron cargar los reactivos", "error");
+    }
+  };
+
+  const cambiarEstado = async (reactivo) => {
+    const nuevoEstado = reactivo.estado === 1 ? 0 : 1;
+    const result = await Swal.fire({
+      title: "¿Cambiar estado?",
+      text: `El reactivo "${reactivo.nom_reactivo}" pasará a ${nuevoEstado === 1 ? "ACTIVO" : "INACTIVO"}`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: nuevoEstado === 1 ? "#0077B6" : "#dc3545",
+      confirmButtonText: "Sí, cambiar",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await apiAxios.put(`/api/reactivos/estado/${reactivo.id_reactivo}`);
+      Swal.fire({
+        icon: "success",
+        title: nuevoEstado === 1 ? "Activado" : "Inactivado",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      cargarReactivos();
+    } catch (error) {
+      console.error("Error al cambiar estado:", error);
+      Swal.fire("Error", "No se pudo cambiar el estado", "error");
     }
   };
 
@@ -65,6 +123,24 @@ const CrudReactivos = () => {
     );
   });
 
+  // ── Formatear datos para exportación (sin createdat/updatedat, estado legible) ──
+  const formatDataForExport = (data) => {
+    return data.map(row => ({
+      "ID": row.id_reactivo,
+      "Nombre": row.nom_reactivo || "-",
+      "Nombre (Inglés)": row.nom_reactivo_ingles || "-",
+      "Fórmula": row.formula_reactivo || "-",
+      "Presentación": row.presentacion_reactivo || "-",
+      "Color Almacenamiento": row.color_almacenamiento || "-",
+      "Color Stand": row.color_stand || "-",
+      "Stand": row.stand || "-",
+      "Columna": row.columna || "-",
+      "Fila": row.fila || "-",
+      "Clasificación": row.clasificacion_reactivo || "-",
+      "Estado": row.estado === 1 ? "Activo" : "Inactivo",
+    }));
+  };
+
   return (
     <div className="container mt-4" style={{ maxWidth: "1200px" }}>
       <div style={{ textAlign: "center", marginBottom: "32px" }}>
@@ -81,16 +157,24 @@ const CrudReactivos = () => {
         <div className="col-md-7 text-end d-flex gap-2 justify-content-end">
           <button className="btn btn-outline-danger" onClick={() => {
             const cols = [
-              { header: "ID", dataKey: "id_reactivo" },
-              { header: "Nombre", dataKey: "nom_reactivo" },
-              { header: "Presentación", dataKey: "presentacion_reactivo" },
-              { header: "Clasificación", dataKey: "clasificacion_reactivo" }
+              { header: "ID", dataKey: "ID" },
+              { header: "Nombre", dataKey: "Nombre" },
+              { header: "Nombre (Inglés)", dataKey: "Nombre (Inglés)" },
+              { header: "Fórmula", dataKey: "Fórmula" },
+              { header: "Presentación", dataKey: "Presentación" },
+              { header: "Color Almacenamiento", dataKey: "Color Almacenamiento" },
+              { header: "Color Stand", dataKey: "Color Stand" },
+              { header: "Stand", dataKey: "Stand" },
+              { header: "Columna", dataKey: "Columna" },
+              { header: "Fila", dataKey: "Fila" },
+              { header: "Clasificación", dataKey: "Clasificación" },
+              { header: "Estado", dataKey: "Estado" },
             ];
-            exportToPDF(filtered, cols, "Inventario_Reactivos", "INVENTARIO DE REACTIVOS");
+            exportToPDF(formatDataForExport(filtered), cols, "Inventario_Reactivos", "INVENTARIO DE REACTIVOS");
           }}>
             <i className="fa-solid fa-file-pdf me-2"></i> PDF
           </button>
-          <button className="btn btn-outline-success" onClick={() => exportToExcel(filtered, "Inventario_Reactivos")}>
+          <button className="btn btn-outline-success" onClick={() => exportToExcel(formatDataForExport(filtered), "Inventario_Reactivos")}>
             <i className="fa-solid fa-file-excel me-2"></i> Excel
           </button>
           <button className="btn" style={{ background: "#0077B6", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }} data-bs-toggle="modal" data-bs-target="#modalReactivo" onClick={() => setSelectedReactivo(null)}>
