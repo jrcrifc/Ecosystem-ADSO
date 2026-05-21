@@ -1,4 +1,4 @@
-import estadoxequipoService from '../service/EstadoxequipoService.js';
+import estadoxequipoService from '../service/estadoxequipoService.js';
 
 export const getAllEstadoxequipo = async (req, res) => {
   try {

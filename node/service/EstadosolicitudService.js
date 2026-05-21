@@ -1,4 +1,4 @@
-import estadoSolicitud from "../models/estado_SolicitudModel.js";
+import estadoSolicitud from "../models/Estado_solicitudModel.js";
 
 const estadoSolicitudService = {
 

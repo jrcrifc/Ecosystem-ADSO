@@ -6,7 +6,7 @@ import {
   updateEstadoxequipo,
   deleteEstadoxequipo
 } from '../controller/EstadoxequipoController.js';
-import estadoxequipoService from '../service/EstadoxequipoService.js';
+import estadoxequipoService from '../service/estadoxequipoService.js';
 import { adminOGestor, todosLosRoles } from '../middleware/roleMiddleware.js';
 
 const router = express.Router();
