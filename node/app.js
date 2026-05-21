@@ -10,7 +10,7 @@ import path from 'path';
 import dotenv from 'dotenv';
 import adminRoutes from "./routes/adminRoutes.js";
 // Rutas
-import estadosolicitudRoutes from "./routes/EstadosolicitudRoutes.js";
+import estadosolicitudRoutes from "./routes/estadoSolicitudRoutes.js";
 import equiposRoutes from './routes/EquiposRoutes.js';
 import proveedoresRoutes from './routes/proveedoresRoutes.js';
 import reactivosRoutes from "./routes/reactivosRoutes.js";
