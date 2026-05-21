@@ -1,8 +1,7 @@
 import { io } from "socket.io-client";
 
-// Detectar URL automáticamente o usar localhost
-const host = window.location.hostname === "localhost" ? "127.0.0.1" : window.location.hostname;
-const socketUrl = `http://${host}:8000`;
+// Usar la URL del backend desde las variables de entorno
+const socketUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const socket = io(socketUrl, {
   transports: ["polling", "websocket"],

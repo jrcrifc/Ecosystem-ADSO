@@ -20,7 +20,7 @@ const cuentadanteModel = db.define('cuentadantes', {
     },
 
     tel_cuentadante: {
-        type: DataTypes.INTEGER
+        type: DataTypes.STRING(20)
     },
 
     estado: {
