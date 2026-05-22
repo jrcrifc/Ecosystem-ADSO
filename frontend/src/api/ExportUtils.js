@@ -56,14 +56,30 @@ export const exportToPDF = (data, columns, fileName = "reporte", title = "Report
  * @param {String} fileName - Nombre del archivo
  */
 export const exportToExcel = (data, fileName = "reporte") => {
-  const worksheet = XLSX.utils.json_to_sheet(data);
+  let sortedData = [...data];
+  if (sortedData.length > 0) {
+    // Asumir que la primera columna (clave) es el ID
+    const sortKey = Object.keys(sortedData[0])[0];
+    sortedData.sort((a, b) => {
+      const valA = a[sortKey];
+      const valB = b[sortKey];
+      if (valA === undefined || valA === null) return 1;
+      if (valB === undefined || valB === null) return -1;
+      if (typeof valA === 'number' && typeof valB === 'number') {
+        return valA - valB;
+      }
+      return String(valA).localeCompare(String(valB), undefined, { numeric: true, sensitivity: 'base' });
+    });
+  }
+
+  const worksheet = XLSX.utils.json_to_sheet(sortedData);
   
   // Ajuste automático de los anchos de columna para evitar textos remontados/solapados
-  if (data && data.length > 0) {
-    const keys = Object.keys(data[0]);
+  if (sortedData && sortedData.length > 0) {
+    const keys = Object.keys(sortedData[0]);
     const cols = keys.map(key => {
       let maxLength = key.length; // Comenzar con el tamaño del encabezado
-      for (const row of data) {
+      for (const row of sortedData) {
         const val = row[key];
         if (val !== undefined && val !== null) {
           const strLen = String(val).length;

@@ -22,6 +22,11 @@ const Register = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  const errorStyle = { color: "#dc2626", fontSize: "11px", marginTop: "4px", fontWeight: "600" };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -32,8 +37,47 @@ const Register = () => {
     // Validación en tiempo real para nombres (no números)
     if (name === "nombres_apellidos" && /\d/.test(value)) return;
 
-    const val = type === "checkbox" ? checked : value;
+    // Validación en tiempo real para número de ficha (solo números)
+    if (name === "numero_ficha" && value !== "" && !/^\d+$/.test(value)) return;
+
+    // Validación en tiempo real para nombre de ficha (solo letras y espacios, no números)
+    if (name === "nombre_ficha" && /\d/.test(value)) return;
+
+    let val = type === "checkbox" ? checked : value;
+    
+    // Convertir email a minúsculas y sin espacios en tiempo real
+    if (name === "email") {
+      val = (value || "").replace(/\s/g, "").toLowerCase();
+    }
+
     setForm({ ...form, [name]: val });
+
+    // Mensajes de error inline
+    const errors = { ...fieldErrors };
+    if (name === "documento") {
+      if (value.length > 0 && value.length < 6) errors.documento = "Mínimo 6 dígitos.";
+      else delete errors.documento;
+    }
+    if (name === "nombres_apellidos") {
+      if (value && value.trim().split(" ").length < 2) errors.nombres_apellidos = "Ingresa nombres y apellidos completos.";
+      else delete errors.nombres_apellidos;
+    }
+    if (name === "email") {
+      if (value && !value.includes("@")) errors.email = "Falta el @ en el correo.";
+      else if (value && (!value.includes(".") || value.split(".").pop().length < 2)) errors.email = "Falta el dominio (ej. .com, .co)";
+      else delete errors.email;
+    }
+    if (name === "password") {
+      if (value && value.length < 8) errors.password = "Mínimo 8 caracteres.";
+      else delete errors.password;
+    }
+    if (name === "confirmPassword" || name === "password") {
+      const p1 = name === "password" ? value : form.password;
+      const p2 = name === "confirmPassword" ? value : form.confirmPassword;
+      if (p2 && p1 !== p2) errors.confirmPassword = "Las contraseñas no coinciden.";
+      else delete errors.confirmPassword;
+    }
+    setFieldErrors(errors);
   };
 
   const registrarUsuario = async (e) => {
@@ -252,7 +296,8 @@ const Register = () => {
             <div className="col-12">
               <label className="mb-1" style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Documento de Identidad</label>
               <input className="form-control" name="documento" placeholder="Ingresa solo números"
-                value={form.documento} onChange={handleChange} required style={inputStyle} />
+                value={form.documento} onChange={handleChange} required style={inputStyle} maxLength={11} />
+              {fieldErrors.documento && <div style={errorStyle}>{fieldErrors.documento}</div>}
             </div>
           </div>
 
@@ -260,12 +305,14 @@ const Register = () => {
             <label className="mb-1" style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Nombres y Apellidos Completos</label>
             <input className="form-control" name="nombres_apellidos" placeholder="Ej: Juan Pérez"
               value={form.nombres_apellidos} onChange={handleChange} required style={inputStyle} />
+            {fieldErrors.nombres_apellidos && <div style={errorStyle}>{fieldErrors.nombres_apellidos}</div>}
           </div>
 
           <div className="mb-2">
             <label className="mb-1" style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Correo Electrónico</label>
             <input className="form-control" type="email" name="email" placeholder="ejemplo@gmail.com"
               value={form.email} onChange={handleChange} required style={inputStyle} />
+            {fieldErrors.email && <div style={errorStyle}>{fieldErrors.email}</div>}
           </div>
 
           {form.rol !== "Administrador" && (
@@ -295,13 +342,35 @@ const Register = () => {
           <div className="row g-2 mb-4">
             <div className="col-6">
               <label className="mb-1" style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Contraseña</label>
-              <input className="form-control" type="password" name="password" placeholder="Mínimo 8"
-                value={form.password} onChange={handleChange} required style={inputStyle} />
+              <div className="position-relative">
+                <input className="form-control" type={showPassword ? "text" : "password"} name="password" placeholder="Mínimo 8"
+                  value={form.password} onChange={handleChange} required style={{ ...inputStyle, paddingRight: "36px" }} />
+                <i
+                  className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`}
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)",
+                    cursor: "pointer", color: "#64748b", fontSize: "16px"
+                  }}
+                />
+              </div>
+              {fieldErrors.password && <div style={errorStyle}>{fieldErrors.password}</div>}
             </div>
             <div className="col-6">
               <label className="mb-1" style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Confirmar contraseña</label>
-              <input className="form-control" type="password" name="confirmPassword" placeholder="Confirma"
-                value={form.confirmPassword} onChange={handleChange} required style={inputStyle} />
+              <div className="position-relative">
+                <input className="form-control" type={showConfirm ? "text" : "password"} name="confirmPassword" placeholder="Confirma"
+                  value={form.confirmPassword} onChange={handleChange} required style={{ ...inputStyle, paddingRight: "36px" }} />
+                <i
+                  className={`bi ${showConfirm ? "bi-eye-slash" : "bi-eye"}`}
+                  onClick={() => setShowConfirm(!showConfirm)}
+                  style={{
+                    position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)",
+                    cursor: "pointer", color: "#64748b", fontSize: "16px"
+                  }}
+                />
+              </div>
+              {fieldErrors.confirmPassword && <div style={errorStyle}>{fieldErrors.confirmPassword}</div>}
             </div>
           </div>
 

@@ -68,13 +68,12 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
       items: [
         { icon: "💻", text: "Lista de Equipos", path: "/equipos", show: true },
         { icon: "🔧", text: "Estado del Equipo", path: "/estadoequipo", show: true },
-        { icon: "📋", text: "Historial Equipos", path: "/historial-equipo", show: true },
         { icon: "⚙️", text: "Gestión Equipos", path: "/gestion-equipo", show: true },
       ]
     },
     {
       key: "registros", icon: "📦", text: "Registros",
-      show: esAdmin || esGestorPasante,
+      show: esAdmin,
       items: [
         { icon: "🏢", text: "Proveedores", path: "/proveedor", show: true },
         { icon: "👤", text: "Cuentadantes", path: "/cuentadante", show: true },
@@ -84,7 +83,7 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
       key: "admin", icon: "👑", text: "Administración", show: esAdmin,
       items: [
         { icon: "👥", text: "Gestión Usuarios", path: "/gestion-usuarios", show: true },
-        { icon: "📜", text: "Auditoría", path: "/auditoria", show: true },
+        { icon: "📜", text: "Historial de Accesos", path: "/auditoria", show: true },
       ]
     },
   ];

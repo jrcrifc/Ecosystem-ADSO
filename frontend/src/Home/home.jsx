@@ -1,15 +1,13 @@
 import React, { useEffect, useState } from "react";
 import ecosystemLogo from "./ecosystem_logo.png";
-import labOficina from "./labAmbien.jpeg";
-import labEquipos from "./lab_equipos.png";
-import labFlujo from "./lab_flujo.png";
 import DashboardCharts from "./DashboardCharts.jsx";
+import apiAxios from "../api/axiosConfig";
+import Swal from "sweetalert2";
+import { Link } from "react-router-dom";
 
 const Home = () => {
   const [heroVisible, setHeroVisible] = useState(false);
   const [sectionsVisible, setSectionsVisible] = useState(false);
-  const [galleryIndex, setGalleryIndex] = useState(0);
-  const [lightboxPhoto, setLightboxPhoto] = useState(null);
 
   const stored = sessionStorage.getItem("user");
   const userData = stored ? JSON.parse(stored) : null;
@@ -24,26 +22,64 @@ const Home = () => {
   const esPasante = userRolLower === "pasante";
   const esAprendiz = userRolLower === "aprendiz";
 
-  const labPhotos = [
-    { src: labOficina, caption: "Oficina y área de trabajo del laboratorio" },
-    { src: labEquipos, caption: "Zona de equipos y análisis de muestras" },
-    { src: labFlujo, caption: "Cámara de flujo laminar e instrumentación" },
-  ];
-
   useEffect(() => {
     setHeroVisible(true);
     setTimeout(() => setSectionsVisible(true), 400);
-
-    const galleryTimer = setInterval(() => {
-      setGalleryIndex(prev => (prev + 1) % labPhotos.length);
-    }, 5000);
-    return () => clearInterval(galleryTimer);
   }, []);
+
+  // ALERTA RESUMEN PARA EL ADMINISTRADOR
+  useEffect(() => {
+    if (!esAdmin) return;
+    
+    // Evitar que la alerta salga en cada render si ya se mostró en esta sesión
+    const alertaMostrada = sessionStorage.getItem("adminAlertShown");
+    if (alertaMostrada) return;
+
+    const fetchResumen = async () => {
+      try {
+        const [statsRes, usersRes] = await Promise.all([
+          apiAxios.get("/api/dashboard/stats"),
+          apiAxios.get("/api/auth/usuarios")
+        ]);
+
+        const stats = statsRes.data;
+        const users = usersRes.data;
+
+        const reactivosPorVencer = stats.vencimientos?.length || 0;
+        // Usuarios con estado pendiente
+        const usuariosPendientes = users.filter(u => u.estado === "pendiente").length;
+        // Solicitudes generadas (pendientes de aprobación, asumiendo estado 1 o generadas)
+        // En DashboardCharts las activas son estado 1. Vamos a usar un contador aproximado si no hay endpoint directo
+        const solicitudesPendientes = stats.solicitudes?.find(s => s.estado === 1)?.count || 0;
+
+        if (reactivosPorVencer > 0 || usuariosPendientes > 0 || solicitudesPendientes > 0) {
+          let htmlMsg = `<div style="text-align: left; font-size: 14px;">`;
+          if (usuariosPendientes > 0) htmlMsg += `<p>👤 <b>${usuariosPendientes}</b> usuarios pendientes de aprobación.</p>`;
+          if (solicitudesPendientes > 0) htmlMsg += `<p>📋 <b>${solicitudesPendientes}</b> solicitudes activas en el sistema.</p>`;
+          if (reactivosPorVencer > 0) htmlMsg += `<p style="color: #dc2626;">⚠️ <b>${reactivosPorVencer}</b> reactivos próximos a vencer.</p>`;
+          htmlMsg += `</div>`;
+
+          Swal.fire({
+            title: "¡Resumen de Novedades!",
+            html: htmlMsg,
+            icon: "info",
+            confirmButtonText: "Entendido",
+            confirmButtonColor: "#0077B6"
+          });
+          sessionStorage.setItem("adminAlertShown", "true");
+        }
+      } catch (error) {
+        console.error("Error cargando resumen para admin", error);
+      }
+    };
+
+    fetchResumen();
+  }, [esAdmin]);
 
   const rolLabel = {
     administrador: "Administrador",
     admin: "Administrador",
-    gestor: "Gestor de Laboratorio",
+    gestor: "Gestor de SENA Empresa",
     pasante: "Pasante",
     instructor: "Instructor",
     aprendiz: "Aprendiz",
@@ -162,63 +198,33 @@ const Home = () => {
         </div>
       </div>
 
-      {/* ===== DASHBOARD (SI TIENE PERMISOS) ===== */}
-      {(esAdmin || esGestor) && (
-        <div style={{
-          opacity: sectionsVisible ? 1 : 0, transition: "all 0.7s ease 0.2s", marginBottom: "40px"
-        }}>
-          <DashboardCharts />
-        </div>
-      )}
-
-      {/* ===== GALERÍA (MÁS DISCRETA) ===== */}
+      {/* ===== DASHBOARD (ADAPTADO POR ROL) ===== */}
       <div style={{
-        opacity: sectionsVisible ? 1 : 0, transform: sectionsVisible ? "translateY(0)" : "translateY(20px)",
-        transition: "all 0.7s ease 0.3s", marginBottom: "40px"
+        opacity: sectionsVisible ? 1 : 0, transition: "all 0.7s ease 0.2s", marginBottom: "40px"
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
-          <div style={{ height: "4px", width: "32px", background: "#0077B6", borderRadius: "99px" }} />
-          <h2 style={{ fontSize: "20px", fontWeight: "800", color: "#0A1628", margin: 0 }}>Nuestras Instalaciones</h2>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px" }}>
-          {labPhotos.map((photo, i) => (
-            <div key={i} style={{
-              position: "relative", borderRadius: "20px", overflow: "hidden",
-              aspectRatio: "16/9", cursor: "pointer", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)"
-            }}
-              onClick={() => setLightboxPhoto(photo)}
-            >
-              <img src={photo.src} alt={photo.caption} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              <div style={{
-                position: "absolute", bottom: 0, left: 0, right: 0,
-                background: "linear-gradient(transparent, rgba(0,0,0,0.8))",
-                padding: "20px", color: "#fff", fontSize: "12px", fontWeight: "600"
-              }}>
-                {photo.caption}
-              </div>
-            </div>
-          ))}
-        </div>
+        <DashboardCharts />
       </div>
 
-      <footer className="text-center py-4" style={{ borderTop: "1px solid #e2e8f0", color: "#94a3b8", fontSize: "12px" }}>
+      <footer 
+        className="text-center p-4 mt-5" 
+        style={{ 
+          background: "#0077B6", 
+          color: "#ffffff", 
+          borderRadius: "20px", 
+          fontSize: "13px", 
+          fontWeight: "600",
+          boxShadow: "0 8px 24px rgba(0, 119, 182, 0.2)",
+          marginBottom: "20px"
+        }}
+      >
         <p className="mb-1">© 2025 Ecosystem - SENA Centro Agropecuario "La Granja"</p>
-        <p>Para más información, consulta la sección <a href="/acerca-de" style={{ color: "#0077B6", fontWeight: "700", textDecoration: "none" }}>Acerca de Ecosystem</a></p>
+        <p className="mb-0">
+          Para más información, consulta la sección{" "}
+          <Link to="/acerca-de" style={{ color: "#e0f2fe", fontWeight: "800", textDecoration: "underline" }}>
+            Acerca de Ecosystem
+          </Link>
+        </p>
       </footer>
-
-      {/* ===== LIGHTBOX ===== */}
-      {lightboxPhoto && (
-        <div onClick={() => setLightboxPhoto(null)} style={{
-          position: "fixed", inset: 0, zIndex: 9999,
-          background: "rgba(0,0,0,0.9)", display: "flex",
-          alignItems: "center", justifyContent: "center", cursor: "zoom-out"
-        }}>
-          <img src={lightboxPhoto.src} alt={lightboxPhoto.caption} style={{
-            maxWidth: "90vw", maxHeight: "80vh", borderRadius: "16px", boxShadow: "0 20px 50px rgba(0,0,0,0.5)"
-          }} />
-        </div>
-      )}
     </div>
   );
 };

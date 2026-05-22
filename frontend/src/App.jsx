@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import apiAxios from "./api/axiosConfig.js";
+import socket from "./socket.js";
+import Swal from "sweetalert2";
 
 import CrudReactivos from "./reactivos/crudreactivos.jsx";
 import CrudmovimientoReactivo from "./movimientosReactivos/crudmovimientoreactivo.jsx";
@@ -35,6 +37,11 @@ const FormularioRoute = ({ isAuth, userData, userRol, logOut, children }) => {
 
   const estado = userData?.estado || userData?.user?.estado;
   const rolesRevision = ['Aprendiz', 'Instructor', 'Pasante', 'Gestor'];
+
+  // Fail-safe: Si por alguna razón el estado es inactivo o rechazado y sigue logueado, no mostrar la pantalla de revisión
+  if (estado === 'inactivo' || estado === 'rechazado') {
+    return null; 
+  }
 
   if (rolesRevision.includes(userRol) && estado !== 'aprobado') {
     return (
@@ -105,19 +112,41 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [userData, setUserData] = useState(null);
 
+
+
+  // ✅ Escuchar eventos de cierre de sesión forzado
   useEffect(() => {
-    const stored = sessionStorage.getItem("user");
-    if (!stored) { setIsAuth(false); setIsLoading(false); return; }
-    try {
-      const user = JSON.parse(stored);
-      if (user?.token) { setIsAuth(true); setUserData(user); }
-      else setIsAuth(false);
-    } catch {
-      sessionStorage.removeItem("user");
-      setIsAuth(false);
+    if (!isAuth || !userData) return;
+    
+    const id = userData?.id_usuario || userData?.user?.id_usuario;
+    if (!id) return;
+
+    // Asegurar que el usuario está en su sala para recibir el evento
+    if (socket.connected) {
+      socket.emit("join", id);
     }
-    setIsLoading(false);
-  }, []);
+    
+    const handleConnect = () => socket.emit("join", id);
+    socket.on("connect", handleConnect);
+
+    const handleForceLogout = (data) => {
+      logOut();
+      Swal.fire({
+        icon: "error",
+        title: "Acceso Revocado",
+        text: data.mensaje || "Has sido desconectado por el administrador.",
+        confirmButtonColor: "#d33",
+        allowOutsideClick: false
+      });
+    };
+
+    socket.on("force_logout", handleForceLogout);
+
+    return () => {
+      socket.off("connect", handleConnect);
+      socket.off("force_logout", handleForceLogout);
+    };
+  }, [isAuth, userData]);
 
   const logOut = () => {
     sessionStorage.removeItem("user");
@@ -126,30 +155,61 @@ function App() {
     setUserData(null);
   };
 
-  // ✅ Recarga el usuario desde el backend y actualiza el estado
-  const recargarUsuario = async () => {
+  const recargarUsuario = async (id, token, userActual) => {
     try {
-      const stored = sessionStorage.getItem("user");
-      if (!stored) return;
-      const userActual = JSON.parse(stored);
-      const id = userActual?.id_usuario || userActual?.user?.id_usuario;
-      if (!id) return;
+      const storedUser = sessionStorage.getItem("user");
+      const storedToken = sessionStorage.getItem("token");
+      
+      const finalUser = userActual || (storedUser ? JSON.parse(storedUser) : null);
+      const finalId = id || finalUser?.id_usuario || finalUser?.user?.id_usuario;
+      const finalToken = token || storedToken;
 
-      const token = sessionStorage.getItem("token");
-      const res = await apiAxios.get(`/api/auth/usuarios/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+      if (!finalId || !finalToken) return;
+
+      const res = await apiAxios.get(`/api/auth/usuarios/${finalId}`, {
+        headers: { Authorization: `Bearer ${finalToken}` }
       });
 
       const userActualizado = { ...userActual, ...res.data };
       sessionStorage.setItem("user", JSON.stringify(userActualizado));
       setUserData(userActualizado);
 
-      // Si fue rechazado, expulsar
-      if (res.data.estado === 'rechazado') {
+      // Si fue rechazado o inactivado, expulsar
+      if (res.data.estado === 'rechazado' || res.data.estado === 'inactivo') {
         logOut();
+        Swal.fire({
+          icon: "error",
+          title: "Acceso Denegado",
+          text: res.data.estado === 'rechazado' 
+            ? "Tu cuenta fue rechazada por el administrador." 
+            : "Tu cuenta ha sido inactivada.",
+          confirmButtonColor: "#d33",
+          allowOutsideClick: false
+        });
       }
     } catch { }
   };
+
+  useEffect(() => {
+    const stored = sessionStorage.getItem("user");
+    if (!stored) { setIsAuth(false); setIsLoading(false); return; }
+    try {
+      const user = JSON.parse(stored);
+      if (user?.token) { 
+        setIsAuth(true); 
+        setUserData(user); 
+        const id = user?.id_usuario || user?.user?.id_usuario;
+        recargarUsuario(id, user.token, user).finally(() => setIsLoading(false));
+      } else {
+        setIsAuth(false);
+        setIsLoading(false);
+      }
+    } catch {
+      sessionStorage.removeItem("user");
+      setIsAuth(false);
+      setIsLoading(false);
+    }
+  }, []);
 
   const userRol = userData?.rol || userData?.user?.rol;
 
@@ -238,13 +298,13 @@ function App() {
             <Route path="/reactivos" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><CrudReactivos /></AdminRoute>} />
             <Route path="/equipos" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><CrudEquipo /></AdminRoute>} />
             <Route path="/movimientoreactivo" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><CrudmovimientoReactivo /></AdminRoute>} />
-            <Route path="/proveedor" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><Crudproveedor /></AdminRoute>} />
+            <Route path="/proveedor" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Crudproveedor /></SoloAdminRoute>} />
             <Route path="/salidas" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><Crudsalidas /></AdminRoute>} />
             <Route path="/estadoequipo" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><Crudestadoequipo /></AdminRoute>} />
             <Route path="/historial-equipo" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><HistorialEstadoEquipo /></AdminRoute>} />
             <Route path="/gestion-equipo" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><GestionEstadoEquipo /></AdminRoute>} />
             <Route path="/control-reactivos" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><ControlReactivos /></AdminRoute>} />
-            <Route path="/cuentadante" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><Crudcuentadantes /></AdminRoute>} />
+            <Route path="/cuentadante" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Crudcuentadantes /></SoloAdminRoute>} />
 
             {/* DEFAULT */}
             <Route path="*" element={<Navigate to={isAuth ? "/home" : "/UserLogin"} replace />} />

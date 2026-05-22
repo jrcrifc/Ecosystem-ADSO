@@ -95,6 +95,13 @@ app.get('/', (req, res) => {
 try {
     await db.authenticate();
     console.log('✅ Conexión a la base de datos establecida');
+    
+    // Asegurar que el ENUM soporta 'inactivo' en la BD real
+    await db.query(`
+      ALTER TABLE usuarios 
+      MODIFY COLUMN estado ENUM('pendiente', 'aprobado', 'rechazado', 'inactivo') 
+      NOT NULL DEFAULT 'pendiente';
+    `).catch(err => console.warn("⚠️ Advertencia al sincronizar ENUM en DB:", err.message));
 } catch (error) {
     console.error('❌ Error al conectar a la base de datos:', error);
     process.exit(1);

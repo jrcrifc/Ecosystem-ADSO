@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import apiAxios from "../api/axiosConfig.js";
+import Swal from "sweetalert2";
 import { FaEnvelope, FaLock } from "react-icons/fa";
 import fondoLaboratorio from "../Home/laboratorio.png";
 import logo from "../Home/ecosystem_logo.png";
@@ -67,11 +68,8 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
 
       setForm({ email: "", password: "" });
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-        err.message ||
-        "Email o contraseña incorrectos"
-      );
+      const errorMsg = err.response?.data?.message || err.message || "Email o contraseña incorrectos";
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }

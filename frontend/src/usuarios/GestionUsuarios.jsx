@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import apiAxios from "../api/axiosConfig";
 import Swal from "sweetalert2";
+import socket from "../socket.js";
 
 export default function GestionUsuarios() {
   const [usuariosPendientes, setUsuariosPendientes] = useState([]);
@@ -12,21 +13,54 @@ export default function GestionUsuarios() {
 
   useEffect(() => { cargar(); }, [tab]);
 
+  // ✅ Actualización en tiempo real al recibir notificaciones por socket
+  useEffect(() => {
+    const handleNotification = (nueva) => {
+      // Si la notificación es sobre un nuevo usuario, recargamos la lista
+      if (nueva.tipo === "solicitud_acceso") {
+        cargar();
+      }
+    };
+
+    socket.on("notification", handleNotification);
+
+    return () => {
+      socket.off("notification", handleNotification);
+    };
+  }, [tab]); // incluimos tab para que cargar use el tab actual
+
+  const ordenarUsuarios = (lista) => {
+    const pesos = {
+      aprobado: 1,
+      pendiente: 2,
+      inactivo: 3,
+      rechazado: 4
+    };
+    return [...lista].sort((a, b) => {
+      const pesoA = pesos[a.estado] || 99;
+      const pesoB = pesos[b.estado] || 99;
+      return pesoA - pesoB;
+    });
+  };
+
   const cargar = async () => {
     try {
-      if (tab === "pendientes" || tab === "todas") {
+      if (tab === "pendientes") {
         const resUsuarios = await apiAxios.get("/api/auth/usuarios", { headers });
-        const pendientes = resUsuarios.data.filter(u =>
+        let pendientes = resUsuarios.data.filter(u =>
           ['Pasante', 'Gestor', 'Aprendiz', 'Instructor'].includes(u.rol) &&
-          (tab === "pendientes" ? u.estado === 'pendiente' : true)
+          u.estado === 'pendiente'
         );
+        pendientes = ordenarUsuarios(pendientes);
         setUsuariosPendientes(pendientes);
       }
 
       // ✅ Cargar todos los usuarios para la pestaña de gestión
       if (tab === "gestion") {
         const resUsuarios = await apiAxios.get("/api/auth/usuarios", { headers });
-        setTodosUsuarios(resUsuarios.data.filter(u => u.rol !== 'Administrador'));
+        let filtrados = resUsuarios.data.filter(u => u.rol !== 'Administrador');
+        filtrados = ordenarUsuarios(filtrados);
+        setTodosUsuarios(filtrados);
       }
     } catch {
       Swal.fire("Error", "No se pudieron cargar los datos", "error");
@@ -151,15 +185,7 @@ export default function GestionUsuarios() {
         {estadoBadge(u.estado)}
       </div>
 
-      <div style={{
-        marginTop: "14px", background: "#f8fafc", borderRadius: "10px",
-        padding: "12px 14px"
-      }}>
-        <p style={{ margin: 0, fontSize: "13px", color: "#64748b" }}>
-          ℹ️ Este usuario es <strong>{u.rol}</strong> y no requiere formulario de acceso.
-          Puedes aprobarlo directamente para que acceda a los módulos del sistema.
-        </p>
-      </div>
+
 
       {(u.numero_ficha || u.nombre_ficha) && (
         <div style={{
@@ -238,7 +264,7 @@ export default function GestionUsuarios() {
 
       {/* Tabs */}
       <div style={{ display: "flex", gap: "8px", marginBottom: "24px", flexWrap: "wrap" }}>
-        {[["pendientes", "⏳ Pendientes"], ["todas", "📋 Todas"], ["gestion", "👥 Gestión"]].map(([key, label]) => (
+        {[["pendientes", "🔑 Solicitudes de Acceso"], ["gestion", "👥 Control de Cuentas"]].map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)} style={{
             padding: "8px 20px", borderRadius: "10px", border: "none", cursor: "pointer",
             fontWeight: "600", fontSize: "13px",

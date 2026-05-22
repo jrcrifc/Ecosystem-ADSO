@@ -6,6 +6,29 @@ import { Op } from "sequelize";
 
 export const getDashboardStats = async (req, res) => {
   try {
+    const userRol = req.user.rol.toLowerCase();
+    const esAdminGestorPasante = ['administrador', 'admin', 'gestor', 'pasante'].includes(userRol);
+
+    if (!esAdminGestorPasante) {
+      // 📊 Si es aprendiz o instructor, solo mostramos sus propias solicitudes
+      const solicitudesStats = await solicitudModel.findAll({
+        where: { id_usuario: req.user.id },
+        attributes: ['estado', [solicitudModel.sequelize.fn('COUNT', solicitudModel.sequelize.col('id_solicitud')), 'count']],
+        group: ['estado']
+      });
+
+      return res.json({
+        totals: {
+          reactivos: 0,
+          equipos: 0
+        },
+        vencimientos: [],
+        solicitudes: solicitudesStats,
+        equiposDistribucion: [],
+        soloPersonal: true // Indicador para el frontend
+      });
+    }
+
     // 1. Conteo total de reactivos y equipos
     const totalReactivos = await reactivoModel.count();
     const totalEquipos = await equipoModel.count();
@@ -26,11 +49,6 @@ export const getDashboardStats = async (req, res) => {
       limit: 5
     });
 
-    // 3. Conteo de solicitudes por estado
-    // Asumiendo que solicitudModel tiene un campo 'estado' o similar. 
-    // Si no, lo sacamos de estadoxsolicitud (pero simplifiquemos por ahora si existe el campo)
-    // Revisando App.jsx, parece que la gestión es compleja. 
-    // Vamos a contar directamente de la tabla solicitud si tiene el estado.
     // 3. Conteo de solicitudes por estado (usando el campo 'estado' de la tabla solicitud_prestamos)
     const solicitudesStats = await solicitudModel.findAll({
       attributes: ['estado', [solicitudModel.sequelize.fn('COUNT', solicitudModel.sequelize.col('id_solicitud')), 'count']],
@@ -50,7 +68,8 @@ export const getDashboardStats = async (req, res) => {
       },
       vencimientos: reactivosVencimiento,
       solicitudes: solicitudesStats,
-      equiposDistribucion: equiposStats
+      equiposDistribucion: equiposStats,
+      soloPersonal: false
     });
   } catch (error) {
     console.error("Error en dashboard stats:", error);

@@ -104,47 +104,53 @@ const PerfilUsuario = () => {
               />
             </div>
             <div className="row">
-              <div className="col-md-6 mb-4">
-                <label className="form-label small fw-bold text-muted">Documento</label>
-                <input type="text" className="form-control" value={user.documento} disabled style={{ borderRadius: "10px", padding: "12px", background: "#f8fafc", border: "1px solid #e2e8f0" }} />
-              </div>
-              <div className="col-md-6 mb-4">
+              {user.rol?.toLowerCase() !== "administrador" && (
+                <div className="col-md-6 mb-4">
+                  <label className="form-label small fw-bold text-muted">Documento</label>
+                  <input type="text" className="form-control" value={user.documento} disabled style={{ borderRadius: "10px", padding: "12px", background: "#f8fafc", border: "1px solid #e2e8f0" }} />
+                </div>
+              )}
+              <div className={user.rol?.toLowerCase() === "administrador" ? "col-12 mb-4" : "col-md-6 mb-4"}>
                 <label className="form-label small fw-bold text-muted">Rol en el Sistema</label>
                 <input type="text" className="form-control" value={user.rol} disabled style={{ borderRadius: "10px", padding: "12px", background: "#f8fafc", border: "1px solid #e2e8f0" }} />
               </div>
             </div>
-            <div className="row">
-              <div className="col-md-6 mb-4">
-                <label className="form-label small fw-bold text-muted">Número de Ficha</label>
-                <input 
-                  type="text" className="form-control" 
-                  value={formData.numero_ficha} 
-                  onChange={(e) => setFormData({...formData, numero_ficha: e.target.value})}
-                  style={{ borderRadius: "10px", padding: "12px", border: "1px solid #e2e8f0" }}
-                />
+            {user.rol?.toLowerCase() !== "administrador" && (
+              <div className="row">
+                <div className="col-md-6 mb-4">
+                  <label className="form-label small fw-bold text-muted">Número de Ficha</label>
+                  <input 
+                    type="text" className="form-control" 
+                    value={formData.numero_ficha} 
+                    onChange={(e) => setFormData({...formData, numero_ficha: e.target.value})}
+                    style={{ borderRadius: "10px", padding: "12px", border: "1px solid #e2e8f0" }}
+                  />
+                </div>
+                <div className="col-md-6 mb-4">
+                  <label className="form-label small fw-bold text-muted">Nombre de la Ficha / Grupo</label>
+                  <input 
+                    type="text" className="form-control" 
+                    value={formData.nombre_ficha} 
+                    onChange={(e) => setFormData({...formData, nombre_ficha: e.target.value})}
+                    style={{ borderRadius: "10px", padding: "12px", border: "1px solid #e2e8f0" }}
+                  />
+                </div>
               </div>
-              <div className="col-md-6 mb-4">
-                <label className="form-label small fw-bold text-muted">Nombre de la Ficha / Grupo</label>
-                <input 
-                  type="text" className="form-control" 
-                  value={formData.nombre_ficha} 
-                  onChange={(e) => setFormData({...formData, nombre_ficha: e.target.value})}
-                  style={{ borderRadius: "10px", padding: "12px", border: "1px solid #e2e8f0" }}
-                />
-              </div>
-            </div>
+            )}
 
-            <div className="form-check d-flex align-items-center gap-2 mb-4" style={{ paddingLeft: "5px" }}>
-              <input 
-                className="form-check-input" type="checkbox" id="es_sena_empresa"
-                checked={formData.es_sena_empresa} 
-                onChange={(e) => setFormData({...formData, es_sena_empresa: e.target.checked})}
-                style={{ width: "17px", height: "17px", cursor: "pointer", border: "1px solid #cbd5e1" }} 
-              />
-              <label className="form-check-label small fw-bold text-muted" htmlFor="es_sena_empresa" style={{ cursor: "pointer", userSelect: "none", margin: 0 }}>
-                ¿Es SENA Empresa? 🏢
-              </label>
-            </div>
+            {user.rol?.toLowerCase() !== "administrador" && (
+              <div className="form-check d-flex align-items-center gap-2 mb-4" style={{ paddingLeft: "5px" }}>
+                <input 
+                  className="form-check-input" type="checkbox" id="es_sena_empresa"
+                  checked={formData.es_sena_empresa} 
+                  onChange={(e) => setFormData({...formData, es_sena_empresa: e.target.checked})}
+                  style={{ width: "17px", height: "17px", cursor: "pointer", border: "1px solid #cbd5e1" }} 
+                />
+                <label className="form-check-label small fw-bold text-muted" htmlFor="es_sena_empresa" style={{ cursor: "pointer", userSelect: "none", margin: 0 }}>
+                  ¿Es SENA Empresa? 🏢
+                </label>
+              </div>
+            )}
             <button type="submit" className="btn w-100 text-white fw-bold mt-2" style={{ background: "#0077B6", borderRadius: "10px", padding: "12px" }}>
               <i className="fas fa-save me-2"></i> Guardar Cambios
             </button>

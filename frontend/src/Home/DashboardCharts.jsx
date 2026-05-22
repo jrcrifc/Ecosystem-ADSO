@@ -58,13 +58,40 @@ const DashboardCharts = () => {
     cantidad: parseInt(item.count)
   }));
 
+  if (stats.soloPersonal) {
+    return (
+      <div style={{ marginTop: "32px", animation: "fadeUp 0.8s ease" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
+          <div style={{ height: "4px", width: "32px", background: "#0077B6", borderRadius: "99px" }} />
+          <h2 style={{ fontSize: "20px", fontWeight: "800", color: "#0A1628", margin: 0 }}>Mi Resumen de Préstamos</h2>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "20px", maxWidth: "600px", margin: "0 auto" }}>
+          {/* Estado de Mis Solicitudes */}
+          <div style={{ background: "#fff", padding: "24px", borderRadius: "18px", border: "1px solid #dbeafe", boxShadow: "0 1px 4px rgba(0,0,0,0.03)" }}>
+            <h4 style={{ fontSize: "14px", fontWeight: "800", color: "#0A1628", marginBottom: "20px", textAlign: "center" }}>Mis Solicitudes de Préstamo</h4>
+            <div style={{ height: "250px" }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dataSolicitudes}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} />
+                  <YAxis fontSize={10} axisLine={false} tickLine={false} />
+                  <Tooltip cursor={{ fill: '#f0f7ff' }} />
+                  <Bar dataKey="cantidad" fill="#0077B6" radius={[4, 4, 0, 0]} barSize={40} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ marginTop: "32px", animation: "fadeUp 0.8s ease" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
-        <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
-        <p style={{ fontSize: "11px", fontWeight: "700", color: "#0077B6", letterSpacing: "2px", textTransform: "uppercase", margin: 0 }}>
-          Métricas del Laboratorio
-        </p>
+        <div style={{ height: "4px", width: "32px", background: "#0077B6", borderRadius: "99px" }} />
+        <h2 style={{ fontSize: "20px", fontWeight: "800", color: "#0A1628", margin: 0 }}>Métricas del Laboratorio</h2>
       </div>
 
       {stats.vencimientos?.length > 0 && (

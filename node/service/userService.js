@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import NotificacionService from "./notificacionService.js";
 import emailService from "./emailService.js";
 import { registrarLog } from "./logService.js";
+import { getIO } from "../socket.js";
 
 class UserService {
 
@@ -175,11 +176,22 @@ class UserService {
     return user;
   }
 
-  // ✅ Rechazar usuario
   async rechazarUsuario(id) {
     const user = await UserModel.findByPk(id);
     if (!user) throw new Error("Usuario no encontrado");
     await user.update({ estado: 'rechazado' });
+
+    try {
+      const io = getIO();
+      io.to(`user_${id}`).emit("force_logout", {
+        mensaje: "Tu cuenta ha sido rechazada por el administrador. Contacta al soporte si crees que es un error."
+      });
+    } catch (err) {
+      console.error("No se pudo emitir force_logout:", err);
+    }
+
+    await registrarLog('ADMIN', 'RECHAZAR_USUARIO', 'GESTION_USUARIOS', `Rechazado usuario: ${user.email}`);
+
     return user;
   }
 
@@ -189,6 +201,28 @@ class UserService {
     if (!user) throw new Error("Usuario no encontrado");
     const nuevoEstado = user.estado === 'inactivo' ? 'aprobado' : 'inactivo';
     await user.update({ estado: nuevoEstado });
+
+    if (nuevoEstado === 'inactivo') {
+      try {
+        const io = getIO();
+        io.to(`user_${id}`).emit("force_logout", {
+          mensaje: "Tu cuenta ha sido inactivada por el administrador."
+        });
+      } catch (err) {
+        console.error("No se pudo emitir force_logout:", err);
+      }
+      await registrarLog('ADMIN', 'INACTIVAR_USUARIO', 'GESTION_USUARIOS', `Inactivado usuario: ${user.email}`);
+    } else {
+      await NotificacionService.crearNotificacion({
+        id_usuario_origen: null,
+        id_usuario_destino: user.id_usuario,
+        titulo: '¡Cuenta Reactivada!',
+        mensaje: 'El administrador ha reactivado tu cuenta. Ya puedes acceder al sistema.',
+        tipo: 'aprobado'
+      });
+      await registrarLog('ADMIN', 'ACTIVAR_USUARIO', 'GESTION_USUARIOS', `Reactivado usuario: ${user.email}`);
+    }
+
     return { ...user.toJSON(), estado: nuevoEstado };
   }
 
