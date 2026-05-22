@@ -31,7 +31,7 @@ async function testModules() {
         { nombre: 'Equipos', endpoint: '/equipos' },
         { nombre: 'Proveedores', endpoint: '/proveedor' },
         { nombre: 'Reactivos', endpoint: '/reactivos' },
-        { nombre: 'Usuarios', endpoint: '/auth' }, 
+        { nombre: 'Usuarios', endpoint: '/auth/usuarios' }, 
         { nombre: 'Solicitudes', endpoint: '/solicitud' }
     ];
 
