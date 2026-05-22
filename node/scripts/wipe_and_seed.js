@@ -36,7 +36,7 @@ async function run() {
     if (!id_cuentadante) {
       console.log("📝 No se encontró cuentadante. Creando cuentadante de prueba...");
       await db.query(
-        "INSERT INTO cuentadantes (nom_cuentadante, apell_cuentadante, correo_cuentadante, createdat, updatedat) VALUES ('Instructor', 'SENA', 'cuentadante@sena.edu.co', NOW(), NOW());"
+        "INSERT INTO cuentadantes (nom_cuentadante, apell_cuentadante, tel_cuentadante, estado) VALUES ('Instructor', 'SENA', '3001234567', 'activo');"
       );
       cuentadante = await db.query(
         "SELECT id_cuentadante FROM cuentadantes LIMIT 1;",
@@ -54,7 +54,7 @@ async function run() {
     if (!id_proveedor) {
       console.log("📝 No se encontró proveedor. Creando proveedor de prueba...");
       await db.query(
-        "INSERT INTO proveedor (nom_proveedor, contacto_proveedor, correo_proveedor, createdat, updatedat) VALUES ('Químicos del Caribe', '3001234567', 'ventas@quimicos.com', NOW(), NOW());"
+        "INSERT INTO proveedor (nom_proveedor, apel_proveedor, tel_proveedor, dir_proveedor, estado, createdAt, updatedAt) VALUES ('Químicos del Caribe', 'S.A.S.', '3001234567', 'Calle 10 # 5-4', 1, NOW(), NOW());"
       );
       proveedor = await db.query(
         "SELECT id_proveedor FROM proveedor LIMIT 1;",
@@ -73,7 +73,7 @@ async function run() {
       console.log("📝 No se encontró usuario de prueba. Creando aprendiz de prueba...");
       // Contraseña es hashed "123456" ($2b$10$R7Msn0XyTqG0.KjBwM8Q2.9WzZ9w6pQxKj1.Yc3/R8uOa44n5aK0G)
       await db.query(
-        `INSERT INTO usuarios (nombres_apellidos, email, password, documento, rol, estado, numero_ficha, nombre_ficha, es_sena_empresa, createdat, updatedat) 
+        `INSERT INTO usuarios (nombres_apellidos, email, password, documento, rol, estado, numero_ficha, nombre_ficha, es_sena_empresa, createdAt, updatedAt) 
          VALUES ('Aprendiz SENA Prueba', 'aprendiz@sena.edu.co', '$2b$10$R7Msn0XyTqG0.KjBwM8Q2.9WzZ9w6pQxKj1.Yc3/R8uOa44n5aK0G', '1098765432', 'Aprendiz', 'aprobado', '2672134', 'ADSO - Ficha 2672134', 1, NOW(), NOW());`
       );
       usuario = await db.query(

@@ -37,10 +37,24 @@ import logRoutes from "./routes/logRoutes.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Cargamos el .env desde la carpeta node
-dotenv.config({ 
-    path: path.resolve(__dirname, '.env') 
-});
+import fs from 'fs';
+const paths = [
+    path.resolve(process.cwd(), '.env'),
+    path.resolve(__dirname, '.env'),
+    path.resolve(__dirname, '../.env'),
+    path.resolve(__dirname, '../../.env')
+];
+let loaded = false;
+for (const p of paths) {
+    if (fs.existsSync(p)) {
+        dotenv.config({ path: p });
+        loaded = true;
+        break;
+    }
+}
+if (!loaded) {
+    dotenv.config();
+}
 
 console.log("🔑 JWT_SECRET cargado:", process.env.JWT_SECRET ? "✅ SÍ" : "❌ NO CARGADO");
 console.log("📌 Puerto configurado:", process.env.PORT || 8000);
