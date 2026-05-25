@@ -8,6 +8,11 @@ import { Link } from "react-router-dom";
 const Home = () => {
   const [heroVisible, setHeroVisible] = useState(false);
   const [sectionsVisible, setSectionsVisible] = useState(false);
+  const [resumenData, setResumenData] = useState({
+    reactivosPorVencer: 0,
+    usuariosPendientes: 0,
+    solicitudesPendientes: 0
+  });
 
   const stored = sessionStorage.getItem("user");
   const userData = stored ? JSON.parse(stored) : null;
@@ -27,13 +32,9 @@ const Home = () => {
     setTimeout(() => setSectionsVisible(true), 400);
   }, []);
 
-  // ALERTA RESUMEN PARA EL ADMINISTRADOR
+  // RESUMEN DE NOVEDADES PARA EL ADMINISTRADOR (EN PANTALLA)
   useEffect(() => {
     if (!esAdmin) return;
-    
-    // Evitar que la alerta salga en cada render si ya se mostró en esta sesión
-    const alertaMostrada = sessionStorage.getItem("adminAlertShown");
-    if (alertaMostrada) return;
 
     const fetchResumen = async () => {
       try {
@@ -46,28 +47,14 @@ const Home = () => {
         const users = usersRes.data;
 
         const reactivosPorVencer = stats.vencimientos?.length || 0;
-        // Usuarios con estado pendiente
         const usuariosPendientes = users.filter(u => u.estado === "pendiente").length;
-        // Solicitudes generadas (pendientes de aprobación, asumiendo estado 1 o generadas)
-        // En DashboardCharts las activas son estado 1. Vamos a usar un contador aproximado si no hay endpoint directo
         const solicitudesPendientes = stats.solicitudes?.find(s => s.estado === 1)?.count || 0;
 
-        if (reactivosPorVencer > 0 || usuariosPendientes > 0 || solicitudesPendientes > 0) {
-          let htmlMsg = `<div style="text-align: left; font-size: 14px;">`;
-          if (usuariosPendientes > 0) htmlMsg += `<p>👤 <b>${usuariosPendientes}</b> usuarios pendientes de aprobación.</p>`;
-          if (solicitudesPendientes > 0) htmlMsg += `<p>📋 <b>${solicitudesPendientes}</b> solicitudes activas en el sistema.</p>`;
-          if (reactivosPorVencer > 0) htmlMsg += `<p style="color: #dc2626;">⚠️ <b>${reactivosPorVencer}</b> reactivos próximos a vencer.</p>`;
-          htmlMsg += `</div>`;
-
-          Swal.fire({
-            title: "¡Resumen de Novedades!",
-            html: htmlMsg,
-            icon: "info",
-            confirmButtonText: "Entendido",
-            confirmButtonColor: "#0077B6"
-          });
-          sessionStorage.setItem("adminAlertShown", "true");
-        }
+        setResumenData({
+          reactivosPorVencer,
+          usuariosPendientes,
+          solicitudesPendientes
+        });
       } catch (error) {
         console.error("Error cargando resumen para admin", error);
       }
@@ -154,6 +141,32 @@ const Home = () => {
           <img src={ecosystemLogo} alt="Ecosystem" style={{ width: "80px", height: "80px", borderRadius: "14px" }} />
         </div>
       </div>
+
+      {/* ===== RESUMEN DE NOVEDADES EN PANTALLA (ADMINISTRADOR) ===== */}
+      {esAdmin && (resumenData.reactivosPorVencer > 0 || resumenData.usuariosPendientes > 0 || resumenData.solicitudesPendientes > 0) && (
+        <div style={{
+          background: "#fff", borderRadius: "18px", padding: "24px",
+          border: "1px solid #e2e8f0", borderLeft: "5px solid #0077B6",
+          marginBottom: "30px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)",
+          opacity: sectionsVisible ? 1 : 0, transform: sectionsVisible ? "translateY(0)" : "translateY(20px)",
+          transition: "all 0.7s ease 0.1s"
+        }}>
+          <h2 style={{ fontSize: "18px", fontWeight: "800", color: "#0A1628", margin: "0 0 15px 0" }}>
+            📢 Resumen de Novedades
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "14px", color: "#334155" }}>
+            {resumenData.usuariosPendientes > 0 && (
+              <div>👤 <b>{resumenData.usuariosPendientes}</b> usuarios pendientes de aprobación.</div>
+            )}
+            {resumenData.solicitudesPendientes > 0 && (
+              <div>📋 <b>{resumenData.solicitudesPendientes}</b> solicitudes activas en el sistema.</div>
+            )}
+            {resumenData.reactivosPorVencer > 0 && (
+              <div style={{ color: "#dc2626" }}>⚠️ <b>{resumenData.reactivosPorVencer}</b> reactivos próximos a vencer.</div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ===== ACCESOS RÁPIDOS (AHORA ARRIBA) ===== */}
       <div style={{

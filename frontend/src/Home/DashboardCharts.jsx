@@ -26,22 +26,7 @@ const DashboardCharts = () => {
     }
   };
 
-  useEffect(() => {
-    if (stats && stats.vencimientos?.length > 0) {
-      import("sweetalert2").then(Swal => {
-        Swal.default.fire({
-          title: '¡Alerta de Vencimiento!',
-          text: `Reactivos en riesgo: ${stats.vencimientos.map(v => v.reactivo?.nom_reactivo).join(", ")}`,
-          icon: 'warning',
-          toast: true,
-          position: 'top-end',
-          showConfirmButton: false,
-          timer: 6000,
-          timerProgressBar: true
-        });
-      });
-    }
-  }, [stats]);
+
 
   if (loading) return <div style={{ textAlign: "center", padding: "20px" }}>Cargando métricas...</div>;
   if (!stats) return null;

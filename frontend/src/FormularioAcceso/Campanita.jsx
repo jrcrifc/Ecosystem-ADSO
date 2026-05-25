@@ -33,22 +33,8 @@ export default function Campanita({ userData, onAprobado, userRol }) {
 
     const playNotificationSound = () => {
       try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-
-        oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-
-        oscillator.type = 'sine'; 
-        oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // 880 Hz es un tono agradable (A5)
-        
-        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.05);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
-
-        oscillator.start(audioCtx.currentTime);
-        oscillator.stop(audioCtx.currentTime + 0.5);
+        const audio = new Audio("https://actions.google.com/sounds/v1/ui/message_notification.ogg");
+        audio.play().catch(e => console.log("Audio bloqueado por el navegador (requiere interacción previa):", e));
       } catch (e) {
         console.error("No se pudo reproducir el sonido de notificación", e);
       }
