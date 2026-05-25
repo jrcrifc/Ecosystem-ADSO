@@ -1,4 +1,5 @@
 import UserService from "../service/userService.js";
+import UserModel from "../models/userModel.js";
 
 export const RegisterUser = async (req, res) => {
   try {
@@ -103,5 +104,24 @@ export const ChangePassword = async (req, res) => {
     res.json({ message: "Contraseña cambiada correctamente" });
   } catch (error) {
     res.status(400).json({ message: error.message });
+  }
+};
+
+// Importar usuarios desde Excel
+export const ImportarExcel = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No se proporcionó ningún archivo Excel" });
+    }
+    const adminUser = await UserModel.findByPk(req.user.id);
+    const userEmailLog = adminUser ? adminUser.email : 'admin@laboratorio.com';
+    
+    const result = await UserService.importarExcel(req.file.buffer, userEmailLog);
+    res.json({
+      message: "Proceso de importación finalizado",
+      data: result
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };

@@ -1,14 +1,16 @@
 import express from "express";
 import UserModel from "../models/userModel.js";
 import { check } from "express-validator";
+import multer from "multer";
 import {
   RegisterUser, LoginUser, GetPendientes, 
   GetTodos, AprobarUsuario, RechazarUsuario, ToggleActivoUsuario,
-  GetProfile, UpdateProfile, ChangePassword
+  GetProfile, UpdateProfile, ChangePassword, ImportarExcel
 } from "../controller/userController.js";
-import { soloAdmin } from '../middleware/roleMiddleware.js';
+import { soloAdmin, adminOGestor } from '../middleware/roleMiddleware.js';
 import authMiddleware from '../middleware/authMiddleware.js';
 
+const upload = multer({ storage: multer.memoryStorage() });
 const router = express.Router();
 
 router.post("/", [
@@ -17,11 +19,12 @@ router.post("/", [
 ], RegisterUser);
 
 router.post("/login", LoginUser);
-router.get("/usuarios", soloAdmin, GetTodos);
+router.get("/usuarios", adminOGestor, GetTodos);
 router.get("/usuarios/pendientes", soloAdmin, GetPendientes);
 router.put("/usuarios/:id/aprobar", soloAdmin, AprobarUsuario);
 router.put("/usuarios/:id/rechazar", soloAdmin, RechazarUsuario);
 router.put("/usuarios/:id/toggle-activo", soloAdmin, ToggleActivoUsuario);
+router.post("/usuarios/importar-excel", soloAdmin, upload.single("archivo"), ImportarExcel);
 
 // RUTAS DE PERFIL
 router.get("/profile/me", authMiddleware, GetProfile);

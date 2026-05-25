@@ -32,17 +32,20 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
   const getToken = () => sessionStorage.getItem("token");
   const headers  = { Authorization: `Bearer ${getToken()}` };
 
-  // Detectar si es admin
+  // Detectar si es admin, gestor o pasante para seleccionar solicitante
   const stored = sessionStorage.getItem("user");
   const userData = stored ? JSON.parse(stored) : null;
   const userRol = (userData?.user?.rol || userData?.rol || "").toLowerCase();
   const esAdmin = userRol === "administrador" || userRol === "admin";
+  const esGestor = userRol === "gestor";
+  const esPasante = userRol === "pasante";
+  const puedeSeleccionarSolicitante = esAdmin || esGestor || esPasante;
 
   // ✅ Determinar el ROL EFECTIVO del solicitante
-  // Si es admin y seleccionó un usuario, usar el rol de ese usuario
+  // Si puede seleccionar solicitante y seleccionó un usuario, usar el rol de ese usuario
   // Si no, usar el rol del usuario logueado
   const selectedUser = usuarios.find(u => u.id_usuario === parseInt(idUsuarioSolicitante));
-  const rolEfectivo = esAdmin && selectedUser
+  const rolEfectivo = puedeSeleccionarSolicitante && selectedUser
     ? selectedUser.rol.toLowerCase()
     : userRol;
 
@@ -67,8 +70,8 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
     socket.on('equipo_actualizado', cargarEquipos);
     socket.on('solicitud_actualizada', cargarEquipos);
 
-    // ✅ Si es admin, cargar lista de usuarios aprobados
-    if (esAdmin) {
+    // ✅ Si puede seleccionar solicitante, cargar lista de usuarios aprobados
+    if (puedeSeleccionarSolicitante) {
       apiAxios
         .get("/api/auth/usuarios", { headers })
         .then(res => {
@@ -187,8 +190,8 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
       nuevosErrores.equipos = "Selecciona al menos un equipo";
     }
 
-    // ✅ Admin debe seleccionar solicitante al crear
-    if (esAdmin && !selectedSolicitud && !idUsuarioSolicitante) {
+    // ✅ Debe seleccionar solicitante al crear
+    if (puedeSeleccionarSolicitante && !selectedSolicitud && !idUsuarioSolicitante) {
       nuevosErrores.solicitante = "Debes seleccionar un solicitante";
     }
 
@@ -218,8 +221,8 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
       equipos_ids:  equiposSeleccionados,
     };
 
-    // ✅ Si es admin y eligió un solicitante, enviarlo
-    if (esAdmin && idUsuarioSolicitante) {
+    // ✅ Si eligió un solicitante, enviarlo
+    if (puedeSeleccionarSolicitante && idUsuarioSolicitante) {
       data.id_usuario_solicitante = parseInt(idUsuarioSolicitante);
     }
 
@@ -251,15 +254,22 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
     <form onSubmit={handleSubmit} noValidate>
       <div className="row g-3">
 
-        {/* ✅ ADMIN: Selector de solicitante */}
-        {esAdmin && !selectedSolicitud && (
+        {/* ✅ Selector de solicitante */}
+        {puedeSeleccionarSolicitante && !selectedSolicitud && (
           <div className="col-12">
             <label className="form-label fw-semibold" style={{ color: "#023E8A" }}>
               👤 Solicitante <span style={{ color: "#dc3545" }}>*</span>
             </label>
             <p style={{ fontSize: "12px", color: "#64748b", margin: "0 0 8px" }}>
-              Como administrador, selecciona el usuario que está realizando la solicitud.
+              Selecciona el usuario que está realizando la solicitud de préstamo.
             </p>
+
+            {/* Mensaje de usuario nuevo arriba si no existe en la BD */}
+            {busquedaUsuario.trim() !== "" && usuariosFiltrados.length === 0 && (
+              <div style={{ color: "#dc3545", fontWeight: "bold", fontSize: "13px", marginBottom: "8px" }}>
+                ⚠️ Es usuario nuevo
+              </div>
+            )}
 
             {/* Búsqueda */}
             <input
@@ -309,7 +319,9 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
                 border: "1px solid #e0e0e0", borderRadius: "8px", padding: "6px"
               }}>
                 {usuariosFiltrados.length === 0 ? (
-                  <p className="text-muted text-center small mt-2">No se encontraron usuarios</p>
+                  <p style={{ color: "#dc3545", fontWeight: "bold", textAlign: "center", fontSize: "13px", margin: "10px 0" }}>
+                    ⚠️ Es usuario nuevo
+                  </p>
                 ) : usuariosFiltrados.map(u => (
                   <div key={u.id_usuario}
                     onClick={() => { setIdUsuarioSolicitante(String(u.id_usuario)); setBusquedaUsuario(""); }}

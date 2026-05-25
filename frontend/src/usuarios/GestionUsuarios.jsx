@@ -127,6 +127,96 @@ export default function GestionUsuarios() {
     }
   };
 
+  const handleImportarExcel = async () => {
+    const { value: file } = await Swal.fire({
+      title: '📥 Importar Usuarios desde Excel',
+      html: `
+        <div style="text-align: left; font-size: 14px; color: #475569; line-height: 1.5;">
+          <p>Sube un archivo de Excel (<strong>.xlsx</strong> o <strong>.xls</strong>) con las siguientes columnas:</p>
+          <ul style="padding-left: 20px; margin-bottom: 15px; font-size: 13px;">
+            <li><strong>documento</strong> (identificación, solo números)</li>
+            <li><strong>nombres_apellidos</strong> (nombre completo)</li>
+            <li><strong>email</strong> (correo único)</li>
+            <li><strong>rol</strong> (Aprendiz, Pasante, Gestor, Instructor)</li>
+            <li><strong>numero_ficha</strong> (opcional)</li>
+            <li><strong>nombre_ficha</strong> (opcional)</li>
+            <li><strong>es_sena_empresa</strong> (opcional: si/no)</li>
+          </ul>
+          <p style="font-size: 12px; color: #dc3545; font-weight: 600;">
+            * Nota: La contraseña predeterminada del usuario será: <strong>Sena[Documento]</strong> (Ej: Sena123456789).
+          </p>
+        </div>
+      `,
+      input: 'file',
+      inputAttributes: {
+        'accept': '.xlsx, .xls',
+        'aria-label': 'Subir archivo Excel'
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Subir archivo',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#0077B6',
+      customClass: {
+        input: 'form-control form-control-sm'
+      }
+    });
+
+    if (!file) return;
+
+    Swal.fire({
+      title: 'Procesando archivo...',
+      text: 'Espere un momento por favor',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    const formData = new FormData();
+    formData.append('archivo', file);
+
+    try {
+      const res = await apiAxios.post("/api/auth/usuarios/importar-excel", formData, {
+        headers: {
+          ...headers,
+          "Content-Type": "multipart/form-data"
+        }
+      });
+
+      const { creados, omitidos, errores } = res.data.data;
+
+      let htmlResult = `
+        <div style="text-align: left; font-size: 14px;">
+          <p style="color: #2e7d32; font-weight: 600;">✅ Creados exitosamente: ${creados} usuarios</p>
+          <p style="color: #64748b;">ℹ️ Omitidos (ya existen): ${omitidos} usuarios</p>
+      `;
+
+      if (errores && errores.length > 0) {
+        htmlResult += `
+          <hr style="margin: 10px 0; border-top: 1px solid #cbd5e1;"/>
+          <p style="color: #c62828; font-weight: bold; margin-bottom: 5px;">⚠️ Advertencias/Errores (${errores.length}):</p>
+          <div style="max-height: 150px; overflow-y: auto; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; padding: 10px; font-size: 11.5px; font-family: monospace; color: #9f1239; line-height: 1.4;">
+            ${errores.map(e => `• ${e}`).join('<br/>')}
+          </div>
+        `;
+      }
+
+      htmlResult += `</div>`;
+
+      Swal.fire({
+        title: '¡Importación Finalizada!',
+        html: htmlResult,
+        icon: (errores && errores.length > 0) ? 'warning' : 'success',
+        confirmButtonText: 'Aceptar',
+        confirmButtonColor: '#0077B6'
+      });
+
+      cargar();
+    } catch (err) {
+      Swal.fire("Error", err.response?.data?.message || "Ocurrió un error al procesar el archivo Excel", "error");
+    }
+  };
+
 
 
   const estadoBadge = (estado) => {
@@ -248,9 +338,9 @@ export default function GestionUsuarios() {
       </div>
       <p style={{ color: "#64748b", marginBottom: "24px" }}>Aprueba, rechaza, activa o inactiva usuarios del sistema</p>
 
-      {/* Buscador */}
-      <div className="row mb-4">
-        <div className="col-md-5">
+      {/* Buscador e Importador */}
+      <div className="row mb-4 align-items-center">
+        <div className="col-md-7">
           <input
             type="text"
             className="form-control"
@@ -259,6 +349,25 @@ export default function GestionUsuarios() {
             onChange={(e) => setFilterText(e.target.value)}
             style={{ borderColor: "#dbeafe", borderRadius: "10px", padding: "10px 15px" }}
           />
+        </div>
+        <div className="col-md-5 text-end">
+          <button 
+            onClick={handleImportarExcel}
+            className="btn text-white" 
+            style={{ 
+              background: "linear-gradient(135deg, #0077B6, #023E8A)", 
+              borderRadius: "10px", 
+              fontWeight: "600",
+              padding: "10px 20px",
+              border: "none",
+              boxShadow: "0 2px 4px rgba(0, 119, 182, 0.2)",
+              transition: "transform 0.15s ease, opacity 0.15s ease"
+            }}
+            onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.02)"; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
+          >
+            📥 Importar Excel
+          </button>
         </div>
       </div>
 

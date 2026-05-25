@@ -6,6 +6,7 @@ import NotificacionService from "./notificacionService.js";
 import emailService from "./emailService.js";
 import { registrarLog } from "./logService.js";
 import { getIO } from "../socket.js";
+import XLSX from "xlsx";
 
 class UserService {
 
@@ -261,6 +262,122 @@ class UserService {
     await registrarLog(user.email, 'CAMBIO_PASSWORD', 'PERFIL', `Contraseña actualizada correctamente`);
 
     return true;
+  }
+
+  // ✅ Importar usuarios desde un archivo Excel
+  async importarExcel(buffer, userEmailLog) {
+    const workbook = XLSX.read(buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const data = XLSX.utils.sheet_to_json(sheet);
+
+    let creados = 0;
+    let omitidos = 0;
+    let errores = [];
+
+    const rolesValidos = ['Aprendiz', 'Pasante', 'Gestor', 'Instructor', 'Administrador'];
+
+    for (let i = 0; i < data.length; i++) {
+      const row = data[i];
+      const filaNum = i + 2; // Fila 1 suele ser la cabecera
+
+      // Mapear columnas de forma flexible
+      let documento = "";
+      let nombres_apellidos = "";
+      let email = "";
+      let rol = "Aprendiz";
+      let numero_ficha = null;
+      let nombre_ficha = null;
+      let es_sena_empresa = false;
+
+      for (const key of Object.keys(row)) {
+        const normalizedKey = key.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+        const val = String(row[key] ?? "").trim();
+
+        if (normalizedKey === "documento" || normalizedKey === "identificacion" || normalizedKey === "documento de identidad" || normalizedKey === "cedula") {
+          documento = val;
+        } else if (normalizedKey === "nombres_apellidos" || normalizedKey === "nombres" || normalizedKey === "apellidos" || normalizedKey === "nombres y apellidos" || normalizedKey === "nombre completo") {
+          nombres_apellidos = val;
+        } else if (normalizedKey === "email" || normalizedKey === "correo" || normalizedKey === "correo electronico") {
+          email = val.toLowerCase();
+        } else if (normalizedKey === "rol") {
+          rol = val;
+        } else if (normalizedKey === "numero_ficha" || normalizedKey === "ficha" || normalizedKey === "numero de ficha") {
+          numero_ficha = val;
+        } else if (normalizedKey === "nombre_ficha" || normalizedKey === "nombre de ficha" || normalizedKey === "programa" || normalizedKey === "programa de formacion") {
+          nombre_ficha = val;
+        } else if (normalizedKey === "es_sena_empresa" || normalizedKey === "sena empresa" || normalizedKey === "sena-empresa") {
+          es_sena_empresa = val.toLowerCase() === "si" || val.toLowerCase() === "sí" || val.toLowerCase() === "true" || val === "1";
+        }
+      }
+
+      // Validar campos obligatorios
+      if (!documento || !nombres_apellidos || !email) {
+        errores.push(`Fila ${filaNum}: Faltan campos requeridos (Documento, Nombres/Apellidos o Email)`);
+        continue;
+      }
+
+      if (!/^\d+$/.test(documento)) {
+        errores.push(`Fila ${filaNum} (${nombres_apellidos}): El documento debe contener solo números`);
+        continue;
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        errores.push(`Fila ${filaNum} (${nombres_apellidos}): El formato del correo electrónico no es válido`);
+        continue;
+      }
+
+      // Normalizar Rol
+      const rolEncontrado = rolesValidos.find(r => r.toLowerCase() === rol.toLowerCase());
+      if (!rolEncontrado) {
+        errores.push(`Fila ${filaNum} (${nombres_apellidos}): El rol "${rol}" no es válido. Roles permitidos: ${rolesValidos.join(", ")}`);
+        continue;
+      }
+      rol = rolEncontrado;
+
+      try {
+        // Verificar si ya existe por documento o email
+        const existDoc = await UserModel.findOne({ where: { documento } });
+        if (existDoc) {
+          omitidos++;
+          continue;
+        }
+
+        const existEmail = await UserModel.findOne({ where: { email } });
+        if (existEmail) {
+          omitidos++;
+          continue;
+        }
+
+        // Crear usuario
+        const defaultPasswordText = `Sena${documento}`;
+        const hashedPassword = await bcrypt.hash(defaultPasswordText, 10);
+
+        await UserModel.create({
+          uuid: uuidv4(),
+          documento,
+          nombres_apellidos,
+          email,
+          password: hashedPassword,
+          rol,
+          estado: 'aprobado', // Los importados por Excel se aprueban automáticamente
+          numero_ficha: numero_ficha || null,
+          nombre_ficha: nombre_ficha || null,
+          es_sena_empresa: !!es_sena_empresa
+        });
+
+        creados++;
+      } catch (err) {
+        errores.push(`Fila ${filaNum} (${nombres_apellidos}): ${err.message}`);
+      }
+    }
+
+    if (creados > 0) {
+      await registrarLog(userEmailLog || 'ADMIN', 'IMPORTAR_EXCEL', 'GESTION_USUARIOS', `Se importaron ${creados} usuarios desde Excel`);
+    }
+
+    return { creados, omitidos, errores };
   }
 }
 
