@@ -143,10 +143,11 @@ const Home = () => {
       </div>
 
       {/* ===== RESUMEN DE NOVEDADES EN PANTALLA (ADMINISTRADOR) ===== */}
-      {esAdmin && (resumenData.reactivosPorVencer > 0 || resumenData.usuariosPendientes > 0 || resumenData.solicitudesPendientes > 0) && (
+      {esAdmin && (
         <div style={{
           background: "#fff", borderRadius: "18px", padding: "24px",
-          border: "1px solid #e2e8f0", borderLeft: "5px solid #0077B6",
+          border: "1px solid #e2e8f0", 
+          borderLeft: (resumenData.reactivosPorVencer > 0 || resumenData.usuariosPendientes > 0 || resumenData.solicitudesPendientes > 0) ? "5px solid #0077B6" : "5px solid #10b981",
           marginBottom: "30px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)",
           opacity: sectionsVisible ? 1 : 0, transform: sectionsVisible ? "translateY(0)" : "translateY(20px)",
           transition: "all 0.7s ease 0.1s"
@@ -155,14 +156,22 @@ const Home = () => {
             📢 Resumen de Novedades
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "14px", color: "#334155" }}>
-            {resumenData.usuariosPendientes > 0 && (
-              <div>👤 <b>{resumenData.usuariosPendientes}</b> usuarios pendientes de aprobación.</div>
-            )}
-            {resumenData.solicitudesPendientes > 0 && (
-              <div>📋 <b>{resumenData.solicitudesPendientes}</b> solicitudes activas en el sistema.</div>
-            )}
-            {resumenData.reactivosPorVencer > 0 && (
-              <div style={{ color: "#dc2626" }}>⚠️ <b>{resumenData.reactivosPorVencer}</b> reactivos próximos a vencer.</div>
+            {(resumenData.reactivosPorVencer === 0 && resumenData.usuariosPendientes === 0 && resumenData.solicitudesPendientes === 0) ? (
+              <div style={{ color: "#047857", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}>
+                <span>✅</span> Todo está al día. No hay pendientes por revisar.
+              </div>
+            ) : (
+              <>
+                {resumenData.usuariosPendientes > 0 && (
+                  <div>👤 <b>{resumenData.usuariosPendientes}</b> usuarios pendientes de aprobación.</div>
+                )}
+                {resumenData.solicitudesPendientes > 0 && (
+                  <div>📋 <b>{resumenData.solicitudesPendientes}</b> solicitudes activas en el sistema.</div>
+                )}
+                {resumenData.reactivosPorVencer > 0 && (
+                  <div style={{ color: "#dc2626" }}>⚠️ <b>{resumenData.reactivosPorVencer}</b> reactivos próximos a vencer.</div>
+                )}
+              </>
             )}
           </div>
         </div>
