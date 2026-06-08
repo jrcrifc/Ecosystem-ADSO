@@ -1,3 +1,10 @@
+// ============================================================
+// 🛠️ REPARACIÓN COMPLETA DE TABLAS DEL INVENTARIO (full_fix.js)
+// Este script automatiza la limpieza y corrección de llaves primarias
+// con valor 0 y la habilitación de AUTO_INCREMENT para las tablas
+// clave de inventario: reactivos, movimientos, salidas y proveedores.
+// ============================================================
+
 import db from '../node/database/db.js';
 
 async function fullRepair() {
@@ -32,3 +39,4 @@ async function fullRepair() {
 }
 
 fullRepair();
+

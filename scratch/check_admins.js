@@ -1,3 +1,10 @@
+// ============================================================
+// 👥 COMPROBACIÓN DE ADMINISTRADORES (check_admins.js)
+// Este script consulta e imprime por consola (usando console.table)
+// todos los usuarios con rol de 'Administrador' registrados en la BD.
+// Si no hay administradores, lista los roles disponibles.
+// ============================================================
+
 import db from '../node/database/db.js';
 
 async function checkAdmins() {
@@ -20,3 +27,4 @@ async function checkAdmins() {
 }
 
 checkAdmins();
+

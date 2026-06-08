@@ -1,28 +1,42 @@
+// Archivo: crudsolicitud.jsx — CRUD principal de solicitudes de préstamo con tabla, filtros, modales de detalle y edición
+
+// Importa la instancia centralizada de Axios para peticiones HTTP
 import apiAxios from "../api/axiosConfig.js";
+// Importa los hooks de React para manejar estado y efectos secundarios
 import { useState, useEffect } from "react";
+// Importa useNavigate para redirigir entre rutas
 import { useNavigate } from "react-router-dom";
+// Importa el componente DataTable para renderizar tablas con paginación y búsqueda
 import DataTable from "react-data-table-component";
+// Importa SweetAlert2 para mostrar alertas interactivas al usuario
 import Swal from "sweetalert2";
+// Importa la librería Bootstrap para manipular modales
 import * as bootstrap from "bootstrap";
+// Importa el formulario de solicitud para usarlo dentro del modal
 import SolicitudPrestamoForm from "./solicitudform.jsx";
+// Importa configuraciones predefinidas de paginación y estilos para la tabla
 import { paginationComponentOptions, tableCustomStyles } from "../config/dataTableConfig";
+// Importa la instancia de Socket.io para comunicación en tiempo real
 import socket from "../socket.js";
 
+// Función que devuelve estilos visuales según el estado del equipo
 const getBadgeEquipo = (estado) => ({
   disponible: { bg: "#d1fae5", color: "#065f46", label: "Disponible" },
   mantenimiento: { bg: "#fef3c7", color: "#92400e", label: "Mantenimiento" },
   "no disponible": { bg: "#fee2e2", color: "#991b1b", label: "No disponible" },
 }[estado] || { bg: "#f3f4f6", color: "#374151", label: estado || "Sin estado" });
 
+// Función que formatea una fecha ISO a formato legible local
 const formatDateTime = (isoString) => {
+  // Retorna un guión si no hay fecha
   if (!isoString) return "-";
+  // Convierte el string ISO a objeto Date
   const d = new Date(isoString);
-  
-  // Si la fecha fue guardada con hora 00:00:00 UTC (solo fecha, sin hora)
+  // Si la fecha tiene hora 00:00:00 UTC, extrae solo la fecha y asigna 7:00 AM
   if (isoString.endsWith("T00:00:00.000Z") || isoString.includes("T00:00:00")) {
     return `${isoString.substring(0, 10)} 07:00 AM`;
   }
-  
+  // Retorna la fecha formateada en locale de Colombia
   return d.toLocaleString('es-CO', { 
     year: 'numeric', 
     month: '2-digit', 
@@ -33,15 +47,18 @@ const formatDateTime = (isoString) => {
   });
 };
 
+// Componente que renderiza las pills de equipos dentro de la celda de la tabla
 const EquiposPills = ({ equipos }) => {
+  // Estado para controlar si la lista de equipos está expandida
   const [expandido, setExpandido] = useState(false);
+  // Si no hay equipos, muestra un texto por defecto
   if (!equipos || equipos.length === 0)
     return <span className="text-muted small">Sin equipos</span>;
-
+  // Muestra solo los primeros dos equipos si no está expandido
   const visibles = expandido ? equipos : equipos.slice(0, 2);
-
   return (
     <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", alignItems: "center" }}>
+      {/* Itera sobre los equipos visibles para pintar cada pill */}
       {visibles.map((eq) => (
         <span
           key={eq.id_equipo}
@@ -55,6 +72,7 @@ const EquiposPills = ({ equipos }) => {
           {eq.nom_equipo}
         </span>
       ))}
+      {/* Si hay más de dos equipos, muestra botón para expandir/colapsar */}
       {equipos.length > 2 && (
         <button
           onClick={() => setExpandido(!expandido)}
@@ -71,22 +89,31 @@ const EquiposPills = ({ equipos }) => {
   );
 };
 
+// Componente principal del CRUD de solicitudes de préstamo
 const CrudSolicitudPrestamos = () => {
+  // Hook para navegación programática entre rutas
   const navigate = useNavigate();
+  // Estado que almacena el listado de solicitudes obtenidas del backend
   const [solicitudes, setSolicitudes] = useState([]);
+  // Estado que almacena el término de búsqueda para filtrar la tabla
   const [filterText, setFilterText] = useState("");
+  // Estado que almacena la solicitud seleccionada para editar
   const [selectedSolicitud, setSelectedSolicitud] = useState(null);
-  const [verDetalle, setVerDetalle] = useState(null); // modal detalle
-
+  // Estado que almacena la solicitud seleccionada para ver detalle
+  const [verDetalle, setVerDetalle] = useState(null);
+  // Obtiene el token de autenticación desde sessionStorage
   const getToken = () => sessionStorage.getItem("token");
-
-  // ✅ Detectar usuario y rol
+  // Lee los datos del usuario desde sessionStorage
   const stored = sessionStorage.getItem("user");
+  // Parsea los datos del usuario si existen
   const userData = stored ? JSON.parse(stored) : null;
+  // Determina el rol del usuario actual en minúsculas
   const userRol = (userData?.user?.rol || userData?.rol || "").toLowerCase();
+  // Obtiene el ID del usuario actual
   const userId = userData?.id_usuario || userData?.user?.id_usuario;
+  // Verifica si el usuario es administrador
   const esAdmin = userRol === "administrador" || userRol === "admin";
-
+  // Definición de las columnas de la tabla DataTable
   const columns = [
     {
       name: "ID",
@@ -103,6 +130,7 @@ const CrudSolicitudPrestamos = () => {
       minWidth: "150px",
       grow: 1,
       wrap: true,
+      // Oculta la columna si el usuario no es administrador
       omit: !esAdmin,
     },
     {
@@ -129,6 +157,7 @@ const CrudSolicitudPrestamos = () => {
       selector: r => r.ultimoEstado || "generado",
       sortable: true,
       width: "150px",
+      // Renderiza el estado con colores según el valor
       cell: r => {
         const colores = {
           generado: { bg: "#f1f5f9", color: "#475569" },
@@ -155,6 +184,7 @@ const CrudSolicitudPrestamos = () => {
       name: "Activo",
       width: "90px",
       center: true,
+      // Renderiza un badge con el estado activo/inactivo
       cell: r => (
         <span className={`px-2 py-1 rounded-pill text-white fw-semibold ${r.estado === 1 ? "bg-success" : "bg-danger"}`}
           style={{ fontSize: "0.7rem" }}>
@@ -166,6 +196,7 @@ const CrudSolicitudPrestamos = () => {
       name: "Acciones",
       center: true,
       width: "120px",
+      // Renderiza los botones de acción para cada fila
       cell: r => (
         <div className="d-flex gap-1 justify-content-center">
           <button
@@ -179,6 +210,7 @@ const CrudSolicitudPrestamos = () => {
             className="btn btn-sm btn-warning"
             data-bs-toggle={['generado', 'aceptado'].includes(r.ultimoEstado) ? "modal" : ""}
             data-bs-target={['generado', 'aceptado'].includes(r.ultimoEstado) ? "#modalSolicitud" : ""}
+            // Maneja el clic para editar, muestra advertencia si el estado no lo permite
             onClick={() => {
               if (!['generado', 'aceptado'].includes(r.ultimoEstado)) {
                 Swal.fire({
@@ -207,32 +239,30 @@ const CrudSolicitudPrestamos = () => {
       ),
     },
   ];
-
+  // Efecto que carga las solicitudes al montar el componente y configura listeners
   useEffect(() => {
     cargarSolicitudes();
-
-    // ✅ Escuchar cambios en tiempo real para refrescar la tabla
+    // Escucha cambios en tiempo real para refrescar la tabla
     socket.on('solicitud_actualizada', cargarSolicitudes);
-
-    // ✅ Event listener para modal de Bootstrap para limpieza garantizada
+    // Obtiene la referencia al modal de Bootstrap para edición
     const modalSolicitud = document.getElementById("modalSolicitud");
-
+    // Función que limpia los backdrops huérfanos del modal
     const cleanupBackdrop = () => {
       document.body.classList.remove("modal-open");
       document.body.style.removeProperty("overflow");
       document.body.style.removeProperty("padding-right");
       document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
     };
-
+    // Función que se ejecuta cuando se oculta el modal, limpiando selección y backdrop
     const handleSolicitudHidden = () => {
       setSelectedSolicitud(null);
       cleanupBackdrop();
     };
-
+    // Si existe el modal, le agrega el listener de ocultamiento
     if (modalSolicitud) {
       modalSolicitud.addEventListener("hidden.bs.modal", handleSolicitudHidden);
     }
-
+    // Función de limpieza al desmontar el componente
     return () => {
       socket.off('solicitud_actualizada', cargarSolicitudes);
       if (modalSolicitud) {
@@ -240,13 +270,13 @@ const CrudSolicitudPrestamos = () => {
       }
     };
   }, []);
-
+  // Función asíncrona para obtener todas las solicitudes desde la API
   const cargarSolicitudes = async () => {
     try {
       const res = await apiAxios.get("/api/solicitud", {
         headers: { Authorization: `Bearer ${getToken()}` }
       });
-      // ✅ Si NO es admin, filtrar solo las solicitudes del usuario actual
+      // Si es admin asigna todas las solicitudes, si no filtra solo las del usuario actual
       if (esAdmin) {
         setSolicitudes(res.data);
       } else {
@@ -257,9 +287,11 @@ const CrudSolicitudPrestamos = () => {
       Swal.fire("Error", "No se pudieron cargar las solicitudes", "error");
     }
   };
-
+  // Función para alternar el estado activo/inactivo de una solicitud
   const toggleEstado = async (id, estadoActual) => {
+    // Calcula el nuevo estado inverso al actual
     const nuevoEstado = estadoActual === 1 ? 0 : 1;
+    // Muestra confirmación al usuario con SweetAlert2
     const result = await Swal.fire({
       title: "¿Cambiar estado?",
       text: `La solicitud pasará a ${nuevoEstado === 1 ? "ACTIVO" : "INACTIVO"}`,
@@ -267,11 +299,14 @@ const CrudSolicitudPrestamos = () => {
       confirmButtonColor: nuevoEstado === 1 ? "#0077B6" : "#dc3545",
       confirmButtonText: "Sí, cambiar", cancelButtonText: "Cancelar",
     });
+    // Sale si el usuario canceló la operación
     if (!result.isConfirmed) return;
     try {
+      // Envía la petición PUT para cambiar el estado en el backend
       await apiAxios.put(`/api/solicitud/estado/${id}`, { estado: nuevoEstado }, {
         headers: { Authorization: `Bearer ${getToken()}` }
       });
+      // Actualiza el estado localmente sin recargar toda la lista
       setSolicitudes(prev =>
         prev.map(item => item.id_solicitud === id ? { ...item, estado: nuevoEstado } : item)
       );
@@ -280,7 +315,7 @@ const CrudSolicitudPrestamos = () => {
       Swal.fire("Error", "No se pudo cambiar el estado", "error");
     }
   };
-
+  // Función para cerrar el modal con limpieza de backdrop
   const hideModal = () => {
     const modal = document.getElementById("modalSolicitud");
     if (modal) {
@@ -291,15 +326,14 @@ const CrudSolicitudPrestamos = () => {
         const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
         bsModal.hide();
       }
-      
-      // ✅ Limpieza inmediata para evitar backdrops huérfanos por re-renders rápidos de React
+      // Limpieza inmediata para evitar backdrops huérfanos por re-renders rápidos
       document.body.classList.remove("modal-open");
       document.body.style.removeProperty("overflow");
       document.body.style.removeProperty("padding-right");
       document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
     }
   };
-
+  // Filtra las solicitudes localmente según el texto de búsqueda ingresado
   const filtered = solicitudes.filter(item => {
     const search = filterText.toLowerCase().trim();
     return (
@@ -312,14 +346,14 @@ const CrudSolicitudPrestamos = () => {
       )
     );
   });
-
   return (
     <div className="mt-4" style={{ padding: "0 16px" }}>
+      {/* Encabezado de la página con barra decorativa azul y título */}
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
         <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
         <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Solicitudes de Préstamo</h2>
       </div>
-
+      {/* Fila con el campo de búsqueda y botones de acción */}
       <div className="row mb-3 align-items-center">
         <div className="col-md-5">
           <input
@@ -342,7 +376,7 @@ const CrudSolicitudPrestamos = () => {
           </button>
         </div>
       </div>
-
+      {/* Contenedor de la tabla con bordes redondeados */}
       <div style={{ borderRadius: "14px", overflow: "hidden", border: "1px solid #dbeafe" }}>
         <DataTable
           columns={columns}
@@ -364,8 +398,7 @@ const CrudSolicitudPrestamos = () => {
           paginationPerPage={10}
         />
       </div>
-
-      {/* Modal editar/crear */}
+      {/* Modal editar/crear solicitud */}
       <div className="modal fade" id="modalSolicitud" tabIndex="-1">
         <div className="modal-dialog modal-lg">
           <div className="modal-content" style={{ borderRadius: "16px", overflow: "hidden" }}>
@@ -386,8 +419,7 @@ const CrudSolicitudPrestamos = () => {
           </div>
         </div>
       </div>
-
-      {/* Modal detalle de equipos */}
+      {/* Modal detalle de equipos de la solicitud */}
       {verDetalle && (
         <div className="modal show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <div className="modal-dialog modal-md modal-dialog-centered">
@@ -399,7 +431,7 @@ const CrudSolicitudPrestamos = () => {
                 <button className="btn-close btn-close-white" onClick={() => setVerDetalle(null)}></button>
               </div>
               <div className="modal-body" style={{ padding: "20px" }}>
-
+                {/* Sección con datos generales de la solicitud */}
                 <div className="mb-3 p-3 rounded" style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0" }}>
                   <div className="row g-2 small">
                     <div className="col-6">
@@ -424,15 +456,16 @@ const CrudSolicitudPrestamos = () => {
                     </div>
                   </div>
                 </div>
-
+                {/* Listado de equipos solicitados con badge de cantidad */}
                 <h6 className="fw-bold mb-3" style={{ color: "#023E8A", fontSize: "14px", display: "flex", alignItems: "center" }}>
                   📦 Equipos solicitados
                   <span className="badge ms-2" style={{ background: "#e0f2fe", color: "#0369a1", fontSize: "11px" }}>{verDetalle.equipos?.length || 0}</span>
                 </h6>
-
+                {/* Mensaje si no hay equipos asignados */}
                 {(!verDetalle.equipos || verDetalle.equipos.length === 0) ? (
                   <p className="text-muted small text-center my-3">No hay equipos asignados</p>
                 ) : (
+                  // Itera sobre los equipos para mostrar cada uno como tarjeta
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     {verDetalle.equipos.map(eq => {
                       const placa = (eq.no_placa && eq.no_placa !== 0 && eq.no_placa !== '0') ? eq.no_placa : null;

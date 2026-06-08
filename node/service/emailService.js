@@ -1,21 +1,35 @@
+// ============================================================
+// 📧 SERVICIO DE CORREO ELECTRÓNICO (EmailService)
+// Este servicio se encarga de enviar correos electrónicos transaccionales
+// (notificaciones de aprobación, registro de nuevos usuarios, restablecimiento de contraseña).
+// Admite una configuración dinámica buscando primero en la base de datos (tabla configuracion)
+// y usando las variables de entorno (.env) como mecanismo de fallback.
+// ============================================================
+
+// Importa nodemailer para el envío de correos electrónicos
 import nodemailer from "nodemailer";
+// Importa dotenv para cargar variables de entorno
 import dotenv from "dotenv";
+// Importa el modelo de configuración para obtener credenciales dinámicas
 import ConfigModel from "../models/configModel.js";
 
+// Carga las variables de entorno desde el archivo .env
 dotenv.config();
 
+// Define la clase de servicio para el envío de correos electrónicos
 class EmailService {
-  /**
-   * Obtiene la configuración desde la base de datos con fallback al .env
-   */
+  
+  // Obtiene la configuración de SMTP desde la base de datos o usa variables de entorno como fallback
   async getConfig() {
     try {
+      // Consulta todas las configuraciones guardadas en la base de datos
       const configs = await ConfigModel.findAll();
+      // Crea un mapa de clave-valor con las configuraciones obtenidas
       const configMap = {};
       configs.forEach(c => {
         configMap[c.clave] = c.valor;
       });
-
+      // Retorna las credenciales priorizando la base de datos y usando .env como fallback
       return {
         user: configMap['EMAIL_USER'] || process.env.EMAIL_USER,
         pass: configMap['EMAIL_PASS'] || process.env.EMAIL_PASS,
@@ -23,7 +37,9 @@ class EmailService {
         port: parseInt(configMap['EMAIL_PORT'] || process.env.EMAIL_PORT || "587")
       };
     } catch (error) {
+      // Muestra en consola si falla la carga desde la base de datos
       console.error("❌ Error al cargar config de DB:", error.message);
+      // Retorna las variables de entorno como plan de contingencia
       return {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
@@ -33,18 +49,18 @@ class EmailService {
     }
   }
 
-  /**
-   * Envía un correo electrónico cargando config dinámica
-   */
+  // Envía un correo electrónico genérico validando credenciales
   async sendEmail(to, subject, text, html) {
+    // Obtiene la configuración SMTP dinámica
     const config = await this.getConfig();
-
+    // Valida si las credenciales de correo están completas antes de intentar enviar
     if (!config.user || !config.pass || config.user.includes('tu_correo')) {
+      // Muestra advertencia si no hay credenciales válidas
       console.warn("⚠️ EmailService: No hay credenciales válidas en DB ni .env. Saltando envío.");
       return;
     }
-
     try {
+      // Crea el transportador de nodemailer con la configuración obtenida
       const transporter = nodemailer.createTransport({
         host: config.host,
         port: config.port,
@@ -54,7 +70,7 @@ class EmailService {
           pass: config.pass,
         },
       });
-
+      // Envía el correo con los datos proporcionados
       const info = await transporter.sendMail({
         from: `"Ecosystem SENA" <${config.user}>`,
         to,
@@ -62,36 +78,39 @@ class EmailService {
         text,
         html,
       });
+      // Muestra en consola el ID del mensaje enviado exitosamente
       console.log("📧 Correo enviado exitosamente (Config Dinámica): %s", info.messageId);
     } catch (error) {
+      // Muestra en consola si ocurre un error al enviar el correo
       console.error("❌ Error al enviar correo dinámico:", error);
     }
   }
 
-  /**
-   * Notifica aprobación de cuenta
-   */
+  // Envía una notificación de felicitación al usuario aprobado
   async sendAprovalEmail(to, name) {
+    // Define el asunto del correo
     const subject = "¡Tu cuenta en Ecosystem ha sido aprobada!";
+    // Define el contenido HTML del correo de aprobación
     const html = `
       <div style="font-family: sans-serif; color: #333;">
         <h2 style="color: #0077B6;">Hola, ${name}</h2>
         <p>Nos complace informarte que tu cuenta ha sido <strong>aprobada</strong> por el administrador.</p>
         <p>Ya puedes acceder a todas las funcionalidades del Laboratorio Ambiental.</p>
         <br>
-        <a href="http://localhost:5173" style="background: #0077B6; color: white; padding: 10px 20px; text-decoration: none; borderRadius: 5px;">Entrar a Ecosystem</a>
+        <a href="http://localhost:5173" style="background: #0077B6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Entrar a Ecosystem</a>
         <br><br>
         <p>Saludos,<br>Equipo Ecosystem</p>
       </div>
     `;
+    // Envía el correo usando el método genérico
     await this.sendEmail(to, subject, "Tu cuenta ha sido aprobada", html);
   }
 
-  /**
-   * Notifica al administrador sobre un nuevo registro
-   */
+  // Envía un correo a los administradores sobre un nuevo registro pendiente
   async notifyAdminNewUser(adminEmail, userData) {
+    // Define el asunto del correo
     const subject = "👤 Nuevo registro pendiente - ECOSYSTEM";
+    // Define el contenido HTML con los datos del nuevo usuario
     const html = `
       <div style="font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden;">
         <div style="background: linear-gradient(135deg, #0077B6, #023E8A); padding: 30px; text-align: center; color: white;">
@@ -122,7 +141,7 @@ class EmailService {
               </tr>
             </table>
           </div>
-
+ 
           <p>Por favor, ingresa al panel administrativo para aprobar o rechazar esta solicitud.</p>
           
           <div style="text-align: center; margin-top: 30px;">
@@ -134,8 +153,10 @@ class EmailService {
         </div>
       </div>
     `;
+    // Envía el correo usando el método genérico
     await this.sendEmail(adminEmail, subject, `Nuevo registro: ${userData.nombres_apellidos}`, html);
   }
 }
 
+// Exporta una instancia única del servicio para usar como singleton
 export default new EmailService();

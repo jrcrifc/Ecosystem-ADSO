@@ -1,10 +1,19 @@
+// Archivo: GestionEstadoEquipo.jsx — Panel para gestionar el estado operativo de equipos (disponible, mantenimiento) con tabs de filtro
+
+// Importa React y hooks de estado y efectos
 import React, { useEffect, useState } from "react";
+// Importa useNavigate para redirigir entre rutas
 import { useNavigate } from "react-router-dom";
+// Importa Axios para peticiones HTTP
 import apiAxios from "../api/axiosConfig";
+// Importa SweetAlert2 para alertas
 import Swal from "sweetalert2";
+// Importa DataTable para renderizar tablas con paginación
 import DataTable from "react-data-table-component";
+// Importa configuraciones predefinidas de paginación y estilos para la tabla
 import { paginationComponentOptions, tableCustomStyles } from "../config/dataTableConfig";
 
+// Configuración visual de los estados operativos
 const estadoConfig = {
   disponible:      { icon: "✅", color: "#0077B6", bg: "#e0f2fe", border: "#bae6fd", label: "Disponible" },
   mantenimiento:   { icon: "🔧", color: "#d97706", bg: "#fef3c7", border: "#fde68a", label: "Mantenimiento" },
@@ -12,18 +21,21 @@ const estadoConfig = {
   prestado:        { icon: "🤝", color: "#8b5cf6", bg: "#f5f3ff", border: "#ddd6fe", label: "Prestado" },
 };
 
+// Mapa de nombres de estado a IDs numéricos
 const mapaEstados = { disponible: 1, mantenimiento: 3 };
 
+// Componente principal de gestión de estado de equipos
 export default function GestionEstadoEquipo() {
   const navigate = useNavigate();
+  // Estado que almacena el listado de equipos
   const [equipos, setEquipos] = useState([]);
+  // Estado para el texto de búsqueda
   const [filterText, setFilterText] = useState("");
-  const [activeTab, setActiveTab] = useState("todos"); // todos, disponibles, ocupados, mantenimiento
-
-
-
+  // Estado para el tab activo de filtro (todos, disponibles, ocupados, mantenimiento)
+  const [activeTab, setActiveTab] = useState("todos");
+  // Efecto que carga los equipos al montar el componente
   useEffect(() => { cargarEquipos(); }, []);
-
+  // Función asíncrona para obtener los equipos con su último estado
   const cargarEquipos = async () => {
     try {
       const token = sessionStorage.getItem("token");
@@ -40,7 +52,7 @@ export default function GestionEstadoEquipo() {
       Swal.fire("Error", "No se pudieron cargar los equipos", "error");
     }
   };
-
+  // Función para cambiar el estado operativo de un equipo (disponible ↔ mantenimiento)
   const cambiarEstado = async (id_equipo, nuevoEstado) => {
     const cfg = estadoConfig[nuevoEstado];
     const result = await Swal.fire({
@@ -52,9 +64,7 @@ export default function GestionEstadoEquipo() {
       confirmButtonText: "Sí, cambiar",
       cancelButtonText: "Cancelar"
     });
-    
     if (!result.isConfirmed) return;
-    
     try {
       const token = sessionStorage.getItem("token");
       await apiAxios.post("/api/estadoxequipo/cambiarEstado",
@@ -68,7 +78,7 @@ export default function GestionEstadoEquipo() {
       Swal.fire("Error", error.response?.data?.message || "No se pudo cambiar el estado", "error");
     }
   };
-
+  // Filtra los equipos localmente por texto y por tab activo
   const filtered = equipos.filter(r => {
     const search = filterText.toLowerCase().trim();
     const matchesSearch = (
@@ -78,14 +88,13 @@ export default function GestionEstadoEquipo() {
       String(r.marca_equipo || "").toLowerCase().includes(search) ||
       String(r.ultimoEstado || "").toLowerCase().includes(search)
     );
-
+    // Filtra según el tab seleccionado
     if (activeTab === "disponibles") return matchesSearch && r.ultimoEstado === "disponible";
     if (activeTab === "ocupados") return matchesSearch && (r.ultimoEstado === "solicitado" || r.ultimoEstado === "prestado");
     if (activeTab === "mantenimiento") return matchesSearch && r.ultimoEstado === "mantenimiento";
-    
     return matchesSearch;
   });
-
+  // Definición de las columnas de la tabla DataTable
   const columns = [
     {
       name: "Equipo",
@@ -96,6 +105,7 @@ export default function GestionEstadoEquipo() {
       name: "Placa",
       selector: row => row.no_placa && row.no_placa !== '0' && row.no_placa !== 0 ? row.no_placa : "Sin placa",
       sortable: true,
+      // Renderiza la placa o un texto gris itálico si no tiene
       cell: row => (
         <span style={{ color: (!row.no_placa || row.no_placa === '0' || row.no_placa === 0) ? "#94a3b8" : "inherit", fontStyle: (!row.no_placa || row.no_placa === '0' || row.no_placa === 0) ? "italic" : "normal" }}>
           {row.no_placa && row.no_placa !== '0' && row.no_placa !== 0 ? row.no_placa : "Sin placa"}
@@ -111,6 +121,7 @@ export default function GestionEstadoEquipo() {
       name: "Estado Actual",
       selector: row => row.ultimoEstado || "disponible",
       sortable: true,
+      // Renderiza el badge del estado con icono y color
       cell: row => {
         const estado = row.ultimoEstado || "disponible";
         const cfg = estadoConfig[estado] || estadoConfig.disponible;
@@ -129,6 +140,7 @@ export default function GestionEstadoEquipo() {
       name: "Acciones",
       center: true,
       width: "180px",
+      // Renderiza botón bloqueado o botones de cambiar estado según disponibilidad
       cell: row => {
         if (row.estaOcupado) {
           return (
@@ -141,9 +153,9 @@ export default function GestionEstadoEquipo() {
             </button>
           );
         }
-
         return (
           <div className="d-flex gap-2">
+            {/* Botón para cambiar a mantenimiento si está disponible */}
             {row.ultimoEstado === "disponible" ? (
               <button 
                 className="btn btn-sm" 
@@ -153,6 +165,7 @@ export default function GestionEstadoEquipo() {
                 <i className="fas fa-tools me-1"></i> Mantenimiento
               </button>
             ) : (
+              // Botón para cambiar a disponible si está en otro estado
               <button 
                 className="btn btn-sm" 
                 style={{ background: "#dcfce7", color: "#16a34a", border: "1px solid #bbf7d0", fontWeight: "700" }}
@@ -167,15 +180,14 @@ export default function GestionEstadoEquipo() {
       ignoreRowClick: true,
     }
   ];
-
   return (
     <div className="container mt-4">
+      {/* Encabezado de la página con barra decorativa y título */}
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
         <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
         <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Gestión de Estado de Equipos</h2>
       </div>
-
-      {/* Tabs de Filtro */}
+      {/* Tabs de filtro por categoría */}
       <div className="d-flex gap-2 mb-4">
         {[
           { id: "todos", label: "Todos", icon: "list" },
@@ -207,7 +219,7 @@ export default function GestionEstadoEquipo() {
           </button>
         ))}
       </div>
-
+      {/* Fila con campo de búsqueda y botones de navegación */}
       <div className="row mb-4 align-items-center">
         <div className="col-md-7">
           <div className="position-relative">
@@ -238,12 +250,12 @@ export default function GestionEstadoEquipo() {
           </div>
         </div>
       </div>
-          
+      {/* Contenedor de la tabla con bordes redondeados */}
       <div style={{ 
         borderRadius: "14px", 
-        overflow: "visible", // Permitir que el dropdown flote
+        overflow: "visible",
         border: "1px solid #dbeafe",
-        marginBottom: "120px" // Espacio de seguridad para el menú
+        marginBottom: "120px"
       }}>
         <DataTable 
           columns={columns} 
@@ -255,7 +267,7 @@ export default function GestionEstadoEquipo() {
             ...tableCustomStyles,
             rows: {
               style: {
-                minHeight: '72px', // Filas más cómodas
+                minHeight: '72px',
               },
             },
           }}

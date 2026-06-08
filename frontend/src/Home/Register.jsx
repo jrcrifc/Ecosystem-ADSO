@@ -1,12 +1,20 @@
+// Importa React y el hook useState para manejar el estado del formulario
 import React, { useState } from "react";
+// Importa useNavigate para redirigir al usuario después del registro
 import { useNavigate } from "react-router-dom";
+// Importa la instancia de Axios configurada para peticiones HTTP
 import apiAxios from "../api/axiosConfig";
+// Importa la imagen de fondo para la página de registro
 import fondoRegistro from "../Home/laboratorio.png";
+// Importa el logo de Ecosystem
 import logo from "../Home/ecosystem_logo.png";
 
+// Define el componente Register con el formulario de registro de usuarios
 const Register = () => {
+  // Hook para navegar a otras rutas programáticamente
   const navigate = useNavigate();
 
+  // Estado del formulario con todos los campos de registro
   const [form, setForm] = useState({
     documento: "",
     nombres_apellidos: "",
@@ -19,58 +27,69 @@ const Register = () => {
     es_sena_empresa: false
   });
 
+  // Estado para mensajes de error generales
   const [error, setError] = useState("");
+  // Estado para mensajes de éxito
   const [success, setSuccess] = useState("");
+  // Estado que indica si la petición de registro está en curso
   const [loading, setLoading] = useState(false);
+  // Estado para mostrar u ocultar la contraseña
   const [showPassword, setShowPassword] = useState(false);
+  // Estado para mostrar u ocultar la confirmación de contraseña
   const [showConfirm, setShowConfirm] = useState(false);
+  // Estado para errores de validación en tiempo real por campo
   const [fieldErrors, setFieldErrors] = useState({});
 
+  // Estilo compartido para los mensajes de error inline
   const errorStyle = { color: "#dc2626", fontSize: "11px", marginTop: "4px", fontWeight: "600" };
 
+  // Maneja los cambios en los campos del formulario con validación en tiempo real
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
-    // Validación en tiempo real para documento (solo números)
+    // Solo permite dígitos en el campo de documento
     if (name === "documento" && value !== "" && !/^\d+$/.test(value)) return;
-
-    // Validación en tiempo real para nombres (no números)
+    // Rechaza números en el campo de nombres
     if (name === "nombres_apellidos" && /\d/.test(value)) return;
-
-    // Validación en tiempo real para número de ficha (solo números)
+    // Solo permite dígitos en el número de ficha
     if (name === "numero_ficha" && value !== "" && !/^\d+$/.test(value)) return;
-
-    // Validación en tiempo real para nombre de ficha (solo letras y espacios, no números)
+    // Rechaza números en el nombre de la ficha
     if (name === "nombre_ficha" && /\d/.test(value)) return;
 
+    // Determina el valor según el tipo de campo (checkbox o texto)
     let val = type === "checkbox" ? checked : value;
-    
-    // Convertir email a minúsculas y sin espacios en tiempo real
+    // Convierte el email a minúsculas y elimina espacios automáticamente
     if (name === "email") {
       val = (value || "").replace(/\s/g, "").toLowerCase();
     }
 
+    // Actualiza el estado del formulario con el nuevo valor
     setForm({ ...form, [name]: val });
 
-    // Mensajes de error inline
+    // Actualiza los errores de validación en tiempo real
     const errors = { ...fieldErrors };
+    // Valida que el documento tenga al menos 6 dígitos
     if (name === "documento") {
       if (value.length > 0 && value.length < 6) errors.documento = "Mínimo 6 dígitos.";
       else delete errors.documento;
     }
+    // Valida que se ingresen nombres y apellidos completos
     if (name === "nombres_apellidos") {
       if (value && value.trim().split(" ").length < 2) errors.nombres_apellidos = "Ingresa nombres y apellidos completos.";
       else delete errors.nombres_apellidos;
     }
+    // Valida que el email tenga formato correcto
     if (name === "email") {
       if (value && !value.includes("@")) errors.email = "Falta el @ en el correo.";
       else if (value && (!value.includes(".") || value.split(".").pop().length < 2)) errors.email = "Falta el dominio (ej. .com, .co)";
       else delete errors.email;
     }
+    // Valida que la contraseña tenga mínimo 8 caracteres
     if (name === "password") {
       if (value && value.length < 8) errors.password = "Mínimo 8 caracteres.";
       else delete errors.password;
     }
+    // Valida que las contraseñas coincidan
     if (name === "confirmPassword" || name === "password") {
       const p1 = name === "password" ? value : form.password;
       const p2 = name === "confirmPassword" ? value : form.confirmPassword;
@@ -80,29 +99,35 @@ const Register = () => {
     setFieldErrors(errors);
   };
 
+  // Envía los datos de registro al backend
   const registrarUsuario = async (e) => {
+    // Previene el envío por defecto del formulario
     e.preventDefault();
+    // Limpia mensajes anteriores
     setError("");
     setSuccess("");
 
-    // Validaciones extra "a prueba de tontos"
+    // Prepara los datos limpiando espacios y normalizando
     const docTrim = form.documento.trim();
     const nombreTrim = form.nombres_apellidos.trim();
     const emailTrim = form.email.trim().toLowerCase();
+    // Los administradores no requieren datos de ficha
     const necesitaFicha = form.rol !== "Administrador";
 
+    // Validaciones finales antes de enviar al servidor
     if (docTrim.length < 5) return setError("El documento es demasiado corto.");
     if (nombreTrim.split(" ").length < 2) return setError("Por favor, ingresa nombres y apellidos completos.");
     if (form.password !== form.confirmPassword) return setError("Las contraseñas no coinciden.");
     if (form.password.length < 8) return setError("La contraseña debe tener mínimo 8 caracteres.");
-
-    // Validar campos de ficha solo si no es Administrador
+    // Valida campos de ficha solo si el rol lo requiere
     if (necesitaFicha && !form.numero_ficha.trim()) return setError("El número de ficha es obligatorio.");
     if (necesitaFicha && !form.nombre_ficha.trim()) return setError("El nombre de la ficha es obligatorio.");
 
+    // Activa el indicador de carga
     setLoading(true);
 
     try {
+      // Construye el payload con los datos del formulario
       const data = {
         documento: docTrim,
         nombres_apellidos: nombreTrim,
@@ -114,8 +139,10 @@ const Register = () => {
         es_sena_empresa: form.es_sena_empresa
       };
 
+      // Envía la petición POST al backend para crear el nuevo usuario
       await apiAxios.post("/api/auth", data);
 
+      // Muestra mensaje de éxito y reinicia el formulario
       setSuccess("✅ Registro exitoso. Tu cuenta está en revisión por el administrador.");
       setForm({
         documento: "",
@@ -129,15 +156,19 @@ const Register = () => {
         es_sena_empresa: false
       });
 
+      // Redirige al login después de 4 segundos
       setTimeout(() => navigate("/UserLogin"), 4000);
     } catch (err) {
+      // Muestra el error del servidor o un mensaje genérico
       setError(err.response?.data?.message || "Error al registrar el usuario. Revisa los datos.");
     } finally {
+      // Desactiva el indicador de carga
       setLoading(false);
     }
   };
 
   return (
+    // Contenedor principal que ocupa toda la pantalla
     <div
       style={{
         position: "fixed", top: 0, left: 0,
@@ -147,8 +178,8 @@ const Register = () => {
         display: "grid", placeItems: "center", padding: "20px"
       }}
     >
+      {/* Definición de animaciones CSS para el registro */}
       <style>{`
-        /* ── BUBBLES: Burbujas ascendentes ultra suaves sin rotación ── */
         @keyframes bubble {
           0% { transform: translateY(0) translateX(0px); opacity: 0; }
           10% { opacity: 0.75; }
@@ -156,7 +187,6 @@ const Register = () => {
           100% { transform: translateY(-120vh) translateX(-8px); opacity: 0; }
         }
 
-        /* ── GRADIENT TEXT FLOW: El título brilla y fluye ── */
         @keyframes textFlow {
           0%   { background-position: 0% 50%; }
           50%  { background-position: 100% 50%; }
@@ -212,7 +242,6 @@ const Register = () => {
           color: #6366F1 !important;
         }
 
-        /* ── HOLOGRAPHIC GRID ── */
         .hologram-grid {
           position: fixed; inset: 0; z-index: 1;
           background-image: linear-gradient(rgba(0, 180, 216, 0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 180, 216, 0.035) 1px, transparent 1px);
@@ -220,17 +249,17 @@ const Register = () => {
         }
       `}</style>
 
-      {/* Fondo Estático */}
+      {/* Fondo de pantalla con imagen del laboratorio */}
       <div style={{
         position: "fixed", inset: 0, zIndex: 0,
         backgroundImage: `url(${fondoRegistro})`,
         backgroundSize: "cover", backgroundPosition: "center",
       }} />
 
-      {/* Hologram blueprint overlay */}
+      {/* Capa decorativa de cuadrícula holográfica */}
       <div className="hologram-grid" />
 
-      {/* ── BURBUJAS FLOTANTES DE LABORATORIO ── */}
+      {/* Contenedor de burbujas flotantes animadas */}
       <div style={{ position: "fixed", inset: 0, zIndex: 9, pointerEvents: "none", overflow: "hidden" }}>
         {[
           { size: 45, left: 3, delay: 0.5, dur: 12 }, { size: 75, left: 18, delay: 2.1, dur: 18 },
@@ -244,6 +273,7 @@ const Register = () => {
           { size: 30, left: 10, delay: 11.2, dur: 9 }, { size: 90, left: 54, delay: 2.3, dur: 23 },
           { size: 75, left: 20, delay: 7.1, dur: 18 }, { size: 55, left: 50, delay: 6.0, dur: 14 },
         ].map((p, i) => (
+          // Burbuja individual con tamaño, posición y animación personalizados
           <div key={i} style={{
             position: "absolute", bottom: "-100px", left: `${p.left}%`,
             width: `${p.size}px`, height: `${p.size}px`, borderRadius: "50%",
@@ -255,7 +285,9 @@ const Register = () => {
         ))}
       </div>
 
+      {/* Tarjeta de registro con el formulario */}
       <div className="register-card">
+        {/* Título y logo de la página */}
         <div className="text-center mb-3">
           <h2 className="flowing-title" style={{ fontWeight: "800", fontSize: "22px", display: "inline-block" }}>
             Crear Cuenta
@@ -265,15 +297,18 @@ const Register = () => {
           </div>
         </div>
 
+        {/* Muestra mensajes de error o éxito */}
         {error && <div className="alert alert-danger p-2 mb-3" style={{ fontSize: "12px", textAlign: "center", borderRadius: "10px", border: "none", background: "#fee2e2", color: "#991b1b" }}>{error}</div>}
         {success && <div className="alert alert-success p-2 mb-3" style={{ fontSize: "12px", textAlign: "center", borderRadius: "10px", border: "none", background: "#dcfce7", color: "#166534" }}>{success}</div>}
 
+        {/* Formulario de registro */}
         <form onSubmit={registrarUsuario}>
-          {/* Tipo de usuario */}
+          {/* Selector de tipo de usuario con botones de opción */}
           <div className="mb-3">
             <label style={{ fontSize: "12px", color: "#64748b", fontWeight: "600", marginBottom: "8px", d: "block" }}>¿Cuál es tu rol?</label>
             <div style={{ display: "flex", gap: "8px" }}>
               {["Aprendiz", "Pasante", "Gestor", "Instructor"].map((rolValue) => (
+                // Botón de rol individual con estilo activo/inactivo
                 <div
                   key={rolValue}
                   onClick={() => setForm({ ...form, rol: rolValue })}
@@ -292,6 +327,7 @@ const Register = () => {
             </div>
           </div>
 
+          {/* Campo de documento de identidad */}
           <div className="row g-2 mb-2">
             <div className="col-12">
               <label className="mb-1" style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Documento de Identidad</label>
@@ -301,6 +337,7 @@ const Register = () => {
             </div>
           </div>
 
+          {/* Campo de nombres y apellidos */}
           <div className="mb-2">
             <label className="mb-1" style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Nombres y Apellidos Completos</label>
             <input className="form-control" name="nombres_apellidos" placeholder="Ej: Juan Pérez"
@@ -308,6 +345,7 @@ const Register = () => {
             {fieldErrors.nombres_apellidos && <div style={errorStyle}>{fieldErrors.nombres_apellidos}</div>}
           </div>
 
+          {/* Campo de correo electrónico */}
           <div className="mb-2">
             <label className="mb-1" style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Correo Electrónico</label>
             <input className="form-control" type="email" name="email" placeholder="ejemplo@gmail.com"
@@ -315,6 +353,7 @@ const Register = () => {
             {fieldErrors.email && <div style={errorStyle}>{fieldErrors.email}</div>}
           </div>
 
+          {/* Campos de ficha solo visibles para roles que no son administrador */}
           {form.rol !== "Administrador" && (
             <div className="mb-2">
               <div className="row g-2 mb-2">
@@ -329,6 +368,7 @@ const Register = () => {
                     value={form.nombre_ficha} onChange={handleChange} required style={inputStyle} />
                 </div>
               </div>
+              {/* Checkbox para SENA Empresa */}
               <div className="form-check d-flex align-items-center gap-2 mb-3 mt-2" style={{ paddingLeft: "5px" }}>
                 <input className="form-check-input" type="checkbox" name="es_sena_empresa" id="es_sena_empresa"
                   checked={form.es_sena_empresa} onChange={handleChange} style={{ width: "17px", height: "17px", cursor: "pointer", border: "1px solid #cbd5e1" }} />
@@ -339,12 +379,14 @@ const Register = () => {
             </div>
           )}
 
+          {/* Campos de contraseña y confirmación */}
           <div className="row g-2 mb-4">
             <div className="col-6">
               <label className="mb-1" style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Contraseña</label>
               <div className="position-relative">
                 <input className="form-control" type={showPassword ? "text" : "password"} name="password" placeholder="Mínimo 8"
                   value={form.password} onChange={handleChange} required style={{ ...inputStyle, paddingRight: "36px" }} />
+                {/* Botón para mostrar u ocultar la contraseña */}
                 <i
                   className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`}
                   onClick={() => setShowPassword(!showPassword)}
@@ -361,6 +403,7 @@ const Register = () => {
               <div className="position-relative">
                 <input className="form-control" type={showConfirm ? "text" : "password"} name="confirmPassword" placeholder="Confirma"
                   value={form.confirmPassword} onChange={handleChange} required style={{ ...inputStyle, paddingRight: "36px" }} />
+                {/* Botón para mostrar u ocultar la confirmación de contraseña */}
                 <i
                   className={`bi ${showConfirm ? "bi-eye-slash" : "bi-eye"}`}
                   onClick={() => setShowConfirm(!showConfirm)}
@@ -374,6 +417,7 @@ const Register = () => {
             </div>
           </div>
 
+          {/* Botón de envío del formulario */}
           <button type="submit" className="btn w-100 py-3" disabled={loading}
             style={{
               background: "#0077B6",
@@ -385,6 +429,7 @@ const Register = () => {
             {loading ? "Creando cuenta..." : "Crear mi Cuenta"}
           </button>
 
+          {/* Enlace a la página de inicio de sesión */}
           <p className="mt-4 text-center" style={{ fontSize: "13px", color: "#64748b" }}>
             ¿Ya tienes cuenta?{" "}
             <span style={{ color: "#0077B6", cursor: "pointer", fontWeight: "700", textDecoration: "underline" }}
@@ -398,6 +443,7 @@ const Register = () => {
   );
 };
 
+// Estilos inline compartidos para los inputs del formulario
 const inputStyle = {
   background: "#f9fafb", border: "1px solid #e5e7eb",
   borderRadius: "8px", padding: "8px 10px",

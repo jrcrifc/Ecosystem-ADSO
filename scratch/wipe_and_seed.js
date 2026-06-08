@@ -1,3 +1,14 @@
+// ============================================================
+// 🌱 SCRIPT DE LIMPIEZA Y RE-SEMILLADO DE PRUEBAS (wipe_and_seed.js)
+// Este script se encarga de:
+//   1. Desactivar validaciones de llaves foráneas para evitar fallos de integridad.
+//   2. Vaciar las tablas principales de la base de datos (Truncate).
+//   3. Insertar registros de prueba reales y coherentes para equipos, reactivos,
+//      movimientos de inventario, cuentadantes, proveedores y solicitudes.
+//   4. Reactivar las llaves foráneas al finalizar.
+// Útil en fase de pruebas locales y desarrollo.
+// ============================================================
+
 import db from "../node/database/db.js";
 import { QueryTypes } from "sequelize";
 

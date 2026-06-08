@@ -1,55 +1,70 @@
+// Archivo: crudequipos.jsx — CRUD de equipos con tabla, filtros, exportación PDF/Excel y lightbox de fotos
+
+// Importa hooks de React para estado y efectos
 import { useEffect, useState } from "react";
+// Importa useNavigate para redirigir entre rutas
 import { useNavigate } from "react-router-dom";
+// Importa DataTable para renderizar tablas con paginación
 import DataTable from "react-data-table-component";
+// Importa Axios para peticiones HTTP
 import apiAxios from "../api/axiosConfig";
+// Importa el formulario de equipo para usarlo dentro del modal
 import EquipoForm from "./EquiposForm.jsx";
+// Importa SweetAlert2 para alertas
 import Swal from "sweetalert2";
+// Importa Bootstrap para manipular modales
 import * as bootstrap from "bootstrap";
+// Importa Socket.io para actualizaciones en tiempo real
 import socket from "../socket.js";
+// Importa utilidades de exportación a PDF y Excel
 import { exportToPDF, exportToExcel } from "../api/ExportUtils.js";
+// Importa configuraciones predefinidas de paginación y estilos para la tabla
 import { paginationComponentOptions, tableCustomStyles } from "../config/dataTableConfig";
 
+// Componente principal del CRUD de equipos
 export default function CrudEquipo() {
   const navigate = useNavigate();
+  // Estado que almacena el listado de equipos
   const [equipos, setEquipos] = useState([]);
+  // Estado para el texto de búsqueda
   const [filterText, setFilterText] = useState("");
+  // Estado que almacena el equipo seleccionado para editar
   const [selectedEquipo, setSelectedEquipo] = useState(null);
+  // Estado que almacena la ruta de la foto ampliada
   const [largePhoto, setLargePhoto] = useState(null);
-
+  // Efecto que carga los equipos al montar y configura listeners de socket y modales
   useEffect(() => {
     getAllEquipos();
-
-    // ✅ Escuchar cambios en tiempo real
+    // Escucha cambios en tiempo real para refrescar la tabla
     socket.on('equipo_actualizado', getAllEquipos);
-
-    // ✅ Event listeners para modales de Bootstrap para limpieza garantizada
+    // Obtiene las referencias a los modales de Bootstrap
     const modalEquipo = document.getElementById("modalEquipo");
     const largePhotoModal = document.getElementById("largePhotoModal");
-
+    // Función que limpia los backdrops huérfanos del modal
     const cleanupBackdrop = () => {
       document.body.classList.remove("modal-open");
       document.body.style.removeProperty("overflow");
       document.body.style.removeProperty("padding-right");
       document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
     };
-
+    // Función que se ejecuta al ocultar el modal de equipo
     const handleEquipoHidden = () => {
       setSelectedEquipo(null);
       cleanupBackdrop();
     };
-
+    // Función que se ejecuta al ocultar el modal de foto ampliada
     const handlePhotoHidden = () => {
       setLargePhoto(null);
       cleanupBackdrop();
     };
-
+    // Agrega listeners de ocultamiento a los modales
     if (modalEquipo) {
       modalEquipo.addEventListener("hidden.bs.modal", handleEquipoHidden);
     }
     if (largePhotoModal) {
       largePhotoModal.addEventListener("hidden.bs.modal", handlePhotoHidden);
     }
-
+    // Limpieza de listeners al desmontar el componente
     return () => {
       socket.off('equipo_actualizado', getAllEquipos);
       if (modalEquipo) {
@@ -60,7 +75,7 @@ export default function CrudEquipo() {
       }
     };
   }, []);
-
+  // Función asíncrona para obtener todos los equipos desde la API
   const getAllEquipos = async () => {
     try {
       const token = sessionStorage.getItem("token");
@@ -77,7 +92,7 @@ export default function CrudEquipo() {
       Swal.fire("Error", "No se pudieron cargar los equipos", "error");
     }
   };
-
+  // Función para alternar el estado activo/inactivo de un equipo
   const cambiarEstado = async (equipo) => {
     const nuevoEstado = equipo.estado === 1 ? 0 : 1;
     const result = await Swal.fire({
@@ -89,9 +104,7 @@ export default function CrudEquipo() {
       confirmButtonText: "Sí, cambiar",
       cancelButtonText: "Cancelar",
     });
-
     if (!result.isConfirmed) return;
-
     try {
       const token = sessionStorage.getItem("token");
       if (!token) {
@@ -115,7 +128,7 @@ export default function CrudEquipo() {
       Swal.fire("Error", "No se pudo cambiar el estado", "error");
     }
   };
-
+  // Función para cerrar un modal con limpieza de backdrop
   const hideModal = (modalId) => {
     const modal = document.getElementById(modalId);
     if (modal) {
@@ -126,23 +139,22 @@ export default function CrudEquipo() {
         const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
         bsModal.hide();
       }
-      
-      // ✅ Limpieza inmediata para evitar backdrops huérfanos por re-renders rápidos de React
+      // Limpieza inmediata para evitar backdrops huérfanos por re-renders rápidos
       document.body.classList.remove("modal-open");
       document.body.style.removeProperty("overflow");
       document.body.style.removeProperty("padding-right");
       document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
     }
   };
-
-    const estadoConfig = {
-      disponible:      { icon: "✅", color: "#0077B6", bg: "#e0f2fe", border: "#bae6fd", label: "Disponible" },
-      mantenimiento:   { icon: "🔧", color: "#d97706", bg: "#fef3c7", border: "#fde68a", label: "Mantenimiento" },
-      solicitado:      { icon: "⏳", color: "#6366f1", bg: "#eef2ff", border: "#c7d2fe", label: "Solicitado" },
-      prestado:        { icon: "🤝", color: "#8b5cf6", bg: "#f5f3ff", border: "#ddd6fe", label: "Prestado" },
-    };
-
-    const columns = [
+  // Configuración visual de los estados operativos
+  const estadoConfig = {
+    disponible:      { icon: "✅", color: "#0077B6", bg: "#e0f2fe", border: "#bae6fd", label: "Disponible" },
+    mantenimiento:   { icon: "🔧", color: "#d97706", bg: "#fef3c7", border: "#fde68a", label: "Mantenimiento" },
+    solicitado:      { icon: "⏳", color: "#6366f1", bg: "#eef2ff", border: "#c7d2fe", label: "Solicitado" },
+    prestado:        { icon: "🤝", color: "#8b5cf6", bg: "#f5f3ff", border: "#ddd6fe", label: "Prestado" },
+  };
+  // Definición de las columnas de la tabla DataTable
+  const columns = [
     { name: "ID", selector: (row) => row.id_equipo, sortable: true, width: "80px", center: true },
     { name: "Grupo", selector: (row) => row.grupo_equipo, sortable: true, minWidth: "180px" },
     { name: "Nombre", selector: (row) => row.nom_equipo, sortable: true, minWidth: "180px" },
@@ -152,6 +164,7 @@ export default function CrudEquipo() {
       selector: (row) => (row.no_placa && row.no_placa !== 0 && row.no_placa !== '0') ? row.no_placa : "Sin placa",
       sortable: true,
       minWidth: "130px",
+      // Renderiza la placa o un texto gris si no tiene
       cell: (row) => {
         const placa = (row.no_placa && row.no_placa !== 0 && row.no_placa !== '0') ? row.no_placa : null;
         return placa
@@ -159,8 +172,6 @@ export default function CrudEquipo() {
           : <span style={{ color: "#94a3b8", fontStyle: "italic", fontSize: "12px" }}>Sin placa</span>;
       }
     },
-
-    // ✅ COLUMNA SIMPLIFICADA
     {
       name: "Cuentadante",
       selector: (row) => row.cuentadante
@@ -169,11 +180,11 @@ export default function CrudEquipo() {
       sortable: true,
       minWidth: "200px"
     },
-
     {
       name: "Foto",
       width: "120px",
       center: true,
+      // Renderiza la foto del equipo con lightbox al hacer clic
       cell: (row) => (
         <div style={{ padding: "5px", cursor: row.foto_equipo ? "pointer" : "default" }}>
           {row.foto_equipo ? (
@@ -210,6 +221,7 @@ export default function CrudEquipo() {
       sortable: true,
       center: true,
       minWidth: "150px",
+      // Renderiza el badge del estado operativo con icono y color
       cell: (row) => {
         const estado = row.estadoReal || "disponible";
         const cfg = estadoConfig[estado] || estadoConfig.disponible;
@@ -228,6 +240,7 @@ export default function CrudEquipo() {
       name: "Acciones",
       center: true,
       width: "140px",
+      // Renderiza botones de editar y activar/inactivar según disponibilidad
       cell: (row) => (
         <div className="d-flex gap-2 justify-content-center">
           <button
@@ -274,8 +287,7 @@ export default function CrudEquipo() {
       ),
     },
   ];
-
-  // ── Formatear datos para exportación (sin createdat/updatedat, nombres legibles) ──
+  // Función que formatea los datos de equipos para exportación PDF/Excel
   const formatEquiposForExport = (data) => {
     return data.map(row => ({
       "ID": row.id_equipo,
@@ -289,14 +301,12 @@ export default function CrudEquipo() {
       "Estado Operativo": (row.estadoReal || "disponible").charAt(0).toUpperCase() + (row.estadoReal || "disponible").slice(1),
     }));
   };
-
-  // ✅ FILTRO CORREGIDO
+  // Filtra los equipos localmente según el texto de búsqueda
   const filteredEquipos = equipos.filter((row) => {
     const search = filterText.toLowerCase().trim();
     const nombreCuentadante = row.cuentadante
       ? `${row.cuentadante.nom_cuentadante} ${row.cuentadante.apell_cuentadante}`
       : "";
-    
     return (
       String(row.id_equipo || "").includes(search) ||
       String(row.nom_equipo || "").toLowerCase().includes(search) ||
@@ -306,9 +316,9 @@ export default function CrudEquipo() {
       nombreCuentadante.toLowerCase().includes(search)
     );
   });
-
   return (
     <div className="container mt-4" style={{ maxWidth: "1150px" }}>
+      {/* Encabezado de la página con título y descripción */}
       <div style={{ textAlign: "center", marginBottom: "32px" }}>
         <div style={{ height: "3px", width: "40px", background: "#0077B6", borderRadius: "99px", margin: "0 auto 12px" }} />
         <h2 style={{ fontSize: "28px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Gestión de Equipos</h2>
@@ -316,7 +326,7 @@ export default function CrudEquipo() {
           Administra el inventario de equipos y herramientas del laboratorio.
         </p>
       </div>
-
+      {/* Fila con el campo de búsqueda y botones de acción */}
       <div className="row mb-4 align-items-center">
         <div className="col-md-6">
           <input
@@ -366,7 +376,7 @@ export default function CrudEquipo() {
           </button>
         </div>
       </div>
-
+      {/* Contenedor de la tabla con bordes redondeados */}
       <div style={{ borderRadius: "14px", overflow: "hidden", border: "1px solid #dbeafe" }}>
         <DataTable
           columns={columns}
@@ -388,8 +398,7 @@ export default function CrudEquipo() {
           }
         />
       </div>
-
-      {/* MODAL EDITAR / CREAR */}
+      {/* Modal editar/crear equipo */}
       <div className="modal fade" id="modalEquipo" tabIndex="-1" aria-labelledby="modalEquipoLabel" aria-hidden="true">
         <div className="modal-dialog modal-lg">
           <div className="modal-content">
@@ -415,8 +424,7 @@ export default function CrudEquipo() {
           </div>
         </div>
       </div>
-
-      {/* LIGHTBOX FOTO GRANDE */}
+      {/* Lightbox para foto ampliada */}
       <div className="modal fade" id="largePhotoModal" tabIndex="-1" aria-hidden="true">
         <div className="modal-dialog modal-xl modal-dialog-centered">
           <div className="modal-content" style={{ background: "rgba(0,0,0,0.95)", border: "none", borderRadius: "16px" }}>

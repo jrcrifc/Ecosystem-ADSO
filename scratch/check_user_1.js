@@ -1,3 +1,9 @@
+// ============================================================
+// 👤 COMPROBACIÓN DE USUARIO CON ID 1 (check_user_1.js)
+// Este script consulta e imprime por consola los detalles del usuario
+// registrado con el identificador único (ID) 1 en la base de datos.
+// ============================================================
+
 import db from '../node/database/db.js';
 
 async function checkUser1() {
@@ -13,3 +19,4 @@ async function checkUser1() {
 }
 
 checkUser1();
+

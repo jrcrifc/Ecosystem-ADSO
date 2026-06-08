@@ -1,10 +1,21 @@
+// ============================================================
+// 🌐 SCRIPT DE PRUEBA DE SERVICIOS EN HOSTING DE PRODUCCIÓN (testHosting.js)
+// Este script simula el comportamiento de un cliente frontend realizando peticiones
+// HTTP nativas (usando fetch) hacia la API desplegada en producción (Clever Cloud/Hetzner).
+// Prueba secuencialmente:
+//   1. Inicio de sesión del administrador y obtención del token JWT.
+//   2. Consulta a los endpoints de Equipos, Proveedores, Reactivos, Usuarios y Solicitudes.
+// Ejecución:
+//   node scripts/testHosting.js
+// ============================================================
+
 const API_URL = 'https://app-fab54542-5aea-4bb3-ba23-e95350ce5d8e.cleverapps.io/api';
 
 async function testModules() {
     console.log("🚀 Iniciando prueba de módulos en producción...");
     let token = '';
 
-    // 1. Probar Login
+    // 1️⃣ Probando Módulo de Autenticación (Login)
     try {
         console.log("\n1️⃣ Probando Módulo de Autenticación (Login)...");
         const loginRes = await fetch(`${API_URL}/auth/login`, {
@@ -17,6 +28,8 @@ async function testModules() {
         });
         const loginData = await loginRes.json();
         if (!loginRes.ok) throw new Error(loginData.message || 'Error en Login');
+        
+        // Almacenar el token JWT para los siguientes requests protegidos
         token = loginData.token;
         console.log("✅ Login exitoso. Token obtenido.");
     } catch (error) {
@@ -24,9 +37,10 @@ async function testModules() {
         return;
     }
 
+    // Cabecera con el token Bearer JWT
     const headers = { Authorization: `Bearer ${token}` };
 
-    // Lista de módulos (endpoints) a probar
+    // Lista de módulos y endpoints protegidos a probar
     const modulos = [
         { nombre: 'Equipos', endpoint: '/equipos' },
         { nombre: 'Proveedores', endpoint: '/proveedor' },
@@ -35,6 +49,7 @@ async function testModules() {
         { nombre: 'Solicitudes', endpoint: '/solicitud' }
     ];
 
+    // Consumir cada endpoint y reportar su estado
     for (const modulo of modulos) {
         try {
             console.log(`\n⏳ Probando Módulo: ${modulo.nombre}...`);

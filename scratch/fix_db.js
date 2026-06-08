@@ -1,3 +1,10 @@
+// ============================================================
+// 🛠️ REPARACIÓN DE LA TABLA DE REACTIVOS (fix_db.js)
+// Este script soluciona problemas en la tabla 'reactivos' reasignando
+// cualquier registro con ID 0 a un ID válido (el máximo actual + 1)
+// y aplicando la propiedad AUTO_INCREMENT a la columna de ID primario.
+// ============================================================
+
 import db from '../node/database/db.js';
 
 async function fixDatabase() {
@@ -25,3 +32,4 @@ async function fixDatabase() {
 }
 
 fixDatabase();
+

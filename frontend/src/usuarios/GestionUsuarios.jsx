@@ -1,41 +1,63 @@
+// Archivo de panel de gestion de usuarios con aprobar, rechazar, activar, inactivar e importar Excel
+
+// Importa los hooks de React para manejar estado y efectos secundarios
 import { useState, useEffect } from "react";
+// Importa la instancia centralizada de Axios para peticiones HTTP
 import apiAxios from "../api/axiosConfig";
+// Importa SweetAlert2 para mostrar alertas interactivas al usuario
 import Swal from "sweetalert2";
+// Importa la instancia centralizada de Socket.IO
 import socket from "../socket.js";
 
+// Define el componente principal de gestion de usuarios
 export default function GestionUsuarios() {
+  // Estado que almacena los usuarios pendientes de aprobacion
   const [usuariosPendientes, setUsuariosPendientes] = useState([]);
+  // Estado que almacena todos los usuarios para la pestana de gestion
   const [todosUsuarios, setTodosUsuarios] = useState([]);
+  // Estado que almacena el texto de busqueda para filtrar usuarios
   const [filterText, setFilterText] = useState("");
+  // Estado que controla la pestana activa (pendientes/gestion)
   const [tab, setTab] = useState("pendientes");
+  // Obtiene el token de autenticacion desde sessionStorage
   const token = sessionStorage.getItem("token");
+  // Prepara el encabezado de autorizacion con el token
   const headers = { Authorization: `Bearer ${token}` };
 
+  // Efecto que carga los usuarios cada vez que cambia la pestana activa
   useEffect(() => { cargar(); }, [tab]);
 
-  // ✅ Actualización en tiempo real al recibir notificaciones por socket
+  // Actualizacion en tiempo real al recibir notificaciones por socket
   useEffect(() => {
+    // Manejador de notificaciones entrantes
     const handleNotification = (nueva) => {
-      // Si la notificación es sobre un nuevo usuario, recargamos la lista
+      // Si la notificacion es sobre un nuevo acceso, recarga la lista
       if (nueva.tipo === "solicitud_acceso") {
         cargar();
       }
     };
 
+    // Escucha el evento de notificacion del socket
     socket.on("notification", handleNotification);
 
+    // Limpieza al desmontar el componente
     return () => {
       socket.off("notification", handleNotification);
     };
-  }, [tab]); // incluimos tab para que cargar use el tab actual
+  }, [tab]);
 
+  // ===== Ordenar usuarios por estado =====
+
+  // Funcion que ordena los usuarios segun la prioridad de su estado
   const ordenarUsuarios = (lista) => {
+    // Define pesos para cada estado (menor = mas prioritario)
     const pesos = {
       aprobado: 1,
       pendiente: 2,
       inactivo: 3,
       rechazado: 4
     };
+    // Retorna una copia ordenada de la lista
     return [...lista].sort((a, b) => {
       const pesoA = pesos[a.estado] || 99;
       const pesoB = pesos[b.estado] || 99;
@@ -43,8 +65,10 @@ export default function GestionUsuarios() {
     });
   };
 
+  // Funcion asincrona para cargar los usuarios segun la pestana activa
   const cargar = async () => {
     try {
+      // Si la pestana activa es pendientes, carga solo los usuarios pendientes
       if (tab === "pendientes") {
         const resUsuarios = await apiAxios.get("/api/auth/usuarios", { headers });
         let pendientes = resUsuarios.data.filter(u =>
@@ -55,7 +79,7 @@ export default function GestionUsuarios() {
         setUsuariosPendientes(pendientes);
       }
 
-      // ✅ Cargar todos los usuarios para la pestaña de gestión
+      // Si la pestana activa es gestion, carga todos los usuarios excepto Administrador
       if (tab === "gestion") {
         const resUsuarios = await apiAxios.get("/api/auth/usuarios", { headers });
         let filtrados = resUsuarios.data.filter(u => u.rol !== 'Administrador');
@@ -63,45 +87,64 @@ export default function GestionUsuarios() {
         setTodosUsuarios(filtrados);
       }
     } catch {
+      // Muestra alerta de error al usuario
       Swal.fire("Error", "No se pudieron cargar los datos", "error");
     }
   };
 
+  // ===== Aprobar solicitud de acceso de un usuario =====
+
+  // Funcion asincrona para aprobar la solicitud de acceso de un usuario
   const aprobarUsuario = async (id_usuario) => {
+    // Muestra dialogo de confirmacion al usuario
     const result = await Swal.fire({
       title: "¿Aprobar usuario?", icon: "question",
       showCancelButton: true, confirmButtonColor: "#0077B6",
       confirmButtonText: "Sí, aprobar", cancelButtonText: "Cancelar"
     });
+    // Sale si el usuario cancelo la confirmacion
     if (!result.isConfirmed) return;
     try {
+      // Envia peticion PUT para aprobar al usuario
       await apiAxios.put(`/api/auth/usuarios/${id_usuario}/aprobar`, {}, { headers });
       Swal.fire("✅ Aprobado", "El usuario ya puede acceder al sistema", "success");
+      // Recarga la lista de usuarios
       cargar();
     } catch (err) {
+      // Muestra alerta de error al usuario
       Swal.fire("Error", err.response?.data?.message, "error");
     }
   };
 
+  // ===== Rechazar solicitud de acceso de un usuario =====
+
+  // Funcion asincrona para rechazar la solicitud de acceso de un usuario
   const rechazarUsuario = async (id_usuario) => {
+    // Muestra dialogo de confirmacion al usuario
     const result = await Swal.fire({
       title: "¿Rechazar usuario?", icon: "warning",
       showCancelButton: true, confirmButtonColor: "#ef4444",
       confirmButtonText: "Sí, rechazar", cancelButtonText: "Cancelar"
     });
+    // Sale si el usuario cancelo la confirmacion
     if (!result.isConfirmed) return;
     try {
+      // Envia peticion PUT para rechazar al usuario
       await apiAxios.put(`/api/auth/usuarios/${id_usuario}/rechazar`, {}, { headers });
       Swal.fire("Rechazado", "El usuario fue rechazado", "info");
+      // Recarga la lista de usuarios
       cargar();
     } catch (err) {
+      // Muestra alerta de error al usuario
       Swal.fire("Error", err.response?.data?.message, "error");
     }
   };
 
-  // ✅ Toggle activar/inactivar
+  // Funcion asincrona para alternar activo/inactivo de un usuario
   const toggleActivo = async (id_usuario, estadoActual) => {
+    // Determina si se va a activar o inactivar
     const activar = estadoActual === 'inactivo';
+    // Muestra dialogo de confirmacion al usuario
     const result = await Swal.fire({
       title: activar ? "¿Activar usuario?" : "¿Inactivar usuario?",
       text: activar
@@ -113,21 +156,29 @@ export default function GestionUsuarios() {
       confirmButtonText: activar ? "Sí, activar" : "Sí, inactivar",
       cancelButtonText: "Cancelar"
     });
+    // Sale si el usuario cancelo la confirmacion
     if (!result.isConfirmed) return;
     try {
+      // Envia peticion PUT para cambiar el estado del usuario
       const res = await apiAxios.put(`/api/auth/usuarios/${id_usuario}/toggle-activo`, {}, { headers });
       Swal.fire({
         icon: "success",
         title: res.data.estado === 'inactivo' ? "Usuario inactivado" : "Usuario activado",
         timer: 1500, showConfirmButton: false
       });
+      // Recarga la lista de usuarios
       cargar();
     } catch (err) {
+      // Muestra alerta de error al usuario
       Swal.fire("Error", err.response?.data?.message, "error");
     }
   };
 
+  // ===== Importar usuarios desde archivo Excel =====
+
+  // Funcion asincrona para manejar la importacion de usuarios desde Excel
   const handleImportarExcel = async () => {
+    // Muestra dialogo de SweetAlert para seleccionar archivo
     const { value: file } = await Swal.fire({
       title: '📥 Importar Usuarios desde Excel',
       html: `
@@ -161,8 +212,10 @@ export default function GestionUsuarios() {
       }
     });
 
+    // Sale si no se selecciono ningun archivo
     if (!file) return;
 
+    // Muestra indicador de carga mientras se procesa el archivo
     Swal.fire({
       title: 'Procesando archivo...',
       text: 'Espere un momento por favor',
@@ -172,10 +225,12 @@ export default function GestionUsuarios() {
       }
     });
 
+    // Prepara el FormData para enviar el archivo
     const formData = new FormData();
     formData.append('archivo', file);
 
     try {
+      // Envia peticion POST para importar el archivo Excel
       const res = await apiAxios.post("/api/auth/usuarios/importar-excel", formData, {
         headers: {
           ...headers,
@@ -183,14 +238,17 @@ export default function GestionUsuarios() {
         }
       });
 
+      // Extrae los resultados de la importacion
       const { creados, omitidos, errores } = res.data.data;
 
+      // Construye el HTML del resultado para mostrar en SweetAlert
       let htmlResult = `
         <div style="text-align: left; font-size: 14px;">
           <p style="color: #2e7d32; font-weight: 600;">✅ Creados exitosamente: ${creados} usuarios</p>
           <p style="color: #64748b;">ℹ️ Omitidos (ya existen): ${omitidos} usuarios</p>
       `;
 
+      // Agrega seccion de errores si existen
       if (errores && errores.length > 0) {
         htmlResult += `
           <hr style="margin: 10px 0; border-top: 1px solid #cbd5e1;"/>
@@ -203,6 +261,7 @@ export default function GestionUsuarios() {
 
       htmlResult += `</div>`;
 
+      // Muestra el resultado de la importacion
       Swal.fire({
         title: '¡Importación Finalizada!',
         html: htmlResult,
@@ -211,15 +270,19 @@ export default function GestionUsuarios() {
         confirmButtonColor: '#0077B6'
       });
 
+      // Recarga la lista de usuarios
       cargar();
     } catch (err) {
+      // Muestra alerta de error al usuario
       Swal.fire("Error", err.response?.data?.message || "Ocurrió un error al procesar el archivo Excel", "error");
     }
   };
 
+  // ===== Renderizar badge de estado del usuario =====
 
-
+  // Funcion que renderiza un badge visual segun el estado del usuario
   const estadoBadge = (estado) => {
+    // Mapa de estilos para cada estado posible
     const map = {
       pendiente: ["#fffbeb", "#d97706", "⏳ Pendiente"],
       aprobado: ["#ecfdf5", "#059669", "✅ Activo"],
@@ -230,6 +293,9 @@ export default function GestionUsuarios() {
     return <span style={{ background: bg, color, fontSize: "11px", fontWeight: "700", padding: "4px 12px", borderRadius: "99px" }}>{label}</span>;
   };
 
+  // ===== Gradiente de color segun el rol =====
+
+  // Funcion que retorna un gradiente de color segun el rol del usuario
   const gradientFor = (rol) => {
     const map = {
       Pasante: "linear-gradient(135deg, #f59e0b, #d97706)",
@@ -240,6 +306,9 @@ export default function GestionUsuarios() {
     return map[rol] || "linear-gradient(135deg, #94a3b8, #64748b)";
   };
 
+  // ===== Definicion de secciones por rol =====
+
+  // Define las secciones de roles con sus propiedades visuales
   const rolSections = [
     { key: "Gestor",     icon: "🔑", label: "Gestores",     color: "#0077B6" },
     { key: "Pasante",    icon: "🔬", label: "Pasantes",     color: "#d97706" },
@@ -247,14 +316,19 @@ export default function GestionUsuarios() {
     { key: "Instructor", icon: "👨‍🏫", label: "Instructores", color: "#059669" },
   ];
 
+  // ===== Renderizar tarjeta de usuario =====
+
+  // Funcion que renderiza una tarjeta visual para un usuario
   const cardUsuario = (u) => (
     <div key={u.id_usuario} style={{
       background: "#fff", borderRadius: "16px", padding: "24px",
       marginBottom: "14px", border: "1px solid #e2e8f0",
       boxShadow: "0 1px 3px rgba(0,0,0,0.04)"
     }}>
+      {/* Encabezado de la tarjeta con avatar, nombre y badge de estado */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          {/* Avatar circular con inicial del usuario */}
           <div style={{
             width: "48px", height: "48px", borderRadius: "50%",
             background: gradientFor(u.rol),
@@ -275,8 +349,7 @@ export default function GestionUsuarios() {
         {estadoBadge(u.estado)}
       </div>
 
-
-
+      {/* Informacion adicional de ficha si existe */}
       {(u.numero_ficha || u.nombre_ficha) && (
         <div style={{
           marginTop: "10px", background: "#f0fdf4", borderRadius: "10px",
@@ -300,7 +373,9 @@ export default function GestionUsuarios() {
         </div>
       )}
 
+      {/* Botones de accion segun el estado del usuario */}
       <div style={{ display: "flex", gap: "10px", marginTop: "14px", flexWrap: "wrap" }}>
+        {/* Botones de aprobar y rechazar para usuarios pendientes */}
         {u.estado === 'pendiente' && (
           <>
             <button onClick={() => aprobarUsuario(u.id_usuario)} style={{
@@ -315,6 +390,7 @@ export default function GestionUsuarios() {
             }}>❌ Rechazar</button>
           </>
         )}
+        {/* Boton de activar/inactivar para usuarios aprobados o inactivos */}
         {(u.estado === 'aprobado' || u.estado === 'inactivo') && (
           <button onClick={() => toggleActivo(u.id_usuario, u.estado)} style={{
             background: u.estado === 'inactivo' ? "linear-gradient(135deg, #0077B6, #023E8A)" : "transparent",
@@ -330,15 +406,17 @@ export default function GestionUsuarios() {
     </div>
   );
 
+  // Renderiza la interfaz del componente
   return (
     <div className="container mt-4">
+      {/* Encabezado con barra decorativa y titulo principal */}
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
         <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
         <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Gestión de Usuarios</h2>
       </div>
       <p style={{ color: "#64748b", marginBottom: "24px" }}>Aprueba, rechaza, activa o inactiva usuarios del sistema</p>
 
-      {/* Buscador e Importador */}
+      {/* Barra de busqueda y boton de importar Excel */}
       <div className="row mb-4 align-items-center">
         <div className="col-md-7">
           <input
@@ -351,6 +429,7 @@ export default function GestionUsuarios() {
           />
         </div>
         <div className="col-md-5 text-end">
+          {/* Boton para importar usuarios desde Excel */}
           <button 
             onClick={handleImportarExcel}
             className="btn text-white" 
@@ -363,6 +442,7 @@ export default function GestionUsuarios() {
               boxShadow: "0 2px 4px rgba(0, 119, 182, 0.2)",
               transition: "transform 0.15s ease, opacity 0.15s ease"
             }}
+            // Efecto hover en el boton
             onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.02)"; }}
             onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
           >
@@ -371,7 +451,7 @@ export default function GestionUsuarios() {
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* Pestañas de navegacion entre pendientes y gestion */}
       <div style={{ display: "flex", gap: "8px", marginBottom: "24px", flexWrap: "wrap" }}>
         {[["pendientes", "🔑 Solicitudes de Acceso"], ["gestion", "👥 Control de Cuentas"]].map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)} style={{
@@ -383,16 +463,19 @@ export default function GestionUsuarios() {
         ))}
       </div>
 
-      {/* ✅ Pestaña Gestión — Separada por roles */}
+      {/* Contenido de la pestana de gestion separada por roles */}
       {tab === "gestion" && (
         <div>
+          {/* Muestra mensaje si no hay usuarios */}
           {todosUsuarios.length === 0 ? (
             <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>
               <div style={{ fontSize: "48px", marginBottom: "12px" }}>📭</div>
               <p>No hay usuarios registrados</p>
             </div>
           ) : (
+            // Mapea las secciones por rol
             rolSections.map(section => {
+              // Filtra usuarios por rol y texto de busqueda
               const usuarios = todosUsuarios.filter(u => {
                 const search = filterText.toLowerCase().trim();
                 return u.rol === section.key && (
@@ -402,11 +485,12 @@ export default function GestionUsuarios() {
                   String(u.email || "").toLowerCase().includes(search)
                 );
               });
+              // No renderiza la seccion si no hay usuarios
               if (usuarios.length === 0) return null;
 
               return (
                 <div key={section.key} style={{ marginBottom: "28px" }}>
-                  {/* Section header */}
+                  {/* Encabezado de la seccion de rol */}
                   <div style={{
                     display: "flex", alignItems: "center", gap: "10px",
                     marginBottom: "14px", paddingBottom: "10px",
@@ -428,7 +512,7 @@ export default function GestionUsuarios() {
                     </span>
                   </div>
 
-                  {/* Users in this role */}
+                  {/* Tarjetas de usuarios en este rol */}
                   {usuarios.map(u => (
                     <div key={u.id_usuario} style={{
                       background: "#fff", borderRadius: "14px", padding: "18px 22px",
@@ -436,6 +520,7 @@ export default function GestionUsuarios() {
                       boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
                       display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap"
                     }}>
+                      {/* Avatar circular con inicial */}
                       <div style={{
                         width: "42px", height: "42px", borderRadius: "50%",
                         background: gradientFor(u.rol),
@@ -444,16 +529,20 @@ export default function GestionUsuarios() {
                       }}>
                         {u.nombres_apellidos?.charAt(0).toUpperCase()}
                       </div>
+                      {/* Informacion del usuario */}
                       <div style={{ flex: 1, minWidth: "200px" }}>
                         <div style={{ fontWeight: "700", color: "#0f172a", fontSize: "14px" }}>{u.nombres_apellidos}</div>
                         <div style={{ fontSize: "12px", color: "#64748b" }}>{u.email} · {u.documento}</div>
+                        {/* Informacion de ficha si existe */}
                         {(u.numero_ficha || u.nombre_ficha) && (
                           <div style={{ fontSize: "11px", color: "#0077B6", marginTop: "4px", fontWeight: "600" }}>
                             🆔 Ficha: {u.numero_ficha || "N/A"} · Ficha Nombre: {u.nombre_ficha || "N/A"} · SENA Empresa: {u.es_sena_empresa ? "Sí" : "No"}
                           </div>
                         )}
                       </div>
+                      {/* Badge de estado */}
                       {estadoBadge(u.estado)}
+                      {/* Boton de activar/inactivar */}
                       {(u.estado === 'aprobado' || u.estado === 'inactivo') && (
                         <button onClick={() => toggleActivo(u.id_usuario, u.estado)} style={{
                           background: u.estado === 'inactivo' ? "linear-gradient(135deg, #0077B6, #023E8A)" : "transparent",
@@ -466,6 +555,7 @@ export default function GestionUsuarios() {
                           {u.estado === 'inactivo' ? "🔓 Activar" : "🔒 Inactivar"}
                         </button>
                       )}
+                      {/* Botones de aprobar/rechazar para pendientes */}
                       {u.estado === 'pendiente' && (
                         <div style={{ display: "flex", gap: "6px" }}>
                           <button onClick={() => aprobarUsuario(u.id_usuario)} style={{
@@ -489,28 +579,29 @@ export default function GestionUsuarios() {
         </div>
       )}
 
-          {/* ✅ Sección Usuarios (pendientes/todas) */}
-          {tab !== "gestion" && (
-            <div style={{ marginBottom: "24px" }}>
-              <p style={{
-                fontSize: "11px", fontWeight: "700", color: "#0077B6",
-                letterSpacing: "1px", textTransform: "uppercase", marginBottom: "12px"
-              }}>⚙️ Lista de Usuarios</p>
-              {usuariosPendientes
-                .filter(u => {
-                  const search = filterText.toLowerCase().trim();
-                  return (
-                    String(u.id_usuario || "").includes(search) ||
-                    String(u.nombres_apellidos || "").toLowerCase().includes(search) ||
-                    String(u.documento || "").includes(search) ||
-                    String(u.email || "").toLowerCase().includes(search)
-                  );
-                })
-                .map(u => cardUsuario(u))}
-            </div>
-          )}
+      {/* Seccion de usuarios pendientes cuando no se esta en gestion */}
+      {tab !== "gestion" && (
+        <div style={{ marginBottom: "24px" }}>
+          <p style={{
+            fontSize: "11px", fontWeight: "700", color: "#0077B6",
+            letterSpacing: "1px", textTransform: "uppercase", marginBottom: "12px"
+          }}>⚙️ Lista de Usuarios</p>
+          {/* Filtra y mapea los usuarios pendientes segun el texto de busqueda */}
+          {usuariosPendientes
+            .filter(u => {
+              const search = filterText.toLowerCase().trim();
+              return (
+                String(u.id_usuario || "").includes(search) ||
+                String(u.nombres_apellidos || "").toLowerCase().includes(search) ||
+                String(u.documento || "").includes(search) ||
+                String(u.email || "").toLowerCase().includes(search)
+              );
+            })
+            .map(u => cardUsuario(u))}
+        </div>
+      )}
 
-      {/* Sin datos */}
+      {/* Mensaje cuando no hay datos en la pestana de pendientes */}
       {tab !== "gestion" && usuariosPendientes.length === 0 && (
         <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>
           <div style={{ fontSize: "48px", marginBottom: "12px" }}>📭</div>

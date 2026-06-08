@@ -1,3 +1,4 @@
+/* Define las variables CSS globales del tema claro de Ecosystem */
 :root {
   --bg-color: #f0f7ff;
   --card-bg: #ffffff;
@@ -9,30 +10,31 @@
   --primary-color: #0077B6;
 }
 
+/* Aplica el fondo azul claro y el texto principal al body de la página */
 body {
   background-color: var(--bg-color) !important;
   color: var(--text-main);
 }
 
+/* Personaliza las tarjetas de Bootstrap con los colores del tema */
 .card {
   background-color: var(--card-bg) !important;
   border-color: var(--border-color) !important;
   color: var(--text-main) !important;
 }
 
-
-
+/* Personaliza la barra superior con fondo blanco y borde inferior azul claro */
 .topbar {
   background-color: var(--topbar-bg) !important;
   border-bottom-color: var(--border-color) !important;
 }
 
-
-
+/* Aplica el color gris azulado al texto atenuado de Bootstrap */
 .text-muted {
   color: var(--text-muted) !important;
 }
 
+/* Estilos base para inputs y selects con bordes redondeados y transición */
 .form-control, .form-select {
   border-radius: 10px;
   border: 1px solid #e2e8f0;
@@ -41,12 +43,14 @@ body {
   transition: all 0.2s ease-in-out;
 }
 
+/* Cambia el borde a azul Ecosystem y agrega sombra cuando el input está enfocado */
 .form-control:focus, .form-select:focus {
   border-color: var(--primary-color) !important;
   box-shadow: 0 0 0 4px rgba(0, 119, 182, 0.1) !important;
   background-color: #fff !important;
 }
 
+/* Botón premium con degradado azul y sombra para apariencia destacada */
 .btn-premium {
   background: linear-gradient(135deg, #0077B6, #00B4D8);
   border: none;
@@ -58,16 +62,19 @@ body {
   box-shadow: 0 4px 12px rgba(0, 119, 182, 0.2);
 }
 
+/* Eleva el botón y acentúa la sombra al pasar el mouse */
 .btn-premium:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 15px rgba(0, 119, 182, 0.3);
   filter: brightness(1.1);
 }
 
+/* Restaura la posición al hacer clic en el botón */
 .btn-premium:active {
   transform: translateY(0);
 }
 
+/* Animación de entrada con fade y escala ascendente */
 @keyframes fadeInScale {
   from {
     opacity: 0;

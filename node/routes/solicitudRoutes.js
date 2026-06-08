@@ -1,4 +1,6 @@
+// Importa Express para crear las rutas del servidor
 import express from 'express';
+// Importa los controladores de solicitudes para manejar la lógica de cada endpoint
 import { 
     getAll, 
     getById, 
@@ -7,60 +9,84 @@ import {
     cambiarEstado,
     remove 
 } from '../controller/solicitudController.js';
+// Importa el modelo de solicitudes para operaciones en la base de datos
 import solicitudModel from '../models/solicitudModel.js';
+// Importa el modelo de relación solicitud-equipo
 import solicitudxequipoModel from '../models/solicitudxequipoModel.js';
+// Importa el modelo de equipos
 import equipoModel from '../models/EquiposModel.js';
+// Importa el modelo de historial de estados de equipos
 import Estadoxequipo from '../models/estadoxequipoModel.js';
+// Importa la función para emitir eventos por Socket.io
 import { getIO } from '../socket.js';
-import authMiddleware from '../middleware/authMiddleware.js'; // ← importa el middleware
+// Importa el middleware de autenticación JWT
+import authMiddleware from '../middleware/authMiddleware.js';
+// Importa el middleware que permite acceso a todos los roles
 import { todosLosRoles } from '../middleware/roleMiddleware.js';
 
+// Crea una nueva instancia del Router
 const router = express.Router();
 
-// ← todas las rutas protegidas con el middleware
-router.get('/',            todosLosRoles, getAll);
-router.get('/:id',         todosLosRoles, getById);
-router.post('/',           todosLosRoles, create);       // aquí req.user.id ya está disponible
-router.put('/:id',         todosLosRoles, update);
-router.delete('/:id',      todosLosRoles, remove);
+// Define la ruta GET /api/solicitud para obtener todas las solicitudes
+router.get('/', todosLosRoles, getAll);
 
-// ← Cambiar estado activo/inactivo (toggle 1/0)
-router.put('/estado/:id',  todosLosRoles, async (req, res) => {
+// Define la ruta GET /api/solicitud/:id para obtener una solicitud por ID
+router.get('/:id', todosLosRoles, getById);
+
+// Define la ruta POST /api/solicitud para crear una nueva solicitud
+router.post('/', todosLosRoles, create);
+
+// Define la ruta PUT /api/solicitud/:id para actualizar una solicitud existente
+router.put('/:id', todosLosRoles, update);
+
+// Define la ruta DELETE /api/solicitud/:id para eliminar una solicitud
+router.delete('/:id', todosLosRoles, remove);
+
+// Define la ruta PUT /api/solicitud/estado/:id para activar/inactivar una solicitud y liberar equipos
+router.put('/estado/:id', todosLosRoles, async (req, res) => {
     try {
+        // Obtiene el ID de la solicitud desde los parámetros de la ruta
         const { id } = req.params;
+        // Busca la solicitud en la base de datos
         const solicitud = await solicitudModel.findByPk(id);
+        // Si no existe la solicitud responde con 404
         if (!solicitud) {
             return res.status(404).json({ message: "Solicitud no encontrada" });
         }
+        // Calcula el nuevo estado invirtiendo el actual
         const nuevoEstado = solicitud.estado === 1 ? 0 : 1;
+        // Actualiza el estado de la solicitud
         await solicitud.update({ estado: nuevoEstado });
 
-        // Si se inactiva (cancela) la solicitud, liberar automáticamente los equipos vinculados
+        // Si se inactiva la solicitud, libera automáticamente los equipos vinculados
         if (nuevoEstado === 0) {
+            // Busca todas las relaciones solicitud-equipo activas
             const vinculos = await solicitudxequipoModel.findAll({
                 where: { id_solicitud: id }
             });
 
+            // Si existen vínculos, libera los equipos asociados
             if (vinculos && vinculos.length > 0) {
+                // Extrae los IDs de los equipos vinculados
                 const idsEquipos = vinculos.map(v => v.id_equipo);
                 
-                // 1. Asegurar que los equipos sigan estando ACTIVOS (estado: 1)
+                // Actualiza los equipos a estado disponible (1)
                 await equipoModel.update(
                     { estado: 1 },
                     { where: { id_equipo: idsEquipos } }
                 );
 
-                // 2. Registrar el estado disponible en el historial de estados de equipos
+                // Registra el cambio de estado en el historial de cada equipo
                 for (const id_equipo of idsEquipos) {
                     await Estadoxequipo.create({
                         id_equipo,
-                        id_estado_equipo: 1 // disponible
+                        id_estado_equipo: 1
                     });
                 }
             }
         }
 
-        // Emitir eventos globales de refresco en tiempo real
+        // Emite eventos de actualización en tiempo real por Socket.io
         try {
             getIO().emit('solicitud_actualizada');
             getIO().emit('equipo_actualizado');
@@ -68,6 +94,7 @@ router.put('/estado/:id',  todosLosRoles, async (req, res) => {
             console.error('Error al emitir eventos de socket:', socketError);
         }
 
+        // Responde con el mensaje de éxito y el nuevo estado
         res.json({ message: "Estado cambiado correctamente", estado: nuevoEstado });
     } catch (error) {
         console.error(error);
@@ -75,7 +102,8 @@ router.put('/estado/:id',  todosLosRoles, async (req, res) => {
     }
 });
 
-// ← Solo admin: cambiar estado (generado, aceptado, prestado, etc.)
+// Define la ruta POST /api/solicitud/cambiarEstado/:id para cambiar el estado del ciclo de la solicitud
 router.post('/cambiarEstado/:id', todosLosRoles, cambiarEstado);
 
-export default router;
+// Exporta el router para ser usado en la aplicación
+export default router;

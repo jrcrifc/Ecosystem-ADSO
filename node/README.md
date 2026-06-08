@@ -1,16 +1,51 @@
-# React + Vite
+# 🔬 Ecosystem ADSO — Servidor Backend (Express)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> **Sistema de Gestión de Laboratorio Ambiental del SENA**
 
-Currently, two official plugins are available:
+Este directorio contiene el backend de la aplicación **Ecosystem**, una solución fullstack para el control y administración del Laboratorio Ambiental del SENA. El servidor está construido sobre Node.js usando Express, Sequelize como ORM y MySQL como motor de base de datos relacional.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## 📋 Requisitos Previos
 
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
+- **Node.js**: Versión 18 o superior.
+- **MySQL**: Versión 8 o superior.
+- Base de datos local o remota llamada `ecosystem`.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## ⚙️ Instalación y Configuración
+
+1. Instalar las dependencias del proyecto:
+   ```bash
+   npm install
+   ```
+2. Crear un archivo `.env` en la raíz del proyecto (o usar el existente) y configurar las variables de entorno necesarias (ver sección de Variables de Entorno en el README principal o usar las credenciales de base de datos local).
+
+---
+
+## 🚀 Scripts Disponibles (package.json)
+
+En `package.json` se definen los siguientes scripts para la ejecución y mantenimiento:
+
+- `npm start` / `npm run dev` / `npm run server`: Inicia el servidor de desarrollo utilizando `app.js` como punto de entrada (escuchando por defecto en el puerto `8000`).
+- `npm run lint`: Ejecuta ESLint para analizar la calidad y el estilo de código del servidor.
+
+---
+
+## 📁 Estructura del Backend y Documentación de Módulos
+
+El backend está organizado de la siguiente manera:
+
+* **`app.js`**: Punto de entrada principal. Inicializa el servidor Express, configura middlewares globales (CORS, JSON, subida de archivos estáticos) y monta todos los routers del sistema. También levanta el servidor HTTP para Socket.io.
+* **`socket.js`**: Configuración y control del servidor de WebSockets en tiempo real. Gestiona salas privadas de usuarios para notificaciones instantáneas (préstamos, aprobación de cuentas, etc.).
+* **`syncDatabase.js`**: Script de sincronización manual de modelos con la base de datos usando `{ alter: true }` de Sequelize.
+* **`database/db.js`**: Instancia y conexión de Sequelize a la base de datos MySQL con soporte de reconexión y logs detallados.
+* **`models/`**: Definición de esquemas de tablas con Sequelize. Contiene `associations.js` que centraliza la relación de cardinalidad entre las 15+ tablas del sistema.
+* **`middleware/`**:
+  * `authMiddleware.js`: Filtro de seguridad que intercepta peticiones HTTP para verificar la validez del token JWT.
+  * `roleMiddleware.js`: Comprobación de roles específicos (Administrador, Gestor, Pasante, Instructor, Aprendiz) para autorización de accesos.
+* **`controller/`**: Controladores que reciben los requests HTTP, aplican validaciones de datos y responden con los estados correspondientes.
+* **`service/`**: Capa lógica de negocio del sistema. Aquí se implementan algoritmos críticos como el método **FEFO** (First Expired, First Out) para la distribución inteligente de salidas de reactivos por lotes.
+* **`routes/`**: Definición de los 20 routers Express que exponen los endpoints de la API organizados por módulos.
+* **`scripts/`**: Utilidades y scripts de mantenimiento (creación de usuarios administradores iniciales, seedeo de tablas maestras, envío de emails de prueba).

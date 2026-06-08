@@ -1,9 +1,17 @@
+// Archivo: EquiposForm.jsx — Formulario de creación/edición de equipos con carga de foto y selección de cuentadante
+
+// Importa hooks de React para estado y efectos
 import { useEffect, useState } from "react";
+// Importa Axios para peticiones HTTP
 import apiAxios from "../api/axiosConfig";
+// Importa SweetAlert2 para alertas
 import Swal from "sweetalert2";
+// Importa Bootstrap para manipular modales
 import * as bootstrap from 'bootstrap';
 
+// Componente del formulario de equipo
 export default function EquipoForm({ selectedEquipo, refreshParent, hideModal }) {
+  // Estado local del formulario con todos los campos del equipo
   const [form, setForm] = useState({
     grupo_equipo: "",
     nom_equipo: "",
@@ -15,25 +23,24 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
     previewFoto: "",
     estado: 1
   });
-
+  // Estado que almacena la lista de cuentadantes disponibles
   const [cuentadantes, setCuentadantes] = useState([]);
+  // Estado que indica si se están cargando los cuentadantes
   const [loadingCuentadantes, setLoadingCuentadantes] = useState(false);
+  // Estado que indica si se está guardando el formulario
   const [loading, setLoading] = useState(false);
-
-  // Cargar lista de cuentadantes
+  // Efecto que carga la lista de cuentadantes al montar el componente
   useEffect(() => {
     cargarCuentadantes();
   }, []);
-
+  // Función asíncrona para obtener los cuentadantes desde la API
   const cargarCuentadantes = async () => {
     setLoadingCuentadantes(true);
     try {
       const token = sessionStorage.getItem("token");
-      
-      const res = await apiAxios.get("/api/cuentadante", {   // ← Ruta corregida
+      const res = await apiAxios.get("/api/cuentadante", {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
       setCuentadantes(res.data);
     } catch (error) {
       console.error("Error al cargar cuentadantes:", error);
@@ -42,8 +49,7 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
       setLoadingCuentadantes(false);
     }
   };
-
-  // Cargar datos cuando se edita un equipo
+  // Efecto que carga los datos del equipo al editar o limpia el formulario al crear nuevo
   useEffect(() => {
     if (selectedEquipo) {
       setForm({
@@ -75,10 +81,11 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
       });
     }
   }, [selectedEquipo]);
-
+  // Función que maneja los cambios en los campos del formulario
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name === "foto_equipo" && files?.[0]) {
+      // Si es el campo de foto, guarda el archivo y genera preview
       const file = files[0];
       setForm(prev => ({
         ...prev,
@@ -89,7 +96,7 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
       setForm(prev => ({ ...prev, [name]: value }));
     }
   };
-
+  // Función asíncrona para guardar (crear o actualizar) un equipo
   const saveData = async () => {
     setLoading(true);
     try {
@@ -98,9 +105,8 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
         Swal.fire("Error", "No se encontró token de autenticación", "warning");
         return;
       }
-
       const data = new FormData();
-
+      // Agrega todos los campos del formulario al FormData excepto foto y preview
       Object.keys(form).forEach(key => {
         if (key !== "foto_equipo" && key !== "previewFoto") {
           if (form[key] !== null && form[key] !== undefined && form[key] !== "") {
@@ -108,35 +114,32 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
           }
         }
       });
-
+      // Si hay un archivo de foto nuevo, lo agrega al FormData
       if (form.foto_equipo instanceof File) {
         data.append("foto_equipo", form.foto_equipo);
       }
-
       const config = {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`
         }
       };
-
       if (selectedEquipo) {
+        // Actualiza el equipo existente vía PUT
         await apiAxios.put(`/api/equipos/${selectedEquipo.id_equipo}`, data, config);
       } else {
+        // Crea un nuevo equipo vía POST
         await apiAxios.post("/api/equipos", data, config);
       }
-
       if (hideModal) hideModal();
       if (refreshParent) refreshParent();
-
       Swal.fire({
         icon: "success",
         title: selectedEquipo ? "¡Actualizado!" : "¡Guardado!",
         timer: 1800,
         showConfirmButton: false
       });
-
-      // Limpiar formulario después de guardar
+      // Limpia el formulario después de guardar
       setForm({
         grupo_equipo: "", 
         nom_equipo: "", 
@@ -148,7 +151,6 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
         previewFoto: "", 
         estado: 1
       });
-
     } catch (error) {
       console.error("Error al guardar:", error);
       Swal.fire({
@@ -160,9 +162,9 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
       setLoading(false);
     }
   };
-
   return (
     <form className="p-3">
+      {/* Vista previa de la foto si existe */}
       {form.previewFoto && (
         <div className="mb-3 text-center">
           <img
@@ -173,8 +175,8 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
           />
         </div>
       )}
-
       <div className="row g-3">
+        {/* Selector de grupo del equipo */}
         <div className="col-md-6">
           <label>Grupo del equipo</label>
           <select className="form-select" name="grupo_equipo" value={form.grupo_equipo} onChange={handleChange} required>
@@ -183,23 +185,22 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
             <option value="Maquinaria, Equipos y Herramientas">Maquinaria, Equipos y Herramientas</option>
           </select>
         </div>
-
+        {/* Campo de nombre del equipo */}
         <div className="col-md-6">
           <label>Nombre del equipo</label>
           <input className="form-control" name="nom_equipo" value={form.nom_equipo} onChange={handleChange} required />
         </div>
-
+        {/* Campo de marca del equipo */}
         <div className="col-md-6">
           <label>Marca</label>
           <input className="form-control" name="marca_equipo" value={form.marca_equipo} onChange={handleChange} />
         </div>
-
+        {/* Campo de número de placa o serial */}
         <div className="col-md-6">
           <label>N° Placa / Serial</label>
           <input className="form-control" name="no_placa" value={form.no_placa} onChange={handleChange} />
         </div>
-
-        {/* SELECT DE CUENTADANTES */}
+        {/* Selector de cuentadante responsable */}
         <div className="col-md-6">
           <label>Cuentadante (Responsable)</label>
           <select 
@@ -219,17 +220,17 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
           </select>
           {loadingCuentadantes && <small className="text-muted">Cargando cuentadantes...</small>}
         </div>
-
+        {/* Campo de observaciones */}
         <div className="col-12">
           <label>Observaciones</label>
           <textarea className="form-control" name="observaciones" value={form.observaciones} onChange={handleChange} rows="3" />
         </div>
-
+        {/* Campo de carga de foto */}
         <div className="col-12">
           <label>Foto del equipo</label>
           <input type="file" className="form-control" name="foto_equipo" accept="image/*" onChange={handleChange} />
         </div>
-
+        {/* Selector de estado activo/inactivo */}
         <div className="col-12">
           <label>Estado</label>
           <select className="form-select" name="estado" value={form.estado} onChange={handleChange}>
@@ -238,7 +239,7 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
           </select>
         </div>
       </div>
-
+      {/* Botón de guardar */}
       <button
         type="button"
         className="btn w-100 mt-4"

@@ -1,3 +1,15 @@
+// ============================================================
+// 🌱 SCRIPT DE LIMPIEZA Y RESTAURACIÓN DE BD (wipe_and_seed.js)
+// Este script realiza una limpieza total (TRUNCATE) de las tablas
+// transaccionales y de inventario de la base de datos, deshabilitando
+// temporalmente las restricciones de clave foránea.
+// Posteriormente, siembra datos iniciales de prueba (10 equipos y 10 reactivos
+// químicos con sus respectivos lotes de stock) y asegura la existencia de un
+// cuentadante, un proveedor y un aprendiz de prueba.
+// Ejecución:
+//   node scripts/wipe_and_seed.js
+// ============================================================
+
 import db from "../database/db.js";
 import { QueryTypes } from "sequelize";
 
@@ -5,10 +17,10 @@ async function run() {
   console.log("🚀 Iniciando limpieza y re-semillado de la Base de Datos...");
   
   try {
-    // 1. Desactivar validaciones de llaves foráneas temporalmente
+    // 1. Desactivar validaciones de llaves foráneas temporalmente para poder truncar tablas relacionadas
     await db.query("SET FOREIGN_KEY_CHECKS = 0;");
 
-    // 2. Limpiar tablas
+    // 2. Limpiar tablas transaccionales y maestras de inventario
     const tablesToWipe = [
       "solicitudxequipo",
       "estadoxsolicitud",
@@ -27,7 +39,7 @@ async function run() {
 
     console.log("✨ Tablas limpias con éxito. Procediendo a insertar registros reales...");
 
-    // 3. Obtener un Cuentadante de prueba (o crearlo si no existe)
+    // 3. Obtener un Cuentadante de prueba (o crearlo si no existe en la BD)
     let cuentadante = await db.query(
       "SELECT id_cuentadante FROM cuentadantes LIMIT 1;",
       { type: QueryTypes.SELECT }
@@ -45,7 +57,7 @@ async function run() {
       id_cuentadante = cuentadante[0].id_cuentadante;
     }
 
-    // 4. Obtener un Proveedor de prueba (o crearlo si no existe)
+    // 4. Obtener un Proveedor de prueba (o crearlo si no existe en la BD)
     let proveedor = await db.query(
       "SELECT id_proveedor FROM proveedor LIMIT 1;",
       { type: QueryTypes.SELECT }
@@ -63,7 +75,7 @@ async function run() {
       id_proveedor = proveedor[0].id_proveedor;
     }
 
-    // 5. Obtener un Usuario de prueba (o crearlo si no existe)
+    // 5. Obtener un Usuario de prueba (o crearlo si no existe en la BD)
     let usuario = await db.query(
       "SELECT id_usuario FROM usuarios WHERE rol != 'Administrador' LIMIT 1;",
       { type: QueryTypes.SELECT }
@@ -71,7 +83,7 @@ async function run() {
     let id_usuario = usuario[0]?.id_usuario || null;
     if (!id_usuario) {
       console.log("📝 No se encontró usuario de prueba. Creando aprendiz de prueba...");
-      // Contraseña es hashed "123456" ($2b$10$R7Msn0XyTqG0.KjBwM8Q2.9WzZ9w6pQxKj1.Yc3/R8uOa44n5aK0G)
+      // Contraseña por defecto es encriptación de "123456"
       await db.query(
         `INSERT INTO usuarios (nombres_apellidos, email, password, documento, rol, estado, numero_ficha, nombre_ficha, es_sena_empresa, createdAt, updatedAt) 
          VALUES ('Aprendiz SENA Prueba', 'aprendiz@sena.edu.co', '$2b$10$R7Msn0XyTqG0.KjBwM8Q2.9WzZ9w6pQxKj1.Yc3/R8uOa44n5aK0G', '1098765432', 'Aprendiz', 'aprobado', '2672134', 'ADSO - Ficha 2672134', 1, NOW(), NOW());`
@@ -84,7 +96,7 @@ async function run() {
     }
 
     // ==========================================
-    // SEED: EQUIPOS (10 REGISTROS)
+    // SEED: EQUIPOS (10 REGISTROS MAQUETADOS)
     // ==========================================
     const mockEquipos = [
       { grupo: 'Equipo de Laboratorio', nom: 'Microscopio Óptico Binocular', marca: 'Nikon', placa: 'SENA-LAB-001' },
@@ -111,7 +123,7 @@ async function run() {
       const newId = result;
       idsEquiposCreados.push(newId);
 
-      // Registrar estado inicial del equipo en estadoxequipo (disponible = 1)
+      // Registrar estado inicial de disponibilidad del equipo en la tabla estadoxequipo (disponible = ID 1)
       await db.query(
         `INSERT INTO estadoxequipo (id_equipo, id_estado_equipo, createdAt, updatedAt) 
          VALUES (?, 1, NOW(), NOW());`,
@@ -120,7 +132,7 @@ async function run() {
     }
 
     // ==========================================
-    // SEED: REACTIVOS Y MOVIMIENTOS (10 REGISTROS)
+    // SEED: REACTIVOS Y MOVIMIENTOS (10 REGISTROS MAQUETADOS)
     // ==========================================
     const mockReactivos = [
       { pres: 'litros', nom: 'Ácido Clorhídrico 37%', ingles: 'Hydrochloric Acid 37%', formula: 'HCl', clas: 'Peligro para salud', colorAlm: 'Peligro para la salud', colorSt: 'Ciruela', stand: 'A1', col: '2', fila: '3' },
@@ -144,9 +156,9 @@ async function run() {
         { replacements: [r.pres, r.nom, r.ingles, r.formula, r.colorAlm, r.colorSt, r.stand, r.col, r.fila, r.clas] }
       );
 
-      // Crear entrada de inventario en movimientos_reactivos
+      // Crear entrada de inventario en movimientos_reactivos con lote inicial
       const cantInit = r.pres === 'litros' ? 5.000 : (r.pres === 'kilogramos' ? 10.000 : 250.000);
-      const vencOffsetDays = Math.floor(Math.random() * 365) + 30; // Vencimiento en el futuro
+      const vencOffsetDays = Math.floor(Math.random() * 365) + 30; // Calcular fecha de vencimiento en el futuro
       const vencDate = new Date();
       vencDate.setDate(vencDate.getDate() + vencOffsetDays);
 
@@ -157,17 +169,15 @@ async function run() {
       );
     }
 
-    // ==========================================
-    // SEED: SOLICITUDES DE PRÉSTAMO (VACÍAS PARA PRUEBAS DEL USUARIO)
-    // ==========================================
     console.log("📋 Dejando solicitudes y movimientos vacíos para tus pruebas...");
 
-    // 6. Volver a activar validaciones de llaves foráneas
+    // 6. Volver a activar las validaciones de llaves foráneas para mantener integridad referencial
     await db.query("SET FOREIGN_KEY_CHECKS = 1;");
     console.log("🎉 ¡Base de Datos limpiada con éxito! Equipos y Reactivos creados listos para tus propias pruebas.");
     process.exit(0);
 
   } catch (error) {
+    // Si ocurre un error, asegurar que se restablezcan las llaves foráneas
     await db.query("SET FOREIGN_KEY_CHECKS = 1;");
     console.error("❌ Error durante el proceso de limpieza y semilla:", error);
     process.exit(1);

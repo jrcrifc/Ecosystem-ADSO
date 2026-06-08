@@ -1,9 +1,17 @@
+// Archivo de formulario de creacion/edicion de reactivos con ubicacion y clasificacion
+
+// Importa la instancia centralizada de Axios para peticiones HTTP
 import apiAxios from "../api/axiosConfig.js";
+// Importa los hooks de React para manejar estado y efectos secundarios
 import { useState, useEffect } from "react";
+// Importa SweetAlert2 para mostrar alertas interactivas al usuario
 import Swal from "sweetalert2";
 
+// Define el componente de formulario que recibe props para editar o crear reactivos
 const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
+  // Estado que indica si el formulario esta procesando una solicitud
   const [loading, setLoading] = useState(false);
+  // Estado individual para cada campo del formulario de reactivo
   const [presentacion_reactivo, setPresentacion_reactivo] = useState("");
   const [nom_reactivo, setNom_reactivo] = useState("");
   const [nom_reactivo_ingles, setNom_reactivo_ingles] = useState("");
@@ -16,7 +24,7 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
   const [clasificacion_reactivo, setClasificacion_reactivo] = useState("");
   const [estado, setEstado] = useState(1);
 
-  // Mapeo de colores para visualización rápida
+  // Mapeo de colores para visualizacion rapida en los selectores
   const swatches = {
     "Morado": "#800080",
     "Negro": "#000000",
@@ -29,15 +37,18 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
     "Marron": "#A52A2A",
     "Gris oscuro": "#A9A9A9",
     "Cafe": "#8B4513",
-    "Peligro para la salud": "#3b82f6", // Azul (sistema antiguo)
-    "Inflamabilidad": "#ef4444",      // Rojo
-    "Riesgo de reactividad": "#facc15", // Amarillo
-    "Peligro de contacto": "#ffffff",    // Blanco
-    "Riesgo minimo": "#22c55e",         // Verde
+    "Peligro para la salud": "#3b82f6",
+    "Inflamabilidad": "#ef4444",
+    "Riesgo de reactividad": "#facc15",
+    "Peligro de contacto": "#ffffff",
+    "Riesgo minimo": "#22c55e",
   };
 
+  // Efecto que carga los datos del reactivo al editar o resetea el formulario
   useEffect(() => {
+    // Verifica si hay un reactivo seleccionado para editar
     if (selectedReactivo) {
+      // Asigna cada valor del reactivo existente a su estado correspondiente
       setPresentacion_reactivo(selectedReactivo.presentacion_reactivo || "");
       setNom_reactivo(selectedReactivo.nom_reactivo || "");
       setNom_reactivo_ingles(selectedReactivo.nom_reactivo_ingles || "");
@@ -50,6 +61,7 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
       setClasificacion_reactivo(selectedReactivo.clasificacion_reactivo || "");
       setEstado(selectedReactivo.estado ?? 1);
     } else {
+      // Resetea todos los campos si es una creacion nueva
       setPresentacion_reactivo("");
       setNom_reactivo("");
       setNom_reactivo_ingles("");
@@ -64,16 +76,21 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
     }
   }, [selectedReactivo]);
 
+  // Manejador del envio del formulario para crear o actualizar un reactivo
   const handleSubmit = async (e) => {
+    // Previene la recarga de la pagina al enviar el formulario
     e.preventDefault();
 
+    // Valida que el nombre del reactivo no este vacio
     if (!nom_reactivo.trim()) {
       Swal.fire("⚠️ Falta información", "El nombre del reactivo es obligatorio", "warning");
       return;
     }
 
+    // Activa el estado de carga
     setLoading(true);
 
+    // Prepara los datos del formulario para enviar al backend
     const data = {
       presentacion_reactivo: presentacion_reactivo || null,
       nom_reactivo: nom_reactivo.trim(),
@@ -89,25 +106,35 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
     };
 
     try {
+      // Verifica si se esta editando un reactivo existente
       if (selectedReactivo && selectedReactivo.id_reactivo) {
+        // Envia peticion PUT para actualizar el reactivo
         await apiAxios.put(`/api/reactivos/${selectedReactivo.id_reactivo}`, data);
         Swal.fire({ icon: 'success', title: '✅ Actualizado', text: 'Reactivo modificado correctamente', timer: 2000, showConfirmButton: false });
       } else {
+        // Envia peticion POST para crear un nuevo reactivo
         await apiAxios.post("/api/reactivos", data);
         Swal.fire({ icon: 'success', title: '✅ Registrado', text: 'Reactivo creado correctamente', timer: 2000, showConfirmButton: false });
       }
 
+      // Refresca la tabla de datos despues de guardar
       refreshData();
+      // Cierra el modal de formulario
       hideModal();
     } catch (error) {
+      // Muestra error en consola si falla la operacion
       console.error("Error al guardar reactivo:", error);
+      // Obtiene el mensaje de error del servidor o uno generico
       const msg = error.response?.data?.message || "No se pudo guardar el reactivo";
+      // Muestra alerta de error al usuario
       Swal.fire("💀 Error", msg, "error");
     } finally {
+      // Desactiva el estado de carga al finalizar
       setLoading(false);
     }
   };
 
+  // Estilos base reutilizables para los campos del formulario
   const inputStyle = {
     borderRadius: "10px",
     borderColor: "#e2e8f0",
@@ -115,11 +142,12 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
     padding: "10px"
   };
 
+  // Renderiza el formulario
   return (
     <form onSubmit={handleSubmit} className="needs-validation" noValidate>
       <div className="row g-3">
 
-        {/* NOMBRE REACTIVO */}
+        {/* Campo de nombre del reactivo */}
         <div className="col-md-6">
           <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Nombre del reactivo <span className="text-danger">*</span></label>
           <input
@@ -133,7 +161,7 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
           />
         </div>
 
-        {/* NOMBRE EN INGLÉS */}
+        {/* Campo de nombre en ingles */}
         <div className="col-md-6">
           <label className="form-label fw-semibold text-muted">Nombre en inglés</label>
           <input
@@ -146,7 +174,7 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
           />
         </div>
 
-        {/* FÓRMULA */}
+        {/* Campo de formula quimica */}
         <div className="col-md-6">
           <label className="form-label fw-semibold text-muted">Fórmula química</label>
           <input
@@ -159,7 +187,7 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
           />
         </div>
 
-        {/* PRESENTACIÓN */}
+        {/* Campo de unidad de medida o presentacion */}
         <div className="col-md-6">
           <label className="form-label fw-semibold text-muted">Unidad de Medida / Presentación</label>
           <select
@@ -177,7 +205,7 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
           </select>
         </div>
 
-        {/* COLOR ALMACENAMIENTO */}
+        {/* Campo de color de almacenamiento con indicador visual */}
         <div className="col-md-6">
           <label className="form-label fw-semibold text-muted">Color Almacenamiento (Pictograma)</label>
           <div className="position-relative">
@@ -188,19 +216,21 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
               onChange={(e) => setColor_almacenamiento(e.target.value)}
             >
               <option value="">Seleccione...</option>
+              {/* Muestra solo las opciones de peligro (desde indice 11) */}
               {Object.keys(swatches).slice(11).map(opt => (
                 <option key={opt} value={opt}>{opt}</option>
               ))}
               <option value="Preparados">Preparados</option>
               <option value="N/A">N/A</option>
             </select>
+            {/* Indicador visual del color seleccionado */}
             {color_almacenamiento && swatches[color_almacenamiento] && (
                <div style={{ position: "absolute", right: "40px", top: "50%", transform: "translateY(-50%)", width: "16px", height: "16px", borderRadius: "50%", background: swatches[color_almacenamiento], border: "1px solid #ddd" }} />
             )}
           </div>
         </div>
 
-        {/* CLASIFICACIÓN */}
+        {/* Campo de clasificacion del reactivo */}
         <div className="col-md-6">
           <label className="form-label fw-semibold text-muted">Clasificación</label>
           <select
@@ -219,7 +249,7 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
           </select>
         </div>
 
-        {/* COLOR STAND */}
+        {/* Campo de color del stand con indicador visual */}
         <div className="col-md-6">
           <label className="form-label fw-semibold text-muted">Color del stand</label>
           <div className="position-relative">
@@ -230,17 +260,19 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
               onChange={(e) => setColor_stand(e.target.value)}
             >
               <option value="">Seleccione...</option>
+              {/* Muestra solo las primeras 11 opciones de colores */}
               {Object.keys(swatches).slice(0, 11).map(opt => (
                 <option key={opt} value={opt}>{opt}</option>
               ))}
             </select>
+            {/* Indicador visual del color seleccionado */}
             {color_stand && swatches[color_stand] && (
                <div style={{ position: "absolute", right: "40px", top: "50%", transform: "translateY(-50%)", width: "16px", height: "16px", borderRadius: "50%", background: swatches[color_stand], border: "1px solid #ddd" }} />
             )}
           </div>
         </div>
 
-        {/* STAND / COLUMNA / FILA */}
+        {/* Campos de ubicacion: Stand, Columna y Fila */}
         <div className="col-md-4">
           <label className="form-label fw-semibold text-muted">Stand</label>
           <input
@@ -275,7 +307,7 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
           />
         </div>
 
-        {/* BOTÓN */}
+        {/* Boton de envio con estado de carga */}
         <div className="col-12 mt-4">
           <button 
             type="submit" 
@@ -283,6 +315,7 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
             disabled={loading}
             style={{ borderRadius: "12px", fontWeight: "700", background: "linear-gradient(135deg, #0077B6, #00B4D8)", border: "none" }}
           >
+            {/* Muestra spinner mientras carga o el texto segun sea crear o editar */}
             {loading ? (
               <><span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Guardando...</>
             ) : (
@@ -296,4 +329,5 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
   );
 };
 
+// Exporta el componente para su uso en otras partes de la aplicacion
 export default ReactivoForm;

@@ -1,19 +1,33 @@
+<!-- 
+  @file index.html
+  @description Archivo HTML principal del frontend. Es el punto de entrada de la aplicación.
+  Vite inyecta automáticamente los scripts y estilos compilados en este archivo.
+  Aquí se cargan las dependencias externas de CSS y JS (Bootstrap, Font Awesome, etc.)
+-->
 <!doctype html>
+<!-- Elemento raíz HTML con idioma español y tema claro de Bootstrap -->
 <html lang="es" data-bs-theme="light">
   <head>
+    <!-- Codificación de caracteres UTF-8 para soportar tildes y caracteres especiales -->
     <meta charset="UTF-8" />
+    <!-- Ícono de la pestaña del navegador (favicon) usando el logo de Vite -->
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <!-- Meta viewport para diseño responsivo en dispositivos móviles -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Título de la página que aparece en la pestaña del navegador -->
     <title>Ecosystem - Laboratorio Ambiental</title>
 
-    <!-- CSS de Bootstrap -->
+    <!-- ===== DEPENDENCIAS CSS EXTERNAS ===== -->
+
+    <!-- Íconos de Bootstrap v1.11.0 (primera carga) -->
      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Estilos principales de Bootstrap v5.3.2 (framework CSS para diseño responsivo) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Bootstrap Icons -->
+    <!-- Íconos de Bootstrap v1.11.1 (segunda carga, versión ligeramente más nueva) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
-    <!-- Font Awesome -->
+    <!-- Font Awesome v7.0.1 - Biblioteca de íconos vectoriales adicionales -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
@@ -22,14 +36,19 @@
       referrerpolicy="no-referrer"
     />
 
-    <!-- JS de Bootstrap Bundle (con Popper) -->
+    <!-- ===== DEPENDENCIAS JS EXTERNAS ===== -->
+
+    <!-- JavaScript de Bootstrap Bundle (incluye Popper.js para tooltips y dropdowns) -->
+    <!-- El atributo "defer" hace que se cargue después del HTML para no bloquear el renderizado -->
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
       defer
     ></script>
   </head>
   <body>
+    <!-- Contenedor raíz donde React renderiza toda la aplicación -->
     <div id="root"></div>
+    <!-- Script principal de la aplicación React (Vite lo procesa como módulo ES) -->
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

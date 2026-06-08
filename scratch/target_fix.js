@@ -1,3 +1,10 @@
+// ============================================================
+// 🛠️ REPARACIÓN ESPECÍFICA DE TABLAS DE USUARIOS Y PRÉSTAMOS (target_fix.js)
+// Este script realiza una reparación forzada para asegurar que las tablas
+// de usuarios, solicitud_prestamos y solicitudxequipo tengan PK y AUTO_INCREMENT
+// aplicados correctamente en sus respectivas llaves primarias.
+// ============================================================
+
 import db from '../node/database/db.js';
 
 async function targetFix() {
@@ -33,3 +40,4 @@ async function targetFix() {
 }
 
 targetFix();
+

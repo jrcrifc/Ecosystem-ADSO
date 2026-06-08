@@ -1,12 +1,16 @@
+// Archivo: crudestadoequipo.jsx — Vista informativa de los estados fijos de equipos (disponible, no disponible, mantenimiento)
+
+// Componente principal de estados de equipo
 export default function CrudEstadoEquipo() {
+  // Lista estática de los tres estados fijos de equipo
   const estados = [
     { id: 1, estado: "disponible",    icon: "✅", color: "#0077B6", bg: "#e0f2fe", border: "#bae6fd", desc: "El equipo está en el laboratorio, listo para ser prestado o utilizado" },
     { id: 2, estado: "no disponible", icon: "🚫", color: "#dc2626", bg: "#fee2e2", border: "#fecaca", desc: "El equipo no se encuentra disponible actualmente para préstamo" },
     { id: 3, estado: "mantenimiento", icon: "🔧", color: "#d97706", bg: "#fef3c7", border: "#fde68a", desc: "El equipo está en proceso de mantenimiento o calibración" },
   ];
-
   return (
     <div className="container mt-4">
+      {/* Encabezado de la página con barra decorativa y título */}
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
         <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
         <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Estados de Equipo</h2>
@@ -14,6 +18,7 @@ export default function CrudEstadoEquipo() {
       <p style={{ color: "#64748b", fontSize: "14px", marginBottom: "8px" }}>
         Estos son los estados fijos que puede tener cada equipo del laboratorio
       </p>
+      {/* Aviso informativo sobre los estados */}
       <div style={{
         background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "12px",
         padding: "12px 18px", marginBottom: "28px", display: "flex", alignItems: "center", gap: "10px"
@@ -23,8 +28,7 @@ export default function CrudEstadoEquipo() {
           Los estados son fijos y se asignan desde la gestión de equipos. No pueden ser creados ni eliminados.
         </p>
       </div>
-
-      {/* Flow diagram */}
+      {/* Diagrama de flujo visual de los estados */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "center",
         flexWrap: "wrap", gap: "0", marginBottom: "32px"
@@ -40,14 +44,14 @@ export default function CrudEstadoEquipo() {
                 {e.estado}
               </div>
             </div>
+            {/* Flecha entre estados */}
             {i < estados.length - 1 && (
               <div style={{ padding: "0 12px", color: "#cbd5e1", fontSize: "24px", fontWeight: "bold" }}>⇄</div>
             )}
           </div>
         ))}
       </div>
-
-      {/* Cards */}
+      {/* Cards de información de cada estado */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "16px" }}>
         {estados.map(e => (
           <div key={e.id} style={{
