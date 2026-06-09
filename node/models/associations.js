@@ -1,7 +1,5 @@
 // Importa el modelo de equipos para definir sus relaciones
 import equipoModel from "./EquiposModel.js";
-// Importa el modelo de cuentadantes para definir sus relaciones
-import cuentadanteModel from "./cuentadanteModel.js";
 // Importa el modelo de movimientos de reactivos para definir sus relaciones
 import movimientoreactivoModel from "./movimientoreactivosModel.js";
 // Importa el modelo de reactivos para definir sus relaciones
@@ -32,11 +30,40 @@ import SolicitudAccesoModel from "./solicitudAccesoModel.js";
 import LogModel from "./logModel.js";
 // Importa el modelo de configuración del sistema
 import ConfigModel from "./configModel.js";
+// Importa nuevos modelos
+import programaModel from "./programaModel.js";
+import fichaModel from "./fichaModel.js";
+import aprendizModel from "./aprendizModel.js";
+import instructorModel from "./instructorModel.js";
 
-// Define la relación: un equipo pertenece a un cuentadante
-equipoModel.belongsTo(cuentadanteModel, { foreignKey: 'id_cuentadante', as: 'cuentadante' });
-// Define la relación: un cuentadante tiene muchos equipos
-cuentadanteModel.hasMany(equipoModel,   { foreignKey: 'id_cuentadante', as: 'equipos' });
+// Define la relación: un equipo pertenece a un usuario (instructor)
+equipoModel.belongsTo(userModel, { foreignKey: 'id_usuario', as: 'instructor' });
+// Define la relación: un usuario tiene muchos equipos (como instructor)
+userModel.hasMany(equipoModel,   { foreignKey: 'id_usuario', as: 'equipos_asignados' });
+
+// Relaciones Programa - Ficha
+programaModel.hasMany(fichaModel, { foreignKey: 'id_programa', as: 'fichas' });
+fichaModel.belongsTo(programaModel, { foreignKey: 'id_programa', as: 'programa' });
+
+// Relaciones Ficha - Aprendiz
+fichaModel.hasMany(aprendizModel, { foreignKey: 'id_ficha', as: 'aprendices' });
+aprendizModel.belongsTo(fichaModel, { foreignKey: 'id_ficha', as: 'ficha' });
+
+// Relaciones Ficha - Usuario (Pasantes/Gestores)
+fichaModel.hasMany(userModel, { foreignKey: 'id_ficha', as: 'usuarios' });
+userModel.belongsTo(fichaModel, { foreignKey: 'id_ficha', as: 'ficha' });
+
+// Relaciones Programa - Usuario (Pasantes/Gestores)
+programaModel.hasMany(userModel, { foreignKey: 'id_programa', as: 'usuarios' });
+userModel.belongsTo(programaModel, { foreignKey: 'id_programa', as: 'programa' });
+
+// Relación Aprendiz - Usuario
+aprendizModel.belongsTo(userModel, { foreignKey: 'id_usuario', as: 'usuario' });
+userModel.hasOne(aprendizModel, { foreignKey: 'id_usuario', as: 'aprendiz' });
+
+// Relación Instructor - Usuario
+instructorModel.belongsTo(userModel, { foreignKey: 'id_usuario', as: 'usuario' });
+userModel.hasOne(instructorModel, { foreignKey: 'id_usuario', as: 'instructor_info' });
 
 // Define la relación: un movimiento pertenece a un reactivo
 movimientoreactivoModel.belongsTo(reactivoModel,  { foreignKey: 'id_reactivo',  as: 'reactivo' });

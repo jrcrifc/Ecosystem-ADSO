@@ -10,7 +10,7 @@ import multer from "multer";
 import {
   RegisterUser, LoginUser, GetPendientes, 
   GetTodos, AprobarUsuario, RechazarUsuario, ToggleActivoUsuario,
-  GetProfile, UpdateProfile, ChangePassword, ImportarExcel
+  GetProfile, UpdateProfile, ChangePasswordByAdmin, ImportarExcel
 } from "../controller/userController.js";
 // Importa los middlewares de autorización por roles
 import { soloAdmin, adminOGestor } from '../middleware/roleMiddleware.js';
@@ -25,9 +25,7 @@ const router = express.Router();
 // Define la ruta POST /api/auth para registrar un nuevo usuario con validaciones
 router.post("/", [
   // Valida que el email tenga un formato correcto
-  check("email", "Ingrese un email válido").isEmail(),
-  // Valida que la contraseña tenga al menos 8 caracteres
-  check("password", "La contraseña debe tener mínimo 8 caracteres").isLength({ min: 8 }),
+  check("email", "Ingrese un email válido").isEmail()
 ], RegisterUser);
 
 // Define la ruta POST /api/auth/login para iniciar sesión y obtener el token JWT
@@ -57,8 +55,8 @@ router.get("/profile/me", authMiddleware, GetProfile);
 // Define la ruta PUT /api/auth/profile/update para actualizar el perfil del usuario autenticado
 router.put("/profile/update", authMiddleware, UpdateProfile);
 
-// Define la ruta PUT /api/auth/profile/change-password para cambiar la contraseña del usuario autenticado
-router.put("/profile/change-password", authMiddleware, ChangePassword);
+// Define la ruta PUT /api/auth/usuarios/:id/change-password para cambiar la contraseña de un usuario (solo admin)
+router.put("/usuarios/:id/change-password", soloAdmin, ChangePasswordByAdmin);
 
 // Define la ruta GET /api/auth/usuarios/:id para obtener un usuario por ID excluyendo datos sensibles
 router.get("/usuarios/:id", authMiddleware, async (req, res) => {

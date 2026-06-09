@@ -291,7 +291,7 @@ const AcercaDe = () => {
       {lightboxPhoto && (
         // Al hacer clic fuera de la imagen se cierra el lightbox
         <div onClick={() => setLightboxPhoto(null)} style={{
-          position: "fixed", inset: 0, zIndex: 9999,
+          position: "fixed", inset: 0, zIndex: 99999,
           background: "rgba(10, 22, 40, 0.95)", display: "flex",
           alignItems: "center", justifyContent: "center", cursor: "zoom-out"
         }}>

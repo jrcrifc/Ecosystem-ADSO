@@ -195,7 +195,7 @@ const CrudSolicitudPrestamos = () => {
     {
       name: "Acciones",
       center: true,
-      width: "120px",
+      width: "160px",
       // Renderiza los botones de acción para cada fila
       cell: r => (
         <div className="d-flex gap-1 justify-content-center">
@@ -205,6 +205,13 @@ const CrudSolicitudPrestamos = () => {
             title="Ver detalle"
           >
             <i className="fas fa-eye"></i>
+          </button>
+          <button
+            className="btn btn-sm btn-secondary text-white"
+            onClick={() => navigate("/estadoxsolicitud", { state: { id_solicitud: r.id_solicitud } })}
+            title="Ver historial"
+          >
+            <i className="fas fa-history"></i>
           </button>
           <button
             className="btn btn-sm btn-warning"
@@ -477,7 +484,7 @@ const CrudSolicitudPrestamos = () => {
                           boxShadow: "0 2px 6px rgba(0,0,0,0.03)"
                         }}>
                           <img
-                            src={eq.foto_equipo ? `http://localhost:8000/uploads/${eq.foto_equipo}` : "/img/no-image.png"}
+                            src={eq.foto_equipo ? (eq.foto_equipo.startsWith("http") ? eq.foto_equipo : `${import.meta.env.VITE_API_URL || "http://localhost:8000"}${eq.foto_equipo}`) : "/img/no-image.png"}
                             alt={eq.nom_equipo || "Foto del equipo"}
                             style={{
                               width: "60px",

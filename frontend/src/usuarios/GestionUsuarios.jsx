@@ -174,6 +174,32 @@ export default function GestionUsuarios() {
     }
   };
 
+  // ===== Cambiar contraseña de un usuario (Solo Admin) =====
+  const cambiarPasswordAdmin = async (id_usuario) => {
+    const { value: nuevaPassword } = await Swal.fire({
+      title: 'Cambiar Contraseña',
+      input: 'password',
+      inputLabel: 'Nueva contraseña',
+      inputPlaceholder: 'Mínimo 8 caracteres',
+      showCancelButton: true,
+      confirmButtonText: 'Guardar',
+      cancelButtonText: 'Cancelar',
+      inputValidator: (value) => {
+        if (!value) return 'Debes ingresar una contraseña';
+        if (value.length < 8) return 'La contraseña debe tener mínimo 8 caracteres';
+      }
+    });
+
+    if (nuevaPassword) {
+      try {
+        await apiAxios.put(`/api/auth/usuarios/${id_usuario}/change-password`, { nuevaPassword }, { headers });
+        Swal.fire('¡Éxito!', 'La contraseña se ha actualizado correctamente.', 'success');
+      } catch (err) {
+        Swal.fire('Error', err.response?.data?.message || 'Error al cambiar la contraseña', 'error');
+      }
+    }
+  };
+
   // ===== Importar usuarios desde archivo Excel =====
 
   // Funcion asincrona para manejar la importacion de usuarios desde Excel
@@ -402,6 +428,18 @@ export default function GestionUsuarios() {
             {u.estado === 'inactivo' ? "🔓 Activar" : "🔒 Inactivar"}
           </button>
         )}
+        {/* Boton para cambiar contraseña (solo en gestión o si está aprobado/inactivo) */}
+        {(u.estado === 'aprobado' || u.estado === 'inactivo') && (
+          <button onClick={() => cambiarPasswordAdmin(u.id_usuario)} style={{
+            background: "#f1f5f9",
+            border: "1px solid #cbd5e1",
+            borderRadius: "10px", padding: "10px 24px",
+            color: "#475569",
+            fontWeight: "700", cursor: "pointer", fontSize: "13px"
+          }}>
+            🔑 Cambiar Clave
+          </button>
+        )}
       </div>
     </div>
   );
@@ -553,6 +591,16 @@ export default function GestionUsuarios() {
                           transition: "all 0.2s"
                         }}>
                           {u.estado === 'inactivo' ? "🔓 Activar" : "🔒 Inactivar"}
+                        </button>
+                      )}
+                      {(u.estado === 'aprobado' || u.estado === 'inactivo') && (
+                        <button onClick={() => cambiarPasswordAdmin(u.id_usuario)} style={{
+                          background: "#f1f5f9", border: "1px solid #cbd5e1",
+                          borderRadius: "8px", padding: "7px 18px",
+                          color: "#475569", fontWeight: "700", cursor: "pointer", fontSize: "12px",
+                          transition: "all 0.2s"
+                        }}>
+                          🔑 Cambiar Clave
                         </button>
                       )}
                       {/* Botones de aprobar/rechazar para pendientes */}

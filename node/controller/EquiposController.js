@@ -56,11 +56,11 @@ export const createEquipos = async (req, res) => {
     // Copia los datos del cuerpo de la petición
     const data = { ...req.body };
 
-    // Verifica si se subió un archivo de imagen (URL de Cloudinary)
-    if (req.file && req.file.path) {
-      // Asigna la URL de la foto al campo foto_equipo
-      data.foto_equipo = req.file.path;
-      console.log('Foto asignada a BD (Cloudinary):', req.file.path);
+    // Verifica si se subió un archivo de imagen (almacenamiento local)
+    if (req.file && req.file.filename) {
+      // Asigna la ruta relativa de la foto para servir desde /uploads/equipos/
+      data.foto_equipo = `/uploads/equipos/${req.file.filename}`;
+      console.log('Foto asignada a BD (local):', data.foto_equipo);
     } else {
       // Si no hay foto, asigna null
       data.foto_equipo = null;
@@ -101,10 +101,10 @@ export const updateEquipos = async (req, res) => {
     const data = { ...req.body };
 
     // Verifica si se subió una foto nueva en esta actualización
-    if (req.file && req.file.path) {
-      // Asigna la nueva URL de la foto
-      data.foto_equipo = req.file.path;
-      console.log('Nueva foto asignada (Cloudinary):', req.file.path);
+    if (req.file && req.file.filename) {
+      // Asigna la nueva ruta relativa de la foto
+      data.foto_equipo = `/uploads/equipos/${req.file.filename}`;
+      console.log('Nueva foto asignada (local):', data.foto_equipo);
     } else {
       // Si no hay foto nueva, elimina la propiedad para mantener la foto anterior
       delete data.foto_equipo;

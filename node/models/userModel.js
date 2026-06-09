@@ -73,25 +73,18 @@ const UserModel = sequelize.define('usuarios', {
     defaultValue: 0
   },
   
-  // Campo numero_ficha - número de la ficha SENA del usuario
-  numero_ficha: {
-    type: DataTypes.STRING,
+  // Campo id_ficha - relación con tabla fichas para pasantes/gestores si aplica
+  id_ficha: {
+    type: DataTypes.INTEGER,
     allowNull: true,
     defaultValue: null
   },
   
-  // Campo nombre_ficha - nombre del programa de formación
-  nombre_ficha: {
-    type: DataTypes.STRING,
+  // Campo id_programa - relación con tabla programas para pasantes/gestores si aplica
+  id_programa: {
+    type: DataTypes.INTEGER,
     allowNull: true,
     defaultValue: null
-  },
-  
-  // Campo es_sena_empresa - indica si pertenece al programa SENA Empresa
-  es_sena_empresa: {
-    type: DataTypes.BOOLEAN,
-    allowNull: true,
-    defaultValue: false
   }
 }, {
   // Evita la pluralización automática del nombre de la tabla

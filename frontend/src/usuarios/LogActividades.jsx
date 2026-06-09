@@ -59,7 +59,8 @@ export default function LogActividades() {
       name: "Acción", 
       selector: (row) => row.accion, 
       sortable: true, 
-      width: "150px",
+      minWidth: "180px",
+      maxWidth: "200px",
       // Renderizador personalizado para mostrar badge con gradiente segun la accion
       cell: (row) => {
         const accion = row.accion;
@@ -94,7 +95,9 @@ export default function LogActividades() {
               borderRadius: '99px',
               background: bg,
               color: '#fff',
-              letterSpacing: '0.5px'
+              letterSpacing: '0.5px',
+              whiteSpace: 'nowrap',
+              display: 'inline-block'
             }}
           >
             {label}
@@ -102,8 +105,78 @@ export default function LogActividades() {
         );
       }
     },
-    { name: "Módulo", selector: (row) => row.modulo, sortable: true, width: "120px" },
-    { name: "Detalles", selector: (row) => row.detalles || "-", sortable: false, wrap: true },
+    { name: "Módulo", selector: (row) => row.modulo, sortable: true, minWidth: "130px", maxWidth: "160px" },
+    { 
+      name: "Detalles", 
+      selector: (row) => row.detalles || "-", 
+      sortable: false, 
+      wrap: true,
+      cell: (row) => {
+        if (!row.detalles) return <span style={{color: '#94a3b8'}}>-</span>;
+        try {
+          const parsed = JSON.parse(row.detalles);
+          
+          // Función para traducir las rutas a texto humano
+          const traducirRuta = (metodo, ruta) => {
+            const r = ruta.toLowerCase();
+            
+            if (r.includes('/auth/login')) return 'Inicio de sesión en el sistema';
+            if (r.includes('/dashboard/stats')) return 'Consultó las estadísticas principales';
+            if (r.includes('/auditoria')) return 'Consultó el historial de auditoría';
+            
+            // Patrones generales por módulo
+            let modulo = 'un registro';
+            if (r.includes('/usuarios') || r.includes('/auth/registro')) modulo = 'usuario';
+            else if (r.includes('/reactivos')) modulo = 'reactivo';
+            else if (r.includes('/equipos')) modulo = 'equipo';
+            else if (r.includes('/salidas')) modulo = 'salida de reactivo';
+            else if (r.includes('/solicitud')) modulo = 'solicitud';
+            else if (r.includes('/proveedores')) modulo = 'proveedor';
+            else if (r.includes('/fichas')) modulo = 'ficha de formación';
+            else if (r.includes('/programas')) modulo = 'programa de formación';
+            else if (r.includes('/aprendices')) modulo = 'aprendiz';
+            else if (r.includes('/instructores')) modulo = 'instructor';
+
+            if (metodo === 'GET') {
+              return r.split('/').pop().length > 15 ? `Consultó detalles de un ${modulo}` : `Consultó la lista de ${modulo}s`;
+            }
+            if (metodo === 'POST') {
+              if (r.includes('importar-excel')) return `Importó ${modulo}s desde archivo Excel`;
+              return `Registró un nuevo ${modulo}`;
+            }
+            if (metodo === 'PUT' || metodo === 'PATCH') return `Actualizó información de un ${modulo}`;
+            if (metodo === 'DELETE') return `Eliminó un ${modulo}`;
+            
+            return `Acción (${metodo}) en módulo de ${modulo}s`;
+          };
+
+          // Si el JSON tiene formato de petición HTTP
+          if (parsed.metodo && parsed.ruta) {
+            const msjHumano = traducirRuta(parsed.metodo, parsed.ruta);
+            const esError = parsed.status >= 400;
+
+            return (
+              <div style={{ fontSize: '13px', lineHeight: '1.5', padding: '6px 0' }}>
+                <span style={{ fontWeight: '600', color: esError ? '#dc2626' : '#1e293b' }}>
+                  {esError ? '⚠️ Intento fallido: ' : ''}{msjHumano}
+                </span>
+                {parsed.body && Object.keys(parsed.body).length > 0 && (
+                  <div style={{ marginTop: '6px', fontSize: '11px', color: '#64748b' }}>
+                    <i className="fas fa-cube me-1"></i>
+                    {JSON.stringify(parsed.body).substring(0, 60)}{JSON.stringify(parsed.body).length > 60 ? '...' : ''}
+                  </div>
+                )}
+              </div>
+            );
+          }
+          // Si es un JSON pero no de petición
+          return <span style={{ fontSize: '13px', color: '#334155', fontWeight: '500' }}>{row.detalles}</span>;
+        } catch {
+          // Si no es un JSON válido, muestra el texto plano
+          return <span style={{ fontSize: '13px', color: '#334155', fontWeight: '500' }}>{row.detalles}</span>;
+        }
+      }
+    },
   ];
 
   // Filtra los logs localmente segun el texto de busqueda y el filtro por tipo

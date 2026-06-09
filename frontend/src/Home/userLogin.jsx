@@ -18,8 +18,8 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
   // Hook para navegar programáticamente a otras rutas
   const navigate = useNavigate();
 
-  // Estado del formulario con email y contraseña
-  const [form, setForm] = useState({ email: "", password: "" });
+  // Estado del formulario con documento y contraseña
+  const [form, setForm] = useState({ documento: "", password: "" });
   // Estado para mostrar mensajes de error al usuario
   const [error, setError] = useState("");
   // Estado que indica si la petición de login está en curso
@@ -42,12 +42,12 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
     try {
       // Prepara los datos limpiando espacios en blanco
       const data = {
-        email: form.email.trim(),
+        documento: form.documento.trim(),
         password: form.password.trim(),
       };
 
       // Valida que ambos campos estén completos
-      if (!data.email || !data.password) {
+      if (!data.documento || !data.password) {
         setError("Todos los campos son obligatorios");
         setLoading(false);
         return;
@@ -94,7 +94,7 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
       setForm({ email: "", password: "" });
     } catch (err) {
       // Muestra el mensaje de error del servidor o uno genérico
-      const errorMsg = err.response?.data?.message || err.message || "Email o contraseña incorrectos";
+      const errorMsg = err.response?.data?.message || err.message || "Documento/Correo o contraseña incorrectos";
       setError(errorMsg);
     } finally {
       // Desactiva el indicador de carga
@@ -250,11 +250,11 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
 
         {/* Formulario de inicio de sesión */}
         <form onSubmit={gestionarLogin}>
-          {/* Campo de email */}
+          {/* Campo de documento o correo */}
           <div className="mb-3 position-relative">
             <FaEnvelope className="input-icon" style={{ position: "absolute", top: "12px", left: "15px", color: "#0077B6" }} />
-            <input type="email" name="email" value={form.email} onChange={handleChange}
-              className="form-control ps-5" placeholder="Email" required style={inputStyle} />
+            <input type="text" name="documento" value={form.documento} onChange={handleChange}
+              className="form-control ps-5" placeholder="Documento o Correo" required style={inputStyle} />
           </div>
 
           {/* Campo de contraseña */}
@@ -264,15 +264,7 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
               className="form-control ps-5" placeholder="Contraseña" required style={inputStyle} />
           </div>
 
-          {/* Enlace para recuperar contraseña */}
-          <div className="text-end mb-3">
-            <span
-              onClick={() => navigate("/olvidar-password")}
-              style={{ color: "#64748b", fontSize: "13px", cursor: "pointer", textDecoration: "underline" }}
-            >
-              ¿Olvidaste tu contraseña?
-            </span>
-          </div>
+          {/* Enlace eliminado para recuperar contraseña */}
 
           {/* Botón de inicio de sesión */}
           <button type="submit" className="btn w-100 fw-bold mt-2 login-btn" disabled={loading}
@@ -282,10 +274,10 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
 
           {/* Enlace a la página de registro */}
           <p className="mt-3" style={{ color: "#334155", fontSize: "14px" }}>
-            ¿No tienes cuenta?{" "}
+            ¿Eres Pasante o Gestor?{" "}
             <span onClick={() => navigate("/register")}
               style={{ color: "#0077B6", fontWeight: "bold", cursor: "pointer" }}>
-              Registrarse
+              Regístrate aquí
             </span>
           </p>
         </form>

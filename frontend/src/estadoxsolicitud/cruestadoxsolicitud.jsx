@@ -2,6 +2,8 @@
 
 // Importa los hooks de React para manejar estado y efectos secundarios
 import { useEffect, useState } from "react";
+// Importa useLocation de react-router-dom para recibir parametros de navegacion
+import { useLocation } from "react-router-dom";
 // Importa DataTable para mostrar los registros en una tabla interactiva
 import DataTable from "react-data-table-component";
 // Importa la instancia centralizada de Axios para peticiones HTTP
@@ -26,10 +28,14 @@ const formatFechaISO = (isoString) => {
 
 // Define el componente principal de historial de estados por solicitud
 export default function CrudEstadoxSolicitud() {
+  // Hook para obtener el estado de la navegacion
+  const location = useLocation();
   // Estado que almacena el listado de registros del historial
   const [registros, setRegistros] = useState([]);
   // Estado que almacena el texto de busqueda para filtrar la tabla
   const [filterText, setFilterText] = useState("");
+  // Estado que almacena la solicitud seleccionada para filtrar (si viene por navegacion)
+  const [selectedSolicitudId, setSelectedSolicitudId] = useState(null);
 
   // Obtiene los datos del usuario almacenados en sessionStorage
   const stored = sessionStorage.getItem("user");
@@ -45,7 +51,11 @@ export default function CrudEstadoxSolicitud() {
   // Efecto que carga los registros al montar el componente
   useEffect(() => {
     cargarRegistros();
-  }, []);
+    if (location.state?.id_solicitud) {
+      setSelectedSolicitudId(location.state.id_solicitud);
+      setFilterText(String(location.state.id_solicitud));
+    }
+  }, [location.state]);
 
   // ===== Obtener historial (todas las solicitudes o solo las del usuario) =====
 
@@ -152,15 +162,19 @@ export default function CrudEstadoxSolicitud() {
     },
   ];
 
-  // Filtra los registros localmente segun el texto de busqueda
-  const filtered = registros.filter((row) =>
-    [
+  // Filtra los registros localmente segun el texto de busqueda o la solicitud seleccionada
+  const filtered = registros.filter((row) => {
+    if (selectedSolicitudId) {
+      return row.solicitud?.id_solicitud === selectedSolicitudId;
+    }
+    const search = filterText.toLowerCase().trim();
+    if (!search) return true;
+    return [
       row.solicitud?.id_solicitud?.toString(),
       row.solicitud?.usuario?.nombres_apellidos,
       row.estadoSolicitud?.estado
-      // Verifica si algun campo coincide con el texto de busqueda
-    ].some((field) => field?.toLowerCase().includes(filterText.toLowerCase()))
-  );
+    ].some((field) => field?.toLowerCase().includes(search));
+  });
 
   // Renderiza la interfaz del componente
   return (
@@ -188,11 +202,35 @@ export default function CrudEstadoxSolicitud() {
             className="form-control"
             placeholder="Buscar por ID, estado o solicitante..."
             value={filterText}
-            onChange={(e) => setFilterText(e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value;
+              setFilterText(val);
+              if (selectedSolicitudId && val !== String(selectedSolicitudId)) {
+                setSelectedSolicitudId(null);
+              }
+            }}
             style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
           />
         </div>
       </div>
+
+      {/* Alerta de filtro activo si se viene de una solicitud especifica */}
+      {selectedSolicitudId && (
+        <div className="alert alert-info d-flex justify-content-between align-items-center mb-3" style={{ borderRadius: "10px" }}>
+          <span>
+            <strong>Filtro activo:</strong> Mostrando el historial de la solicitud <strong>#{selectedSolicitudId}</strong>.
+          </span>
+          <button
+            className="btn btn-sm btn-outline-info"
+            onClick={() => {
+              setSelectedSolicitudId(null);
+              setFilterText("");
+            }}
+          >
+            Ver todas
+          </button>
+        </div>
+      )}
 
       {/* Contenedor de la tabla con bordes redondeados */}
       <div style={{ borderRadius: "14px", overflow: "hidden", border: "1px solid #dbeafe" }}>

@@ -101,7 +101,16 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
       show: esAdmin,
       items: [
         { icon: "🏢", text: "Proveedores", path: "/proveedor", show: true },
-        { icon: "👤", text: "Cuentadantes", path: "/cuentadante", show: true },
+        // El ítem de Cuentadantes ha sido eliminado ya que ahora los responsables son los Instructores
+      ]
+    },
+    {
+      key: "formacion", icon: "🎓", text: "Formación", show: esAdmin,
+      items: [
+        { icon: "📚", text: "Programas", path: "/programas", show: true },
+        { icon: "📋", text: "Fichas", path: "/fichas", show: true },
+        { icon: "🎓", text: "Aprendices", path: "/aprendices", show: true },
+        { icon: "👨‍🏫", text: "Instructores", path: "/instructores", show: true },
       ]
     },
     {

@@ -1,23 +1,17 @@
-// Importa la fuente Inter desde Google Fonts con pesos del 400 al 800
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
-// Layout raíz del sidebar: flexbox horizontal con altura mínima de pantalla completa
+/*  */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');/*  */
 .sidebar-layout {
   display: flex;
   min-height: 100vh;
   font-family: 'Inter', 'Segoe UI', sans-serif;
-}
-
-// Área de contenido principal al lado del sidebar
+}/*  */
 .sidebar-main-content {
   flex: 1;
   min-height: 100vh;
   background: #f0f7ff;
   transition: margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   overflow-x: hidden;
-}
-
-// Barra lateral fija con gradiente azul oscuro
+}/*  */
 .sidebar {
   position: fixed;
   top: 0;
@@ -32,9 +26,7 @@
               width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 4px 0 24px rgba(2, 62, 138, 0.15);
   overflow: hidden;
-}
-
-// Cabecera del sidebar con logo y nombre de la marca
+}/*  */
 .sidebar-header {
   padding: 22px 20px 18px;
   display: flex;
@@ -42,9 +34,7 @@
   gap: 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
-}
-
-// Contenedor del logo con bordes redondeados y sombra
+}/*  */
 .sidebar-logo {
   width: 42px;
   height: 42px;
@@ -52,23 +42,17 @@
   overflow: hidden;
   flex-shrink: 0;
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2);
-}
-
-// Imagen del logo que llena el contenedor manteniendo proporción
+}/*  */
 .sidebar-logo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-// Contenedor del texto de la marca apilado verticalmente
+}/*  */
 .sidebar-brand {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-}
-
-// Nombre "ECOSYSTEM" en blanco y negrita
+}/*  */
 .sidebar-brand h5 {
   margin: 0;
   font-size: 15px;
@@ -76,36 +60,26 @@
   color: #fff;
   letter-spacing: 0.3px;
   white-space: nowrap;
-}
-
-// Subtítulo "Laboratorio Ambiental" en celeste semitransparente
+}/*  */
 .sidebar-brand small {
   font-size: 11px;
   color: rgba(202, 240, 248, 0.5);
   white-space: nowrap;
-}
-
-// Espacio reservado para las notificaciones dentro del sidebar
+}/*  */
 .sidebar-notifications {
   padding: 10px 14px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   flex-shrink: 0;
-}
-
-// Área scrollable del menú de navegación
+}/*  */
 .sidebar-menu {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 10px 0;
-}
-
-// Scrollbar personalizado del menú (navegadores WebKit)
+}/*  */
 .sidebar-menu::-webkit-scrollbar { width: 3px; }
 .sidebar-menu::-webkit-scrollbar-track { background: transparent; }
-.sidebar-menu::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 10px; }
-
-// Etiqueta de grupo del menú en mayúsculas y celeste tenue
+.sidebar-menu::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 10px; }/*  */
 .sidebar-group-label {
   padding: 16px 20px 6px;
   font-size: 10px;
@@ -115,9 +89,7 @@
   color: rgba(202, 240, 248, 0.5);
   white-space: nowrap;
   user-select: none;
-}
-
-// Item clickeable del menú de navegación
+}/*  */
 .sidebar-item {
   position: relative;
   display: flex;
@@ -136,24 +108,18 @@
   overflow: hidden;
   border: 1px solid transparent;
   user-select: none;
-}
-
-// Efecto hover del item con fondo celeste sutil
+}/*  */
 .sidebar-item:hover {
   background: rgba(0, 180, 216, 0.1);
   color: rgba(255, 255, 255, 0.9);
   border-color: rgba(0, 180, 216, 0.15);
-}
-
-// Item activo resaltado con fondo y borde celeste más visible
+}/*  */
 .sidebar-item.active {
   background: rgba(0, 180, 216, 0.15);
   color: #CAF0F8;
   font-weight: 600;
   border-color: rgba(0, 180, 216, 0.2);
-}
-
-// Indicador vertical izquierdo del item activo
+}/*  */
 .sidebar-item.active::before {
   content: '';
   position: absolute;
@@ -165,9 +131,7 @@
   border-radius: 0 3px 3px 0;
   background: #48CAE4;
   box-shadow: 0 0 10px rgba(72, 202, 228, 0.4);
-}
-
-// Contenedor del ícono del item centrado
+}/*  */
 .sidebar-item-icon {
   font-size: 17px;
   width: 20px;
@@ -176,21 +140,15 @@
   justify-content: center;
   flex-shrink: 0;
   transition: transform 0.2s ease;
-}
-
-// Escala el ícono al pasar el mouse
+}/*  */
 .sidebar-item:hover .sidebar-item-icon {
   transform: scale(1.08);
-}
-
-// Texto del item con puntos suspensivos si es muy largo
+}/*  */
 .sidebar-item-text {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-// Botón desplegable de submenú con estilo consistente
+}/*  */
 .sidebar-submenu-toggle {
   position: relative;
   display: flex;
@@ -211,70 +169,50 @@
   background: transparent;
   width: calc(100% - 20px);
   text-align: left;
-}
-
-// Hover del botón desplegable
+}/*  */
 .sidebar-submenu-toggle:hover {
   background: rgba(0, 180, 216, 0.1);
   color: rgba(255, 255, 255, 0.9);
   border-color: rgba(0, 180, 216, 0.15);
-}
-
-// Estado abierto del desplegable
+}/*  */
 .sidebar-submenu-toggle.open {
   color: rgba(255, 255, 255, 0.85);
   background: rgba(0, 180, 216, 0.08);
-}
-
-// Desplegable con un item activo en su interior
+}/*  */
 .sidebar-submenu-toggle.has-active {
   color: #CAF0F8;
   border-left: 3px solid #48CAE4;
-}
-
-// Flecha indicadora del desplegable empujada a la derecha
+}/*  */
 .sidebar-submenu-arrow {
   margin-left: auto;
   font-size: 10px;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   color: rgba(255, 255, 255, 0.2);
   flex-shrink: 0;
-}
-
-// Rota la flecha 90 grados cuando el submenú está abierto
+}/*  */
 .sidebar-submenu-toggle.open .sidebar-submenu-arrow {
   transform: rotate(90deg);
   color: #48CAE4;
-}
-
-// Contenedor del submenú colapsado por defecto
+}/*  */
 .sidebar-submenu {
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
               opacity 0.25s ease;
   opacity: 0;
-}
-
-// Submenú expandido y visible
+}/*  */
 .sidebar-submenu.open {
   max-height: 500px;
   opacity: 1;
-}
-
-// Items dentro del submenú con mayor indentación izquierda
+}/*  */
 .sidebar-submenu .sidebar-item {
   padding-left: 50px;
   font-size: 12.5px;
   color: rgba(255, 255, 255, 0.8);
   margin: 1px 10px;
-}
-
-// Hover y activo de items del submenú
+}/*  */
 .sidebar-submenu .sidebar-item:hover { color: rgba(255, 255, 255, 0.95); }
-.sidebar-submenu .sidebar-item.active { color: #CAF0F8; }
-
-// Punto indicador circular a la izquierda de cada item del submenú
+.sidebar-submenu .sidebar-item.active { color: #CAF0F8; }/*  */
 .sidebar-submenu .sidebar-item::before {
   content: '';
   position: absolute;
@@ -286,26 +224,18 @@
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.1);
   transition: all 0.2s ease;
-}
-
-// Punto más visible al hacer hover
-.sidebar-submenu .sidebar-item:hover::before { background: rgba(0, 180, 216, 0.5); }
-
-// Punto celeste brillante con resplandor cuando el item está activo
+}/*  */
+.sidebar-submenu .sidebar-item:hover::before { background: rgba(0, 180, 216, 0.5); }/*  */
 .sidebar-submenu .sidebar-item.active::before {
   background: #48CAE4;
   box-shadow: 0 0 6px rgba(72, 202, 228, 0.5);
   width: 5px; height: 5px; left: 30px; border-radius: 50%;
-}
-
-// Pie del sidebar con borde superior tenue
+}/*  */
 .sidebar-footer {
   padding: 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   flex-shrink: 0;
-}
-
-// Perfil del usuario en el footer con avatar, nombre y botón logout
+}/*  */
 .sidebar-profile {
   display: flex;
   align-items: center;
@@ -315,12 +245,8 @@
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.06);
   transition: all 0.2s ease;
-}
-
-// Fondo ligeramente más visible al hover del perfil
-.sidebar-profile:hover { background: rgba(255, 255, 255, 0.07); }
-
-// Avatar circular del usuario con la inicial de su nombre
+}/*  */
+.sidebar-profile:hover { background: rgba(255, 255, 255, 0.07); }/*  */
 .sidebar-avatar {
   width: 38px;
   height: 38px;
@@ -333,17 +259,11 @@
   color: #fff;
   flex-shrink: 0;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
-}
-
-// Colores del avatar según el rol del usuario
+}/*  */
 .sidebar-avatar.admin { background: #0077B6; }
 .sidebar-avatar.gestor { background: #0096C7; }
-.sidebar-avatar.default { background: #00B4D8; }
-
-// Contenedor flexible del nombre y rol del usuario
-.sidebar-profile-info { flex: 1; overflow: hidden; }
-
-// Nombre del usuario en blanco y semi-negrita
+.sidebar-avatar.default { background: #00B4D8; }/*  */
+.sidebar-profile-info { flex: 1; overflow: hidden; }/*  */
 .sidebar-profile-name {
   font-size: 12.5px;
   font-weight: 600;
@@ -353,17 +273,13 @@
   text-overflow: ellipsis;
   margin: 0;
   text-transform: capitalize;
-}
-
-// Rol del usuario debajo del nombre en celeste semitransparente
+}/*  */
 .sidebar-profile-role {
   font-size: 10.5px;
   color: rgba(202, 240, 248, 0.6);
   margin: 2px 0 0;
   white-space: nowrap;
-}
-
-// Botón de cerrar sesión con borde rojo sutil
+}/*  */
 .sidebar-logout-btn {
   background: transparent;
   border: 1px solid rgba(239, 68, 68, 0.2);
@@ -377,15 +293,11 @@
   justify-content: center;
   transition: all 0.2s ease;
   flex-shrink: 0;
-}
-
-// Hover del botón logout con fondo rojo claro
+}/*  */
 .sidebar-logout-btn:hover {
   background: rgba(239, 68, 68, 0.1);
   border-color: rgba(239, 68, 68, 0.35);
-}
-
-// Botón hamburguesa oculto en escritorio, visible en móviles
+}/*  */
 .sidebar-mobile-toggle {
   display: none;
   position: fixed;
@@ -403,12 +315,8 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 16px rgba(2, 62, 138, 0.3);
-}
-
-// Hover del botón hamburguesa
-.sidebar-mobile-toggle:hover { background: #0353A4; }
-
-// Overlay oscuro detrás del sidebar en móvil
+}/*  */
+.sidebar-mobile-toggle:hover { background: #0353A4; }/*  */
 .sidebar-overlay {
   display: none;
   position: fixed;
@@ -416,31 +324,19 @@
   background: rgba(0, 0, 0, 0.45);
   z-index: 999;
   backdrop-filter: blur(3px);
-}
-
-// Línea divisoria decorativa dentro del sidebar
+}/*  */
 .sidebar-divider {
   height: 1px;
   background: rgba(255, 255, 255, 0.05);
   margin: 6px 18px;
-}
-
-// Media query para móviles: muestra hamburguesa y oculta sidebar
-@media (max-width: 992px) {
-  // Muestra el botón hamburguesa en pantallas pequeñas
-  .sidebar-mobile-toggle { display: flex; }
-  // Oculta el sidebar fuera de la pantalla hacia la izquierda
-  .sidebar { transform: translateX(-100%); }
-  // Muestra el sidebar cuando tiene la clase mobile-open
-  .sidebar.mobile-open { transform: translateX(0); }
-  // Muestra el overlay oscuro cuando está activo
-  .sidebar-overlay.show { display: block; }
-  // El contenido ocupa todo el ancho sin margen
+}/*  */
+@media (max-width: 992px) {/*  */
+  .sidebar-mobile-toggle { display: flex; }/*  */
+  .sidebar { transform: translateX(-100%); }/*  */
+  .sidebar.mobile-open { transform: translateX(0); }/*  */
+  .sidebar-overlay.show { display: block; }/*  */
   .sidebar-main-content { margin-left: 0 !important; }
-}
-
-// Media query para escritorio: margen izquierdo para el sidebar fijo
-@media (min-width: 993px) {
-  // Desplaza el contenido 272px a la derecha para dejar espacio al sidebar
+}/*  */
+@media (min-width: 993px) {/*  */
   .sidebar-main-content { margin-left: 272px; }
 }

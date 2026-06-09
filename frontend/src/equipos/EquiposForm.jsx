@@ -1,4 +1,4 @@
-// Archivo: EquiposForm.jsx — Formulario de creación/edición de equipos con carga de foto y selección de cuentadante
+// Archivo: EquiposForm.jsx — Formulario de creación/edición de equipos con carga de foto y búsqueda de cuentadante por documento
 
 // Importa hooks de React para estado y efectos
 import { useEffect, useState } from "react";
@@ -17,38 +17,65 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
     nom_equipo: "",
     marca_equipo: "",
     no_placa: "",
-    id_cuentadante: "",
+    id_usuario: "",
     observaciones: "",
     foto_equipo: null,
     previewFoto: "",
     estado: 1
   });
-  // Estado que almacena la lista de cuentadantes disponibles
-  const [cuentadantes, setCuentadantes] = useState([]);
-  // Estado que indica si se están cargando los cuentadantes
-  const [loadingCuentadantes, setLoadingCuentadantes] = useState(false);
+  // Estado que almacena la lista de instructores disponibles
+  const [instructores, setInstructores] = useState([]);
+  // Estado que indica si se están cargando los instructores
+  const [loadingInstructores, setLoadingInstructores] = useState(false);
   // Estado que indica si se está guardando el formulario
   const [loading, setLoading] = useState(false);
-  // Efecto que carga la lista de cuentadantes al montar el componente
+  // Estado para el campo de búsqueda de documento del cuentadante
+  const [docBusqueda, setDocBusqueda] = useState("");
+  // Estado del instructor encontrado al buscar por documento
+  const [instructorEncontrado, setInstructorEncontrado] = useState(null);
+
+  // Efecto que carga la lista de instructores al montar el componente
   useEffect(() => {
-    cargarCuentadantes();
+    cargarInstructores();
   }, []);
-  // Función asíncrona para obtener los cuentadantes desde la API
-  const cargarCuentadantes = async () => {
-    setLoadingCuentadantes(true);
+  // Función asíncrona para obtener los instructores desde la API
+  const cargarInstructores = async () => {
+    setLoadingInstructores(true);
     try {
       const token = sessionStorage.getItem("token");
-      const res = await apiAxios.get("/api/cuentadante", {
+      const res = await apiAxios.get("/api/instructores", {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setCuentadantes(res.data);
+      setInstructores(res.data);
     } catch (error) {
-      console.error("Error al cargar cuentadantes:", error);
-      Swal.fire("Error", "No se pudieron cargar los cuentadantes", "error");
+      console.error("Error al cargar instructores:", error);
+      Swal.fire("Error", "No se pudieron cargar los instructores", "error");
     } finally {
-      setLoadingCuentadantes(false);
+      setLoadingInstructores(false);
     }
   };
+
+  // Función que busca un instructor por su número de documento
+  const buscarPorDocumento = (documento) => {
+    setDocBusqueda(documento);
+    if (!documento.trim()) {
+      setInstructorEncontrado(null);
+      setForm(prev => ({ ...prev, id_usuario: "" }));
+      return;
+    }
+    // Busca coincidencia exacta o parcial en la lista de instructores
+    const encontrado = instructores.find(
+      (inst) => inst.documento === documento.trim()
+    );
+    if (encontrado) {
+      setInstructorEncontrado(encontrado);
+      setForm(prev => ({ ...prev, id_usuario: encontrado.id_usuario }));
+    } else {
+      setInstructorEncontrado(null);
+      setForm(prev => ({ ...prev, id_usuario: "" }));
+    }
+  };
+
   // Efecto que carga los datos del equipo al editar o limpia el formulario al crear nuevo
   useEffect(() => {
     if (selectedEquipo) {
@@ -57,30 +84,51 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
         nom_equipo: selectedEquipo.nom_equipo || "",
         marca_equipo: selectedEquipo.marca_equipo || "",
         no_placa: (selectedEquipo.no_placa && selectedEquipo.no_placa !== 0 && selectedEquipo.no_placa !== '0') ? selectedEquipo.no_placa : "",
-        id_cuentadante: selectedEquipo.id_cuentadante || "",
+        id_usuario: selectedEquipo.id_usuario || "",
         observaciones: selectedEquipo.observaciones || "",
         foto_equipo: null,
         previewFoto: selectedEquipo.foto_equipo
           ? (selectedEquipo.foto_equipo.startsWith("http") 
               ? selectedEquipo.foto_equipo 
-              : `http://localhost:8000/uploads/${selectedEquipo.foto_equipo}`)
+              : `${import.meta.env.VITE_API_URL || "http://localhost:8000"}${selectedEquipo.foto_equipo}`)
           : "",
         estado: selectedEquipo.estado ?? 1
       });
+      // Si el equipo tiene instructor asignado, carga sus datos en la búsqueda
+      if (selectedEquipo.instructor) {
+        setDocBusqueda(selectedEquipo.instructor.documento || "");
+        setInstructorEncontrado({
+          documento: selectedEquipo.instructor.documento,
+          nombres_apellidos: selectedEquipo.instructor.nombres_apellidos,
+          id_usuario: selectedEquipo.id_usuario,
+        });
+      } else {
+        // Busca en la lista de instructores cargados
+        const inst = instructores.find(i => i.id_usuario === selectedEquipo.id_usuario);
+        if (inst) {
+          setDocBusqueda(inst.documento || "");
+          setInstructorEncontrado(inst);
+        } else {
+          setDocBusqueda("");
+          setInstructorEncontrado(null);
+        }
+      }
     } else {
       setForm({
         grupo_equipo: "",
         nom_equipo: "",
         marca_equipo: "",
         no_placa: "",
-        id_cuentadante: "",
+        id_usuario: "",
         observaciones: "",
         foto_equipo: null,
         previewFoto: "",
         estado: 1
       });
+      setDocBusqueda("");
+      setInstructorEncontrado(null);
     }
-  }, [selectedEquipo]);
+  }, [selectedEquipo, instructores]);
   // Función que maneja los cambios en los campos del formulario
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -145,12 +193,14 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
         nom_equipo: "", 
         marca_equipo: "", 
         no_placa: "",
-        id_cuentadante: "", 
+        id_usuario: "", 
         observaciones: "", 
         foto_equipo: null, 
         previewFoto: "", 
         estado: 1
       });
+      setDocBusqueda("");
+      setInstructorEncontrado(null);
     } catch (error) {
       console.error("Error al guardar:", error);
       Swal.fire({
@@ -162,6 +212,17 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
       setLoading(false);
     }
   };
+
+  // Filtra sugerencias de instructores mientras se escribe el documento o nombre
+  // Busca coincidencias parciales tanto en el campo documento como en nombres_apellidos
+  const sugerencias = docBusqueda.trim().length > 0 && !instructorEncontrado
+    ? instructores.filter(i => {
+        const termino = docBusqueda.trim().toLowerCase();
+        return i.documento.toLowerCase().includes(termino) ||
+          (i.nombres_apellidos || '').toLowerCase().includes(termino);
+      }).slice(0, 8)
+    : [];
+
   return (
     <form className="p-3">
       {/* Vista previa de la foto si existe */}
@@ -200,25 +261,99 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
           <label>N° Placa / Serial</label>
           <input className="form-control" name="no_placa" value={form.no_placa} onChange={handleChange} />
         </div>
-        {/* Selector de cuentadante responsable */}
-        <div className="col-md-6">
-          <label>Cuentadante (Responsable)</label>
-          <select 
-            className="form-select" 
-            name="id_cuentadante" 
-            value={form.id_cuentadante} 
-            onChange={handleChange} 
-            required
-            disabled={loadingCuentadantes}
-          >
-            <option value="">Seleccione cuentadante...</option>
-            {cuentadantes.map(c => (
-              <option key={c.id_cuentadante} value={c.id_cuentadante}>
-                {c.nom_cuentadante} {c.apell_cuentadante}
-              </option>
-            ))}
-          </select>
-          {loadingCuentadantes && <small className="text-muted">Cargando cuentadantes...</small>}
+        {/* Búsqueda de cuentadante por documento */}
+        <div className="col-md-6" style={{ position: "relative" }}>
+          <label>Cuentadante (Instructor)</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Buscar por documento o nombre..."
+            value={docBusqueda}
+            onChange={(e) => buscarPorDocumento(e.target.value)}
+            disabled={loadingInstructores}
+            style={{
+              borderColor: instructorEncontrado ? "#16a34a" : undefined,
+              backgroundColor: instructorEncontrado ? "#f0fdf4" : undefined
+            }}
+          />
+          {loadingInstructores && <small className="text-muted">Cargando instructores...</small>}
+          {/* Lista de sugerencias mientras escribe */}
+          {sugerencias.length > 0 && (
+            <div style={{
+              position: "absolute",
+              zIndex: 10,
+              width: "calc(100% - 24px)",
+              background: "#fff",
+              border: "1px solid #dbeafe",
+              borderRadius: "0 0 8px 8px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+              maxHeight: "180px",
+              overflowY: "auto"
+            }}>
+              {sugerencias.map(inst => (
+                <div
+                  key={inst.id_instructor}
+                  style={{
+                    padding: "8px 12px",
+                    cursor: "pointer",
+                    fontSize: "13px",
+                    borderBottom: "1px solid #f1f5f9"
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.background = "#eef2ff"}
+                  onMouseOut={(e) => e.currentTarget.style.background = "#fff"}
+                  onClick={() => {
+                    setDocBusqueda(inst.documento);
+                    setInstructorEncontrado(inst);
+                    setForm(prev => ({ ...prev, id_usuario: inst.id_usuario }));
+                  }}
+                >
+                  <strong>{inst.documento}</strong> — {inst.nombres_apellidos}
+                </div>
+              ))}
+            </div>
+          )}
+          {/* Tarjeta del instructor encontrado */}
+          {instructorEncontrado && (
+            <div style={{
+              marginTop: "6px",
+              padding: "8px 12px",
+              background: "#f0fdf4",
+              border: "1px solid #bbf7d0",
+              borderRadius: "8px",
+              fontSize: "13px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between"
+            }}>
+              <span>
+                <i className="fas fa-user-check" style={{ color: "#16a34a", marginRight: "6px" }}></i>
+                <strong>{instructorEncontrado.nombres_apellidos}</strong>
+                <span style={{ color: "#64748b", marginLeft: "6px" }}>({instructorEncontrado.documento})</span>
+              </span>
+              <button
+                type="button"
+                style={{
+                  background: "none", border: "none", color: "#dc2626", cursor: "pointer",
+                  fontSize: "16px", padding: "0 4px"
+                }}
+                title="Quitar cuentadante"
+                onClick={() => {
+                  setDocBusqueda("");
+                  setInstructorEncontrado(null);
+                  setForm(prev => ({ ...prev, id_usuario: "" }));
+                }}
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+          )}
+          {/* Mensaje cuando no se encuentra */}
+          {docBusqueda.trim().length > 2 && !instructorEncontrado && sugerencias.length === 0 && !loadingInstructores && (
+            <small style={{ color: "#dc2626", fontSize: "12px" }}>
+              <i className="fas fa-exclamation-circle me-1"></i>
+              No se encontró instructor con ese documento
+            </small>
+          )}
         </div>
         {/* Campo de observaciones */}
         <div className="col-12">
@@ -252,3 +387,4 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
     </form>
   );
 }
+

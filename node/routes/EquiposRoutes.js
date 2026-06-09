@@ -8,41 +8,52 @@ import multer from 'multer';
 import authMiddleware from '../middleware/authMiddleware.js';
 // Importa el middleware de autorización para administradores y gestores
 import { adminOGestor } from '../middleware/roleMiddleware.js';
-// Importa Cloudinary para almacenamiento de imágenes en la nube
-import { v2 as cloudinary } from 'cloudinary';
-// Importa el almacenamiento de Cloudinary para multer
-import { CloudinaryStorage } from 'multer-storage-cloudinary';
-// Importa dotenv para manejar variables de entorno
-import dotenv from 'dotenv';
 // Importa path para resolver rutas de archivos
 import path from 'path';
+// Importa fileURLToPath para obtener __dirname en ESM
+import { fileURLToPath } from 'url';
+// Importa fs para crear directorios si no existen
+import fs from 'fs';
 
-// Carga las variables de entorno desde el archivo .env
-dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+// Obtiene la ruta del archivo actual (necesario en ESM)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Define la carpeta destino para las fotos de equipos
+const uploadDir = path.join(__dirname, '..', 'public', 'uploads', 'equipos');
+// Crea la carpeta si no existe
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 // Crea una nueva instancia del Router
 const router = express.Router();
 
-// Configura las credenciales de Cloudinary desde las variables de entorno
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
-
-// Configura el motor de almacenamiento de Cloudinary para Multer
-const almacenamiento = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    // Carpeta donde se almacenarán las imágenes en Cloudinary
-    folder: 'ecosystem_equipos',
-    // Extensiones de imagen permitidas
-    allowed_formats: ['jpg', 'png', 'jpeg', 'webp']
+// Configura el almacenamiento local en disco con Multer
+const almacenamiento = multer.diskStorage({
+  // Define la carpeta de destino para los archivos subidos
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  // Define el nombre del archivo con timestamp para evitar duplicados
+  filename: (req, file, cb) => {
+    const uniqueName = `equipo_${Date.now()}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
   }
 });
 
-// Instancia Multer con la configuración de almacenamiento en la nube
-const upload = multer({ storage: almacenamiento });
+// Filtra solo archivos de imagen válidos
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Solo se permiten imágenes (jpg, png, jpeg, webp)'), false);
+  }
+};
+
+// Instancia Multer con almacenamiento local y filtro de archivos
+const upload = multer({ storage: almacenamiento, fileFilter, limits: { fileSize: 5 * 1024 * 1024 } });
 
 // Define la ruta GET /api/equipos para obtener todos los equipos
 router.get('/', adminOGestor, getAllEquipos);
@@ -61,4 +72,3 @@ router.delete('/:id', adminOGestor, deleteEquipos);
 
 // Exporta el router para ser usado en la aplicación
 export default router;
-

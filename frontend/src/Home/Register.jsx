@@ -1,5 +1,5 @@
-// Importa React y el hook useState para manejar el estado del formulario
-import React, { useState } from "react";
+// Importa React y hooks para manejar estado y efectos
+import React, { useState, useEffect } from "react";
 // Importa useNavigate para redirigir al usuario después del registro
 import { useNavigate } from "react-router-dom";
 // Importa la instancia de Axios configurada para peticiones HTTP
@@ -14,18 +14,35 @@ const Register = () => {
   // Hook para navegar a otras rutas programáticamente
   const navigate = useNavigate();
 
-  // Estado del formulario con todos los campos de registro
+  // Estado del formulario con todos los campos de registro (sin password, ya que será el documento)
   const [form, setForm] = useState({
     documento: "",
     nombres_apellidos: "",
     email: "",
-    password: "",
-    confirmPassword: "",
-    rol: "Aprendiz",
-    numero_ficha: "",
-    nombre_ficha: "",
-    es_sena_empresa: false
+    rol: "Pasante",
+    id_programa: "",
+    id_ficha: ""
   });
+
+  // Estados para programas y fichas
+  const [programas, setProgramas] = useState([]);
+  const [fichas, setFichas] = useState([]);
+  const [fichasFiltradas, setFichasFiltradas] = useState([]);
+
+  // Cargar programas y fichas al montar el componente
+  useEffect(() => {
+    const fetchDatos = async () => {
+      try {
+        const resProg = await apiAxios.get('/api/programas');
+        setProgramas(resProg.data);
+        const resFich = await apiAxios.get('/api/fichas');
+        setFichas(resFich.data);
+      } catch (error) {
+        console.error("Error cargando programas o fichas", error);
+      }
+    };
+    fetchDatos();
+  }, []);
 
   // Estado para mensajes de error generales
   const [error, setError] = useState("");
@@ -33,10 +50,6 @@ const Register = () => {
   const [success, setSuccess] = useState("");
   // Estado que indica si la petición de registro está en curso
   const [loading, setLoading] = useState(false);
-  // Estado para mostrar u ocultar la contraseña
-  const [showPassword, setShowPassword] = useState(false);
-  // Estado para mostrar u ocultar la confirmación de contraseña
-  const [showConfirm, setShowConfirm] = useState(false);
   // Estado para errores de validación en tiempo real por campo
   const [fieldErrors, setFieldErrors] = useState({});
 
@@ -51,10 +64,6 @@ const Register = () => {
     if (name === "documento" && value !== "" && !/^\d+$/.test(value)) return;
     // Rechaza números en el campo de nombres
     if (name === "nombres_apellidos" && /\d/.test(value)) return;
-    // Solo permite dígitos en el número de ficha
-    if (name === "numero_ficha" && value !== "" && !/^\d+$/.test(value)) return;
-    // Rechaza números en el nombre de la ficha
-    if (name === "nombre_ficha" && /\d/.test(value)) return;
 
     // Determina el valor según el tipo de campo (checkbox o texto)
     let val = type === "checkbox" ? checked : value;
@@ -65,6 +74,12 @@ const Register = () => {
 
     // Actualiza el estado del formulario con el nuevo valor
     setForm({ ...form, [name]: val });
+
+    // Filtrar fichas si se selecciona un programa
+    if (name === "id_programa") {
+      setFichasFiltradas(fichas.filter(f => String(f.id_programa) === String(val)));
+      setForm(prev => ({ ...prev, id_programa: val, id_ficha: "" }));
+    }
 
     // Actualiza los errores de validación en tiempo real
     const errors = { ...fieldErrors };
@@ -84,18 +99,6 @@ const Register = () => {
       else if (value && (!value.includes(".") || value.split(".").pop().length < 2)) errors.email = "Falta el dominio (ej. .com, .co)";
       else delete errors.email;
     }
-    // Valida que la contraseña tenga mínimo 8 caracteres
-    if (name === "password") {
-      if (value && value.length < 8) errors.password = "Mínimo 8 caracteres.";
-      else delete errors.password;
-    }
-    // Valida que las contraseñas coincidan
-    if (name === "confirmPassword" || name === "password") {
-      const p1 = name === "password" ? value : form.password;
-      const p2 = name === "confirmPassword" ? value : form.confirmPassword;
-      if (p2 && p1 !== p2) errors.confirmPassword = "Las contraseñas no coinciden.";
-      else delete errors.confirmPassword;
-    }
     setFieldErrors(errors);
   };
 
@@ -111,17 +114,11 @@ const Register = () => {
     const docTrim = form.documento.trim();
     const nombreTrim = form.nombres_apellidos.trim();
     const emailTrim = form.email.trim().toLowerCase();
-    // Los administradores no requieren datos de ficha
-    const necesitaFicha = form.rol !== "Administrador";
-
     // Validaciones finales antes de enviar al servidor
     if (docTrim.length < 5) return setError("El documento es demasiado corto.");
     if (nombreTrim.split(" ").length < 2) return setError("Por favor, ingresa nombres y apellidos completos.");
-    if (form.password !== form.confirmPassword) return setError("Las contraseñas no coinciden.");
-    if (form.password.length < 8) return setError("La contraseña debe tener mínimo 8 caracteres.");
-    // Valida campos de ficha solo si el rol lo requiere
-    if (necesitaFicha && !form.numero_ficha.trim()) return setError("El número de ficha es obligatorio.");
-    if (necesitaFicha && !form.nombre_ficha.trim()) return setError("El nombre de la ficha es obligatorio.");
+    if (!form.id_programa) return setError("El programa es obligatorio.");
+    if (!form.id_ficha) return setError("La ficha es obligatoria.");
 
     // Activa el indicador de carga
     setLoading(true);
@@ -132,11 +129,9 @@ const Register = () => {
         documento: docTrim,
         nombres_apellidos: nombreTrim,
         email: emailTrim,
-        password: form.password,
         rol: form.rol,
-        numero_ficha: form.numero_ficha.trim(),
-        nombre_ficha: form.nombre_ficha.trim(),
-        es_sena_empresa: form.es_sena_empresa
+        id_programa: form.id_programa,
+        id_ficha: form.id_ficha
       };
 
       // Envía la petición POST al backend para crear el nuevo usuario
@@ -148,12 +143,9 @@ const Register = () => {
         documento: "",
         nombres_apellidos: "",
         email: "",
-        password: "",
-        confirmPassword: "",
-        rol: "Aprendiz",
-        numero_ficha: "",
-        nombre_ficha: "",
-        es_sena_empresa: false
+        rol: "Pasante",
+        id_programa: "",
+        id_ficha: ""
       });
 
       // Redirige al login después de 4 segundos
@@ -305,9 +297,9 @@ const Register = () => {
         <form onSubmit={registrarUsuario}>
           {/* Selector de tipo de usuario con botones de opción */}
           <div className="mb-3">
-            <label style={{ fontSize: "12px", color: "#64748b", fontWeight: "600", marginBottom: "8px", d: "block" }}>¿Cuál es tu rol?</label>
+            <label style={{ fontSize: "12px", color: "#64748b", fontWeight: "600", marginBottom: "8px", display: "block" }}>¿Cuál es tu rol?</label>
             <div style={{ display: "flex", gap: "8px" }}>
-              {["Aprendiz", "Pasante", "Gestor", "Instructor"].map((rolValue) => (
+              {["Pasante", "Gestor"].map((rolValue) => (
                 // Botón de rol individual con estilo activo/inactivo
                 <div
                   key={rolValue}
@@ -353,67 +345,25 @@ const Register = () => {
             {fieldErrors.email && <div style={errorStyle}>{fieldErrors.email}</div>}
           </div>
 
-          {/* Campos de ficha solo visibles para roles que no son administrador */}
-          {form.rol !== "Administrador" && (
-            <div className="mb-2">
-              <div className="row g-2 mb-2">
-                <div className="col-6">
-                  <label className="mb-1" style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Número de Ficha</label>
-                  <input className="form-control" name="numero_ficha" placeholder="Ej: 2558832"
-                    value={form.numero_ficha} onChange={handleChange} required style={inputStyle} />
-                </div>
-                <div className="col-6">
-                  <label className="mb-1" style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Nombre de la Ficha</label>
-                  <input className="form-control" name="nombre_ficha" placeholder="Ej: ADSO"
-                    value={form.nombre_ficha} onChange={handleChange} required style={inputStyle} />
-                </div>
-              </div>
-              {/* Checkbox para SENA Empresa */}
-              <div className="form-check d-flex align-items-center gap-2 mb-3 mt-2" style={{ paddingLeft: "5px" }}>
-                <input className="form-check-input" type="checkbox" name="es_sena_empresa" id="es_sena_empresa"
-                  checked={form.es_sena_empresa} onChange={handleChange} style={{ width: "17px", height: "17px", cursor: "pointer", border: "1px solid #cbd5e1" }} />
-                <label className="form-check-label" htmlFor="es_sena_empresa" style={{ fontSize: "12px", fontWeight: "600", color: "#475569", cursor: "pointer", userSelect: "none" }}>
-                  ¿Es SENA Empresa? 🏢
-                </label>
-              </div>
-            </div>
-          )}
-
-          {/* Campos de contraseña y confirmación */}
-          <div className="row g-2 mb-4">
+          {/* Selectores de Programa y Ficha */}
+          <div className="row g-2 mb-4 mt-2">
             <div className="col-6">
-              <label className="mb-1" style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Contraseña</label>
-              <div className="position-relative">
-                <input className="form-control" type={showPassword ? "text" : "password"} name="password" placeholder="Mínimo 8"
-                  value={form.password} onChange={handleChange} required style={{ ...inputStyle, paddingRight: "36px" }} />
-                {/* Botón para mostrar u ocultar la contraseña */}
-                <i
-                  className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`}
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={{
-                    position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)",
-                    cursor: "pointer", color: "#64748b", fontSize: "16px"
-                  }}
-                />
-              </div>
-              {fieldErrors.password && <div style={errorStyle}>{fieldErrors.password}</div>}
+              <label className="mb-1" style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Programa</label>
+              <select className="form-control" name="id_programa" value={form.id_programa} onChange={handleChange} required style={inputStyle}>
+                <option value="">Selecciona un Programa</option>
+                {programas.map(p => (
+                  <option key={p.id_programa} value={p.id_programa}>{p.nombre_programa}</option>
+                ))}
+              </select>
             </div>
             <div className="col-6">
-              <label className="mb-1" style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Confirmar contraseña</label>
-              <div className="position-relative">
-                <input className="form-control" type={showConfirm ? "text" : "password"} name="confirmPassword" placeholder="Confirma"
-                  value={form.confirmPassword} onChange={handleChange} required style={{ ...inputStyle, paddingRight: "36px" }} />
-                {/* Botón para mostrar u ocultar la confirmación de contraseña */}
-                <i
-                  className={`bi ${showConfirm ? "bi-eye-slash" : "bi-eye"}`}
-                  onClick={() => setShowConfirm(!showConfirm)}
-                  style={{
-                    position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)",
-                    cursor: "pointer", color: "#64748b", fontSize: "16px"
-                  }}
-                />
-              </div>
-              {fieldErrors.confirmPassword && <div style={errorStyle}>{fieldErrors.confirmPassword}</div>}
+              <label className="mb-1" style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Ficha</label>
+              <select className="form-control" name="id_ficha" value={form.id_ficha} onChange={handleChange} required style={inputStyle} disabled={!form.id_programa}>
+                <option value="">Selecciona una Ficha</option>
+                {fichasFiltradas.map(f => (
+                  <option key={f.id_ficha} value={f.id_ficha}>{f.numero_ficha}</option>
+                ))}
+              </select>
             </div>
           </div>
 

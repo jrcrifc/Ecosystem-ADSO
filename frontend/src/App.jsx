@@ -19,7 +19,6 @@ import CrudEquipo from "./equipos/crudequipos.jsx";
 import Crudestadoequipo from "./estadoequipo/crudestadoequipo.jsx";
 import Crudestadosolicitud from "./estadosolicitud/crudestadosolicitud.jsx";
 import Crudsalidas from "./salidasReactivos/crudsalidareactivo.jsx";
-import Crudcuentadantes from "./cuentadante/crudcuentadante.jsx";
 import Crudsolicitud from "./Solicitud/crudsolicitud.jsx";
 import CrudEstadoxSolicitud from "./estadoxsolicitud/cruestadoxsolicitud.jsx";
 import Home from "./Home/home.jsx";
@@ -35,8 +34,12 @@ import LogActividades from "./usuarios/LogActividades.jsx";
 import SalidasReactivos from "./salidasReactivos/crudsalidareactivo.jsx";
 import TopBar from "./TopBar.jsx";
 import PerfilUsuario from "./Home/PerfilUsuario.jsx";
-import OlvidarPassword from "./Home/OlvidarPassword.jsx";
 import AcercaDe from "./Home/AcercaDe.jsx";
+// Importa los nuevos componentes de gestión de formación
+import Aprendices from "./usuarios/Aprendices.jsx";
+import Instructores from "./usuarios/Instructores.jsx";
+import Programas from "./usuarios/Programas.jsx";
+import Fichas from "./usuarios/Fichas.jsx";
 
 // Define el componente FormularioRoute que protege rutas para usuarios en revisión
 const FormularioRoute = ({ isAuth, userData, userRol, logOut, children }) => {
@@ -333,11 +336,8 @@ function App() {
             {/* Ruta pública de registro con redirección si ya está autenticado */}
             <Route path="/register" element={isAuth ? <Navigate to="/home" replace /> : <Register />} />
 
-            {/* Ruta pública de recuperación de contraseña */}
-            <Route path="/olvidar-password" element={isAuth ? <Navigate to="/home" replace /> : <OlvidarPassword />} />
-
-            {/* Ruta de Acerca de, accesible para todos */}
-            <Route path="/acerca-de" element={<AcercaDe />} />
+            {/* Ruta de Acerca de, requiere autenticación */}
+            <Route path="/acerca-de" element={isAuth ? <AcercaDe /> : <Navigate to="/UserLogin" replace />} />
 
             {/* Ruta protegida del dashboard principal con FormularioRoute */}
             <Route path="/home" element={
@@ -375,6 +375,12 @@ function App() {
             <Route path="/gestion-solicitudes" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><GestionSolicitudes /></SoloAdminRoute>} />
             <Route path="/estadoSolicitud" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Crudestadosolicitud /></SoloAdminRoute>} />
 
+            {/* Rutas de gestión de formación — solo administrador */}
+            <Route path="/aprendices" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Aprendices /></SoloAdminRoute>} />
+            <Route path="/instructores" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Instructores /></SoloAdminRoute>} />
+            <Route path="/programas" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Programas /></SoloAdminRoute>} />
+            <Route path="/fichas" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Fichas /></SoloAdminRoute>} />
+
             {/* Rutas para admin, pasantes y gestores aprobados */}
             <Route path="/reactivos" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><CrudReactivos /></AdminRoute>} />
             <Route path="/equipos" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><CrudEquipo /></AdminRoute>} />
@@ -385,7 +391,6 @@ function App() {
             <Route path="/historial-equipo" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><HistorialEstadoEquipo /></AdminRoute>} />
             <Route path="/gestion-equipo" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><GestionEstadoEquipo /></AdminRoute>} />
             <Route path="/control-reactivos" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><ControlReactivos /></AdminRoute>} />
-            <Route path="/cuentadante" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Crudcuentadantes /></SoloAdminRoute>} />
 
             {/* Ruta comodín que redirige al home o login según autenticación */}
             <Route path="*" element={<Navigate to={isAuth ? "/home" : "/UserLogin"} replace />} />

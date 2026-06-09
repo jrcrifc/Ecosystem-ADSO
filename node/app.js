@@ -55,20 +55,24 @@ import estadoxsolicitudRoutes from './routes/estadoxsolicitudRoutes.js';
 import salidasRoutes from './routes/salidasRoutes.js';
 // Importa las rutas del historial de estados de equipos
 import estadoxequipoRoutes from './routes/estadoxequipoRoutes.js';
-// Importa las rutas de cuentadantes
-import cuentadanteRoutes from './routes/cuentandanteRoutes.js';
 // Importa las rutas de notificaciones
 import notificacionRoutes from './routes/notificacionRoutes.js';
 // Importa las rutas de solicitudes de acceso
 import solicitudAccesoRoutes from './routes/solicitudAccesoRoutes.js';
 // Importa las rutas del dashboard
 import dashboardRoutes from './routes/dashboardRoutes.js';
-// Importa las rutas de restablecimiento de contraseña
-import passwordResetRoutes from './routes/passwordResetRoutes.js';
 // Importa las rutas de configuración global
 import configRoutes from './routes/configRoutes.js';
 // Importa las rutas de auditoría
-import logRoutes from "./routes/logRoutes.js";
+import auditoriaRoutes from './routes/auditoriaRoutes.js';
+// Importa el middleware de auditoría global
+import auditoriaMiddleware from './middleware/auditoriaMiddleware.js';
+
+// Nuevas rutas
+import programaRoutes from './routes/programaRoutes.js';
+import fichaRoutes from './routes/fichaRoutes.js';
+import aprendizRoutes from './routes/aprendizRoutes.js';
+import instructorRoutes from './routes/instructorRoutes.js';
 // Importa fs para verificar la existencia de archivos
 import fs from 'fs';
 
@@ -117,6 +121,9 @@ app.use(cors());
 // Habilita el parseo automático del cuerpo de peticiones en formato JSON
 app.use(express.json());
 
+// Monta el middleware de auditoría global para registrar acciones de usuarios autenticados
+app.use(auditoriaMiddleware);
+
 // Expone la carpeta de uploads como contenido estático para acceder a las fotos
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
@@ -142,8 +149,6 @@ app.use("/api/solicitud", solicitudRoutes);
 app.use("/api/salidas", salidasRoutes);
 // Monta las rutas de movimientos en /api/movimientos
 app.use("/api/movimientos", movimientosRoutes);
-// Monta las rutas de cuentadantes en /api/cuentadante
-app.use("/api/cuentadante", cuentadanteRoutes);
 // Monta las rutas de autenticación en /api/auth
 app.use('/api/auth', UserRoutes);
 // Monta las rutas de administración en /api/admin
@@ -154,12 +159,16 @@ app.use('/api/notificaciones', notificacionRoutes);
 app.use('/api/solicitud-acceso', solicitudAccesoRoutes);
 // Monta las rutas del dashboard en /api/dashboard
 app.use('/api/dashboard', dashboardRoutes);
-// Monta las rutas de restablecimiento de contraseña en /api/password-reset
-app.use('/api/password-reset', passwordResetRoutes);
 // Monta las rutas de configuración en /api/config
 app.use('/api/config', configRoutes);
 // Monta las rutas de auditoría en /api/auditoria
-app.use('/api/auditoria', logRoutes);
+app.use('/api/auditoria', auditoriaRoutes);
+
+// Monta las nuevas rutas
+app.use('/api/programas', programaRoutes);
+app.use('/api/fichas', fichaRoutes);
+app.use('/api/aprendices', aprendizRoutes);
+app.use('/api/instructores', instructorRoutes);
 
 // Define la ruta base que retorna un mensaje de bienvenida
 app.get('/', (req, res) => {

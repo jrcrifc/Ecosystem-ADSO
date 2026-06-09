@@ -9,6 +9,8 @@
 import UserService from "../service/userService.js";
 // Importa el modelo de Usuarios para consultas directas a la base de datos
 import UserModel from "../models/userModel.js";
+// Importa el modelo de Logs para registrar el inicio de sesión
+import LogModel from '../models/logModel.js';
 
 // Controlador para registrar un nuevo usuario en la plataforma
 export const RegisterUser = async (req, res) => {
@@ -46,6 +48,9 @@ export const LoginUser = async (req, res) => {
   try {
     // Llama al servicio para autenticar al usuario con las credenciales proporcionadas
     const result = await UserService.loginUser(req.body);
+    
+    // El inicio de sesión ya se registra de manera limpia dentro de UserService.loginUser
+
     // Responde con el resultado de la autenticación (token y datos del usuario)
     res.json(result);
   } catch (error) {
@@ -152,12 +157,12 @@ export const UpdateProfile = async (req, res) => {
   }
 };
 
-// Controlador para cambiar la contraseña del usuario actual
-export const ChangePassword = async (req, res) => {
+// Controlador para cambiar la contraseña de un usuario por parte del administrador
+export const ChangePasswordByAdmin = async (req, res) => {
   // Ejecuta el bloque en try-catch para manejar errores
   try {
-    // Llama al servicio para cambiar la contraseña con los datos proporcionados
-    await UserService.changePassword(req.user.id, req.body);
+    // Llama al servicio para cambiar la contraseña con los datos proporcionados por el admin
+    await UserService.changePasswordByAdmin(req.params.id, req.body);
     // Responde con mensaje de éxito
     res.json({ message: "Contraseña cambiada correctamente" });
   } catch (error) {
@@ -180,8 +185,11 @@ export const ImportarExcel = async (req, res) => {
     // Define el email del usuario administrador o un valor por defecto
     const userEmailLog = adminUser ? adminUser.email : 'admin@laboratorio.com';
     
+    // Obtiene el rol forzado del body si existe
+    const { rolForzado } = req.body;
+    
     // Llama al servicio para importar el archivo Excel con su contenido en buffer
-    const result = await UserService.importarExcel(req.file.buffer, userEmailLog);
+    const result = await UserService.importarExcel(req.file.buffer, userEmailLog, rolForzado);
     // Responde con mensaje de éxito y los datos del resultado de la importación
     res.json({
       message: "Proceso de importación finalizado",

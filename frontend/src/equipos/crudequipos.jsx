@@ -174,8 +174,8 @@ export default function CrudEquipo() {
     },
     {
       name: "Cuentadante",
-      selector: (row) => row.cuentadante
-        ? `${row.cuentadante.nom_cuentadante} ${row.cuentadante.apell_cuentadante}`
+      selector: (row) => row.instructor
+        ? `${row.instructor.nombres_apellidos} (${row.instructor.documento})`
         : "-",
       sortable: true,
       minWidth: "200px"
@@ -189,7 +189,7 @@ export default function CrudEquipo() {
         <div style={{ padding: "5px", cursor: row.foto_equipo ? "pointer" : "default" }}>
           {row.foto_equipo ? (
             <img
-              src={row.foto_equipo.startsWith("http") ? row.foto_equipo : `http://localhost:8000/uploads/${row.foto_equipo}`}
+              src={row.foto_equipo.startsWith("http") ? row.foto_equipo : `${import.meta.env.VITE_API_URL || "http://localhost:8000"}${row.foto_equipo}`}
               alt={row.nom_equipo || "Foto del equipo"}
               style={{
                 width: "80px",
@@ -295,7 +295,7 @@ export default function CrudEquipo() {
       "Nombre": row.nom_equipo || "-",
       "Marca": row.marca_equipo || "-",
       "Placa": (row.no_placa && row.no_placa !== 0 && row.no_placa !== '0') ? row.no_placa : "Sin placa",
-      "Cuentadante": row.cuentadante ? `${row.cuentadante.nom_cuentadante} ${row.cuentadante.apell_cuentadante}` : "-",
+      "Cuentadante": row.instructor ? `${row.instructor.nombres_apellidos}` : "-",
       "Observaciones": row.observaciones || "-",
       "Estado Equipo": row.estado === 1 ? "Activo" : "Inactivo",
       "Estado Operativo": (row.estadoReal || "disponible").charAt(0).toUpperCase() + (row.estadoReal || "disponible").slice(1),
@@ -304,8 +304,8 @@ export default function CrudEquipo() {
   // Filtra los equipos localmente según el texto de búsqueda
   const filteredEquipos = equipos.filter((row) => {
     const search = filterText.toLowerCase().trim();
-    const nombreCuentadante = row.cuentadante
-      ? `${row.cuentadante.nom_cuentadante} ${row.cuentadante.apell_cuentadante}`
+    const nombreCuentadante = row.instructor
+      ? `${row.instructor.nombres_apellidos}`
       : "";
     return (
       String(row.id_equipo || "").includes(search) ||
@@ -441,7 +441,7 @@ export default function CrudEquipo() {
             <div className="modal-body text-center" style={{ padding: "20px 40px 40px" }}>
               {largePhoto && (
                 <img
-                  src={largePhoto.startsWith("http") ? largePhoto : `http://localhost:8000/uploads/${largePhoto}`}
+                  src={largePhoto.startsWith("http") ? largePhoto : `${import.meta.env.VITE_API_URL || "http://localhost:8000"}${largePhoto}`}
                   alt="Foto del equipo"
                   style={{
                     maxWidth: "100%",

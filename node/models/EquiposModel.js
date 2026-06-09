@@ -37,13 +37,13 @@ const EquiposModel = db.define('equipos', {
     unique: true
   },
   
-  // Campo id_cuentadante - clave foránea que referencia al cuentadante responsable
-  id_cuentadante: { 
+  // Campo id_usuario - clave foránea que referencia al instructor responsable
+  id_usuario: { 
     type: DataTypes.INTEGER,
     allowNull: true,
     references: {
-      model: 'cuentadantes',
-      key: 'id_cuentadante'
+      model: 'usuarios',
+      key: 'id_usuario'
     },
     onDelete: 'SET NULL',
     onUpdate: 'CASCADE'

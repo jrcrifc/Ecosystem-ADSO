@@ -8,8 +8,8 @@
 
 // Importa el modelo de Equipos para acceder a la tabla de equipos en la base de datos
 import EquiposModel from '../models/EquiposModel.js';
-// Importa el modelo de cuentadantes para la relación con responsables de equipos
-import cuentadanteModel from '../models/cuentadanteModel.js';
+// Importa el modelo de usuarios para la relación con el cuentadante (instructor) del equipo
+import userModel from '../models/userModel.js';
 // Importa el modelo de historial de estados de equipo
 import Estadoxequipo from '../models/estadoxequipoModel.js';
 // Importa el modelo de catálogo de estados de equipo
@@ -25,14 +25,14 @@ import EstadoSolicitudModel from '../models/Estado_solicitudModel.js';
 class EquiposService {
     // Obtiene todos los equipos con información completa y estado calculado dinámicamente
     async getAll() {
-        // Consulta todos los equipos incluyendo cuentadante, historial de estados y solicitudes activas
+        // Consulta todos los equipos incluyendo cuentadante (instructor), historial de estados y solicitudes activas
         const equipos = await EquiposModel.findAll({
             include: [
                 {
-                    // Incluye los datos del cuentadante responsable del equipo
-                    model: cuentadanteModel,
-                    as: 'cuentadante',
-                    attributes: ['nom_cuentadante', 'apell_cuentadante']
+                    // Incluye los datos del cuentadante (instructor) asignado al equipo
+                    model: userModel,
+                    as: 'instructor',
+                    attributes: ['id_usuario', 'documento', 'nombres_apellidos', 'email']
                 },
                 {
                     // Incluye el historial de estados físicos del equipo

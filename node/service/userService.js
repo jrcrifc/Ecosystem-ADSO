@@ -12,6 +12,8 @@ import UserModel from "../models/userModel.js";
 import bcrypt from "bcrypt";
 // Importa jsonwebtoken para la generación de tokens JWT
 import jwt from "jsonwebtoken";
+// Importa Op de sequelize para operadores lógicos
+import { Op } from "sequelize";
 // Importa uuid para la generación de identificadores únicos
 import { v4 as uuidv4 } from "uuid";
 // Importa el servicio de notificaciones para alertar a administradores
@@ -24,6 +26,11 @@ import { registrarLog } from "./logService.js";
 import { getIO } from "../socket.js";
 // Importa la librería XLSX para procesar archivos de Excel
 import XLSX from "xlsx";
+// Importa modelos adicionales para la lógica de importación
+import ProgramaModel from "../models/programaModel.js";
+import FichaModel from "../models/fichaModel.js";
+import AprendizModel from "../models/aprendizModel.js";
+import InstructorModel from "../models/instructorModel.js";
 
 // Define la clase de servicio para usuarios con registro, login, aprobación e importación masiva
 class UserService {
@@ -62,14 +69,13 @@ class UserService {
   // Registra un nuevo usuario en el sistema con validaciones del lado del servidor
   async registerUser(data) {
     // Desestructura los datos del formulario de registro
-    let { documento, nombres_apellidos, email, password, rol, numero_ficha, nombre_ficha, es_sena_empresa } = data;
+    let { documento, nombres_apellidos, email, rol, id_ficha, id_programa } = data;
     // Limpia y normaliza espacios y minúsculas en los campos de texto
     documento = (documento || "").trim();
     nombres_apellidos = (nombres_apellidos || "").trim();
     email = (email || "").trim().toLowerCase();
-    numero_ficha = numero_ficha ? String(numero_ficha).trim() : null;
-    nombre_ficha = nombre_ficha ? String(nombre_ficha).trim() : null;
-    const esSenaEmpresa = !!es_sena_empresa;
+    // La contraseña por defecto será el mismo documento
+    const password = documento;
     // VALIDACIONES DE SEGURIDAD EN EL SERVIDOR
     // Valida que el documento contenga solo números
     if (!/^\d+$/.test(documento)) throw new Error("El documento debe contener solo números");
@@ -78,8 +84,10 @@ class UserService {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     // Valida el formato del correo electrónico
     if (!emailRegex.test(email)) throw new Error("El formato del correo electrónico no es válido");
-    // Valida que la contraseña tenga al menos 8 caracteres
-    if (password.length < 8) throw new Error("La contraseña debe tener al menos 8 caracteres");
+    // Valida que el rol sea únicamente Pasante o Gestor para el registro manual
+    if (!['Pasante', 'Gestor'].includes(rol)) {
+      throw new Error("Solo los Pasantes y Gestores pueden registrarse manualmente.");
+    }
     // Verifica si el correo ya está registrado
     const existUser = await UserModel.findOne({ where: { email } });
     if (existUser) throw new Error("El correo electrónico ya está registrado");
@@ -97,9 +105,8 @@ class UserService {
       password: hashedPassword,
       rol,
       estado: 'pendiente',
-      numero_ficha,
-      nombre_ficha,
-      es_sena_empresa: esSenaEmpresa
+      id_ficha,    // Se guarda la ficha seleccionada
+      id_programa  // Se guarda el programa seleccionado
     });
     // Registra la acción en la tabla de auditoría
     await registrarLog(email, 'REGISTRO', 'AUTH', `Usuario registrado como ${rol}`);
@@ -132,19 +139,27 @@ class UserService {
     return userSinPassword;
   }
 
-  // Inicia sesión de un usuario validando credenciales y generando token JWT
+  // Inicia sesión de un usuario validando su documento como usuario y contraseña
   async loginUser(data) {
-    const { email, password } = data;
+    // Se recibe documento como nombre de usuario y password (que también debe ser el documento)
+    const { documento, password } = data;
     // Verifica que la variable de entorno JWT_SECRET esté configurada
     if (!process.env.JWT_SECRET) {
       throw new Error("JWT_SECRET no está configurado. Revisa tu archivo .env");
     }
-    // Busca el usuario por correo electrónico
-    const user = await UserModel.findOne({ where: { email } });
-    if (!user) throw new Error("Usuario y contraseña incorrectos");
-    // Verifica la contraseña encriptada
+    // Busca el usuario por su número de documento o por su correo electrónico
+    const user = await UserModel.findOne({ 
+      where: { 
+        [Op.or]: [
+          { documento: documento },
+          { email: documento }
+        ]
+      } 
+    });
+    if (!user) throw new Error("Documento/Correo o contraseña incorrectos");
+    // Verifica la contraseña encriptada comparándola con la ingresada
     const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid) throw new Error("Usuario y contraseña incorrectos");
+    if (!isValid) throw new Error("Documento o contraseña incorrectos");
     // Verifica restricciones de estado de cuenta
     if (user.estado === 'rechazado') {
       throw new Error("Tu cuenta fue rechazada. Contacta al administrador del Laboratorio Ambiental.");
@@ -154,7 +169,7 @@ class UserService {
     }
     // Genera token JWT con firma y expiración de 8 horas
     const token = jwt.sign(
-      { id: user.id_usuario, uuid: user.uuid, rol: user.rol },
+      { id: user.id_usuario, uuid: user.uuid, rol: user.rol, email: user.email },
       process.env.JWT_SECRET,
       { expiresIn: "8h" }
     );
@@ -276,35 +291,29 @@ class UserService {
     // Actualiza los datos del perfil
     await user.update({
       nombres_apellidos: data.nombres_apellidos,
-      email: data.email,
-      numero_ficha: data.numero_ficha ? String(data.numero_ficha).trim() : null,
-      nombre_ficha: data.nombre_ficha ? String(data.nombre_ficha).trim() : null,
-      es_sena_empresa: !!data.es_sena_empresa
+      email: data.email
     });
     // Retorna el usuario actualizado
     return user;
   }
 
-  // Cambia la contraseña de un usuario validando primero su contraseña actual
-  async changePassword(id, { passwordActual, passwordNueva }) {
+  // Cambia la contraseña de un usuario por parte de un administrador
+  async changePasswordByAdmin(id, { nuevaPassword }) {
     // Busca el usuario por su ID
     const user = await UserModel.findByPk(id);
     if (!user) throw new Error("Usuario no encontrado");
-    // Verifica que la contraseña actual sea correcta
-    const isValid = await bcrypt.compare(passwordActual, user.password);
-    if (!isValid) throw new Error("La contraseña actual es incorrecta");
-    // Encripta la nueva contraseña
-    const hashedPassword = await bcrypt.hash(passwordNueva, 10);
+    // Encripta la nueva contraseña ingresada por el admin
+    const hashedPassword = await bcrypt.hash(nuevaPassword, 10);
     // Actualiza la contraseña en la base de datos
     await user.update({ password: hashedPassword });
     // Guarda log de auditoría
-    await registrarLog(user.email, 'CAMBIO_PASSWORD', 'PERFIL', `Contraseña actualizada correctamente`);
+    await registrarLog('ADMIN', 'CAMBIO_PASSWORD', 'GESTION_USUARIOS', `Contraseña actualizada para el usuario ${user.documento}`);
     // Retorna true indicando que el cambio fue exitoso
     return true;
   }
 
   // Importa usuarios de forma masiva desde un archivo de Excel
-  async importarExcel(buffer, userEmailLog) {
+  async importarExcel(buffer, userEmailLog, rolForzado = null) {
     // Lee el archivo Excel desde el buffer
     const workbook = XLSX.read(buffer, { type: 'buffer' });
     // Obtiene el nombre de la primera hoja
@@ -359,6 +368,12 @@ class UserService {
           es_sena_empresa = val.toLowerCase() === "si" || val.toLowerCase() === "sí" || val.toLowerCase() === "true" || val === "1";
         }
       }
+      
+      // Sobrescribe el rol si se especificó rolForzado
+      if (rolForzado) {
+        rol = rolForzado;
+      }
+      
       // Valida datos mínimos obligatorios
       if (!documento || !nombres_apellidos || !email) {
         errores.push(`Fila ${filaNum}: Faltan campos requeridos (Documento, Nombres/Apellidos o Email)`);
@@ -395,11 +410,34 @@ class UserService {
           omitidos++;
           continue;
         }
-        // Crea contraseña por defecto usando Sena más el número de documento
-        const defaultPasswordText = `Sena${documento}`;
-        const hashedPassword = await bcrypt.hash(defaultPasswordText, 10);
+        // Crea contraseña por defecto usando el número de documento
+        const password = documento;
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        // Manejo de Programa y Ficha
+        let id_programa = null;
+        let id_ficha = null;
+
+        if (nombre_ficha) {
+          // Busca o crea el programa
+          const [programa] = await ProgramaModel.findOrCreate({
+            where: { nombre_programa: nombre_ficha },
+            defaults: { estado: true }
+          });
+          id_programa = programa.id_programa;
+        }
+
+        if (numero_ficha) {
+          // Busca o crea la ficha
+          const [ficha] = await FichaModel.findOrCreate({
+            where: { numero_ficha },
+            defaults: { id_programa, estado: true }
+          });
+          id_ficha = ficha.id_ficha;
+        }
+
         // Crea el usuario en la base de datos con estado aprobado automáticamente
-        await UserModel.create({
+        const nuevoUsuario = await UserModel.create({
           uuid: uuidv4(),
           documento,
           nombres_apellidos,
@@ -407,10 +445,30 @@ class UserService {
           password: hashedPassword,
           rol,
           estado: 'aprobado',
-          numero_ficha: numero_ficha || null,
-          nombre_ficha: nombre_ficha || null,
-          es_sena_empresa: !!es_sena_empresa
+          id_ficha,
+          id_programa
         });
+
+        // Si es Aprendiz, se registra en su tabla
+        if (rol.toLowerCase() === 'aprendiz') {
+          await AprendizModel.create({
+            documento,
+            nombres_apellidos,
+            email,
+            id_ficha,
+            id_usuario: nuevoUsuario.id_usuario
+          });
+        }
+        
+        // Si es Instructor, se registra en su tabla
+        if (rol.toLowerCase() === 'instructor') {
+          await InstructorModel.create({
+            documento,
+            nombres_apellidos,
+            email,
+            id_usuario: nuevoUsuario.id_usuario
+          });
+        }
         // Incrementa el contador de creados
         creados++;
       } catch (err) {
