@@ -439,14 +439,11 @@ class UserService {
       // Un registro real de instructor/aprendiz SIEMPRE tiene ambos campos
       if (!documento || !nombres_apellidos) continue;
 
-      // Limpia puntos, guiones y espacios del documento (ej: "1.023.456.789" → "1023456789")
-      documento = documento.replace(/[\.\-\s]/g, '');
+      // Limpia TODOS los caracteres que no sean dígitos del documento (puntos, guiones, espacios, letras como "CC", etc.)
+      documento = documento.replace(/\D/g, '');
       
-      // Valida que el documento contenga solo números después de limpiar
-      if (!/^\d+$/.test(documento)) {
-        errores.push(`Fila ${filaNum} (${nombres_apellidos}): El documento debe contener solo números`);
-        continue;
-      }
+      // Si después de limpiar no quedó ningún número, ignorar la fila
+      if (!documento) continue;
       
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       // Si no tiene correo, o el correo es inválido (ej: "N/A", "-", "no tiene", typos), le asignamos uno por defecto
