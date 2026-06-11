@@ -44,6 +44,10 @@ export default function Fichas() {
         <select id="swal-programa" class="swal2-select" style="margin-top:10px;padding:8px;border:1px solid #d9d9d9;border-radius:4px;width:80%">
           <option value="">Sin programa asignado</option>
         </select>
+        <div style="display:flex; justify-content:center; gap:10px; margin-top:10px; width:80%; margin-left:auto; margin-right:auto;">
+          <input id="swal-inicio" type="date" class="swal2-input" style="width:48%; margin:0" title="Fecha inicio etapa lectiva">
+          <input id="swal-fin" type="date" class="swal2-input" style="width:48%; margin:0" title="Fecha fin etapa lectiva">
+        </div>
       `,
       focusConfirm: false,
       showCancelButton: true,
@@ -65,7 +69,9 @@ export default function Fichas() {
         if (!numero) { Swal.showValidationMessage('El número de ficha es obligatorio'); return false; }
         return {
           numero_ficha: numero,
-          id_programa: document.getElementById('swal-programa').value || null
+          id_programa: document.getElementById('swal-programa').value || null,
+          fecha_inicio: document.getElementById('swal-inicio').value || null,
+          fecha_fin: document.getElementById('swal-fin').value || null
         };
       }
     });
@@ -92,6 +98,10 @@ export default function Fichas() {
           <option value="true" ${f.estado !== false ? 'selected' : ''}>Activo</option>
           <option value="false" ${f.estado === false ? 'selected' : ''}>Inactivo</option>
         </select>
+        <div style="display:flex; justify-content:center; gap:10px; margin-top:10px; width:80%; margin-left:auto; margin-right:auto;">
+          <input id="swal-inicio" type="date" class="swal2-input" style="width:48%; margin:0" title="Fecha inicio" value="${f.fecha_inicio || ''}">
+          <input id="swal-fin" type="date" class="swal2-input" style="width:48%; margin:0" title="Fecha fin" value="${f.fecha_fin || ''}">
+        </div>
       `,
       focusConfirm: false,
       showCancelButton: true,
@@ -115,7 +125,9 @@ export default function Fichas() {
         return {
           numero_ficha: numero,
           id_programa: document.getElementById('swal-programa').value || null,
-          estado: document.getElementById('swal-estado').value === 'true'
+          estado: document.getElementById('swal-estado').value === 'true',
+          fecha_inicio: document.getElementById('swal-inicio').value || null,
+          fecha_fin: document.getElementById('swal-fin').value || null
         };
       }
     });
@@ -160,6 +172,8 @@ export default function Fichas() {
           <ul style="padding-left:20px;font-size:13px">
             <li><strong>numero_ficha</strong> (obligatorio, número único)</li>
             <li><strong>nombre_programa</strong> (opcional, nombre del programa)</li>
+            <li><strong>fecha_inicio</strong> (opcional, formato AAAA-MM-DD)</li>
+            <li><strong>fecha_fin</strong> (opcional, formato AAAA-MM-DD)</li>
           </ul>
           <p style="font-size:12px;color:#f59e0b;font-weight:600">Las fichas con número duplicado serán omitidas</p>
         </div>
@@ -251,7 +265,7 @@ export default function Fichas() {
           <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
             <thead>
               <tr style={{ background: '#f8fafc' }}>
-                {['N° Ficha', 'Programa', 'Estado', 'Acciones'].map(h => (
+                {['N° Ficha', 'Programa', 'Lectiva', 'Estado', 'Acciones'].map(h => (
                   <th key={h} style={{ padding: '12px 16px', fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>{h}</th>
                 ))}
               </tr>
@@ -266,6 +280,9 @@ export default function Fichas() {
                   </td>
                   <td style={{ padding: '14px 16px', color: '#334155' }}>
                     {f.programa?.nombre_programa || <span style={{ color: '#94a3b8', fontSize: '12px' }}>Sin programa</span>}
+                  </td>
+                  <td style={{ padding: '14px 16px', color: '#64748b', fontSize: '11px' }}>
+                    {f.fecha_inicio && f.fecha_fin ? `${f.fecha_inicio} a ${f.fecha_fin}` : 'No definida'}
                   </td>
 
                   <td style={{ padding: '14px 16px' }}>

@@ -10,13 +10,14 @@ class InstructorService {
         model: UserModel,
         as: 'usuario',
         attributes: ['email', 'estado', 'documento', 'nombres_apellidos']
-      }]
+      }],
+      order: [['id_instructor', 'DESC']]
     });
   }
 
   // Crea un instructor manualmente
   async create(data) {
-    const { documento, nombres_apellidos, email } = data;
+    const { documento, nombres_apellidos, email, tipo_vinculacion, correo_personal, programa, telefono } = data;
     if (!documento || !nombres_apellidos || !email) throw new Error("Faltan campos obligatorios");
     
     // Verifica si ya existe
@@ -45,6 +46,10 @@ class InstructorService {
       documento,
       nombres_apellidos,
       email,
+      tipo_vinculacion,
+      correo_personal,
+      programa,
+      telefono,
       id_usuario: user.id_usuario
     });
 
@@ -59,7 +64,7 @@ class InstructorService {
     const user = await UserModel.findByPk(instructor.id_usuario);
     if (!user) throw new Error("Usuario asociado no encontrado");
 
-    const { documento, nombres_apellidos, email } = data;
+    const { documento, nombres_apellidos, email, tipo_vinculacion, correo_personal, programa, telefono } = data;
 
     if (documento && documento !== user.documento) {
       const exist = await UserModel.findOne({ where: { documento } });
@@ -79,7 +84,11 @@ class InstructorService {
     await instructor.update({
       documento: documento || instructor.documento,
       nombres_apellidos: nombres_apellidos || instructor.nombres_apellidos,
-      email: email || instructor.email
+      email: email || instructor.email,
+      tipo_vinculacion: tipo_vinculacion !== undefined ? tipo_vinculacion : instructor.tipo_vinculacion,
+      correo_personal: correo_personal !== undefined ? correo_personal : instructor.correo_personal,
+      programa: programa !== undefined ? programa : instructor.programa,
+      telefono: telefono !== undefined ? telefono : instructor.telefono
     });
 
     return instructor;

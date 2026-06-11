@@ -57,6 +57,8 @@ class FichaService {
       const filaNum = i + 2;
       let numero_ficha = "";
       let nombre_programa = "";
+      let fecha_inicio = null;
+      let fecha_fin = null;
 
       for (const key of Object.keys(row)) {
         const nk = key.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
@@ -65,6 +67,10 @@ class FichaService {
           numero_ficha = val;
         } else if (nk === "programa" || nk === "nombre_programa" || nk === "programa de formacion" || nk === "nombre del programa") {
           nombre_programa = val;
+        } else if (nk === "fecha_inicio" || nk === "fecha de inicio" || nk === "fecha inicio" || nk === "inicio") {
+          fecha_inicio = val || null;
+        } else if (nk === "fecha_fin" || nk === "fecha de fin" || nk === "fecha fin" || nk === "fin") {
+          fecha_fin = val || null;
         }
       }
 
@@ -86,7 +92,13 @@ class FichaService {
           id_programa = programa.id_programa;
         }
 
-        await FichaModel.create({ numero_ficha, id_programa, estado: true });
+        await FichaModel.create({
+          numero_ficha,
+          id_programa,
+          estado: true,
+          fecha_inicio,
+          fecha_fin
+        });
         creados++;
       } catch (err) {
         errores.push(`Fila ${filaNum} (${numero_ficha}): ${err.message}`);

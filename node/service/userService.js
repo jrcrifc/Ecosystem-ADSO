@@ -340,6 +340,23 @@ class UserService {
       let numero_ficha = null;
       let nombre_ficha = null;
       let es_sena_empresa = false;
+      // Campos extra para Instructor
+      let correo_personal = null;
+      let programa_instructor = null;
+      let telefono = null;
+      let tipo_vinculacion = null;
+      // Campos extra para Aprendiz
+      let tipo_documento = null;
+      let fecha_nacimiento = null;
+      let genero = null;
+      let direccion = null;
+      let tipo_direccion = null;
+      let estrato = null;
+      let estado_civil = null;
+      let tipo_aprendiz = null;
+      let nombre_responsable = null;
+      let telefono_responsable = null;
+      let email_responsable = null;
       // Mapea cada columna buscando variaciones ortográficas comunes
       for (const key of Object.keys(row)) {
         // Normaliza la clave eliminando tildes y espacios
@@ -366,6 +383,38 @@ class UserService {
         // Mapea la columna de es_sena_empresa con distintas variantes
         } else if (normalizedKey === "es_sena_empresa" || normalizedKey === "sena empresa" || normalizedKey === "sena-empresa") {
           es_sena_empresa = val.toLowerCase() === "si" || val.toLowerCase() === "sí" || val.toLowerCase() === "true" || val === "1";
+        // --- Campos extra para Instructor ---
+        } else if (normalizedKey === "correo_personal" || normalizedKey === "correo personal") {
+          correo_personal = val;
+        } else if (normalizedKey === "telefono" || normalizedKey === "celular" || normalizedKey === "telefono de contacto") {
+          telefono = val;
+        } else if (normalizedKey === "tipo_vinculacion" || normalizedKey === "tipo de vinculacion" || normalizedKey === "vinculacion") {
+          tipo_vinculacion = val;
+        } else if (normalizedKey === "programa_instructor" || normalizedKey === "area" || normalizedKey === "tipo de programa") {
+          programa_instructor = val;
+        // --- Campos extra para Aprendiz ---
+        } else if (normalizedKey === "tipo_documento" || normalizedKey === "tipo de documento" || normalizedKey === "tipo documento") {
+          tipo_documento = val;
+        } else if (normalizedKey === "fecha_nacimiento" || normalizedKey === "fecha de nacimiento" || normalizedKey === "nacimiento") {
+          fecha_nacimiento = val;
+        } else if (normalizedKey === "genero" || normalizedKey === "sexo") {
+          genero = val;
+        } else if (normalizedKey === "direccion" || normalizedKey === "direccion residencial") {
+          direccion = val;
+        } else if (normalizedKey === "tipo_direccion" || normalizedKey === "tipo de direccion" || normalizedKey === "zona") {
+          tipo_direccion = val;
+        } else if (normalizedKey === "estrato" || normalizedKey === "estrato socioeconomico") {
+          estrato = val;
+        } else if (normalizedKey === "estado_civil" || normalizedKey === "estado civil") {
+          estado_civil = val;
+        } else if (normalizedKey === "tipo_aprendiz" || normalizedKey === "tipo de aprendiz") {
+          tipo_aprendiz = val;
+        } else if (normalizedKey === "nombre_responsable" || normalizedKey === "nombre del responsable" || normalizedKey === "acudiente" || normalizedKey === "nombre responsable") {
+          nombre_responsable = val;
+        } else if (normalizedKey === "telefono_responsable" || normalizedKey === "telefono del responsable" || normalizedKey === "telefono responsable") {
+          telefono_responsable = val;
+        } else if (normalizedKey === "email_responsable" || normalizedKey === "correo del responsable" || normalizedKey === "correo responsable" || normalizedKey === "email del responsable") {
+          email_responsable = val;
         }
       }
       
@@ -449,23 +498,39 @@ class UserService {
           id_programa
         });
 
-        // Si es Aprendiz, se registra en su tabla
+        // Si es Aprendiz, se registra en su tabla con todos los campos extendidos
         if (rol.toLowerCase() === 'aprendiz') {
           await AprendizModel.create({
             documento,
             nombres_apellidos,
             email,
             id_ficha,
+            tipo_documento,
+            fecha_nacimiento,
+            genero,
+            direccion,
+            tipo_direccion,
+            telefono,
+            estrato,
+            estado_civil,
+            tipo_aprendiz,
+            nombre_responsable,
+            telefono_responsable,
+            email_responsable,
             id_usuario: nuevoUsuario.id_usuario
           });
         }
         
-        // Si es Instructor, se registra en su tabla
+        // Si es Instructor, se registra en su tabla con todos los campos extendidos
         if (rol.toLowerCase() === 'instructor') {
           await InstructorModel.create({
             documento,
             nombres_apellidos,
             email,
+            correo_personal,
+            programa: programa_instructor,
+            telefono,
+            tipo_vinculacion,
             id_usuario: nuevoUsuario.id_usuario
           });
         }

@@ -2,7 +2,7 @@
 import React from "react";
 // Importa Link de React Router para navegación sin recargar la página
 import { Link } from "react-router-dom";
-
+import Campanita from "./FormularioAcceso/Campanita.jsx";
 
 // Define el componente TopBar que renderiza la barra superior con perfil y notificaciones
 const TopBar = ({ userData, userRol, logOut, onAprobado }) => {
@@ -31,6 +31,8 @@ const TopBar = ({ userData, userRol, logOut, onAprobado }) => {
       marginBottom: "8px",
     }}>
 
+      {/* Notificaciones */}
+      <Campanita userData={userData} onAprobado={onAprobado} userRol={userRol} />
 
       {/* Separador vertical entre notificaciones y perfil */}
       <div style={{ width: "1px", height: "32px", background: "#e2e8f0" }} />

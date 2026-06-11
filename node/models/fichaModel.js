@@ -15,6 +15,14 @@ const FichaModel = sequelize.define('fichas', {
   estado: {
     type: DataTypes.BOOLEAN,
     defaultValue: true
+  },
+  fecha_inicio: {
+    type: DataTypes.DATEONLY,
+    allowNull: true
+  },
+  fecha_fin: {
+    type: DataTypes.DATEONLY,
+    allowNull: true
   }
 }, {
   freezeTableName: true,

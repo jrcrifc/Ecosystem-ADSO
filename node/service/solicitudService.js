@@ -35,7 +35,7 @@ class solicitudService {
                     // Incluye datos básicos del usuario que creó la solicitud
                     model: userModel,
                     as: 'usuario',
-                    attributes: ['id_usuario', 'nombres_apellidos', 'rol', 'numero_ficha', 'nombre_ficha', 'es_sena_empresa']
+                    attributes: ['id_usuario', 'nombres_apellidos', 'rol', 'email']
                 },
                 {
                     // Incluye el historial de estados por los que ha pasado la solicitud

@@ -20,12 +20,52 @@ const AprendizModel = sequelize.define('aprendices', {
     type: DataTypes.INTEGER,
     allowNull: true
   },
-  fecha_inicio: {
+  tipo_documento: {
+    type: DataTypes.STRING(50),
+    allowNull: true
+  },
+  fecha_nacimiento: {
     type: DataTypes.DATEONLY,
     allowNull: true
   },
-  fecha_fin: {
-    type: DataTypes.DATEONLY,
+  genero: {
+    type: DataTypes.STRING(50),
+    allowNull: true
+  },
+  direccion: {
+    type: DataTypes.STRING(255),
+    allowNull: true
+  },
+  tipo_direccion: {
+    type: DataTypes.STRING(50),
+    allowNull: true
+  },
+  telefono: {
+    type: DataTypes.STRING(100),
+    allowNull: true
+  },
+  estrato: {
+    type: DataTypes.STRING(20),
+    allowNull: true
+  },
+  estado_civil: {
+    type: DataTypes.STRING(50),
+    allowNull: true
+  },
+  tipo_aprendiz: {
+    type: DataTypes.STRING(100),
+    allowNull: true
+  },
+  nombre_responsable: {
+    type: DataTypes.STRING(255),
+    allowNull: true
+  },
+  telefono_responsable: {
+    type: DataTypes.STRING(100),
+    allowNull: true
+  },
+  email_responsable: {
+    type: DataTypes.STRING(255),
     allowNull: true
   },
   id_usuario: {

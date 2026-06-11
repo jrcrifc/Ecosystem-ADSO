@@ -9,14 +9,20 @@ class AprendizService {
     return await AprendizModel.findAll({
       include: [
         { model: UserModel, as: 'usuario', attributes: ['email', 'estado', 'documento', 'nombres_apellidos'] },
-        { model: FichaModel, as: 'ficha', attributes: ['numero_ficha'] }
-      ]
+        { model: FichaModel, as: 'ficha', attributes: ['numero_ficha', 'fecha_inicio', 'fecha_fin'] }
+      ],
+      order: [['id_aprendiz', 'DESC']]
     });
   }
 
   // Crea un aprendiz manualmente (Administrador)
   async create(data) {
-    const { documento, nombres_apellidos, email, id_ficha } = data;
+    const { 
+      documento, nombres_apellidos, email, id_ficha,
+      tipo_documento, fecha_nacimiento, genero, direccion, tipo_direccion, 
+      telefono, estrato, estado_civil, tipo_aprendiz, 
+      nombre_responsable, telefono_responsable, email_responsable 
+    } = data;
     if (!documento || !nombres_apellidos || !email) throw new Error("Faltan campos obligatorios");
     
     // Verifica si ya existe
@@ -47,6 +53,18 @@ class AprendizService {
       nombres_apellidos,
       email,
       id_ficha,
+      tipo_documento,
+      fecha_nacimiento,
+      genero,
+      direccion,
+      tipo_direccion,
+      telefono,
+      estrato,
+      estado_civil,
+      tipo_aprendiz,
+      nombre_responsable,
+      telefono_responsable,
+      email_responsable,
       id_usuario: user.id_usuario
     });
 
@@ -61,7 +79,12 @@ class AprendizService {
     const user = await UserModel.findByPk(aprendiz.id_usuario);
     if (!user) throw new Error("Usuario asociado no encontrado");
 
-    const { documento, nombres_apellidos, email, id_ficha } = data;
+    const { 
+      documento, nombres_apellidos, email, id_ficha,
+      tipo_documento, fecha_nacimiento, genero, direccion, tipo_direccion, 
+      telefono, estrato, estado_civil, tipo_aprendiz, 
+      nombre_responsable, telefono_responsable, email_responsable
+    } = data;
 
     // Verificar unicidad si cambia
     if (documento && documento !== user.documento) {
@@ -84,7 +107,19 @@ class AprendizService {
       documento: documento || aprendiz.documento,
       nombres_apellidos: nombres_apellidos || aprendiz.nombres_apellidos,
       email: email || aprendiz.email,
-      id_ficha: id_ficha !== undefined ? id_ficha : aprendiz.id_ficha
+      id_ficha: id_ficha !== undefined ? id_ficha : aprendiz.id_ficha,
+      tipo_documento: tipo_documento !== undefined ? tipo_documento : aprendiz.tipo_documento,
+      fecha_nacimiento: fecha_nacimiento !== undefined ? fecha_nacimiento : aprendiz.fecha_nacimiento,
+      genero: genero !== undefined ? genero : aprendiz.genero,
+      direccion: direccion !== undefined ? direccion : aprendiz.direccion,
+      tipo_direccion: tipo_direccion !== undefined ? tipo_direccion : aprendiz.tipo_direccion,
+      telefono: telefono !== undefined ? telefono : aprendiz.telefono,
+      estrato: estrato !== undefined ? estrato : aprendiz.estrato,
+      estado_civil: estado_civil !== undefined ? estado_civil : aprendiz.estado_civil,
+      tipo_aprendiz: tipo_aprendiz !== undefined ? tipo_aprendiz : aprendiz.tipo_aprendiz,
+      nombre_responsable: nombre_responsable !== undefined ? nombre_responsable : aprendiz.nombre_responsable,
+      telefono_responsable: telefono_responsable !== undefined ? telefono_responsable : aprendiz.telefono_responsable,
+      email_responsable: email_responsable !== undefined ? email_responsable : aprendiz.email_responsable
     });
 
     return aprendiz;

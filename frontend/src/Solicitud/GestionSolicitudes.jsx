@@ -63,7 +63,7 @@ const GestionSolicitudes = () => {
     { name: "ID", selector: (row) => row.id_solicitud, sortable: true, width: "80px" },
     {
       name: "Solicitante",
-      // Renderiza los datos del solicitante con rol y ficha
+      // Renderiza los datos del solicitante con rol y email
       cell: (row) => {
         const u = row.usuario;
         if (!u) return <span>-</span>;
@@ -71,12 +71,7 @@ const GestionSolicitudes = () => {
           <div style={{ padding: "6px 0" }}>
             <div style={{ fontWeight: "700", color: "#0f172a", fontSize: "13px" }}>{u.nombres_apellidos}</div>
             <div style={{ fontSize: "11px", color: "#64748b", marginTop: "2px" }}>{u.rol}</div>
-            {(u.numero_ficha || u.nombre_ficha) && (
-              <div style={{ fontSize: "11px", color: "#0077B6", marginTop: "2px", fontWeight: "600" }}>
-                🆔 Ficha: {u.numero_ficha || "N/A"} ({u.nombre_ficha || "N/A"})
-                {u.es_sena_empresa ? " 🏢 SENA Empresa" : ""}
-              </div>
-            )}
+            <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "2px" }}>{u.email}</div>
           </div>
         );
       },

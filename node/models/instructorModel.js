@@ -20,6 +20,18 @@ const InstructorModel = sequelize.define('instructores', {
     type: DataTypes.ENUM('Planta', 'Contrato'),
     allowNull: true
   },
+  correo_personal: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  programa: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  telefono: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   id_usuario: { 
     type: DataTypes.INTEGER,
     allowNull: true
