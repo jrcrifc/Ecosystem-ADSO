@@ -17,15 +17,20 @@ export default function GestionUsuarios() {
   const [todosUsuarios, setTodosUsuarios] = useState([]);
   // Estado que almacena el texto de busqueda para filtrar usuarios
   const [filterText, setFilterText] = useState("");
-  // Estado que controla la pestana activa (pendientes/gestion)
+  // Estado que controla la pestana activa
   const [tab, setTab] = useState("pendientes");
+  // Estado para la pagina actual de la paginacion
+  const [page, setPage] = useState(1);
+  const perPage = 20;
   // Obtiene el token de autenticacion desde sessionStorage
   const token = sessionStorage.getItem("token");
   // Prepara el encabezado de autorizacion con el token
   const headers = { Authorization: `Bearer ${token}` };
 
   // Efecto que carga los usuarios cada vez que cambia la pestana activa
-  useEffect(() => { cargar(); }, [tab]);
+  useEffect(() => { cargar(); setPage(1); }, [tab]);
+  // Resetear pagina cuando cambia el filtro de busqueda
+  useEffect(() => { setPage(1); }, [filterText]);
 
   // Actualizacion en tiempo real al recibir notificaciones por socket
   useEffect(() => {
@@ -555,6 +560,9 @@ export default function GestionUsuarios() {
           );
         });
 
+        const totalPages = Math.ceil(usuarios.length / perPage);
+        const paginados = usuarios.slice((page - 1) * perPage, page * perPage);
+
         return (
           <div>
             {/* Encabezado de la seccion de rol */}
@@ -585,7 +593,8 @@ export default function GestionUsuarios() {
                 <p style={{ fontSize: "16px" }}>No hay {section.label.toLowerCase()} registrados</p>
               </div>
             ) : (
-              usuarios.map(u => (
+              <>
+              {paginados.map(u => (
                 <div key={u.id_usuario} style={{
                   background: "#fff", borderRadius: "14px", padding: "18px 22px",
                   marginBottom: "10px", border: "1px solid #e2e8f0",
@@ -653,7 +662,56 @@ export default function GestionUsuarios() {
                     </div>
                   )}
                 </div>
-              ))
+              ))}
+
+              {/* Controles de paginación */}
+              {totalPages > 1 && (
+                <div style={{
+                  display: "flex", justifyContent: "center", alignItems: "center",
+                  gap: "6px", marginTop: "20px", flexWrap: "wrap"
+                }}>
+                  <button
+                    onClick={() => setPage(1)}
+                    disabled={page === 1}
+                    style={{
+                      padding: "6px 12px", borderRadius: "8px", border: "1px solid #dbeafe",
+                      background: page === 1 ? "#f1f5f9" : "#fff", cursor: page === 1 ? "default" : "pointer",
+                      color: page === 1 ? "#94a3b8" : "#0077B6", fontWeight: "600", fontSize: "12px"
+                    }}
+                  >«</button>
+                  <button
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    style={{
+                      padding: "6px 12px", borderRadius: "8px", border: "1px solid #dbeafe",
+                      background: page === 1 ? "#f1f5f9" : "#fff", cursor: page === 1 ? "default" : "pointer",
+                      color: page === 1 ? "#94a3b8" : "#0077B6", fontWeight: "600", fontSize: "12px"
+                    }}
+                  >‹</button>
+                  <span style={{ fontSize: "13px", color: "#475569", fontWeight: "600", padding: "0 8px" }}>
+                    Página {page} de {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    style={{
+                      padding: "6px 12px", borderRadius: "8px", border: "1px solid #dbeafe",
+                      background: page === totalPages ? "#f1f5f9" : "#fff", cursor: page === totalPages ? "default" : "pointer",
+                      color: page === totalPages ? "#94a3b8" : "#0077B6", fontWeight: "600", fontSize: "12px"
+                    }}
+                  >›</button>
+                  <button
+                    onClick={() => setPage(totalPages)}
+                    disabled={page === totalPages}
+                    style={{
+                      padding: "6px 12px", borderRadius: "8px", border: "1px solid #dbeafe",
+                      background: page === totalPages ? "#f1f5f9" : "#fff", cursor: page === totalPages ? "default" : "pointer",
+                      color: page === totalPages ? "#94a3b8" : "#0077B6", fontWeight: "600", fontSize: "12px"
+                    }}
+                  >»</button>
+                </div>
+              )}
+              </>
             )}
           </div>
         );

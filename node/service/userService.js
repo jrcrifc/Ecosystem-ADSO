@@ -438,8 +438,11 @@ class UserService {
       // Si no tiene documento O no tiene nombre, es una fila de separación/encabezado/subtotal — ignorar silenciosamente
       // Un registro real de instructor/aprendiz SIEMPRE tiene ambos campos
       if (!documento || !nombres_apellidos) continue;
+
+      // Limpia puntos, guiones y espacios del documento (ej: "1.023.456.789" → "1023456789")
+      documento = documento.replace(/[\.\-\s]/g, '');
       
-      // Valida que el documento contenga solo números
+      // Valida que el documento contenga solo números después de limpiar
       if (!/^\d+$/.test(documento)) {
         errores.push(`Fila ${filaNum} (${nombres_apellidos}): El documento debe contener solo números`);
         continue;
