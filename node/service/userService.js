@@ -388,8 +388,16 @@ class UserService {
           correo_personal = val;
         } else if (normalizedKey === "telefono" || normalizedKey === "celular" || normalizedKey === "telefono de contacto") {
           telefono = val;
-        } else if (normalizedKey === "tipo_vinculacion" || normalizedKey === "tipo de vinculacion" || normalizedKey === "vinculacion") {
-          tipo_vinculacion = val;
+        } else if (normalizedKey.includes("vinculacion") || normalizedKey.includes("contrato") || normalizedKey.includes("tipo vinculacion")) {
+          // Normalizar el valor a los permitidos por el ENUM ('Planta', 'Contrato')
+          const v = val.toLowerCase();
+          if (v.includes("planta") || v.includes("nombramiento") || v.includes("fijo") || v.includes("indefinido")) {
+            tipo_vinculacion = "Planta";
+          } else if (v.includes("contrat") || v.includes("prestacion") || v.includes("servicios")) {
+            tipo_vinculacion = "Contrato";
+          } else {
+            tipo_vinculacion = "Contrato"; // Valor por defecto si hay algo pero no se reconoce bien
+          }
         } else if (normalizedKey === "programa_instructor" || normalizedKey === "area" || normalizedKey === "tipo de programa") {
           programa_instructor = val;
         // --- Campos extra para Aprendiz ---
