@@ -2,8 +2,7 @@
 import React, { useState } from "react";
 // Importa hooks de navegación para cambiar de ruta y detectar la ruta actual
 import { useNavigate, useLocation } from "react-router-dom";
-// Importa el componente Campanita para notificaciones dentro del sidebar
-import Campanita from "./FormularioAcceso/Campanita.jsx";
+
 // Importa el logo de Ecosystem para la cabecera del sidebar
 import ecosystemLogo from "./Home/ecosystem_logo.png";
 // Importa los estilos CSS del sidebar

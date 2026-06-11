@@ -16,8 +16,8 @@ const InstructorModel = sequelize.define('instructores', {
     type: DataTypes.STRING,
     allowNull: true
   },
-  especialidad: {
-    type: DataTypes.STRING,
+  tipo_vinculacion: {
+    type: DataTypes.ENUM('Planta', 'Contrato'),
     allowNull: true
   },
   id_usuario: { 

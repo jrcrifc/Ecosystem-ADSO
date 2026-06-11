@@ -12,10 +12,6 @@ const FichaModel = sequelize.define('fichas', {
     type: DataTypes.INTEGER,
     allowNull: true
   },
-  jornada: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
   estado: {
     type: DataTypes.BOOLEAN,
     defaultValue: true

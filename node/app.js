@@ -57,12 +57,10 @@ import salidasRoutes from './routes/salidasRoutes.js';
 import estadoxequipoRoutes from './routes/estadoxequipoRoutes.js';
 // Importa las rutas de notificaciones
 import notificacionRoutes from './routes/notificacionRoutes.js';
-// Importa las rutas de solicitudes de acceso
-import solicitudAccesoRoutes from './routes/solicitudAccesoRoutes.js';
+
 // Importa las rutas del dashboard
 import dashboardRoutes from './routes/dashboardRoutes.js';
-// Importa las rutas de configuración global
-import configRoutes from './routes/configRoutes.js';
+
 // Importa las rutas de auditoría
 import auditoriaRoutes from './routes/auditoriaRoutes.js';
 // Importa el middleware de auditoría global
@@ -155,12 +153,10 @@ app.use('/api/auth', UserRoutes);
 app.use("/api/admin", adminRoutes);
 // Monta las rutas de notificaciones en /api/notificaciones
 app.use('/api/notificaciones', notificacionRoutes);
-// Monta las rutas de solicitudes de acceso en /api/solicitud-acceso
-app.use('/api/solicitud-acceso', solicitudAccesoRoutes);
+
 // Monta las rutas del dashboard en /api/dashboard
 app.use('/api/dashboard', dashboardRoutes);
-// Monta las rutas de configuración en /api/config
-app.use('/api/config', configRoutes);
+
 // Monta las rutas de auditoría en /api/auditoria
 app.use('/api/auditoria', auditoriaRoutes);
 

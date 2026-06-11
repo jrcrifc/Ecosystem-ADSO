@@ -28,7 +28,7 @@ import GestionSolicitudes from "./Solicitud/GestionSolicitudes.jsx";
 import HistorialEstadoEquipo from "./estadoequipo/HistorialEstadoEquipo.jsx";
 import GestionEstadoEquipo from "./estadoequipo/GestionEstadoEquipo.jsx";
 import ControlReactivos from "./movimientosReactivos/ControlReactivos.jsx";
-import FormularioAcceso from "./FormularioAcceso/FormularioAcceso.jsx";
+
 import GestionUsuarios from "./usuarios/GestionUsuarios.jsx";
 import LogActividades from "./usuarios/LogActividades.jsx";
 import SalidasReactivos from "./salidasReactivos/crudsalidareactivo.jsx";

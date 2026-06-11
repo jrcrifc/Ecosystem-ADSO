@@ -24,13 +24,19 @@ export default function Instructores() {
         <input id="swal-doc" class="swal2-input" placeholder="Documento (solo números)">
         <input id="swal-nombre" class="swal2-input" placeholder="Nombres y Apellidos">
         <input id="swal-email" class="swal2-input" placeholder="Correo electrónico">
+        <select id="swal-vinculacion" class="swal2-select" style="margin-top:10px;padding:8px;border:1px solid #d9d9d9;border-radius:4px;width:80%">
+          <option value="">Tipo de vinculación</option>
+          <option value="Planta">Planta</option>
+          <option value="Contrato">Contrato</option>
+        </select>
       `,
       focusConfirm: false, showCancelButton: true,
       confirmButtonText: 'Registrar', cancelButtonText: 'Cancelar', confirmButtonColor: '#0077B6',
       preConfirm: () => ({
         documento: document.getElementById('swal-doc').value,
         nombres_apellidos: document.getElementById('swal-nombre').value,
-        email: document.getElementById('swal-email').value
+        email: document.getElementById('swal-email').value,
+        tipo_vinculacion: document.getElementById('swal-vinculacion').value || null
       })
     });
     if (!formValues) return;
@@ -51,13 +57,19 @@ export default function Instructores() {
         <input id="swal-doc" class="swal2-input" placeholder="Documento" value="${inst.documento || ''}">
         <input id="swal-nombre" class="swal2-input" placeholder="Nombres y Apellidos" value="${inst.nombres_apellidos || ''}">
         <input id="swal-email" class="swal2-input" placeholder="Correo" value="${inst.email || inst.usuario?.email || ''}">
+        <select id="swal-vinculacion" class="swal2-select" style="margin-top:10px;padding:8px;border:1px solid #d9d9d9;border-radius:4px;width:80%">
+          <option value="">Tipo de vinculación</option>
+          <option value="Planta" ${inst.tipo_vinculacion === 'Planta' ? 'selected' : ''}>Planta</option>
+          <option value="Contrato" ${inst.tipo_vinculacion === 'Contrato' ? 'selected' : ''}>Contrato</option>
+        </select>
       `,
       focusConfirm: false, showCancelButton: true,
       confirmButtonText: 'Guardar', cancelButtonText: 'Cancelar', confirmButtonColor: '#0077B6',
       preConfirm: () => ({
         documento: document.getElementById('swal-doc').value,
         nombres_apellidos: document.getElementById('swal-nombre').value,
-        email: document.getElementById('swal-email').value
+        email: document.getElementById('swal-email').value,
+        tipo_vinculacion: document.getElementById('swal-vinculacion').value || null
       })
     });
     if (!formValues) return;
@@ -185,7 +197,7 @@ export default function Instructores() {
           <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
             <thead>
               <tr style={{ background: '#f8fafc' }}>
-                {['Documento', 'Nombres y Apellidos', 'Email', 'Estado', 'Acciones'].map(h => (
+                {['Documento', 'Nombres y Apellidos', 'Email', 'Vinculación', 'Estado', 'Acciones'].map(h => (
                   <th key={h} style={{ padding: '12px 16px', fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>{h}</th>
                 ))}
               </tr>
@@ -196,6 +208,11 @@ export default function Instructores() {
                   <td style={{ padding: '14px 16px', fontWeight: '600', color: '#0f172a' }}>{i.documento}</td>
                   <td style={{ padding: '14px 16px', color: '#334155' }}>{i.nombres_apellidos}</td>
                   <td style={{ padding: '14px 16px', color: '#64748b', fontSize: '13px' }}>{i.email || i.usuario?.email}</td>
+                  <td style={{ padding: '14px 16px' }}>
+                    <span style={{ background: '#f0f9ff', color: '#0077B6', fontSize: '11px', fontWeight: '700', padding: '4px 12px', borderRadius: '99px' }}>
+                      {i.tipo_vinculacion || 'N/A'}
+                    </span>
+                  </td>
                   <td style={{ padding: '14px 16px' }}>
                     <span style={{ background: i.usuario?.estado === 'aprobado' ? '#ecfdf5' : '#fef2f2', color: i.usuario?.estado === 'aprobado' ? '#059669' : '#dc2626', fontSize: '11px', fontWeight: '700', padding: '4px 12px', borderRadius: '99px' }}>
                       {i.usuario?.estado === 'aprobado' ? '✅ Activo' : i.usuario?.estado || 'N/A'}

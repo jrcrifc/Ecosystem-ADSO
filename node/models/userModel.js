@@ -53,25 +53,7 @@ const UserModel = sequelize.define('usuarios', {
     defaultValue: 'pendiente'
   },
   
-  // Campo reset_code - código de 6 dígitos para recuperación de contraseña
-  reset_code: {
-    type: DataTypes.STRING(6),
-    allowNull: true,
-    defaultValue: null
-  },
-  
-  // Campo reset_code_expires - fecha de expiración del código de recuperación
-  reset_code_expires: {
-    type: DataTypes.DATE,
-    allowNull: true,
-    defaultValue: null
-  },
-  
-  // Campo failed_attempts - contador de intentos fallidos al verificar código
-  failed_attempts: {
-    type: DataTypes.INTEGER,
-    defaultValue: 0
-  },
+
   
   // Campo id_ficha - relación con tabla fichas para pasantes/gestores si aplica
   id_ficha: {

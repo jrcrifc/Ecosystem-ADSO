@@ -24,12 +24,10 @@ import estadoEquipoModel from "./Estado_equipoModel.js";
 import estadoSolicitudModel from "./Estado_solicitudModel.js";
 // Importa el modelo de notificaciones
 import NotificacionModel from "./notificacionModel.js";
-// Importa el modelo de solicitudes de acceso
-import SolicitudAccesoModel from "./solicitudAccesoModel.js";
+
 // Importa el modelo de logs de auditoría
 import LogModel from "./logModel.js";
-// Importa el modelo de configuración del sistema
-import ConfigModel from "./configModel.js";
+
 // Importa nuevos modelos
 import programaModel from "./programaModel.js";
 import fichaModel from "./fichaModel.js";
@@ -115,8 +113,4 @@ userModel.hasMany(solicitudModel,   { foreignKey: 'id_usuario', as: 'solicitudes
 NotificacionModel.belongsTo(userModel, { foreignKey: 'id_usuario_destino', as: 'usuarioDestino' });
 // Define la relación: un usuario tiene muchas notificaciones
 userModel.hasMany(NotificacionModel,   { foreignKey: 'id_usuario_destino', as: 'notificaciones' });
-
-// Define la relación: una solicitud de acceso pertenece a un usuario
-SolicitudAccesoModel.belongsTo(userModel, { foreignKey: 'id_usuario', as: 'usuario' });
-// Define la relación uno a uno: un usuario tiene una solicitud de acceso
-userModel.hasOne(SolicitudAccesoModel,    { foreignKey: 'id_usuario', as: 'solicitudAcceso' });
+

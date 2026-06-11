@@ -35,6 +35,10 @@ export default function Aprendices() {
         <select id="swal-ficha" class="swal2-select" style="margin-top:10px;padding:8px;border:1px solid #d9d9d9;border-radius:4px;width:80%">
           <option value="">Sin ficha asignada</option>
         </select>
+        <div style="display:flex; justify-content:center; gap:10px; margin-top:10px; width:80%; margin-left:auto; margin-right:auto;">
+          <input id="swal-inicio" type="date" class="swal2-input" style="width:48%; margin:0" title="Fecha inicio etapa lectiva">
+          <input id="swal-fin" type="date" class="swal2-input" style="width:48%; margin:0" title="Fecha fin etapa lectiva">
+        </div>
       `,
       focusConfirm: false,
       showCancelButton: true,
@@ -54,7 +58,9 @@ export default function Aprendices() {
         documento: document.getElementById('swal-doc').value,
         nombres_apellidos: document.getElementById('swal-nombre').value,
         email: document.getElementById('swal-email').value,
-        id_ficha: document.getElementById('swal-ficha').value || null
+        id_ficha: document.getElementById('swal-ficha').value || null,
+        fecha_inicio: document.getElementById('swal-inicio').value || null,
+        fecha_fin: document.getElementById('swal-fin').value || null
       })
     });
     if (!formValues) return;
@@ -78,6 +84,10 @@ export default function Aprendices() {
         <select id="swal-ficha" class="swal2-select" style="margin-top:10px;padding:8px;border:1px solid #d9d9d9;border-radius:4px;width:80%">
           <option value="">Sin ficha</option>
         </select>
+        <div style="display:flex; justify-content:center; gap:10px; margin-top:10px; width:80%; margin-left:auto; margin-right:auto;">
+          <input id="swal-inicio" type="date" class="swal2-input" style="width:48%; margin:0" title="Fecha inicio" value="${a.fecha_inicio || ''}">
+          <input id="swal-fin" type="date" class="swal2-input" style="width:48%; margin:0" title="Fecha fin" value="${a.fecha_fin || ''}">
+        </div>
       `,
       focusConfirm: false,
       showCancelButton: true,
@@ -98,7 +108,9 @@ export default function Aprendices() {
         documento: document.getElementById('swal-doc').value,
         nombres_apellidos: document.getElementById('swal-nombre').value,
         email: document.getElementById('swal-email').value,
-        id_ficha: document.getElementById('swal-ficha').value || null
+        id_ficha: document.getElementById('swal-ficha').value || null,
+        fecha_inicio: document.getElementById('swal-inicio').value || null,
+        fecha_fin: document.getElementById('swal-fin').value || null
       })
     });
     if (!formValues) return;
@@ -142,6 +154,8 @@ export default function Aprendices() {
             <li><strong>email</strong> (correo único)</li>
             <li><strong>numero_ficha</strong> (opcional)</li>
             <li><strong>nombre_ficha / programa</strong> (opcional)</li>
+            <li><strong>fecha_inicio</strong> (opcional, formato AAAA-MM-DD)</li>
+            <li><strong>fecha_fin</strong> (opcional, formato AAAA-MM-DD)</li>
           </ul>
           <p style="font-size:12px;color:#0077B6;font-weight:600">El rol se asignará automáticamente como <strong>Aprendiz</strong></p>
         </div>
@@ -232,7 +246,7 @@ export default function Aprendices() {
           <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
             <thead>
               <tr style={{ background: '#f8fafc' }}>
-                {['Documento', 'Nombres y Apellidos', 'Email', 'Ficha', 'Estado', 'Acciones'].map(h => (
+                {['Documento', 'Nombres', 'Ficha', 'Lectiva', 'Estado', 'Acciones'].map(h => (
                   <th key={h} style={{ padding: '12px 16px', fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>{h}</th>
                 ))}
               </tr>
@@ -241,14 +255,19 @@ export default function Aprendices() {
               {filtrados.map(a => (
                 <tr key={a.id_aprendiz} style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                   <td style={{ padding: '14px 16px', fontWeight: '600', color: '#0f172a' }}>{a.documento}</td>
-                  <td style={{ padding: '14px 16px', color: '#334155' }}>{a.nombres_apellidos}</td>
-                  <td style={{ padding: '14px 16px', color: '#64748b', fontSize: '13px' }}>{a.email || a.usuario?.email}</td>
+                  <td style={{ padding: '14px 16px', color: '#334155' }}>
+                    <div style={{ fontWeight: '600' }}>{a.nombres_apellidos}</div>
+                    <div style={{ fontSize: '11px', color: '#64748b' }}>{a.email || a.usuario?.email}</div>
+                  </td>
                   <td style={{ padding: '14px 16px' }}>
                     {a.ficha ? (
                       <span style={{ background: '#ecfdf5', color: '#059669', fontSize: '11px', fontWeight: '700', padding: '4px 12px', borderRadius: '99px' }}>
                         📋 {a.ficha.numero_ficha}
                       </span>
                     ) : <span style={{ color: '#94a3b8', fontSize: '12px' }}>Sin ficha</span>}
+                  </td>
+                  <td style={{ padding: '14px 16px', color: '#64748b', fontSize: '11px' }}>
+                    {a.fecha_inicio && a.fecha_fin ? `${a.fecha_inicio} a ${a.fecha_fin}` : 'No definida'}
                   </td>
                   <td style={{ padding: '14px 16px' }}>
                     <span style={{ background: a.usuario?.estado === 'aprobado' ? '#ecfdf5' : '#fef2f2', color: a.usuario?.estado === 'aprobado' ? '#059669' : '#dc2626', fontSize: '11px', fontWeight: '700', padding: '4px 12px', borderRadius: '99px' }}>
