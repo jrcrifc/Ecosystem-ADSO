@@ -79,8 +79,8 @@ export default function GestionUsuarios() {
         setUsuariosPendientes(pendientes);
       }
 
-      // Si la pestana activa es gestion, carga todos los usuarios excepto Administrador
-      if (tab === "gestion") {
+      // Si la pestana activa es alguna de las de rol, carga todos los usuarios excepto Administrador
+      if (["aprendices", "instructores", "gestores", "pasantes"].includes(tab)) {
         const resUsuarios = await apiAxios.get("/api/auth/usuarios", { headers });
         let filtrados = resUsuarios.data.filter(u => u.rol !== 'Administrador');
         filtrados = ordenarUsuarios(filtrados);
@@ -489,173 +489,175 @@ export default function GestionUsuarios() {
         </div>
       </div>
 
-      {/* Pestañas de navegacion entre pendientes y gestion */}
+      {/* Pestañas de navegacion */}
       <div style={{ display: "flex", gap: "8px", marginBottom: "24px", flexWrap: "wrap" }}>
-        {[["pendientes", "🔑 Solicitudes de Acceso"], ["gestion", "👥 Control de Cuentas"]].map(([key, label]) => (
+        {[
+          ["pendientes", "🔑 Solicitudes"],
+          ["aprendices", "🎓 Aprendices"],
+          ["instructores", "👨‍🏫 Instructores"],
+          ["gestores", "🔑 Gestores"],
+          ["pasantes", "🔬 Pasantes"]
+        ].map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)} style={{
             padding: "8px 20px", borderRadius: "10px", border: "none", cursor: "pointer",
             fontWeight: "600", fontSize: "13px",
             background: tab === key ? "#0f172a" : "#f1f5f9",
-            color: tab === key ? "#818cf8" : "#64748b"
+            color: tab === key ? "#818cf8" : "#64748b",
+            transition: "all 0.2s ease"
           }}>{label}</button>
         ))}
       </div>
 
-      {/* Contenido de la pestana de gestion separada por roles */}
-      {tab === "gestion" && (
-        <div>
-          {/* Muestra mensaje si no hay usuarios */}
-          {todosUsuarios.length === 0 ? (
+      {/* Pestaña de Solicitudes de Acceso (pendientes) */}
+      {tab === "pendientes" && (
+        <div style={{ marginBottom: "24px" }}>
+          <p style={{
+            fontSize: "11px", fontWeight: "700", color: "#0077B6",
+            letterSpacing: "1px", textTransform: "uppercase", marginBottom: "12px"
+          }}>⚙️ Usuarios Pendientes de Aprobación</p>
+          {usuariosPendientes.length === 0 ? (
             <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>
               <div style={{ fontSize: "48px", marginBottom: "12px" }}>📭</div>
-              <p>No hay usuarios registrados</p>
+              <p style={{ fontSize: "16px" }}>No hay usuarios pendientes</p>
             </div>
           ) : (
-            // Mapea las secciones por rol
-            rolSections.map(section => {
-              // Filtra usuarios por rol y texto de busqueda
-              const usuarios = todosUsuarios.filter(u => {
+            usuariosPendientes
+              .filter(u => {
                 const search = filterText.toLowerCase().trim();
-                return u.rol === section.key && (
+                return (
                   String(u.id_usuario || "").includes(search) ||
                   String(u.nombres_apellidos || "").toLowerCase().includes(search) ||
                   String(u.documento || "").includes(search) ||
                   String(u.email || "").toLowerCase().includes(search)
                 );
-              });
-              // No renderiza la seccion si no hay usuarios
-              if (usuarios.length === 0) return null;
-
-              return (
-                <div key={section.key} style={{ marginBottom: "28px" }}>
-                  {/* Encabezado de la seccion de rol */}
-                  <div style={{
-                    display: "flex", alignItems: "center", gap: "10px",
-                    marginBottom: "14px", paddingBottom: "10px",
-                    borderBottom: `2px solid ${section.color}22`
-                  }}>
-                    <span style={{ fontSize: "20px" }}>{section.icon}</span>
-                    <span style={{
-                      fontSize: "13px", fontWeight: "800", color: section.color,
-                      letterSpacing: "1px", textTransform: "uppercase"
-                    }}>
-                      {section.label}
-                    </span>
-                    <span style={{
-                      background: section.color, color: "#fff",
-                      fontSize: "11px", fontWeight: "700", padding: "2px 10px",
-                      borderRadius: "99px", marginLeft: "4px"
-                    }}>
-                      {usuarios.length}
-                    </span>
-                  </div>
-
-                  {/* Tarjetas de usuarios en este rol */}
-                  {usuarios.map(u => (
-                    <div key={u.id_usuario} style={{
-                      background: "#fff", borderRadius: "14px", padding: "18px 22px",
-                      marginBottom: "10px", border: "1px solid #e2e8f0",
-                      boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-                      display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap"
-                    }}>
-                      {/* Avatar circular con inicial */}
-                      <div style={{
-                        width: "42px", height: "42px", borderRadius: "50%",
-                        background: gradientFor(u.rol),
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        color: "#fff", fontWeight: "800", fontSize: "16px", flexShrink: 0
-                      }}>
-                        {u.nombres_apellidos?.charAt(0).toUpperCase()}
-                      </div>
-                      {/* Informacion del usuario */}
-                      <div style={{ flex: 1, minWidth: "200px" }}>
-                        <div style={{ fontWeight: "700", color: "#0f172a", fontSize: "14px" }}>{u.nombres_apellidos}</div>
-                        <div style={{ fontSize: "12px", color: "#64748b" }}>{u.email} · {u.documento}</div>
-                        {/* Informacion de ficha si existe */}
-                        {(u.numero_ficha || u.nombre_ficha) && (
-                          <div style={{ fontSize: "11px", color: "#0077B6", marginTop: "4px", fontWeight: "600" }}>
-                            🆔 Ficha: {u.numero_ficha || "N/A"} · Ficha Nombre: {u.nombre_ficha || "N/A"} · SENA Empresa: {u.es_sena_empresa ? "Sí" : "No"}
-                          </div>
-                        )}
-                      </div>
-                      {/* Badge de estado */}
-                      {estadoBadge(u.estado)}
-                      {/* Boton de activar/inactivar */}
-                      {(u.estado === 'aprobado' || u.estado === 'inactivo') && (
-                        <button onClick={() => toggleActivo(u.id_usuario, u.estado)} style={{
-                          background: u.estado === 'inactivo' ? "linear-gradient(135deg, #0077B6, #023E8A)" : "transparent",
-                          border: u.estado === 'inactivo' ? "none" : "1px solid #f59e0b",
-                          borderRadius: "8px", padding: "7px 18px",
-                          color: u.estado === 'inactivo' ? "#fff" : "#d97706",
-                          fontWeight: "700", cursor: "pointer", fontSize: "12px",
-                          transition: "all 0.2s"
-                        }}>
-                          {u.estado === 'inactivo' ? "🔓 Activar" : "🔒 Inactivar"}
-                        </button>
-                      )}
-                      {(u.estado === 'aprobado' || u.estado === 'inactivo') && (
-                        <button onClick={() => cambiarPasswordAdmin(u.id_usuario)} style={{
-                          background: "#f1f5f9", border: "1px solid #cbd5e1",
-                          borderRadius: "8px", padding: "7px 18px",
-                          color: "#475569", fontWeight: "700", cursor: "pointer", fontSize: "12px",
-                          transition: "all 0.2s"
-                        }}>
-                          🔑 Cambiar Clave
-                        </button>
-                      )}
-                      {/* Botones de aprobar/rechazar para pendientes */}
-                      {u.estado === 'pendiente' && (
-                        <div style={{ display: "flex", gap: "6px" }}>
-                          <button onClick={() => aprobarUsuario(u.id_usuario)} style={{
-                            background: "linear-gradient(135deg, #0077B6, #023E8A)", border: "none",
-                            borderRadius: "8px", padding: "7px 16px", color: "#fff",
-                            fontWeight: "700", cursor: "pointer", fontSize: "12px"
-                          }}>✅</button>
-                          <button onClick={() => rechazarUsuario(u.id_usuario)} style={{
-                            background: "#fff", border: "1px solid #ef4444",
-                            borderRadius: "8px", padding: "7px 16px", color: "#ef4444",
-                            fontWeight: "700", cursor: "pointer", fontSize: "12px"
-                          }}>❌</button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              );
-            })
+              })
+              .map(u => cardUsuario(u))
           )}
         </div>
       )}
 
-      {/* Seccion de usuarios pendientes cuando no se esta en gestion */}
-      {tab !== "gestion" && (
-        <div style={{ marginBottom: "24px" }}>
-          <p style={{
-            fontSize: "11px", fontWeight: "700", color: "#0077B6",
-            letterSpacing: "1px", textTransform: "uppercase", marginBottom: "12px"
-          }}>⚙️ Lista de Usuarios</p>
-          {/* Filtra y mapea los usuarios pendientes segun el texto de busqueda */}
-          {usuariosPendientes
-            .filter(u => {
-              const search = filterText.toLowerCase().trim();
-              return (
-                String(u.id_usuario || "").includes(search) ||
-                String(u.nombres_apellidos || "").toLowerCase().includes(search) ||
-                String(u.documento || "").includes(search) ||
-                String(u.email || "").toLowerCase().includes(search)
-              );
-            })
-            .map(u => cardUsuario(u))}
-        </div>
-      )}
+      {/* Pestañas por rol: Aprendices, Instructores, Gestores, Pasantes */}
+      {["aprendices", "instructores", "gestores", "pasantes"].includes(tab) && (() => {
+        const rolMap = {
+          aprendices: { key: "Aprendiz", icon: "🎓", label: "Aprendices", color: "#0891b2" },
+          instructores: { key: "Instructor", icon: "👨‍🏫", label: "Instructores", color: "#059669" },
+          gestores: { key: "Gestor", icon: "🔑", label: "Gestores", color: "#0077B6" },
+          pasantes: { key: "Pasante", icon: "🔬", label: "Pasantes", color: "#d97706" },
+        };
+        const section = rolMap[tab];
+        const usuarios = todosUsuarios.filter(u => {
+          const search = filterText.toLowerCase().trim();
+          return u.rol === section.key && (
+            String(u.id_usuario || "").includes(search) ||
+            String(u.nombres_apellidos || "").toLowerCase().includes(search) ||
+            String(u.documento || "").includes(search) ||
+            String(u.email || "").toLowerCase().includes(search)
+          );
+        });
 
-      {/* Mensaje cuando no hay datos en la pestana de pendientes */}
-      {tab !== "gestion" && usuariosPendientes.length === 0 && (
-        <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>
-          <div style={{ fontSize: "48px", marginBottom: "12px" }}>📭</div>
-          <p style={{ fontSize: "16px" }}>No hay usuarios {tab === "pendientes" ? "pendientes" : ""}</p>
-        </div>
-      )}
+        return (
+          <div>
+            {/* Encabezado de la seccion de rol */}
+            <div style={{
+              display: "flex", alignItems: "center", gap: "10px",
+              marginBottom: "14px", paddingBottom: "10px",
+              borderBottom: `2px solid ${section.color}22`
+            }}>
+              <span style={{ fontSize: "20px" }}>{section.icon}</span>
+              <span style={{
+                fontSize: "13px", fontWeight: "800", color: section.color,
+                letterSpacing: "1px", textTransform: "uppercase"
+              }}>
+                {section.label}
+              </span>
+              <span style={{
+                background: section.color, color: "#fff",
+                fontSize: "11px", fontWeight: "700", padding: "2px 10px",
+                borderRadius: "99px", marginLeft: "4px"
+              }}>
+                {usuarios.length}
+              </span>
+            </div>
+
+            {usuarios.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>
+                <div style={{ fontSize: "48px", marginBottom: "12px" }}>📭</div>
+                <p style={{ fontSize: "16px" }}>No hay {section.label.toLowerCase()} registrados</p>
+              </div>
+            ) : (
+              usuarios.map(u => (
+                <div key={u.id_usuario} style={{
+                  background: "#fff", borderRadius: "14px", padding: "18px 22px",
+                  marginBottom: "10px", border: "1px solid #e2e8f0",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                  display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap"
+                }}>
+                  {/* Avatar circular con inicial */}
+                  <div style={{
+                    width: "42px", height: "42px", borderRadius: "50%",
+                    background: gradientFor(u.rol),
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    color: "#fff", fontWeight: "800", fontSize: "16px", flexShrink: 0
+                  }}>
+                    {u.nombres_apellidos?.charAt(0).toUpperCase()}
+                  </div>
+                  {/* Informacion del usuario */}
+                  <div style={{ flex: 1, minWidth: "200px" }}>
+                    <div style={{ fontWeight: "700", color: "#0f172a", fontSize: "14px" }}>{u.nombres_apellidos}</div>
+                    <div style={{ fontSize: "12px", color: "#64748b" }}>{u.email} · {u.documento}</div>
+                    {/* Informacion de ficha si existe */}
+                    {(u.numero_ficha || u.nombre_ficha) && (
+                      <div style={{ fontSize: "11px", color: "#0077B6", marginTop: "4px", fontWeight: "600" }}>
+                        🆔 Ficha: {u.numero_ficha || "N/A"} · Ficha Nombre: {u.nombre_ficha || "N/A"} · SENA Empresa: {u.es_sena_empresa ? "Sí" : "No"}
+                      </div>
+                    )}
+                  </div>
+                  {/* Badge de estado */}
+                  {estadoBadge(u.estado)}
+                  {/* Boton de activar/inactivar */}
+                  {(u.estado === 'aprobado' || u.estado === 'inactivo') && (
+                    <button onClick={() => toggleActivo(u.id_usuario, u.estado)} style={{
+                      background: u.estado === 'inactivo' ? "linear-gradient(135deg, #0077B6, #023E8A)" : "transparent",
+                      border: u.estado === 'inactivo' ? "none" : "1px solid #f59e0b",
+                      borderRadius: "8px", padding: "7px 18px",
+                      color: u.estado === 'inactivo' ? "#fff" : "#d97706",
+                      fontWeight: "700", cursor: "pointer", fontSize: "12px",
+                      transition: "all 0.2s"
+                    }}>
+                      {u.estado === 'inactivo' ? "🔓 Activar" : "🔒 Inactivar"}
+                    </button>
+                  )}
+                  {(u.estado === 'aprobado' || u.estado === 'inactivo') && (
+                    <button onClick={() => cambiarPasswordAdmin(u.id_usuario)} style={{
+                      background: "#f1f5f9", border: "1px solid #cbd5e1",
+                      borderRadius: "8px", padding: "7px 18px",
+                      color: "#475569", fontWeight: "700", cursor: "pointer", fontSize: "12px",
+                      transition: "all 0.2s"
+                    }}>
+                      🔑 Cambiar Clave
+                    </button>
+                  )}
+                  {/* Botones de aprobar/rechazar para pendientes */}
+                  {u.estado === 'pendiente' && (
+                    <div style={{ display: "flex", gap: "6px" }}>
+                      <button onClick={() => aprobarUsuario(u.id_usuario)} style={{
+                        background: "linear-gradient(135deg, #0077B6, #023E8A)", border: "none",
+                        borderRadius: "8px", padding: "7px 16px", color: "#fff",
+                        fontWeight: "700", cursor: "pointer", fontSize: "12px"
+                      }}>✅</button>
+                      <button onClick={() => rechazarUsuario(u.id_usuario)} style={{
+                        background: "#fff", border: "1px solid #ef4444",
+                        borderRadius: "8px", padding: "7px 16px", color: "#ef4444",
+                        fontWeight: "700", cursor: "pointer", fontSize: "12px"
+                      }}>❌</button>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }
