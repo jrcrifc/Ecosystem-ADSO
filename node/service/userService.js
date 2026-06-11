@@ -435,18 +435,9 @@ class UserService {
       const isRowEmpty = Object.values(row).every(v => v === null || v === undefined || String(v).trim() === "");
       if (isRowEmpty) continue;
 
-      // Si no tiene ni documento NI nombre, es una fila de separación/encabezado/subtotal — ignorar silenciosamente
-      if (!documento && !nombres_apellidos) continue;
-
-      // Valida datos mínimos obligatorios
-      if (!documento) {
-        errores.push(`Fila ${filaNum} (${nombres_apellidos}): Falta el documento.`);
-        continue;
-      }
-      if (!nombres_apellidos) {
-        errores.push(`Fila ${filaNum} (Doc: ${documento}): Falta el nombre.`);
-        continue;
-      }
+      // Si no tiene documento O no tiene nombre, es una fila de separación/encabezado/subtotal — ignorar silenciosamente
+      // Un registro real de instructor/aprendiz SIEMPRE tiene ambos campos
+      if (!documento || !nombres_apellidos) continue;
       
       // Valida que el documento contenga solo números
       if (!/^\d+$/.test(documento)) {
