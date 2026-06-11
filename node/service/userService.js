@@ -341,8 +341,6 @@ class UserService {
       let nombre_ficha = null;
       let es_sena_empresa = false;
       // Campos extra para Instructor
-      let correo_personal = null;
-      let programa_instructor = null;
       let telefono = null;
       let tipo_vinculacion = null;
       // Campos extra para Aprendiz
@@ -354,9 +352,6 @@ class UserService {
       let estrato = null;
       let estado_civil = null;
       let tipo_aprendiz = null;
-      let nombre_responsable = null;
-      let telefono_responsable = null;
-      let email_responsable = null;
       // Mapea cada columna buscando variaciones ortográficas comunes
       for (const key of Object.keys(row)) {
         // Normaliza la clave eliminando tildes y espacios
@@ -384,22 +379,19 @@ class UserService {
         } else if (normalizedKey === "es_sena_empresa" || normalizedKey === "sena empresa" || normalizedKey === "sena-empresa") {
           es_sena_empresa = val.toLowerCase() === "si" || val.toLowerCase() === "sí" || val.toLowerCase() === "true" || val === "1";
         // --- Campos extra para Instructor ---
-        } else if (normalizedKey === "correo_personal" || normalizedKey === "correo personal") {
-          correo_personal = val;
         } else if (normalizedKey === "telefono" || normalizedKey === "celular" || normalizedKey === "telefono de contacto") {
           telefono = val;
         } else if (normalizedKey.includes("vinculacion") || normalizedKey.includes("contrato") || normalizedKey.includes("tipo vinculacion")) {
           // Normalizar el valor a los permitidos por el ENUM ('Planta', 'Contrato')
           const v = val.toLowerCase();
           if (v.includes("planta") || v.includes("nombramiento") || v.includes("fijo") || v.includes("indefinido")) {
-            tipo_vinculacion = "Planta";
+            tipo_vinculacion = "Instructor de planta";
           } else if (v.includes("contrat") || v.includes("prestacion") || v.includes("servicios")) {
-            tipo_vinculacion = "Contrato";
+            tipo_vinculacion = "Instructor por prestacion de servicios";
           } else {
-            tipo_vinculacion = "Contrato"; // Valor por defecto si hay algo pero no se reconoce bien
+            tipo_vinculacion = "Instructor por prestacion de servicios"; // Valor por defecto si hay algo pero no se reconoce bien
           }
-        } else if (normalizedKey === "programa_instructor" || normalizedKey === "area" || normalizedKey === "tipo de programa") {
-          programa_instructor = val;
+
         // --- Campos extra para Aprendiz ---
         } else if (normalizedKey === "tipo_documento" || normalizedKey === "tipo de documento" || normalizedKey === "tipo documento") {
           tipo_documento = val;
@@ -417,12 +409,6 @@ class UserService {
           estado_civil = val;
         } else if (normalizedKey === "tipo_aprendiz" || normalizedKey === "tipo de aprendiz") {
           tipo_aprendiz = val;
-        } else if (normalizedKey === "nombre_responsable" || normalizedKey === "nombre del responsable" || normalizedKey === "acudiente" || normalizedKey === "nombre responsable") {
-          nombre_responsable = val;
-        } else if (normalizedKey === "telefono_responsable" || normalizedKey === "telefono del responsable" || normalizedKey === "telefono responsable") {
-          telefono_responsable = val;
-        } else if (normalizedKey === "email_responsable" || normalizedKey === "correo del responsable" || normalizedKey === "correo responsable" || normalizedKey === "email del responsable") {
-          email_responsable = val;
         }
       }
       
@@ -461,6 +447,19 @@ class UserService {
         // Evita duplicados por documento
         const existDoc = await UserModel.findOne({ where: { documento } });
         if (existDoc) {
+          // 🔥 PARCHE: Si el usuario ya existe y es Instructor, le actualizamos el tipo de vinculación
+          // Esto sirve para arreglar los registros viejos que quedaron en NULL/vacío
+          if (rol === "Instructor" && tipo_vinculacion) {
+            try {
+              const InstructorModel = (await import("../models/instructorModel.js")).default;
+              await InstructorModel.update(
+                { tipo_vinculacion },
+                { where: { id_usuario: existDoc.id_usuario } }
+              );
+            } catch (err) {
+              console.error("Error arreglando tipo_vinculacion:", err);
+            }
+          }
           omitidos++;
           continue;
         }
@@ -525,9 +524,6 @@ class UserService {
             estrato,
             estado_civil,
             tipo_aprendiz,
-            nombre_responsable,
-            telefono_responsable,
-            email_responsable,
             id_usuario: nuevoUsuario.id_usuario
           });
         }
@@ -538,8 +534,6 @@ class UserService {
             documento,
             nombres_apellidos,
             email,
-            correo_personal,
-            programa: programa_instructor,
             telefono,
             tipo_vinculacion,
             id_usuario: nuevoUsuario.id_usuario

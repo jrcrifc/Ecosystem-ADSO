@@ -83,13 +83,6 @@ export default function Aprendices() {
     <div style="display:grid;grid-template-columns:1fr;gap:6px;padding:0 10px">
       <input id="swal-tipo-aprendiz" class="swal2-input" style="font-size:13px;padding:6px;margin:0" placeholder="Tipo de aprendiz (ej: Regular)" value="${a.tipo_aprendiz || ''}">
     </div>
-    <div style="text-align:left;padding:0 10px">
-      <p style="font-weight:700;color:#0077B6;font-size:13px;margin:15px 0 8px;border-bottom:1px solid #e2e8f0;padding-bottom:4px">👨‍👩‍👦 Acudiente / Responsable</p>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 10px">
-      <input id="swal-nom-resp" class="swal2-input" style="font-size:13px;padding:6px;margin:0;grid-column:1/3" placeholder="Nombre del responsable" value="${a.nombre_responsable || ''}">
-      <input id="swal-tel-resp" class="swal2-input" style="font-size:13px;padding:6px;margin:0" placeholder="Teléfono responsable" value="${a.telefono_responsable || ''}">
-      <input id="swal-email-resp" class="swal2-input" style="font-size:13px;padding:6px;margin:0" placeholder="Email responsable" value="${a.email_responsable || ''}">
     </div>
   `;
 
@@ -104,9 +97,6 @@ export default function Aprendices() {
     telefono: document.getElementById('swal-telefono')?.value || null,
     estrato: document.getElementById('swal-estrato')?.value || null,
     tipo_aprendiz: document.getElementById('swal-tipo-aprendiz')?.value || null,
-    nombre_responsable: document.getElementById('swal-nom-resp')?.value || null,
-    telefono_responsable: document.getElementById('swal-tel-resp')?.value || null,
-    email_responsable: document.getElementById('swal-email-resp')?.value || null,
   });
 
   // Crear aprendiz manualmente
@@ -214,11 +204,6 @@ export default function Aprendices() {
           <p><strong>🏠 Dirección:</strong> ${a.direccion || 'N/A'} ${a.tipo_direccion ? '(' + a.tipo_direccion + ')' : ''}</p>
           <p><strong>📞 Teléfono:</strong> ${a.telefono || 'N/A'}</p>
           <p><strong>🏢 Estrato:</strong> ${a.estrato || 'N/A'}</p>
-          
-          <p style="font-weight:700;color:#06b6d4;border-bottom:1px solid #e2e8f0;padding-bottom:4px;margin-top:12px">👨‍👩‍👦 Acudiente</p>
-          <p><strong>👤 Nombre:</strong> ${a.nombre_responsable || 'N/A'}</p>
-          <p><strong>📞 Teléfono:</strong> ${a.telefono_responsable || 'N/A'}</p>
-          <p><strong>📧 Email:</strong> ${a.email_responsable || 'N/A'}</p>
         </div>
       `,
       confirmButtonColor: '#0077B6',
@@ -258,7 +243,7 @@ export default function Aprendices() {
             <li><strong>numero_ficha</strong> (opcional)</li>
             <li><strong>nombre_ficha / programa</strong> (opcional)</li>
           </ul>
-          <p style="font-size:12px;color:#64748b;margin-top:8px">Columnas extendidas opcionales: <em>tipo_documento, fecha_nacimiento, genero, direccion, tipo_direccion, telefono, estrato, estado_civil, tipo_aprendiz, nombre_responsable, telefono_responsable, email_responsable</em></p>
+          <p style="font-size:12px;color:#64748b;margin-top:8px">Columnas extendidas opcionales: <em>tipo_documento, fecha_nacimiento, genero, direccion, tipo_direccion, telefono, estrato, estado_civil, tipo_aprendiz</em></p>
           <p style="font-size:12px;color:#0077B6;font-weight:600">El rol se asignará automáticamente como <strong>Aprendiz</strong></p>
         </div>
       `,

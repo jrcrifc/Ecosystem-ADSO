@@ -20,8 +20,7 @@ class AprendizService {
     const { 
       documento, nombres_apellidos, email, id_ficha,
       tipo_documento, fecha_nacimiento, genero, direccion, tipo_direccion, 
-      telefono, estrato, estado_civil, tipo_aprendiz, 
-      nombre_responsable, telefono_responsable, email_responsable 
+      telefono, estrato, estado_civil, tipo_aprendiz
     } = data;
     if (!documento || !nombres_apellidos || !email) throw new Error("Faltan campos obligatorios");
     
@@ -62,9 +61,6 @@ class AprendizService {
       estrato,
       estado_civil,
       tipo_aprendiz,
-      nombre_responsable,
-      telefono_responsable,
-      email_responsable,
       id_usuario: user.id_usuario
     });
 
@@ -82,8 +78,7 @@ class AprendizService {
     const { 
       documento, nombres_apellidos, email, id_ficha,
       tipo_documento, fecha_nacimiento, genero, direccion, tipo_direccion, 
-      telefono, estrato, estado_civil, tipo_aprendiz, 
-      nombre_responsable, telefono_responsable, email_responsable
+      telefono, estrato, estado_civil, tipo_aprendiz
     } = data;
 
     // Verificar unicidad si cambia
@@ -116,10 +111,7 @@ class AprendizService {
       telefono: telefono !== undefined ? telefono : aprendiz.telefono,
       estrato: estrato !== undefined ? estrato : aprendiz.estrato,
       estado_civil: estado_civil !== undefined ? estado_civil : aprendiz.estado_civil,
-      tipo_aprendiz: tipo_aprendiz !== undefined ? tipo_aprendiz : aprendiz.tipo_aprendiz,
-      nombre_responsable: nombre_responsable !== undefined ? nombre_responsable : aprendiz.nombre_responsable,
-      telefono_responsable: telefono_responsable !== undefined ? telefono_responsable : aprendiz.telefono_responsable,
-      email_responsable: email_responsable !== undefined ? email_responsable : aprendiz.email_responsable
+      tipo_aprendiz: tipo_aprendiz !== undefined ? tipo_aprendiz : aprendiz.tipo_aprendiz
     });
 
     return aprendiz;

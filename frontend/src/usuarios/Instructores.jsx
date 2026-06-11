@@ -6,8 +6,11 @@ import Swal from "sweetalert2";
 export default function Instructores() {
   const [instructores, setInstructores] = useState([]);
   const [filterText, setFilterText] = useState("");
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => { cargar(); }, []);
+  useEffect(() => { setPage(1); }, [filterText]);
 
   const cargar = async () => {
     try {
@@ -24,13 +27,11 @@ export default function Instructores() {
         <input id="swal-doc" class="swal2-input" placeholder="Documento (solo números)">
         <input id="swal-nombre" class="swal2-input" placeholder="Nombres y Apellidos">
         <input id="swal-email" class="swal2-input" placeholder="Correo electrónico institucional">
-        <input id="swal-correo-personal" class="swal2-input" placeholder="Correo personal (opcional)">
         <input id="swal-telefono" class="swal2-input" placeholder="Teléfono de contacto (opcional)">
-        <input id="swal-programa" class="swal2-input" placeholder="Programa / Área (ej: SER, VICTIMAS...)">
         <select id="swal-vinculacion" class="swal2-select" style="margin-top:10px;padding:8px;border:1px solid #d9d9d9;border-radius:4px;width:80%">
           <option value="">Tipo de vinculación</option>
-          <option value="Planta">Planta</option>
-          <option value="Contrato">Contrato</option>
+          <option value="Instructor de planta">Instructor de planta</option>
+          <option value="Instructor por prestacion de servicios">Instructor por prestacion de servicios</option>
         </select>
       `,
       focusConfirm: false, showCancelButton: true,
@@ -39,9 +40,7 @@ export default function Instructores() {
         documento: document.getElementById('swal-doc').value,
         nombres_apellidos: document.getElementById('swal-nombre').value,
         email: document.getElementById('swal-email').value,
-        correo_personal: document.getElementById('swal-correo-personal').value || null,
         telefono: document.getElementById('swal-telefono').value || null,
-        programa: document.getElementById('swal-programa').value || null,
         tipo_vinculacion: document.getElementById('swal-vinculacion').value || null
       })
     });
@@ -63,13 +62,11 @@ export default function Instructores() {
         <input id="swal-doc" class="swal2-input" placeholder="Documento" value="${inst.documento || ''}">
         <input id="swal-nombre" class="swal2-input" placeholder="Nombres y Apellidos" value="${inst.nombres_apellidos || ''}">
         <input id="swal-email" class="swal2-input" placeholder="Correo institucional" value="${inst.email || inst.usuario?.email || ''}">
-        <input id="swal-correo-personal" class="swal2-input" placeholder="Correo personal" value="${inst.correo_personal || ''}">
         <input id="swal-telefono" class="swal2-input" placeholder="Teléfono" value="${inst.telefono || ''}">
-        <input id="swal-programa" class="swal2-input" placeholder="Programa / Área" value="${inst.programa || ''}">
         <select id="swal-vinculacion" class="swal2-select" style="margin-top:10px;padding:8px;border:1px solid #d9d9d9;border-radius:4px;width:80%">
           <option value="">Tipo de vinculación</option>
-          <option value="Planta" ${inst.tipo_vinculacion === 'Planta' ? 'selected' : ''}>Planta</option>
-          <option value="Contrato" ${inst.tipo_vinculacion === 'Contrato' ? 'selected' : ''}>Contrato</option>
+          <option value="Instructor de planta" ${inst.tipo_vinculacion === 'Instructor de planta' ? 'selected' : ''}>Instructor de planta</option>
+          <option value="Instructor por prestacion de servicios" ${inst.tipo_vinculacion === 'Instructor por prestacion de servicios' ? 'selected' : ''}>Instructor por prestacion de servicios</option>
         </select>
       `,
       focusConfirm: false, showCancelButton: true,
@@ -78,9 +75,7 @@ export default function Instructores() {
         documento: document.getElementById('swal-doc').value,
         nombres_apellidos: document.getElementById('swal-nombre').value,
         email: document.getElementById('swal-email').value,
-        correo_personal: document.getElementById('swal-correo-personal').value || null,
         telefono: document.getElementById('swal-telefono').value || null,
-        programa: document.getElementById('swal-programa').value || null,
         tipo_vinculacion: document.getElementById('swal-vinculacion').value || null
       })
     });
@@ -102,9 +97,7 @@ export default function Instructores() {
         <div style="text-align:left;font-size:14px;color:#334155;line-height:2">
           <p><strong>📄 Documento:</strong> ${inst.documento}</p>
           <p><strong>📧 Email institucional:</strong> ${inst.email || inst.usuario?.email || 'N/A'}</p>
-          <p><strong>📧 Correo personal:</strong> ${inst.correo_personal || 'N/A'}</p>
           <p><strong>📞 Teléfono:</strong> ${inst.telefono || 'N/A'}</p>
-          <p><strong>📚 Programa/Área:</strong> ${inst.programa || 'N/A'}</p>
           <p><strong>🏷️ Vinculación:</strong> ${inst.tipo_vinculacion || 'N/A'}</p>
           <p><strong>🟢 Estado:</strong> ${inst.usuario?.estado === 'aprobado' ? 'Activo' : inst.usuario?.estado || 'N/A'}</p>
         </div>
@@ -143,9 +136,7 @@ export default function Instructores() {
             <li><strong>documento</strong> (solo números)</li>
             <li><strong>nombres_apellidos</strong> (nombre completo)</li>
             <li><strong>email</strong> (correo único)</li>
-            <li><strong>correo_personal</strong> (opcional)</li>
             <li><strong>telefono</strong> (opcional)</li>
-            <li><strong>programa</strong> / área (opcional)</li>
             <li><strong>tipo_vinculacion</strong> (Planta/Contrato, opcional)</li>
           </ul>
           <p style="font-size:12px;color:#10b981;font-weight:600">El rol se asignará automáticamente como <strong>Instructor</strong></p>
@@ -190,9 +181,11 @@ export default function Instructores() {
     return (i.documento || '').toLowerCase().includes(s) ||
       (i.nombres_apellidos || '').toLowerCase().includes(s) ||
       (i.email || i.usuario?.email || '').toLowerCase().includes(s) ||
-      (i.programa || '').toLowerCase().includes(s) ||
       (i.telefono || '').toLowerCase().includes(s);
   });
+
+  const totalPages = Math.ceil(filtrados.length / itemsPerPage);
+  const paginados = filtrados.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
   const btnStyle = (bg, color, border) => ({
     background: bg, color, border: border || 'none', borderRadius: '8px',
@@ -235,25 +228,19 @@ export default function Instructores() {
           <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
             <thead>
               <tr style={{ background: '#f8fafc' }}>
-                {['Documento', 'Nombres y Apellidos', 'Email', 'Teléfono', 'Programa', 'Vinculación', 'Estado', 'Acciones'].map(h => (
+                {['Documento', 'Nombres y Apellidos', 'Email', 'Teléfono', 'Vinculación', 'Estado', 'Acciones'].map(h => (
                   <th key={h} style={{ padding: '12px 16px', fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {filtrados.map(i => (
+              {paginados.map(i => (
                 <tr key={i.id_instructor} style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                   <td style={{ padding: '14px 16px', fontWeight: '600', color: '#0f172a' }}>{i.documento}</td>
                   <td style={{ padding: '14px 16px', color: '#334155' }}>{i.nombres_apellidos}</td>
                   <td style={{ padding: '14px 16px', color: '#64748b', fontSize: '13px' }}>{i.email || i.usuario?.email}</td>
                   <td style={{ padding: '14px 16px', color: '#334155', fontSize: '13px' }}>{i.telefono || '—'}</td>
-                  <td style={{ padding: '14px 16px' }}>
-                    {i.programa ? (
-                      <span style={{ background: '#fef3c7', color: '#92400e', fontSize: '11px', fontWeight: '700', padding: '4px 12px', borderRadius: '99px' }}>
-                        {i.programa}
-                      </span>
-                    ) : <span style={{ color: '#94a3b8', fontSize: '12px' }}>—</span>}
-                  </td>
+
                   <td style={{ padding: '14px 16px' }}>
                     <span style={{ background: '#f0f9ff', color: '#0077B6', fontSize: '11px', fontWeight: '700', padding: '4px 12px', borderRadius: '99px' }}>
                       {i.tipo_vinculacion || 'N/A'}
@@ -275,6 +262,53 @@ export default function Instructores() {
               ))}
             </tbody>
           </table>
+          
+          {totalPages > 1 && (
+            <div style={{
+              display: "flex", justifyContent: "center", alignItems: "center",
+              gap: "6px", marginTop: "20px", flexWrap: "wrap", paddingBottom: "20px"
+            }}>
+              <button
+                onClick={() => setPage(1)}
+                disabled={page === 1}
+                style={{
+                  padding: "6px 12px", borderRadius: "8px", border: "1px solid #dbeafe",
+                  background: page === 1 ? "#f1f5f9" : "#fff", cursor: page === 1 ? "default" : "pointer",
+                  color: page === 1 ? "#94a3b8" : "#0077B6", fontWeight: "600", fontSize: "12px"
+                }}
+              >«</button>
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                style={{
+                  padding: "6px 12px", borderRadius: "8px", border: "1px solid #dbeafe",
+                  background: page === 1 ? "#f1f5f9" : "#fff", cursor: page === 1 ? "default" : "pointer",
+                  color: page === 1 ? "#94a3b8" : "#0077B6", fontWeight: "600", fontSize: "12px"
+                }}
+              >‹</button>
+              <span style={{ fontSize: "13px", color: "#475569", fontWeight: "600", padding: "0 8px" }}>
+                Página {page} de {totalPages}
+              </span>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                style={{
+                  padding: "6px 12px", borderRadius: "8px", border: "1px solid #dbeafe",
+                  background: page === totalPages ? "#f1f5f9" : "#fff", cursor: page === totalPages ? "default" : "pointer",
+                  color: page === totalPages ? "#94a3b8" : "#0077B6", fontWeight: "600", fontSize: "12px"
+                }}
+              >›</button>
+              <button
+                onClick={() => setPage(totalPages)}
+                disabled={page === totalPages}
+                style={{
+                  padding: "6px 12px", borderRadius: "8px", border: "1px solid #dbeafe",
+                  background: page === totalPages ? "#f1f5f9" : "#fff", cursor: page === totalPages ? "default" : "pointer",
+                  color: page === totalPages ? "#94a3b8" : "#0077B6", fontWeight: "600", fontSize: "12px"
+                }}
+              >»</button>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -17,17 +17,10 @@ const InstructorModel = sequelize.define('instructores', {
     allowNull: true
   },
   tipo_vinculacion: {
-    type: DataTypes.ENUM('Planta', 'Contrato'),
+    type: DataTypes.ENUM('Instructor de planta', 'Instructor por prestacion de servicios'),
     allowNull: true
   },
-  correo_personal: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
-  programa: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
+
   telefono: {
     type: DataTypes.STRING,
     allowNull: true

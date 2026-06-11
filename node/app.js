@@ -183,6 +183,24 @@ try {
       MODIFY COLUMN estado ENUM('pendiente', 'aprobado', 'rechazado', 'inactivo') 
       NOT NULL DEFAULT 'pendiente';
     `).catch(err => console.warn("⚠️ Advertencia al sincronizar ENUM en DB:", err.message));
+
+    // Actualiza ENUM de instructores para soportar los nuevos y viejos valores temporalmente
+    await db.query(`
+      ALTER TABLE instructores
+      MODIFY COLUMN tipo_vinculacion ENUM('Instructor de planta', 'Instructor por prestacion de servicios', 'Planta', 'Contrato') 
+      NULL DEFAULT NULL;
+    `).catch(err => console.warn("⚠️ Advertencia al sincronizar ENUM instructores en DB:", err.message));
+
+    // Migrar los antiguos a los nuevos valores
+    await db.query(`UPDATE instructores SET tipo_vinculacion = 'Instructor de planta' WHERE tipo_vinculacion = 'Planta';`).catch(()=>null);
+    await db.query(`UPDATE instructores SET tipo_vinculacion = 'Instructor por prestacion de servicios' WHERE tipo_vinculacion = 'Contrato';`).catch(()=>null);
+
+    // Luego dejar solo los correctos en el enum
+    await db.query(`
+      ALTER TABLE instructores
+      MODIFY COLUMN tipo_vinculacion ENUM('Instructor de planta', 'Instructor por prestacion de servicios') 
+      NULL DEFAULT NULL;
+    `).catch(err => console.warn("⚠️ Advertencia al limpiar ENUM instructores en DB:", err.message));
 } catch (error) {
     // Imprime el error de conexión en consola
     console.error('❌ Error al conectar a la base de datos:', error);

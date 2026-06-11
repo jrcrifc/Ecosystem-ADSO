@@ -56,18 +56,7 @@ const AprendizModel = sequelize.define('aprendices', {
     type: DataTypes.STRING(100),
     allowNull: true
   },
-  nombre_responsable: {
-    type: DataTypes.STRING(255),
-    allowNull: true
-  },
-  telefono_responsable: {
-    type: DataTypes.STRING(100),
-    allowNull: true
-  },
-  email_responsable: {
-    type: DataTypes.STRING(255),
-    allowNull: true
-  },
+
   id_usuario: {
     type: DataTypes.INTEGER,
     allowNull: true
