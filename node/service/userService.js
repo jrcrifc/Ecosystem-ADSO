@@ -427,21 +427,22 @@ class UserService {
       const isRowEmpty = Object.values(row).every(v => v === null || v === undefined || String(v).trim() === "");
       if (isRowEmpty) continue;
 
-      // Valida datos mínimos obligatorios
-      if (!documento || !nombres_apellidos || !email) {
-        errores.push(`Fila ${filaNum}: Faltan campos requeridos (Documento, Nombres/Apellidos o Email). Revisa los nombres de las columnas.`);
+      // Valida datos mínimos obligatorios (solo documento y nombres son estrictamente requeridos ahora)
+      if (!documento || !nombres_apellidos) {
+        errores.push(`Fila ${filaNum}: Faltan campos requeridos (Documento o Nombres/Apellidos).`);
         continue;
       }
+      
       // Valida que el documento contenga solo números
       if (!/^\d+$/.test(documento)) {
         errores.push(`Fila ${filaNum} (${nombres_apellidos}): El documento debe contener solo números`);
         continue;
       }
+      
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      // Valida el formato del correo electrónico
-      if (!emailRegex.test(email)) {
-        errores.push(`Fila ${filaNum} (${nombres_apellidos}): El formato del correo electrónico no es válido`);
-        continue;
+      // Si no tiene correo, o el correo es inválido (ej: "N/A", "-", "no tiene", typos), le asignamos uno por defecto
+      if (!email || !emailRegex.test(email)) {
+        email = `${documento}@sena.edu.co`;
       }
       // Valida si el rol leído del Excel existe en el sistema
       const rolEncontrado = rolesValidos.find(r => r.toLowerCase() === rol.toLowerCase());
