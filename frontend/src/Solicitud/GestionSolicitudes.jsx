@@ -115,51 +115,60 @@ const GestionSolicitudes = () => {
       cell: (row) => {
         const estadoActual = row.ultimoEstado || "generado";
         const siguientes = estadosSiguientes[estadoActual] || [];
-        if (siguientes.length === 0) return <span className="text-muted small">Finalizado</span>;
         return (
-          <div className="d-flex gap-1 py-1">
+          <div className="d-flex gap-2 py-1 align-items-center">
+            {/* Botón para ver el historial */}
+            <button
+              className="btn btn-sm text-info bg-transparent border-0"
+              onClick={() => verHistorial(row.id_solicitud)}
+              title="Ver Historial"
+              style={{ padding: "4px" }}
+            >
+              <i className="fas fa-history" style={{ fontSize: "16px" }}></i>
+            </button>
+            {siguientes.length === 0 && <span className="text-muted small ms-2">Finalizado</span>}
             {/* Botón para aceptar solicitud */}
             {siguientes.includes("aceptado") && (
               <button
-                className="btn btn-sm text-white fw-bold d-flex align-items-center gap-1 shadow-sm"
-                style={{ background: "#0077B6", borderRadius: "8px", border: "none", fontSize: "11px", padding: "6px 10px" }}
+                className="btn btn-sm text-primary bg-transparent border-0"
                 onClick={() => cambiarEstado(row.id_solicitud, "aceptado")}
                 title="Aceptar Solicitud"
+                style={{ padding: "4px" }}
               >
-                <i className="fas fa-check-circle"></i> Aceptar
+                <i className="fas fa-check-circle" style={{ fontSize: "16px" }}></i>
               </button>
             )}
             {/* Botón para cancelar/rechazar solicitud */}
             {siguientes.includes("cancelado") && (
               <button
-                className="btn btn-sm text-white fw-bold d-flex align-items-center gap-1 shadow-sm"
-                style={{ background: "#dc2626", borderRadius: "8px", border: "none", fontSize: "11px", padding: "6px 10px" }}
+                className="btn btn-sm text-danger bg-transparent border-0"
                 onClick={() => cambiarEstado(row.id_solicitud, "cancelado")}
                 title="Rechazar/Cancelar"
+                style={{ padding: "4px" }}
               >
-                <i className="fas fa-times-circle"></i> Rechazar
+                <i className="fas fa-times-circle" style={{ fontSize: "16px" }}></i>
               </button>
             )}
             {/* Botón para prestar equipos */}
             {siguientes.includes("prestado") && (
               <button
-                className="btn btn-sm text-white fw-bold d-flex align-items-center gap-1 shadow-sm"
-                style={{ background: "#d97706", borderRadius: "8px", border: "none", fontSize: "11px", padding: "6px 10px" }}
+                className="btn btn-sm text-warning bg-transparent border-0"
                 onClick={() => cambiarEstado(row.id_solicitud, "prestado")}
                 title="Entregar Equipo (Prestar)"
+                style={{ padding: "4px" }}
               >
-                <i className="fas fa-box"></i> Prestar
+                <i className="fas fa-box" style={{ fontSize: "16px" }}></i>
               </button>
             )}
             {/* Botón para liberar/entregar equipos */}
             {siguientes.includes("entregado") && (
               <button
-                className="btn btn-sm text-white fw-bold d-flex align-items-center gap-1 shadow-sm"
-                style={{ background: "#059669", borderRadius: "8px", border: "none", fontSize: "11px", padding: "6px 10px" }}
+                className="btn btn-sm text-success bg-transparent border-0"
                 onClick={() => cambiarEstado(row.id_solicitud, "entregado")}
                 title="Recibir Equipo (Liberar)"
+                style={{ padding: "4px" }}
               >
-                <i className="fas fa-undo"></i> Liberar
+                <i className="fas fa-undo" style={{ fontSize: "16px" }}></i>
               </button>
             )}
           </div>
@@ -168,7 +177,7 @@ const GestionSolicitudes = () => {
       ignoreRowClick: true,
       allowOverflow: true,
       button: true,
-      width: "200px"
+      width: "150px"
     }
   ];
   // Efecto que carga las solicitudes al montar y escucha cambios en tiempo real
@@ -234,6 +243,46 @@ const GestionSolicitudes = () => {
       Swal.fire("Error", "No se pudo cambiar el estado", "error");
     }
   };
+  // Función para ver el historial de una solicitud
+  const verHistorial = async (id_solicitud) => {
+    try {
+      const token = getToken();
+      const res = await apiAxios.get("/api/estadoxsolicitud", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // Filtrar el historial por el id de la solicitud específica
+      const historial = res.data.filter(h => h.id_solicitud === id_solicitud || (h.solicitud && h.solicitud.id_solicitud === id_solicitud));
+      
+      if (historial.length === 0) {
+        Swal.fire("Historial", "No hay registros de estado para esta solicitud", "info");
+        return;
+      }
+      
+      const htmlContent = `
+        <div style="text-align: left; font-size: 14px;">
+          <ul style="list-style: none; padding: 0;">
+            ${historial.map(h => `
+              <li style="border-left: 3px solid #0077B6; margin-bottom: 12px; padding-left: 10px;">
+                <strong>${h.estadoSolicitud?.estado?.toUpperCase() || 'DESCONOCIDO'}</strong><br/>
+                <small style="color: #64748b;">${new Date(h.createdAt || h.createdat).toLocaleString('es-CO')}</small>
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+      `;
+      
+      Swal.fire({
+        title: `Historial Solicitud #${id_solicitud}`,
+        html: htmlContent,
+        confirmButtonColor: "#0077B6",
+        confirmButtonText: "Cerrar"
+      });
+    } catch (error) {
+      console.error("Error al cargar historial:", error);
+      Swal.fire("Error", "No se pudo cargar el historial", "error");
+    }
+  };
+
   // Filtro local por ID, solicitante o estado
   const filtered = solicitudes.filter((item) => {
     const search = filterText.toLowerCase().trim();
@@ -243,6 +292,7 @@ const GestionSolicitudes = () => {
       String(item.ultimoEstado || "").toLowerCase().includes(search)
     );
   });
+
   return (
     <div className="container mt-4">
       {/* Encabezado de la página con barra decorativa y título */}
@@ -263,27 +313,29 @@ const GestionSolicitudes = () => {
           />
         </div>
       </div>
-      {/* Contenedor de la tabla con bordes redondeados */}
-      <div style={{ borderRadius: "14px", overflow: "hidden", border: "1px solid #dbeafe" }}>
-        <DataTable
-          columns={columns}
-          data={filtered}
-          pagination
-          paginationPerPage={10}
-          paginationComponentOptions={paginationComponentOptions}
-          customStyles={tableCustomStyles}
-          highlightOnHover
-          striped
-          responsive
-          defaultSortFieldId={1}
-          defaultSortAsc={false}
-          noDataComponent={
-            <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
-              <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>
-              <p>No hay solicitudes registradas</p>
-            </div>
-          }
-        />
+      {/* Contenedor de la tabla con bordes redondeados y scroll horizontal */}
+      <div style={{ borderRadius: "14px", border: "1px solid #dbeafe", overflowX: "auto" }}>
+        <div style={{ minWidth: "900px" }}>
+          <DataTable
+            columns={columns}
+            data={filtered}
+            pagination
+            paginationPerPage={10}
+            paginationComponentOptions={paginationComponentOptions}
+            customStyles={tableCustomStyles}
+            highlightOnHover
+            striped
+            responsive
+            defaultSortFieldId={1}
+            defaultSortAsc={false}
+            noDataComponent={
+              <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
+                <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>
+                <p>No hay solicitudes registradas</p>
+              </div>
+            }
+          />
+        </div>
       </div>
     </div>
   );

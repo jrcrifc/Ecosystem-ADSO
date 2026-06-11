@@ -264,7 +264,7 @@ export default function Campanita({ userData, onAprobado, userRol }) {
             padding: "16px 20px", borderBottom: "1px solid #f0f4f8",
             display: "flex", alignItems: "center", justifyContent: "space-between"
           }}>
-            <span style={{ fontWeight: "700", color: "#0A1628", fontSize: "15px" }}>
+            <span style={{ fontWeight: "700", color: "#0077B6", fontSize: "15px" }}>
               Notificaciones {noLeidas > 0 && (
                 <span style={{ background: "#ef4444", color: "#fff", fontSize: "11px", padding: "2px 8px", borderRadius: "99px", marginLeft: "6px" }}>{noLeidas}</span>
               )}
@@ -273,13 +273,13 @@ export default function Campanita({ userData, onAprobado, userRol }) {
             {noLeidas > 0 && (
               <button onClick={marcarTodas} style={{
                 background: "transparent", border: "none",
-                color: "#00A8CC", fontSize: "12px", cursor: "pointer", fontWeight: "600"
+                color: "#0077B6", fontSize: "12px", cursor: "pointer", fontWeight: "600"
               }}>Marcar todas leídas</button>
             )}
           </div>
 
           {/* Lista de notificaciones */}
-          <div style={{ overflowY: "auto", flex: 1 }}>
+          <div style={{ overflowX: "auto", display: "flex", flexDirection: "column", flex: 1 }}>
             {/* Mensaje si no hay notificaciones */}
             {notificaciones.length === 0 ? (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#94a3b8" }}>
@@ -303,7 +303,7 @@ export default function Campanita({ userData, onAprobado, userRol }) {
                   {/* Icono del tipo de notificacion */}
                   <span style={{ fontSize: "18px", flexShrink: 0 }}>{iconTipo(n.tipo)}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ margin: "0 0 4px", fontWeight: "600", fontSize: "13px", color: "#0A1628" }}>{n.titulo}</p>
+                    <p style={{ margin: "0 0 4px", fontWeight: "700", fontSize: "13px", color: "#0077B6" }}>{n.titulo}</p>
                     <p style={{ margin: "0 0 4px", fontSize: "12px", color: "#64748b", lineHeight: "1.5", wordBreak: "break-word" }}>{n.mensaje}</p>
                     {/* Pie de la notificacion con fecha e indicador de accion */}
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
@@ -313,8 +313,8 @@ export default function Campanita({ userData, onAprobado, userRol }) {
                       {/* Indicador de accion clickeable segun el tipo */}
                       {esAdmin && n.tipo === 'solicitud_acceso' && (
                         <span style={{
-                          fontSize: "10px", fontWeight: "700", color: "#00A8CC",
-                          background: "rgba(0,168,204,0.1)", padding: "2px 8px",
+                          fontSize: "10px", fontWeight: "700", color: "#0077B6",
+                          background: "rgba(0,119,182,0.1)", padding: "2px 8px",
                           borderRadius: "99px", whiteSpace: "nowrap"
                         }}>Ver solicitud →</span>
                       )}
@@ -323,7 +323,7 @@ export default function Campanita({ userData, onAprobado, userRol }) {
                           fontSize: "10px", fontWeight: "700", color: "#0077B6",
                           background: "rgba(0,119,182,0.1)", padding: "2px 8px",
                           borderRadius: "99px", whiteSpace: "nowrap"
-                        }}>Ver solicitudes →</span>
+                        }}>Ver historial →</span>
                       )}
                       {n.tipo === 'vencimiento_reactivo' && (
                         <span style={{
@@ -335,7 +335,7 @@ export default function Campanita({ userData, onAprobado, userRol }) {
                     </div>
                   </div>
                   {/* Punto azul indicador de no leida */}
-                  {!n.leida && <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#00D4FF", marginTop: "4px", flexShrink: 0 }} />}
+                  {!n.leida && <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#0077B6", marginTop: "4px", flexShrink: 0 }} />}
                 </div>
               </div>
             ))}
