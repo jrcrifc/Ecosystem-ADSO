@@ -435,9 +435,16 @@ class UserService {
       const isRowEmpty = Object.values(row).every(v => v === null || v === undefined || String(v).trim() === "");
       if (isRowEmpty) continue;
 
-      // Valida datos mínimos obligatorios (solo documento y nombres son estrictamente requeridos ahora)
-      if (!documento || !nombres_apellidos) {
-        errores.push(`Fila ${filaNum}: Faltan campos requeridos (Documento o Nombres/Apellidos).`);
+      // Si no tiene ni documento NI nombre, es una fila de separación/encabezado/subtotal — ignorar silenciosamente
+      if (!documento && !nombres_apellidos) continue;
+
+      // Valida datos mínimos obligatorios
+      if (!documento) {
+        errores.push(`Fila ${filaNum} (${nombres_apellidos}): Falta el documento.`);
+        continue;
+      }
+      if (!nombres_apellidos) {
+        errores.push(`Fila ${filaNum} (Doc: ${documento}): Falta el nombre.`);
         continue;
       }
       
