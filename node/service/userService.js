@@ -363,13 +363,13 @@ class UserService {
         const normalizedKey = key.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
         const val = String(row[key] ?? "").trim();
         // Mapea la columna de documento con distintas variantes
-        if (normalizedKey === "documento" || normalizedKey === "identificacion" || normalizedKey === "documento de identidad" || normalizedKey === "cedula") {
+        if (normalizedKey === "documento" || normalizedKey === "identificacion" || normalizedKey === "documento de identidad" || normalizedKey === "cedula" || normalizedKey.includes("documento") || normalizedKey.includes("cedula")) {
           documento = val;
         // Mapea la columna de nombres y apellidos con distintas variantes
-        } else if (normalizedKey === "nombres_apellidos" || normalizedKey === "nombres" || normalizedKey === "apellidos" || normalizedKey === "nombres y apellidos" || normalizedKey === "nombre completo") {
+        } else if (normalizedKey === "nombres_apellidos" || normalizedKey === "nombres" || normalizedKey === "apellidos" || normalizedKey === "nombres y apellidos" || normalizedKey === "nombre completo" || normalizedKey.includes("nombre") || normalizedKey.includes("apellido")) {
           nombres_apellidos = val;
         // Mapea la columna de email con distintas variantes
-        } else if (normalizedKey === "email" || normalizedKey === "correo" || normalizedKey === "correo electronico") {
+        } else if (normalizedKey === "email" || normalizedKey === "correo" || normalizedKey === "correo electronico" || normalizedKey.includes("correo") || normalizedKey.includes("email")) {
           email = val.toLowerCase();
         // Mapea la columna de rol
         } else if (normalizedKey === "rol") {
@@ -423,9 +423,13 @@ class UserService {
         rol = rolForzado;
       }
       
+      // Ignorar filas completamente vacías
+      const isRowEmpty = Object.values(row).every(v => v === null || v === undefined || String(v).trim() === "");
+      if (isRowEmpty) continue;
+
       // Valida datos mínimos obligatorios
       if (!documento || !nombres_apellidos || !email) {
-        errores.push(`Fila ${filaNum}: Faltan campos requeridos (Documento, Nombres/Apellidos o Email)`);
+        errores.push(`Fila ${filaNum}: Faltan campos requeridos (Documento, Nombres/Apellidos o Email). Revisa los nombres de las columnas.`);
         continue;
       }
       // Valida que el documento contenga solo números
