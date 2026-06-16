@@ -216,11 +216,9 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
               onChange={(e) => setColor_almacenamiento(e.target.value)}
             >
               <option value="">Seleccione...</option>
-              {/* Muestra solo las opciones de peligro (desde indice 11) */}
               {Object.keys(swatches).slice(11).map(opt => (
                 <option key={opt} value={opt}>{opt}</option>
               ))}
-              <option value="Preparados">Preparados</option>
               <option value="N/A">N/A</option>
             </select>
             {/* Indicador visual del color seleccionado */}
@@ -245,7 +243,6 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
             <option value="Peligro de inflamabilidad">Peligro de inflamabilidad</option>
             <option value="Riesgo minimo">Riesgo mínimo</option>
             <option value="Peligro para salud">Peligro para la salud</option>
-            <option value="Evalué el almacenamiento individualmente">Evalué el almacenamiento individualmente</option>
           </select>
         </div>
 

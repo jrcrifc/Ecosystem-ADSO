@@ -30,7 +30,7 @@ const reactivosModel = db.define('reactivos', {
     
     // Campo color_almacenamiento - color de seguridad según normativas
     color_almacenamiento: {
-        type: DataTypes.ENUM("Peligro para la salud", "Inflamabilidad", "N/A", "Peligro de contacto", "Riesgo minimo", "Riesgo de reactividad", "Preparados")
+        type: DataTypes.ENUM("Peligro para la salud", "Inflamabilidad", "N/A", "Peligro de contacto", "Riesgo minimo", "Riesgo de reactividad")
     },
     
     // Campo color_stand - color de etiqueta del stand de ubicación
@@ -49,7 +49,7 @@ const reactivosModel = db.define('reactivos', {
     
     // Campo clasificacion_reactivo - clasificación según tipo de peligrosidad
     clasificacion_reactivo: {
-        type: DataTypes.ENUM('Peligro de contacto', 'Peligro de reactividad', 'Peligro de inflamabilidad', 'Riesgo minimo', 'Peligro para salud', 'Evalué el almacenamiento individualmente')
+        type: DataTypes.ENUM('Peligro de contacto', 'Peligro de reactividad', 'Peligro de inflamabilidad', 'Riesgo minimo', 'Peligro para salud')
     },
     
     // Campo estado - estado del reactivo (1 activo, 0 inactivo)
