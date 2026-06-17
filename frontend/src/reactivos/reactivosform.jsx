@@ -163,7 +163,7 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
 
         {/* Campo de nombre en ingles */}
         <div className="col-md-6">
-          <label className="form-label fw-semibold text-muted">Nombre en inglés</label>
+          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Nombre en inglés</label>
           <input
             type="text"
             className="form-control"
@@ -176,7 +176,7 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
 
         {/* Campo de formula quimica */}
         <div className="col-md-6">
-          <label className="form-label fw-semibold text-muted">Fórmula química</label>
+          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Fórmula química</label>
           <input
             type="text"
             className="form-control"
@@ -189,7 +189,7 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
 
         {/* Campo de unidad de medida o presentacion */}
         <div className="col-md-6">
-          <label className="form-label fw-semibold text-muted">Unidad de Medida / Presentación</label>
+          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Unidad de Medida / Presentación</label>
           <select
             className="form-select"
             style={inputStyle}
@@ -207,7 +207,7 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
 
         {/* Campo de color de almacenamiento con indicador visual */}
         <div className="col-md-6">
-          <label className="form-label fw-semibold text-muted">Color Almacenamiento (Pictograma)</label>
+          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Color Almacenamiento (Pictograma)</label>
           <div className="position-relative">
             <select
               className="form-select"
@@ -230,7 +230,7 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
 
         {/* Campo de clasificacion del reactivo */}
         <div className="col-md-6">
-          <label className="form-label fw-semibold text-muted">Clasificación</label>
+          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Clasificación</label>
           <select
             className="form-select"
             style={inputStyle}
@@ -248,7 +248,7 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
 
         {/* Campo de color del stand con indicador visual */}
         <div className="col-md-6">
-          <label className="form-label fw-semibold text-muted">Color del stand</label>
+          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Color del stand</label>
           <div className="position-relative">
             <select
               className="form-select"
@@ -271,7 +271,7 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
 
         {/* Campos de ubicacion: Stand, Columna y Fila */}
         <div className="col-md-4">
-          <label className="form-label fw-semibold text-muted">Stand</label>
+          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Stand</label>
           <input
             type="text"
             className="form-control"
@@ -282,7 +282,7 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
           />
         </div>
         <div className="col-md-4">
-          <label className="form-label fw-semibold text-muted">Columna</label>
+          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Columna</label>
           <input
             type="text"
             className="form-control"
@@ -293,7 +293,7 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
           />
         </div>
         <div className="col-md-4">
-          <label className="form-label fw-semibold text-muted">Fila</label>
+          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Fila</label>
           <input
             type="text"
             className="form-control"
@@ -310,7 +310,7 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
             type="submit" 
             className="btn btn-primary w-100 py-3 shadow-sm" 
             disabled={loading}
-            style={{ borderRadius: "12px", fontWeight: "700", background: "linear-gradient(135deg, #0077B6, #00B4D8)", border: "none" }}
+            style={{ borderRadius: "12px", fontWeight: "700", background: "#023E8A", border: "none" }}
           >
             {/* Muestra spinner mientras carga o el texto segun sea crear o editar */}
             {loading ? (

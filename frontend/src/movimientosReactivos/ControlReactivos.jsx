@@ -251,7 +251,7 @@ const ControlReactivos = () => {
         <div className="modal-dialog modal-xl">
           <div className="modal-content" style={{ borderRadius: "16px", border: "none" }}>
             {/* Encabezado del modal con gradiente azul */}
-            <div className="modal-header" style={{ background: "linear-gradient(135deg, #0077B6, #023E8A)", color: "#fff" }}>
+            <div className="modal-header text-white" style={{ background: "#023E8A" }}>
               <h5 className="modal-title fw-bold">
                 <i className="fa-solid fa-flask-vial me-2"></i>
                 Detalle de Inventario: {selectedReactivo?.nom_reactivo}

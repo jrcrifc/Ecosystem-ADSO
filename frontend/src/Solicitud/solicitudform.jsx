@@ -259,7 +259,7 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
         {/* Selector de solicitante para usuarios con permisos */}
         {puedeSeleccionarSolicitante && !selectedSolicitud && (
           <div className="col-12">
-            <label className="form-label fw-semibold" style={{ color: "#023E8A" }}>
+            <label className="form-label fw-bold" style={{ color: "#0A1628" }}>
               👤 Solicitante <span style={{ color: "#dc3545" }}>*</span>
             </label>
             <p style={{ fontSize: "12px", color: "#64748b", margin: "0 0 8px" }}>
@@ -396,7 +396,7 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
             <>
               {/* Fecha de solicitud o inicio */}
               <div className="col-md-6">
-                <label className="form-label fw-semibold" style={{ color: "#023E8A", fontSize: "13px" }}>
+                <label className="form-label fw-bold" style={{ color: "#0A1628", fontSize: "13px" }}>
                   📅 {esAprendiz ? "Fecha de Solicitud (Mismo día)" : "Fecha de Inicio"}
                 </label>
                 <input type="date" className={`form-control form-control-sm ${errors.fecha_inicio ? 'is-invalid' : ''}`}
@@ -423,7 +423,7 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
               {/* Instructor: Fecha de devolución */}
               {esInstructor && (
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold" style={{ color: "#023E8A", fontSize: "13px" }}>
+                  <label className="form-label fw-bold" style={{ color: "#0A1628", fontSize: "13px" }}>
                     📅 Fecha de Devolución
                   </label>
                   <input type="date" className={`form-control form-control-sm ${errors.fecha_fin ? 'is-invalid' : ''}`}
@@ -438,7 +438,7 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
               )}
               {/* Horario de uso (siempre visible) */}
               <div className={esInstructor ? "col-12" : "col-md-6"}>
-                <label className="form-label fw-semibold" style={{ color: "#023E8A", fontSize: "13px" }}>
+                <label className="form-label fw-bold" style={{ color: "#0A1628", fontSize: "13px" }}>
                   ⏰ {esAprendiz ? "Horario de Uso (Mismo día)" : "Horario"}
                 </label>
                 <div className="d-flex gap-2 align-items-center">
@@ -467,7 +467,7 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
         })()}
         {/* Selector de equipos */}
         <div className="col-12">
-          <label className="form-label fw-semibold text-muted mb-1">
+          <label className="form-label fw-bold mb-1" style={{ color: "#0A1628" }}>
             Equipos a solicitar
             {/* Badge con la cantidad de equipos seleccionados */}
             {equiposSeleccionados.length > 0 && (

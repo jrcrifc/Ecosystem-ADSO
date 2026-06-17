@@ -45,13 +45,8 @@ const CrudReactivos = () => {
       width: "120px",
       // Renderizador personalizado para mostrar badge de estado
       cell: (row) => (
-        <span style={{
-          background: row.estado === 1 ? "#dcfce7" : "#fee2e2",
-          color: row.estado === 1 ? "#16a34a" : "#dc2626",
-          padding: "4px 12px", borderRadius: "99px", fontSize: "11px", fontWeight: "700",
-          border: `1px solid ${row.estado === 1 ? "#bbf7d0" : "#fecaca"}`
-        }}>
-          {row.estado === 1 ? "Activo" : "Inactivo"}
+        <span className={`px-2 py-1 rounded-pill text-white fw-semibold ${row.estado === 1 ? "bg-success" : "bg-danger"}`} style={{ fontSize: "0.7rem" }}>
+          {row.estado === 1 ? "ACTIVO" : "INACTIVO"}
         </span>
       ),
     },
@@ -252,7 +247,7 @@ const CrudReactivos = () => {
       <div className="modal fade" id="modalReactivo" tabIndex="-1">
         <div className="modal-dialog modal-xl">
           <div className="modal-content">
-            <div className="modal-header bg-primary text-white">
+            <div className="modal-header text-white" style={{ background: "#023E8A" }}>
               <h5 className="modal-title">{selectedReactivo ? "Editar" : "Nuevo"} Reactivo</h5>
               <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" onClick={hideModal}></button>
             </div>

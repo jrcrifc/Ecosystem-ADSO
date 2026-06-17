@@ -1,19 +1,38 @@
 // Vista de gestión de Fichas de Formación con CRUD e importación desde Excel
 // Las fichas pertenecen a un programa y pueden tener muchos aprendices asociados
 import { useState, useEffect } from "react";
+import * as bootstrap from "bootstrap";
 import apiAxios from "../api/axiosConfig";
 import Swal from "sweetalert2";
+import FichaForm from "./FichaForm.jsx";
 
 export default function Fichas() {
   // Estado que almacena la lista de fichas cargadas desde el backend
   const [fichas, setFichas] = useState([]);
-  // Estado que almacena la lista de programas disponibles para el selector
   const [programas, setProgramas] = useState([]);
-  // Estado que controla el texto del filtro de búsqueda
   const [filterText, setFilterText] = useState("");
+  const [selectedFicha, setSelectedFicha] = useState(null);
 
-  // Al montar el componente, carga fichas y programas en paralelo
-  useEffect(() => { cargar(); cargarProgramas(); }, []);
+  useEffect(() => {
+    cargar();
+    cargarProgramas();
+    const modalFicha = document.getElementById("modalFicha");
+    const handleHidden = () => {
+      setSelectedFicha(null);
+      document.body.classList.remove("modal-open");
+      document.body.style.removeProperty("overflow");
+      document.body.style.removeProperty("padding-right");
+      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+    };
+    if (modalFicha) {
+      modalFicha.addEventListener("hidden.bs.modal", handleHidden);
+    }
+    return () => {
+      if (modalFicha) {
+        modalFicha.removeEventListener("hidden.bs.modal", handleHidden);
+      }
+    };
+  }, []);
 
   // Función asíncrona que obtiene todas las fichas desde la API
   const cargar = async () => {
@@ -35,130 +54,50 @@ export default function Fichas() {
     }
   };
 
-  // Función que abre un modal para crear una nueva ficha manualmente
-  const handleCrear = async () => {
-    const { value: formValues } = await Swal.fire({
-      title: '📋 Nueva Ficha',
-      html: `
-        <input id="swal-numero" class="swal2-input" placeholder="Número de ficha (ej: 2889927)">
-        <select id="swal-programa" class="swal2-select" style="margin-top:10px;padding:8px;border:1px solid #d9d9d9;border-radius:4px;width:80%">
-          <option value="">Sin programa asignado</option>
-        </select>
-        <div style="display:flex; justify-content:center; gap:10px; margin-top:10px; width:80%; margin-left:auto; margin-right:auto;">
-          <input id="swal-inicio" type="date" class="swal2-input" style="width:48%; margin:0" title="Fecha inicio etapa lectiva">
-          <input id="swal-fin" type="date" class="swal2-input" style="width:48%; margin:0" title="Fecha fin etapa lectiva">
-        </div>
-      `,
-      focusConfirm: false,
-      showCancelButton: true,
-      confirmButtonText: 'Registrar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#0077B6',
-      didOpen: () => {
-        // Rellena dinámicamente el selector de programas con los datos cargados
-        const select = document.getElementById('swal-programa');
-        programas.forEach(p => {
-          const opt = document.createElement('option');
-          opt.value = p.id_programa;
-          opt.textContent = p.nombre_programa;
-          select.appendChild(opt);
-        });
-      },
-      preConfirm: () => {
-        const numero = document.getElementById('swal-numero').value.trim();
-        if (!numero) { Swal.showValidationMessage('El número de ficha es obligatorio'); return false; }
-        return {
-          numero_ficha: numero,
-          id_programa: document.getElementById('swal-programa').value || null,
-          fecha_inicio: document.getElementById('swal-inicio').value || null,
-          fecha_fin: document.getElementById('swal-fin').value || null
-        };
+  // Funciones de SweetAlert eliminadas, se usa FichaForm
+  const hideModal = (modalId) => {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      const closeBtn = modal.querySelector(".btn-close");
+      if (closeBtn) closeBtn.click();
+      else {
+        const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
+        bsModal.hide();
       }
-    });
-    if (!formValues) return;
-    try {
-      await apiAxios.post("/api/fichas", formValues);
-      Swal.fire("✅ Creada", "Ficha registrada correctamente", "success");
-      cargar();
-    } catch (err) {
-      Swal.fire("Error", err.response?.data?.message || "Error al crear la ficha", "error");
+      document.body.classList.remove("modal-open");
+      document.body.style.removeProperty("overflow");
+      document.body.style.removeProperty("padding-right");
+      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
     }
   };
 
-  // Función que abre un modal pre-rellenado para editar una ficha existente
-  const handleEditar = async (f) => {
-    const { value: formValues } = await Swal.fire({
-      title: '✏️ Editar Ficha',
-      html: `
-        <input id="swal-numero" class="swal2-input" placeholder="Número de ficha" value="${f.numero_ficha || ''}">
-        <select id="swal-programa" class="swal2-select" style="margin-top:10px;padding:8px;border:1px solid #d9d9d9;border-radius:4px;width:80%">
-          <option value="">Sin programa</option>
-        </select>
-        <select id="swal-estado" class="swal2-select" style="margin-top:10px;padding:8px;border:1px solid #d9d9d9;border-radius:4px;width:80%">
-          <option value="true" ${f.estado !== false ? 'selected' : ''}>Activo</option>
-          <option value="false" ${f.estado === false ? 'selected' : ''}>Inactivo</option>
-        </select>
-        <div style="display:flex; justify-content:center; gap:10px; margin-top:10px; width:80%; margin-left:auto; margin-right:auto;">
-          <input id="swal-inicio" type="date" class="swal2-input" style="width:48%; margin:0" title="Fecha inicio" value="${f.fecha_inicio || ''}">
-          <input id="swal-fin" type="date" class="swal2-input" style="width:48%; margin:0" title="Fecha fin" value="${f.fecha_fin || ''}">
-        </div>
-      `,
-      focusConfirm: false,
-      showCancelButton: true,
-      confirmButtonText: 'Guardar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#0077B6',
-      didOpen: () => {
-        // Rellena el selector de programas y marca el seleccionado
-        const select = document.getElementById('swal-programa');
-        programas.forEach(p => {
-          const opt = document.createElement('option');
-          opt.value = p.id_programa;
-          opt.textContent = p.nombre_programa;
-          if (String(p.id_programa) === String(f.id_programa)) opt.selected = true;
-          select.appendChild(opt);
-        });
-      },
-      preConfirm: () => {
-        const numero = document.getElementById('swal-numero').value.trim();
-        if (!numero) { Swal.showValidationMessage('El número de ficha es obligatorio'); return false; }
-        return {
-          numero_ficha: numero,
-          id_programa: document.getElementById('swal-programa').value || null,
-          estado: document.getElementById('swal-estado').value === 'true',
-          fecha_inicio: document.getElementById('swal-inicio').value || null,
-          fecha_fin: document.getElementById('swal-fin').value || null
-        };
-      }
-    });
-    if (!formValues) return;
-    try {
-      await apiAxios.put(`/api/fichas/${f.id_ficha}`, formValues);
-      Swal.fire("✅ Actualizada", "Ficha actualizada correctamente", "success");
-      cargar();
-    } catch (err) {
-      Swal.fire("Error", err.response?.data?.message || "Error al actualizar", "error");
-    }
-  };
-
-  // Función que confirma y elimina una ficha
-  const handleEliminar = async (f) => {
+  // Alternar estado activo/inactivo de la ficha
+  const toggleEstado = async (id, estadoActual) => {
+    const nuevoEstado = estadoActual !== false ? false : true;
     const result = await Swal.fire({
-      title: "¿Eliminar ficha?",
-      text: `Se eliminará la ficha ${f.numero_ficha}. Los aprendices asociados quedarán sin ficha.`,
+      title: "¿Cambiar estado?",
+      text: `La ficha pasará a estar ${nuevoEstado ? "ACTIVA" : "INACTIVA"}`,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#ef4444",
-      confirmButtonText: "Sí, eliminar",
+      confirmButtonColor: estadoActual !== false ? "#dc3545" : "#0077B6",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sí, cambiar",
       cancelButtonText: "Cancelar"
     });
     if (!result.isConfirmed) return;
     try {
-      await apiAxios.delete(`/api/fichas/${f.id_ficha}`);
-      Swal.fire("Eliminada", "Ficha eliminada correctamente", "success");
+      const ficha = fichas.find(f => f.id_ficha === id);
+      await apiAxios.put(`/api/fichas/${id}`, {
+        numero_ficha: ficha.numero_ficha,
+        id_programa: ficha.id_programa,
+        fecha_inicio: ficha.fecha_inicio,
+        fecha_fin: ficha.fecha_fin,
+        estado: nuevoEstado
+      });
+      Swal.fire({ icon: "success", title: "Actualizado", text: "El estado fue modificado correctamente", timer: 1500, showConfirmButton: false });
       cargar();
     } catch (err) {
-      Swal.fire("Error", err.response?.data?.message || "Error al eliminar", "error");
+      Swal.fire("Error", err.response?.data?.message || "No se pudo cambiar el estado", "error");
     }
   };
 
@@ -230,8 +169,8 @@ export default function Fichas() {
     <div className="container mt-4">
       {/* Encabezado con línea decorativa y título */}
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
-        <div style={{ height: "3px", width: "24px", background: "#f59e0b", borderRadius: "99px" }} />
-        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#f59e0b", margin: 0 }}>📋 Fichas de Formación</h2>
+        <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
+        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>📋 Fichas de Formación</h2>
       </div>
       <p style={{ color: "#64748b", marginBottom: "24px" }}>Gestiona las fichas de formación. Cada ficha pertenece a un programa y puede tener múltiples aprendices.</p>
 
@@ -243,8 +182,13 @@ export default function Fichas() {
             style={{ borderColor: "#dbeafe", borderRadius: "10px", padding: "10px 15px" }} />
         </div>
         <div className="col-md-7 text-end" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', flexWrap: 'wrap' }}>
-          <button onClick={handleCrear} className="btn text-white"
-            style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)", borderRadius: "10px", fontWeight: "600", padding: "10px 20px", border: "none" }}>
+          <button 
+            className="btn text-white"
+            style={{ background: "#0077B6", borderRadius: "10px", fontWeight: "600", padding: "10px 20px", border: "none" }}
+            data-bs-toggle="modal"
+            data-bs-target="#modalFicha"
+            onClick={() => setSelectedFicha(null)}
+          >
             ➕ Nueva Ficha
           </button>
           <button onClick={handleImportar} className="btn text-white"
@@ -273,8 +217,8 @@ export default function Fichas() {
             <tbody>
               {filtradas.map(f => (
                 <tr key={f.id_ficha} style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                  <td style={{ padding: '14px 16px', fontWeight: '700', color: '#0f172a', fontSize: '15px' }}>
-                    <span style={{ background: '#fef3c7', color: '#92400e', padding: '4px 12px', borderRadius: '99px', fontSize: '13px', fontWeight: '700' }}>
+                  <td style={{ padding: '14px 16px', color: '#0f172a', fontSize: '13px' }}>
+                    <span style={{ background: '#f1f5f9', color: '#475569', padding: '4px 12px', borderRadius: '99px', fontSize: '13px', fontWeight: '600' }}>
                       📋 {f.numero_ficha}
                     </span>
                   </td>
@@ -286,18 +230,25 @@ export default function Fichas() {
                   </td>
 
                   <td style={{ padding: '14px 16px' }}>
-                    <span style={{
-                      background: f.estado !== false ? '#ecfdf5' : '#fef2f2',
-                      color: f.estado !== false ? '#059669' : '#dc2626',
-                      fontSize: '11px', fontWeight: '700', padding: '4px 12px', borderRadius: '99px'
-                    }}>
-                      {f.estado !== false ? '✅ Activa' : '❌ Inactiva'}
+                    <span className={`px-2 py-1 rounded-pill text-white fw-semibold ${f.estado !== false ? "bg-success" : "bg-danger"}`} style={{ fontSize: "0.7rem" }}>
+                      {f.estado !== false ? "ACTIVA" : "INACTIVA"}
                     </span>
                   </td>
                   <td style={{ padding: '14px 16px' }}>
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                      <button onClick={() => handleEditar(f)} style={btnStyle('#f0f9ff', '#0077B6', '1px solid #bae6fd')}>✏️</button>
-                      <button onClick={() => handleEliminar(f)} style={btnStyle('#fef2f2', '#dc2626', '1px solid #fecaca')}>🗑️</button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button 
+                        onClick={() => setSelectedFicha(f)} 
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalFicha"
+                        title="Editar"
+                        className="btn btn-sm"
+                        style={{ background: "#dbeafe", color: "#0077B6", border: "none" }}
+                      >
+                        <i className="fas fa-edit"></i>
+                      </button>
+                      <button onClick={() => toggleEstado(f.id_ficha, f.estado)} title={f.estado !== false ? "Inactivar" : "Activar"} className="btn btn-sm" style={{ background: f.estado !== false ? "#fee2e2" : "#dcfce7", color: f.estado !== false ? "#dc2626" : "#16a34a", border: "none" }}>
+                        <i className={`fas ${f.estado !== false ? "fa-ban" : "fa-check"}`}></i>
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -306,6 +257,33 @@ export default function Fichas() {
           </table>
         </div>
       )}
+      {/* Modal editar/crear Ficha */}
+      <div className="modal fade" id="modalFicha" tabIndex="-1" aria-hidden="true">
+        <div className="modal-dialog modal-lg">
+          <div className="modal-content">
+            <div className="modal-header text-white" style={{ background: "#023E8A" }}>
+              <h5 className="modal-title" style={{ fontWeight: "700" }}>
+                {selectedFicha ? "Editar Ficha" : "Registrar Nueva Ficha"}
+              </h5>
+              <button
+                type="button"
+                className="btn-close btn-close-white"
+                data-bs-dismiss="modal"
+                onClick={() => hideModal("modalFicha")}
+                aria-label="Close"
+              ></button>
+            </div>
+            <div className="modal-body">
+              <FichaForm
+                selectedFicha={selectedFicha}
+                programas={programas}
+                refreshParent={cargar}
+                hideModal={() => hideModal("modalFicha")}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

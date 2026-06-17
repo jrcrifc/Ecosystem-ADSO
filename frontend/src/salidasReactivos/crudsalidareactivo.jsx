@@ -75,8 +75,8 @@ const CrudSalidasReactivos = () => {
       center: true,
       // Renderizador personalizado para mostrar badge de estado
       cell: (row) => (
-        <span className={`badge ${row.estado === 1 ? "bg-success" : "bg-danger"}`} style={{ fontSize: "11px", padding: "5px 10px", borderRadius: "8px" }}>
-          {row.estado === 1 ? "✅ Activa" : "❌ Inactiva"}
+        <span className={`px-2 py-1 rounded-pill text-white fw-semibold ${row.estado === 1 ? "bg-success" : "bg-danger"}`} style={{ fontSize: "0.7rem" }}>
+          {row.estado === 1 ? "ACTIVO" : "INACTIVO"}
         </span>
       )
     },
@@ -84,37 +84,37 @@ const CrudSalidasReactivos = () => {
       name: "Acciones", center: true, width: "120px",
       // Renderizador de botones de accion por fila
       cell: (row) => (
-        <div className="d-flex gap-1 justify-content-center">
+        <div className="d-flex gap-2 justify-content-center">
           {/* Boton para editar la salida (solo si esta activa) */}
           <button
-            className="btn btn-sm btn-warning"
+            className="btn btn-sm"
+            style={{ 
+              background: row.estado === 1 ? "#dbeafe" : "#f1f5f9", 
+              color: row.estado === 1 ? "#0077B6" : "#94a3b8", 
+              border: "none",
+              cursor: row.estado === 0 ? "not-allowed" : "pointer"
+            }}
             data-bs-toggle={row.estado === 1 ? "modal" : ""}
             data-bs-target={row.estado === 1 ? "#modalSalida" : ""}
             onClick={() => row.estado === 1 && setSelectedSalida(row)}
             title={row.estado === 1 ? "Editar" : "No se puede editar una salida inactiva"}
             disabled={row.estado === 0}
-            style={{ opacity: row.estado === 0 ? 0.5 : 1 }}
           >
-            <i className="fas fa-pencil"></i>
+            <i className="fas fa-edit"></i>
           </button>
           {/* Boton para inactivar o activar segun el estado actual */}
-          {row.estado === 1 ? (
-            <button
-              className="btn btn-sm btn-danger"
-              onClick={() => inactivarSalida(row.id_salida)}
-              title="Inactivar"
-            >
-              <i className="fas fa-ban"></i>
-            </button>
-          ) : (
-            <button
-              className="btn btn-sm btn-success"
-              onClick={() => activarSalida(row.id_salida)}
-              title="Activar"
-            >
-              <i className="fas fa-check"></i>
-            </button>
-          )}
+          <button
+            className="btn btn-sm"
+            style={{
+              background: row.estado === 1 ? "#fee2e2" : "#dcfce7",
+              color: row.estado === 1 ? "#dc2626" : "#16a34a",
+              border: "none"
+            }}
+            onClick={() => row.estado === 1 ? inactivarSalida(row.id_salida) : activarSalida(row.id_salida)}
+            title={row.estado === 1 ? "Inactivar" : "Activar"}
+          >
+            <i className={`fas ${row.estado === 1 ? "fa-ban" : "fa-check"}`}></i>
+          </button>
         </div>
       ),
     },

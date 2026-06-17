@@ -9,6 +9,10 @@ import Swal from "sweetalert2";
 // Importa la instancia centralizada de Socket.IO
 import socket from "../socket.js";
 
+// Importa los subcomponentes de formación para renderizar en pestañas
+import Aprendices from "./Aprendices.jsx";
+import Instructores from "./Instructores.jsx";
+
 // Define el componente principal de gestion de usuarios
 export default function GestionUsuarios() {
   // Estado que almacena los usuarios pendientes de aprobacion
@@ -328,13 +332,7 @@ export default function GestionUsuarios() {
 
   // Funcion que retorna un gradiente de color segun el rol del usuario
   const gradientFor = (rol) => {
-    const map = {
-      Pasante: "linear-gradient(135deg, #f59e0b, #d97706)",
-      Gestor: "linear-gradient(135deg, #0077B6, #023E8A)",
-      Aprendiz: "linear-gradient(135deg, #06b6d4, #0891b2)",
-      Instructor: "linear-gradient(135deg, #10b981, #059669)",
-    };
-    return map[rol] || "linear-gradient(135deg, #94a3b8, #64748b)";
+    return "#0077B6";
   };
 
   // ===== Definicion de secciones por rol =====
@@ -342,9 +340,9 @@ export default function GestionUsuarios() {
   // Define las secciones de roles con sus propiedades visuales
   const rolSections = [
     { key: "Gestor",     icon: "🔑", label: "Gestores",     color: "#0077B6" },
-    { key: "Pasante",    icon: "🔬", label: "Pasantes",     color: "#d97706" },
-    { key: "Aprendiz",   icon: "🎓", label: "Aprendices",   color: "#0891b2" },
-    { key: "Instructor", icon: "👨‍🏫", label: "Instructores", color: "#059669" },
+    { key: "Pasante",    icon: "🔬", label: "Pasantes",     color: "#0077B6" },
+    { key: "Aprendiz",   icon: "🎓", label: "Aprendices",   color: "#0077B6" },
+    { key: "Instructor", icon: "👨‍🏫", label: "Instructores", color: "#0077B6" },
   ];
 
   // ===== Renderizar tarjeta de usuario =====
@@ -410,7 +408,7 @@ export default function GestionUsuarios() {
         {u.estado === 'pendiente' && (
           <>
             <button onClick={() => aprobarUsuario(u.id_usuario)} style={{
-              background: "linear-gradient(135deg, #0077B6, #023E8A)",
+              background: "#0077B6",
               border: "none", borderRadius: "10px", padding: "10px 24px",
               color: "#fff", fontWeight: "700", cursor: "pointer", fontSize: "13px"
             }}>✅ Aprobar</button>
@@ -424,13 +422,14 @@ export default function GestionUsuarios() {
         {/* Boton de activar/inactivar para usuarios aprobados o inactivos */}
         {(u.estado === 'aprobado' || u.estado === 'inactivo') && (
           <button onClick={() => toggleActivo(u.id_usuario, u.estado)} style={{
-            background: u.estado === 'inactivo' ? "linear-gradient(135deg, #0077B6, #023E8A)" : "transparent",
-            border: u.estado === 'inactivo' ? "none" : "1px solid #f59e0b",
+            background: u.estado === 'inactivo' ? "#dcfce7" : "#fee2e2",
+            border: "none",
             borderRadius: "10px", padding: "10px 24px",
-            color: u.estado === 'inactivo' ? "#fff" : "#d97706",
+            color: u.estado === 'inactivo' ? "#16a34a" : "#dc2626",
             fontWeight: "700", cursor: "pointer", fontSize: "13px"
           }}>
-            {u.estado === 'inactivo' ? "🔓 Activar" : "🔒 Inactivar"}
+            <i className={`fas ${u.estado === 'inactivo' ? "fa-check" : "fa-ban"} me-2`}></i>
+            {u.estado === 'inactivo' ? "Activar" : "Inactivar"}
           </button>
         )}
         {/* Boton para cambiar contraseña (solo en gestión o si está aprobado/inactivo) */}
@@ -459,40 +458,42 @@ export default function GestionUsuarios() {
       </div>
       <p style={{ color: "#64748b", marginBottom: "24px" }}>Aprueba, rechaza, activa o inactiva usuarios del sistema</p>
 
-      {/* Barra de busqueda y boton de importar Excel */}
-      <div className="row mb-4 align-items-center">
-        <div className="col-md-7">
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Buscar por ID, nombre, documento o email..."
-            value={filterText}
-            onChange={(e) => setFilterText(e.target.value)}
-            style={{ borderColor: "#dbeafe", borderRadius: "10px", padding: "10px 15px" }}
-          />
+      {/* Barra de busqueda y boton de importar Excel (solo para pendientes, gestores y pasantes) */}
+      {["pendientes", "gestores", "pasantes"].includes(tab) && (
+        <div className="row mb-4 align-items-center">
+          <div className="col-md-7">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Buscar por ID, nombre, documento o email..."
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
+              style={{ borderColor: "#dbeafe", borderRadius: "10px", padding: "10px 15px" }}
+            />
+          </div>
+          <div className="col-md-5 text-end">
+            {/* Boton para importar usuarios desde Excel */}
+            <button 
+              onClick={handleImportarExcel}
+              className="btn text-white" 
+              style={{ 
+                background: "linear-gradient(135deg, #0077B6, #023E8A)", 
+                borderRadius: "10px", 
+                fontWeight: "600",
+                padding: "10px 20px",
+                border: "none",
+                boxShadow: "0 2px 4px rgba(0, 119, 182, 0.2)",
+                transition: "transform 0.15s ease, opacity 0.15s ease"
+              }}
+              // Efecto hover en el boton
+              onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.02)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
+            >
+              📥 Importar Excel
+            </button>
+          </div>
         </div>
-        <div className="col-md-5 text-end">
-          {/* Boton para importar usuarios desde Excel */}
-          <button 
-            onClick={handleImportarExcel}
-            className="btn text-white" 
-            style={{ 
-              background: "linear-gradient(135deg, #0077B6, #023E8A)", 
-              borderRadius: "10px", 
-              fontWeight: "600",
-              padding: "10px 20px",
-              border: "none",
-              boxShadow: "0 2px 4px rgba(0, 119, 182, 0.2)",
-              transition: "transform 0.15s ease, opacity 0.15s ease"
-            }}
-            // Efecto hover en el boton
-            onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.02)"; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
-          >
-            📥 Importar Excel
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Pestañas de navegacion */}
       <div style={{ display: "flex", gap: "8px", marginBottom: "24px", flexWrap: "wrap" }}>
@@ -541,11 +542,12 @@ export default function GestionUsuarios() {
         </div>
       )}
 
-      {/* Pestañas por rol: Aprendices, Instructores, Gestores, Pasantes */}
-      {["aprendices", "instructores", "gestores", "pasantes"].includes(tab) && (() => {
+      {tab === "aprendices" && <Aprendices />}
+      {tab === "instructores" && <Instructores />}
+
+      {/* Pestañas por rol: Gestores, Pasantes */}
+      {["gestores", "pasantes"].includes(tab) && (() => {
         const rolMap = {
-          aprendices: { key: "Aprendiz", icon: "🎓", label: "Aprendices", color: "#0891b2" },
-          instructores: { key: "Instructor", icon: "👨‍🏫", label: "Instructores", color: "#059669" },
           gestores: { key: "Gestor", icon: "🔑", label: "Gestores", color: "#0077B6" },
           pasantes: { key: "Pasante", icon: "🔬", label: "Pasantes", color: "#d97706" },
         };

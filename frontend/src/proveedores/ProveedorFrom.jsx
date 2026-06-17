@@ -96,7 +96,7 @@ const ProveedorForm = ({ selectedProveedor, refreshData, hideModal }) => {
 
                 {/* Campo de nombre del proveedor */}
                 <div className="col-md-6">
-                    <label className="form-label fw-semibold text-muted">Nombre</label>
+                    <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Nombre</label>
                     <input
                         type="text"
                         name="nom_proveedor"
@@ -110,7 +110,7 @@ const ProveedorForm = ({ selectedProveedor, refreshData, hideModal }) => {
 
                 {/* Campo de apellido del proveedor */}
                 <div className="col-md-6">
-                    <label className="form-label fw-semibold text-muted">Apellido</label>
+                    <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Apellido</label>
                     <input
                         type="text"
                         name="apel_proveedor"
@@ -124,7 +124,7 @@ const ProveedorForm = ({ selectedProveedor, refreshData, hideModal }) => {
 
                 {/* Campo de telefono del proveedor */}
                 <div className="col-md-6">
-                    <label className="form-label fw-semibold text-muted">Teléfono</label>
+                    <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Teléfono</label>
                     <input
                         type="tel"
                         name="tel_proveedor"
@@ -138,7 +138,7 @@ const ProveedorForm = ({ selectedProveedor, refreshData, hideModal }) => {
 
                 {/* Campo de direccion del proveedor */}
                 <div className="col-md-6">
-                    <label className="form-label fw-semibold text-muted">Dirección</label>
+                    <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Dirección</label>
                     <input
                         type="text"
                         name="dir_proveedor"
@@ -152,7 +152,8 @@ const ProveedorForm = ({ selectedProveedor, refreshData, hideModal }) => {
 
                 {/* Boton de envio que cambia su texto segun sea crear o editar */}
                 <div className="col-12 mt-2">
-                    <button type="submit" className="btn btn-primary w-100">
+                    <button type="submit" className="btn w-100"
+                        style={{ background: "#023E8A", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }}>
                         {selectedProveedor ? "Actualizar Proveedor" : "Registrar Proveedor"}
                     </button>
                 </div>

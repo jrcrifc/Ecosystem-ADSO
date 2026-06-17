@@ -72,21 +72,24 @@ export default function Campanita({ userData, onAprobado, userRol }) {
       // Reproduce el sonido de campanita
       playNotificationSound();
       
-      // Muestra un Toast inmediato con opcion de ver la notificacion
+      // Muestra un Toast inmediato clickeable en cualquier parte
       Swal.fire({
         toast: true,
         position: 'top-end',
         icon: 'info',
         title: nueva.titulo || '🔔 Nueva Notificación',
         text: nueva.mensaje,
-        showConfirmButton: true,
-        confirmButtonText: 'Ver',
+        showConfirmButton: false,
         timer: 10000,
-        timerProgressBar: true
-      }).then((result) => {
-        // Si el usuario hace clic en Ver, redirige segun el tipo
-        if (result.isConfirmed) {
-          handleNotificacionClick(nueva);
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer);
+          toast.addEventListener('mouseleave', Swal.resumeTimer);
+          toast.style.cursor = 'pointer';
+          toast.addEventListener('click', () => {
+            Swal.close();
+            handleNotificacionClick(nueva);
+          });
         }
       });
 
@@ -189,7 +192,7 @@ export default function Campanita({ userData, onAprobado, userRol }) {
     } else if (n.tipo === 'cambio_estado_solicitud') {
       setOpen(false);
       navigate('/solicitud');
-    } else if (n.tipo === 'aprobado') {
+    } else if (n.tipo === 'aprobado' || n.tipo === 'rechazado') {
       setOpen(false);
       navigate('/perfil');
     } else if (n.tipo === 'vencimiento_reactivo') {
@@ -275,6 +278,60 @@ export default function Campanita({ userData, onAprobado, userRol }) {
                 background: "transparent", border: "none",
                 color: "#0077B6", fontSize: "12px", cursor: "pointer", fontWeight: "600"
               }}>Marcar todas leídas</button>
+            )}
+          </div>
+
+          {/* Botones de acceso directo */}
+          <div style={{ padding: "10px 20px", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", display: "flex", gap: "8px" }}>
+            <button
+              onClick={() => {
+                setOpen(false);
+                navigate(esAdmin ? '/gestion-solicitudes' : '/solicitud');
+              }}
+              style={{
+                flex: 1,
+                background: "#0077B6",
+                color: "#fff",
+                border: "none",
+                borderRadius: "10px",
+                padding: "8px 12px",
+                fontSize: "12px",
+                fontWeight: "700",
+                cursor: "pointer",
+                textAlign: "center",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px"
+              }}
+            >
+              📥 {esAdmin ? "Ver Solicitudes" : "Ver Mis Solicitudes"}
+            </button>
+            {esAdmin && (
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  navigate('/gestion-usuarios');
+                }}
+                style={{
+                  flex: 1,
+                  background: "#023E8A",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "10px",
+                  padding: "8px 12px",
+                  fontSize: "12px",
+                  fontWeight: "700",
+                  cursor: "pointer",
+                  textAlign: "center",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "6px"
+                }}
+              >
+                👥 Gestión Usuarios
+              </button>
             )}
           </div>
 

@@ -200,24 +200,31 @@ const CrudSolicitudPrestamos = () => {
       cell: r => (
         <div className="d-flex gap-1 justify-content-center">
           <button
-            className="btn btn-sm btn-info text-white"
+            className="btn btn-sm"
+            style={{ background: "#dbeafe", color: "#0077B6", border: "none" }}
             onClick={() => setVerDetalle(r)}
             title="Ver detalle"
           >
             <i className="fas fa-eye"></i>
           </button>
           <button
-            className="btn btn-sm btn-secondary text-white"
+            className="btn btn-sm"
+            style={{ background: "#f1f5f9", color: "#64748b", border: "none" }}
             onClick={() => navigate("/estadoxsolicitud", { state: { id_solicitud: r.id_solicitud } })}
             title="Ver historial"
           >
             <i className="fas fa-history"></i>
           </button>
           <button
-            className="btn btn-sm btn-warning"
+            className="btn btn-sm"
+            style={{ 
+              background: ['generado', 'aceptado'].includes(r.ultimoEstado) ? "#dbeafe" : "#f1f5f9", 
+              color: ['generado', 'aceptado'].includes(r.ultimoEstado) ? "#0077B6" : "#94a3b8", 
+              border: "none",
+              opacity: ['generado', 'aceptado'].includes(r.ultimoEstado) ? 1 : 0.5
+            }}
             data-bs-toggle={['generado', 'aceptado'].includes(r.ultimoEstado) ? "modal" : ""}
             data-bs-target={['generado', 'aceptado'].includes(r.ultimoEstado) ? "#modalSolicitud" : ""}
-            // Maneja el clic para editar, muestra advertencia si el estado no lo permite
             onClick={() => {
               if (!['generado', 'aceptado'].includes(r.ultimoEstado)) {
                 Swal.fire({
@@ -230,13 +237,17 @@ const CrudSolicitudPrestamos = () => {
               }
             }}
             disabled={!['generado', 'aceptado'].includes(r.ultimoEstado)}
-            style={{ opacity: ['generado', 'aceptado'].includes(r.ultimoEstado) ? 1 : 0.5 }}
             title={['generado', 'aceptado'].includes(r.ultimoEstado) ? "Editar" : `No se puede editar en estado ${r.ultimoEstado}`}
           >
             <i className="fa-solid fa-pencil"></i>
           </button>
           <button
-            className={`btn btn-sm ${r.estado === 1 ? "btn-outline-danger" : "btn-outline-success"}`}
+            className="btn btn-sm"
+            style={{
+              background: r.estado === 1 ? "#fee2e2" : "#dcfce7",
+              color: r.estado === 1 ? "#dc2626" : "#16a34a",
+              border: "none"
+            }}
             onClick={() => toggleEstado(r.id_solicitud, r.estado)}
             title={r.estado === 1 ? "Inactivar" : "Activar"}
           >
@@ -370,11 +381,7 @@ const CrudSolicitudPrestamos = () => {
           />
         </div>
         <div className="col-md-7 text-end d-flex gap-2 justify-content-end">
-          <button className="btn btn-outline-secondary"
-            style={{ fontWeight: "600", borderRadius: "10px" }}
-            onClick={() => navigate("/estadoxsolicitud")}>
-            📜 Ver Historial
-          </button>
+
           <button className="btn"
             style={{ background: "#0077B6", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }}
             data-bs-toggle="modal" data-bs-target="#modalSolicitud"

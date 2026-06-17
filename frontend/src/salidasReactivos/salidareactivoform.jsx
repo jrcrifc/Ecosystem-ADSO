@@ -357,7 +357,7 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
 
         {/* Campo de cantidad de salida */}
         <div className="col-md-6">
-          <label className="form-label fw-semibold text-muted">Cantidad de salida</label>
+          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Cantidad de salida</label>
           <div className="input-group">
             <input
               type="number"
@@ -390,7 +390,7 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
 
         {/* Campo de fecha de salida */}
         <div className="col-md-6">
-          <label className="form-label fw-semibold text-muted">📅 Fecha de salida</label>
+          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>📅 Fecha de salida</label>
           <input
             type="date"
             className="form-control"
@@ -404,7 +404,7 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
 
         {/* Campo de hora de salida */}
         <div className="col-md-6">
-          <label className="form-label fw-semibold text-muted">⏰ Hora</label>
+          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>⏰ Hora</label>
           <input type="time" className="form-control" style={inputStyle}
             value={hora_salida} onChange={(e) => setHoraSalida(e.target.value)}
             min="07:00" max="16:00" required />
@@ -412,7 +412,7 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
 
         {/* Campo de observaciones */}
         <div className="col-md-12">
-          <label className="form-label fw-semibold text-muted">📝 Observaciones</label>
+          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>📝 Observaciones</label>
           <textarea
             className="form-control"
             style={inputStyle}

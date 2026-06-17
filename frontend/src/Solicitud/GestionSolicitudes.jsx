@@ -111,64 +111,54 @@ const GestionSolicitudes = () => {
     },
     {
       name: "Acciones",
-      // Renderiza los botones de acción según el estado actual
       cell: (row) => {
         const estadoActual = row.ultimoEstado || "generado";
         const siguientes = estadosSiguientes[estadoActual] || [];
         return (
-          <div className="d-flex gap-2 py-1 align-items-center">
-            {/* Botón para ver el historial */}
-            <button
-              className="btn btn-sm text-info bg-transparent border-0"
-              onClick={() => verHistorial(row.id_solicitud)}
-              title="Ver Historial"
-              style={{ padding: "4px" }}
-            >
-              <i className="fas fa-history" style={{ fontSize: "16px" }}></i>
-            </button>
-            {siguientes.length === 0 && <span className="text-muted small ms-2">Finalizado</span>}
+          <div className="d-flex gap-2 py-1 align-items-center flex-wrap">
+            {siguientes.length === 0 && <span className="text-muted small ms-1">Finalizado</span>}
             {/* Botón para aceptar solicitud */}
             {siguientes.includes("aceptado") && (
               <button
-                className="btn btn-sm text-primary bg-transparent border-0"
+                className="btn btn-sm"
                 onClick={() => cambiarEstado(row.id_solicitud, "aceptado")}
                 title="Aceptar Solicitud"
-                style={{ padding: "4px" }}
+                style={{ background: "#dbeafe", color: "#0077B6", border: "none", borderRadius: "20px", padding: "6px 12px", fontWeight: "700", fontSize: "11px", display: "inline-flex", alignItems: "center", gap: "5px" }}
               >
-                <i className="fas fa-check-circle" style={{ fontSize: "16px" }}></i>
+                <i className="fas fa-check-circle"></i> Aceptar
               </button>
             )}
             {/* Botón para cancelar/rechazar solicitud */}
             {siguientes.includes("cancelado") && (
               <button
-                className="btn btn-sm text-danger bg-transparent border-0"
+                className="btn btn-sm"
                 onClick={() => cambiarEstado(row.id_solicitud, "cancelado")}
                 title="Rechazar/Cancelar"
-                style={{ padding: "4px" }}
+                style={{ background: "#fee2e2", color: "#dc2626", border: "none", borderRadius: "20px", padding: "6px 12px", fontWeight: "700", fontSize: "11px", display: "inline-flex", alignItems: "center", gap: "5px" }}
               >
-                <i className="fas fa-times-circle" style={{ fontSize: "16px" }}></i>
+                <i className="fas fa-times-circle"></i> Cancelar
               </button>
             )}
             {/* Botón para prestar equipos */}
             {siguientes.includes("prestado") && (
               <button
-                className="btn btn-sm text-warning bg-transparent border-0"
+                className="btn btn-sm"
                 onClick={() => cambiarEstado(row.id_solicitud, "prestado")}
                 title="Entregar Equipo (Prestar)"
-                style={{ padding: "4px" }}
+                style={{ background: "#fef3c7", color: "#d97706", border: "none", borderRadius: "20px", padding: "6px 12px", fontWeight: "700", fontSize: "11px", display: "inline-flex", alignItems: "center", gap: "5px" }}
               >
-                <i className="fas fa-box" style={{ fontSize: "16px" }}></i>
+                <i className="fas fa-box"></i> Prestar
               </button>
             )}
             {/* Botón para liberar/entregar equipos */}
             {siguientes.includes("entregado") && (
               <button
-                className="btn btn-sm text-success bg-transparent border-0"
+                className="btn btn-sm"
                 onClick={() => cambiarEstado(row.id_solicitud, "entregado")}
                 title="Recibir Equipo (Liberar)"
-                style={{ padding: "4px" }}
+                style={{ background: "#dcfce7", color: "#16a34a", border: "none", borderRadius: "20px", padding: "6px 12px", fontWeight: "700", fontSize: "11px", display: "inline-flex", alignItems: "center", gap: "5px" }}
               >
-                <i className="fas fa-undo" style={{ fontSize: "16px" }}></i>
+                <i className="fas fa-undo"></i> Recibir
               </button>
             )}
           </div>
@@ -177,7 +167,7 @@ const GestionSolicitudes = () => {
       ignoreRowClick: true,
       allowOverflow: true,
       button: true,
-      width: "150px"
+      width: "280px"
     }
   ];
   // Efecto que carga las solicitudes al montar y escucha cambios en tiempo real

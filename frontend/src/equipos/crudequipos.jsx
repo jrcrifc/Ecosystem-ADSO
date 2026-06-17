@@ -262,7 +262,7 @@ export default function CrudEquipo() {
             }}
             title={row.estaOcupado ? "Equipo en uso" : "Editar equipo"}
           >
-            <i className={`fas ${row.estaOcupado ? "fa-lock" : "fa-edit"}`}></i>
+            <i className={`fa-solid ${row.estaOcupado ? "fa-lock" : "fa-pencil"}`}></i>
           </button>
           <button
             className="btn btn-sm" 
@@ -281,7 +281,7 @@ export default function CrudEquipo() {
             }}
             title={row.estaOcupado ? "Equipo en uso" : (row.estado === 1 ? "Inactivar" : "Activar")}
           >
-            <i className={`fas ${row.estaOcupado ? "fa-lock" : (row.estado === 1 ? "fa-ban" : "fa-check")}`}></i>
+            <i className={`fa-solid ${row.estaOcupado ? "fa-lock" : (row.estado === 1 ? "fa-ban" : "fa-check")}`}></i>
           </button>
         </div>
       ),

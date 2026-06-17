@@ -118,12 +118,12 @@ const Crudproveedor = () => {
           {/* Boton para editar el proveedor */}
           <button className="btn btn-sm" style={{ background: "#dbeafe", color: "#0077B6", border: "none" }}
             data-bs-toggle="modal" data-bs-target="#modalProveedor" onClick={() => setSelectedProveedor(row)} title="Editar">
-            <i className="fas fa-edit"></i>
+            <i className="fa-solid fa-pencil"></i>
           </button>
           {/* Boton para activar o inactivar el proveedor */}
           <button className="btn btn-sm" style={{ background: row.estado === 1 ? "#fee2e2" : "#dcfce7", color: row.estado === 1 ? "#dc2626" : "#16a34a", border: "none" }}
             onClick={() => toggleEstado(row.id_proveedor, row.estado)} title={row.estado === 1 ? "Inactivar" : "Activar"}>
-            <i className={`fas ${row.estado === 1 ? "fa-ban" : "fa-check"}`}></i>
+            <i className={`fa-solid ${row.estado === 1 ? "fa-ban" : "fa-check"}`}></i>
           </button>
         </div>
       ),

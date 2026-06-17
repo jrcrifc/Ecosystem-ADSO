@@ -1,14 +1,36 @@
 // Vista de gestión de Aprendices con CRUD e importación desde Excel
 import { useState, useEffect } from "react";
+import * as bootstrap from "bootstrap";
 import apiAxios from "../api/axiosConfig";
 import Swal from "sweetalert2";
+import AprendizForm from "./AprendizForm.jsx";
 
 export default function Aprendices() {
   const [aprendices, setAprendices] = useState([]);
   const [fichas, setFichas] = useState([]);
   const [filterText, setFilterText] = useState("");
+  const [selectedAprendiz, setSelectedAprendiz] = useState(null);
 
-  useEffect(() => { cargar(); cargarFichas(); }, []);
+  useEffect(() => {
+    cargar();
+    cargarFichas();
+    const modalAprendiz = document.getElementById("modalAprendiz");
+    const handleHidden = () => {
+      setSelectedAprendiz(null);
+      document.body.classList.remove("modal-open");
+      document.body.style.removeProperty("overflow");
+      document.body.style.removeProperty("padding-right");
+      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+    };
+    if (modalAprendiz) {
+      modalAprendiz.addEventListener("hidden.bs.modal", handleHidden);
+    }
+    return () => {
+      if (modalAprendiz) {
+        modalAprendiz.removeEventListener("hidden.bs.modal", handleHidden);
+      }
+    };
+  }, []);
 
   const cargar = async () => {
     try {
@@ -24,160 +46,20 @@ export default function Aprendices() {
     } catch { console.error("Error cargando fichas"); }
   };
 
-  // Helper para generar las opciones de ficha en un select
-  const buildFichaOptions = (selectedId) => {
-    return fichas.map(f => 
-      `<option value="${f.id_ficha}" ${String(f.id_ficha) === String(selectedId) ? 'selected' : ''}>${f.numero_ficha} - ${f.programa?.nombre_programa || 'Sin programa'}</option>`
-    ).join('');
-  };
-
-  // HTML del formulario de campos extendidos
-  const camposExtendidosHTML = (a = {}) => `
-    <div style="text-align:left;padding:0 10px">
-      <p style="font-weight:700;color:#0077B6;font-size:13px;margin:15px 0 8px;border-bottom:1px solid #e2e8f0;padding-bottom:4px">📋 Información Personal</p>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 10px">
-      <select id="swal-tipo-doc" class="swal2-input" style="font-size:13px;padding:6px;margin:0">
-        <option value="">Tipo documento</option>
-        <option value="CC" ${a.tipo_documento === 'CC' ? 'selected' : ''}>CC</option>
-        <option value="TI" ${a.tipo_documento === 'TI' ? 'selected' : ''}>TI</option>
-        <option value="CE" ${a.tipo_documento === 'CE' ? 'selected' : ''}>CE</option>
-        <option value="PEP" ${a.tipo_documento === 'PEP' ? 'selected' : ''}>PEP</option>
-        <option value="PPT" ${a.tipo_documento === 'PPT' ? 'selected' : ''}>PPT</option>
-      </select>
-      <input id="swal-fecha-nac" class="swal2-input" type="date" style="font-size:13px;padding:6px;margin:0" value="${a.fecha_nacimiento || ''}" placeholder="Fecha nacimiento">
-      <select id="swal-genero" class="swal2-input" style="font-size:13px;padding:6px;margin:0">
-        <option value="">Género</option>
-        <option value="Masculino" ${a.genero === 'Masculino' ? 'selected' : ''}>Masculino</option>
-        <option value="Femenino" ${a.genero === 'Femenino' ? 'selected' : ''}>Femenino</option>
-        <option value="Otro" ${a.genero === 'Otro' ? 'selected' : ''}>Otro</option>
-      </select>
-      <select id="swal-estado-civil" class="swal2-input" style="font-size:13px;padding:6px;margin:0">
-        <option value="">Estado civil</option>
-        <option value="Soltero" ${a.estado_civil === 'Soltero' ? 'selected' : ''}>Soltero</option>
-        <option value="Casado" ${a.estado_civil === 'Casado' ? 'selected' : ''}>Casado</option>
-        <option value="Unión libre" ${a.estado_civil === 'Unión libre' ? 'selected' : ''}>Unión libre</option>
-        <option value="Divorciado" ${a.estado_civil === 'Divorciado' ? 'selected' : ''}>Divorciado</option>
-        <option value="Viudo" ${a.estado_civil === 'Viudo' ? 'selected' : ''}>Viudo</option>
-      </select>
-    </div>
-    <div style="text-align:left;padding:0 10px">
-      <p style="font-weight:700;color:#0077B6;font-size:13px;margin:15px 0 8px;border-bottom:1px solid #e2e8f0;padding-bottom:4px">📍 Ubicación y Contacto</p>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 10px">
-      <input id="swal-direccion" class="swal2-input" style="font-size:13px;padding:6px;margin:0" placeholder="Dirección" value="${a.direccion || ''}">
-      <select id="swal-tipo-dir" class="swal2-input" style="font-size:13px;padding:6px;margin:0">
-        <option value="">Tipo dirección</option>
-        <option value="Urbana" ${a.tipo_direccion === 'Urbana' ? 'selected' : ''}>Urbana</option>
-        <option value="Rural" ${a.tipo_direccion === 'Rural' ? 'selected' : ''}>Rural</option>
-      </select>
-      <input id="swal-telefono" class="swal2-input" style="font-size:13px;padding:6px;margin:0" placeholder="Teléfono" value="${a.telefono || ''}">
-      <select id="swal-estrato" class="swal2-input" style="font-size:13px;padding:6px;margin:0">
-        <option value="">Estrato</option>
-        ${[1,2,3,4,5,6].map(e => `<option value="${e}" ${String(a.estrato) === String(e) ? 'selected' : ''}>${e}</option>`).join('')}
-      </select>
-    </div>
-    <div style="text-align:left;padding:0 10px">
-      <p style="font-weight:700;color:#0077B6;font-size:13px;margin:15px 0 8px;border-bottom:1px solid #e2e8f0;padding-bottom:4px">🏷️ Formación</p>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr;gap:6px;padding:0 10px">
-      <input id="swal-tipo-aprendiz" class="swal2-input" style="font-size:13px;padding:6px;margin:0" placeholder="Tipo de aprendiz (ej: Regular)" value="${a.tipo_aprendiz || ''}">
-    </div>
-    </div>
-  `;
-
-  // Leer todos los campos extendidos del formulario
-  const leerCamposExtendidos = () => ({
-    tipo_documento: document.getElementById('swal-tipo-doc')?.value || null,
-    fecha_nacimiento: document.getElementById('swal-fecha-nac')?.value || null,
-    genero: document.getElementById('swal-genero')?.value || null,
-    estado_civil: document.getElementById('swal-estado-civil')?.value || null,
-    direccion: document.getElementById('swal-direccion')?.value || null,
-    tipo_direccion: document.getElementById('swal-tipo-dir')?.value || null,
-    telefono: document.getElementById('swal-telefono')?.value || null,
-    estrato: document.getElementById('swal-estrato')?.value || null,
-    tipo_aprendiz: document.getElementById('swal-tipo-aprendiz')?.value || null,
-  });
-
-  // Crear aprendiz manualmente
-  const handleCrear = async () => {
-    const { value: formValues } = await Swal.fire({
-      title: '🎓 Nuevo Aprendiz',
-      width: 650,
-      html: `
-        <div style="text-align:left;padding:0 10px">
-          <p style="font-weight:700;color:#06b6d4;font-size:13px;margin:0 0 8px;border-bottom:1px solid #e2e8f0;padding-bottom:4px">📝 Datos Básicos</p>
-        </div>
-        <input id="swal-doc" class="swal2-input" placeholder="Documento (solo números)">
-        <input id="swal-nombre" class="swal2-input" placeholder="Nombres y Apellidos">
-        <input id="swal-email" class="swal2-input" placeholder="Correo electrónico">
-        <select id="swal-ficha" class="swal2-select" style="margin-top:10px;padding:8px;border:1px solid #d9d9d9;border-radius:4px;width:80%">
-          <option value="">Sin ficha asignada</option>
-          ${buildFichaOptions(null)}
-        </select>
-        ${camposExtendidosHTML()}
-      `,
-      focusConfirm: false,
-      showCancelButton: true,
-      confirmButtonText: 'Registrar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#0077B6',
-      preConfirm: () => ({
-        documento: document.getElementById('swal-doc').value,
-        nombres_apellidos: document.getElementById('swal-nombre').value,
-        email: document.getElementById('swal-email').value,
-        id_ficha: document.getElementById('swal-ficha').value || null,
-        ...leerCamposExtendidos()
-      })
-    });
-    if (!formValues) return;
-    try {
-      await apiAxios.post("/api/aprendices", formValues);
-      Swal.fire("✅ Creado", "Aprendiz registrado correctamente", "success");
-      cargar();
-    } catch (err) {
-      Swal.fire("Error", err.response?.data?.message || "Error al crear", "error");
-    }
-  };
-
-  // Editar aprendiz
-  const handleEditar = async (a) => {
-    const { value: formValues } = await Swal.fire({
-      title: '✏️ Editar Aprendiz',
-      width: 650,
-      html: `
-        <div style="text-align:left;padding:0 10px">
-          <p style="font-weight:700;color:#06b6d4;font-size:13px;margin:0 0 8px;border-bottom:1px solid #e2e8f0;padding-bottom:4px">📝 Datos Básicos</p>
-        </div>
-        <input id="swal-doc" class="swal2-input" placeholder="Documento" value="${a.documento || ''}">
-        <input id="swal-nombre" class="swal2-input" placeholder="Nombres y Apellidos" value="${a.nombres_apellidos || ''}">
-        <input id="swal-email" class="swal2-input" placeholder="Correo" value="${a.email || a.usuario?.email || ''}">
-        <select id="swal-ficha" class="swal2-select" style="margin-top:10px;padding:8px;border:1px solid #d9d9d9;border-radius:4px;width:80%">
-          <option value="">Sin ficha</option>
-          ${buildFichaOptions(a.id_ficha)}
-        </select>
-        ${camposExtendidosHTML(a)}
-      `,
-      focusConfirm: false,
-      showCancelButton: true,
-      confirmButtonText: 'Guardar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#0077B6',
-      preConfirm: () => ({
-        documento: document.getElementById('swal-doc').value,
-        nombres_apellidos: document.getElementById('swal-nombre').value,
-        email: document.getElementById('swal-email').value,
-        id_ficha: document.getElementById('swal-ficha').value || null,
-        ...leerCamposExtendidos()
-      })
-    });
-    if (!formValues) return;
-    try {
-      await apiAxios.put(`/api/aprendices/${a.id_aprendiz}`, formValues);
-      Swal.fire("✅ Actualizado", "Datos del aprendiz actualizados", "success");
-      cargar();
-    } catch (err) {
-      Swal.fire("Error", err.response?.data?.message || "Error al actualizar", "error");
+  // Funciones de SweetAlert eliminadas, se usa AprendizForm
+  const hideModal = (modalId) => {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      const closeBtn = modal.querySelector(".btn-close");
+      if (closeBtn) closeBtn.click();
+      else {
+        const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
+        bsModal.hide();
+      }
+      document.body.classList.remove("modal-open");
+      document.body.style.removeProperty("overflow");
+      document.body.style.removeProperty("padding-right");
+      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
     }
   };
 
@@ -188,19 +70,19 @@ export default function Aprendices() {
       width: 550,
       html: `
         <div style="text-align:left;font-size:13px;color:#334155;line-height:1.8">
-          <p style="font-weight:700;color:#06b6d4;border-bottom:1px solid #e2e8f0;padding-bottom:4px">📝 Datos Básicos</p>
+          <p style="font-weight:700;color:#0077B6;border-bottom:1px solid #e2e8f0;padding-bottom:4px">📝 Datos Básicos</p>
           <p><strong>📄 Documento:</strong> ${a.tipo_documento ? a.tipo_documento + ' ' : ''}${a.documento}</p>
           <p><strong>📧 Email:</strong> ${a.email || a.usuario?.email || 'N/A'}</p>
           <p><strong>📋 Ficha:</strong> ${a.ficha?.numero_ficha || 'Sin ficha'}</p>
           <p><strong>📅 Lectiva:</strong> ${a.ficha?.fecha_inicio && a.ficha?.fecha_fin ? `${a.ficha.fecha_inicio} a ${a.ficha.fecha_fin}` : 'No definida'}</p>
           
-          <p style="font-weight:700;color:#06b6d4;border-bottom:1px solid #e2e8f0;padding-bottom:4px;margin-top:12px">📋 Información Personal</p>
+          <p style="font-weight:700;color:#0077B6;border-bottom:1px solid #e2e8f0;padding-bottom:4px;margin-top:12px">📋 Información Personal</p>
           <p><strong>🎂 Nacimiento:</strong> ${a.fecha_nacimiento || 'N/A'}</p>
           <p><strong>👤 Género:</strong> ${a.genero || 'N/A'}</p>
           <p><strong>💍 Estado civil:</strong> ${a.estado_civil || 'N/A'}</p>
           <p><strong>🏷️ Tipo aprendiz:</strong> ${a.tipo_aprendiz || 'N/A'}</p>
           
-          <p style="font-weight:700;color:#06b6d4;border-bottom:1px solid #e2e8f0;padding-bottom:4px;margin-top:12px">📍 Ubicación y Contacto</p>
+          <p style="font-weight:700;color:#0077B6;border-bottom:1px solid #e2e8f0;padding-bottom:4px;margin-top:12px">📍 Ubicación y Contacto</p>
           <p><strong>🏠 Dirección:</strong> ${a.direccion || 'N/A'} ${a.tipo_direccion ? '(' + a.tipo_direccion + ')' : ''}</p>
           <p><strong>📞 Teléfono:</strong> ${a.telefono || 'N/A'}</p>
           <p><strong>🏢 Estrato:</strong> ${a.estrato || 'N/A'}</p>
@@ -211,21 +93,31 @@ export default function Aprendices() {
     });
   };
 
-  // Eliminar aprendiz
-  const handleEliminar = async (a) => {
+  // Alternar estado activo/inactivo del aprendiz
+  const toggleEstado = async (a) => {
+    if (!a.usuario) {
+      Swal.fire("Error", "Este aprendiz no tiene un usuario asociado para cambiar su estado", "warning");
+      return;
+    }
+    const estadoActual = a.usuario.estado;
+    const nuevoEstado = estadoActual === "aprobado" ? "INACTIVO" : "ACTIVO";
     const result = await Swal.fire({
-      title: "¿Eliminar aprendiz?",
-      text: `Se eliminará a ${a.nombres_apellidos} y su cuenta de usuario`,
-      icon: "warning", showCancelButton: true,
-      confirmButtonColor: "#ef4444", confirmButtonText: "Sí, eliminar", cancelButtonText: "Cancelar"
+      title: "¿Cambiar estado?",
+      text: `El aprendiz pasará a estar ${nuevoEstado}`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: estadoActual === "aprobado" ? "#dc3545" : "#0077B6",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sí, cambiar",
+      cancelButtonText: "Cancelar"
     });
     if (!result.isConfirmed) return;
     try {
-      await apiAxios.delete(`/api/aprendices/${a.id_aprendiz}`);
-      Swal.fire("Eliminado", "Aprendiz eliminado correctamente", "success");
+      await apiAxios.put(`/api/auth/usuarios/${a.usuario.id_usuario}/toggle-activo`);
+      Swal.fire({ icon: "success", title: "Actualizado", text: "El estado fue modificado correctamente", timer: 1500, showConfirmButton: false });
       cargar();
     } catch (err) {
-      Swal.fire("Error", err.response?.data?.message || "Error al eliminar", "error");
+      Swal.fire("Error", err.response?.data?.message || "No se pudo cambiar el estado", "error");
     }
   };
 
@@ -300,8 +192,8 @@ export default function Aprendices() {
   return (
     <div className="container mt-4">
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
-        <div style={{ height: "3px", width: "24px", background: "#06b6d4", borderRadius: "99px" }} />
-        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#06b6d4", margin: 0 }}>🎓 Aprendices</h2>
+        <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
+        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>🎓 Aprendices</h2>
       </div>
       <p style={{ color: "#64748b", marginBottom: "24px" }}>Gestiona los aprendices del sistema. Crea, edita, elimina o importa desde Excel.</p>
 
@@ -313,8 +205,13 @@ export default function Aprendices() {
             style={{ borderColor: "#dbeafe", borderRadius: "10px", padding: "10px 15px" }} />
         </div>
         <div className="col-md-7 text-end" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', flexWrap: 'wrap' }}>
-          <button onClick={handleCrear} className="btn text-white"
-            style={{ background: "linear-gradient(135deg, #06b6d4, #0891b2)", borderRadius: "10px", fontWeight: "600", padding: "10px 20px", border: "none" }}>
+          <button
+            className="btn text-white"
+            style={{ background: "#0077B6", borderRadius: "10px", fontWeight: "600", padding: "10px 20px", border: "none" }}
+            data-bs-toggle="modal"
+            data-bs-target="#modalAprendiz"
+            onClick={() => setSelectedAprendiz(null)}
+          >
             ➕ Nuevo Aprendiz
           </button>
           <button onClick={handleImportar} className="btn text-white"
@@ -343,12 +240,12 @@ export default function Aprendices() {
             <tbody>
               {filtrados.map(a => (
                 <tr key={a.id_aprendiz} style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                  <td style={{ padding: '14px 16px', fontWeight: '600', color: '#0f172a' }}>
+                  <td style={{ padding: '14px 16px', color: '#0f172a', fontSize: '13px' }}>
                     {a.tipo_documento ? <span style={{ fontSize: '10px', color: '#64748b' }}>{a.tipo_documento} </span> : null}
                     {a.documento}
                   </td>
-                  <td style={{ padding: '14px 16px', color: '#334155' }}>
-                    <div style={{ fontWeight: '600' }}>{a.nombres_apellidos}</div>
+                  <td style={{ padding: '14px 16px', color: '#334155', fontSize: '13px' }}>
+                    <div>{a.nombres_apellidos}</div>
                     <div style={{ fontSize: '11px', color: '#64748b' }}>{a.email || a.usuario?.email}</div>
                   </td>
                   <td style={{ padding: '14px 16px' }}>
@@ -370,15 +267,37 @@ export default function Aprendices() {
                     {a.ficha?.fecha_inicio && a.ficha?.fecha_fin ? `${a.ficha.fecha_inicio} a ${a.ficha.fecha_fin}` : 'No definida'}
                   </td>
                   <td style={{ padding: '14px 16px' }}>
-                    <span style={{ background: a.usuario?.estado === 'aprobado' ? '#ecfdf5' : '#fef2f2', color: a.usuario?.estado === 'aprobado' ? '#059669' : '#dc2626', fontSize: '11px', fontWeight: '700', padding: '4px 12px', borderRadius: '99px' }}>
-                      {a.usuario?.estado === 'aprobado' ? '✅ Activo' : a.usuario?.estado || 'N/A'}
+                    <span className={`px-2 py-1 rounded-pill text-white fw-semibold ${a.usuario?.estado === 'aprobado' ? "bg-success" : "bg-danger"}`} style={{ fontSize: "0.7rem" }}>
+                      {a.usuario?.estado === 'aprobado' ? "ACTIVO" : (a.usuario?.estado ? a.usuario.estado.toUpperCase() : "INACTIVO")}
                     </span>
                   </td>
                   <td style={{ padding: '14px 16px' }}>
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                      <button onClick={() => handleVerDetalle(a)} style={btnStyle('#f5f3ff', '#7c3aed', '1px solid #ddd6fe')}>👁️</button>
-                      <button onClick={() => handleEditar(a)} style={btnStyle('#f0f9ff', '#0077B6', '1px solid #bae6fd')}>✏️</button>
-                      <button onClick={() => handleEliminar(a)} style={btnStyle('#fef2f2', '#dc2626', '1px solid #fecaca')}>🗑️</button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button onClick={() => handleVerDetalle(a)} title="Ver Detalle" className="btn btn-sm" style={{ background: "#dbeafe", color: "#0077B6", border: "none" }}>
+                        <i className="fa-solid fa-eye"></i>
+                      </button>
+                      <button
+                        onClick={() => setSelectedAprendiz(a)}
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalAprendiz"
+                        title="Editar"
+                        className="btn btn-sm"
+                        style={{ background: "#dbeafe", color: "#0077B6", border: "none" }}
+                      >
+                        <i className="fas fa-edit"></i>
+                      </button>
+                      <button 
+                        onClick={() => toggleEstado(a)} 
+                        title={a.usuario?.estado === 'aprobado' ? "Inactivar" : "Activar"} 
+                        className="btn btn-sm" 
+                        style={{ 
+                          background: a.usuario?.estado === 'aprobado' ? "#fee2e2" : "#dcfce7", 
+                          color: a.usuario?.estado === 'aprobado' ? "#dc2626" : "#16a34a", 
+                          border: "none" 
+                        }}
+                      >
+                        <i className={`fas ${a.usuario?.estado === 'aprobado' ? "fa-ban" : "fa-check"}`}></i>
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -387,6 +306,33 @@ export default function Aprendices() {
           </table>
         </div>
       )}
+      {/* Modal editar/crear Aprendiz */}
+      <div className="modal fade" id="modalAprendiz" tabIndex="-1" aria-hidden="true">
+        <div className="modal-dialog modal-lg">
+          <div className="modal-content">
+            <div className="modal-header text-white" style={{ background: "#023E8A" }}>
+              <h5 className="modal-title" style={{ fontWeight: "700" }}>
+                {selectedAprendiz ? "Editar Aprendiz" : "Registrar Nuevo Aprendiz"}
+              </h5>
+              <button
+                type="button"
+                className="btn-close btn-close-white"
+                data-bs-dismiss="modal"
+                onClick={() => hideModal("modalAprendiz")}
+                aria-label="Close"
+              ></button>
+            </div>
+            <div className="modal-body">
+              <AprendizForm
+                selectedAprendiz={selectedAprendiz}
+                fichas={fichas}
+                refreshParent={cargar}
+                hideModal={() => hideModal("modalAprendiz")}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

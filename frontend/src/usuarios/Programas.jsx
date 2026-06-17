@@ -1,17 +1,35 @@
 // Vista de gestión de Programas de Formación con CRUD e importación desde Excel
 // Permite al administrador crear, editar, eliminar y buscar programas, además de importar desde archivos Excel
 import { useState, useEffect } from "react";
+import * as bootstrap from "bootstrap";
 import apiAxios from "../api/axiosConfig";
 import Swal from "sweetalert2";
+import ProgramaForm from "./ProgramaForm.jsx";
 
 export default function Programas() {
-  // Estado que almacena la lista de programas cargados desde el backend
   const [programas, setProgramas] = useState([]);
-  // Estado que controla el texto del filtro de búsqueda
   const [filterText, setFilterText] = useState("");
+  const [selectedPrograma, setSelectedPrograma] = useState(null);
 
-  // Al montar el componente, carga la lista de programas
-  useEffect(() => { cargar(); }, []);
+  useEffect(() => {
+    cargar();
+    const modalPrograma = document.getElementById("modalPrograma");
+    const handleHidden = () => {
+      setSelectedPrograma(null);
+      document.body.classList.remove("modal-open");
+      document.body.style.removeProperty("overflow");
+      document.body.style.removeProperty("padding-right");
+      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+    };
+    if (modalPrograma) {
+      modalPrograma.addEventListener("hidden.bs.modal", handleHidden);
+    }
+    return () => {
+      if (modalPrograma) {
+        modalPrograma.removeEventListener("hidden.bs.modal", handleHidden);
+      }
+    };
+  }, []);
 
   // Función asíncrona que obtiene todos los programas desde la API
   const cargar = async () => {
@@ -23,87 +41,47 @@ export default function Programas() {
     }
   };
 
-  // Función que abre un modal de SweetAlert2 para crear un nuevo programa manualmente
-  const handleCrear = async () => {
-    const { value: formValues } = await Swal.fire({
-      title: '📚 Nuevo Programa',
-      html: `
-        <input id="swal-nombre" class="swal2-input" placeholder="Nombre del programa de formación">
-      `,
-      focusConfirm: false,
-      showCancelButton: true,
-      confirmButtonText: 'Registrar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#0077B6',
-      preConfirm: () => {
-        const nombre = document.getElementById('swal-nombre').value.trim();
-        if (!nombre) { Swal.showValidationMessage('El nombre del programa es obligatorio'); return false; }
-        return { nombre_programa: nombre };
+  // Funciones de SweetAlert eliminadas, se usa ProgramaForm
+  const hideModal = (modalId) => {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      const closeBtn = modal.querySelector(".btn-close");
+      if (closeBtn) closeBtn.click();
+      else {
+        const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
+        bsModal.hide();
       }
-    });
-    if (!formValues) return;
-    try {
-      await apiAxios.post("/api/programas", formValues);
-      Swal.fire("✅ Creado", "Programa registrado correctamente", "success");
-      cargar();
-    } catch (err) {
-      Swal.fire("Error", err.response?.data?.message || "Error al crear el programa", "error");
+      document.body.classList.remove("modal-open");
+      document.body.style.removeProperty("overflow");
+      document.body.style.removeProperty("padding-right");
+      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
     }
   };
 
-  // Función que abre un modal pre-rellenado para editar un programa existente
-  const handleEditar = async (p) => {
-    const { value: formValues } = await Swal.fire({
-      title: '✏️ Editar Programa',
-      html: `
-        <input id="swal-nombre" class="swal2-input" placeholder="Nombre del programa" value="${p.nombre_programa || ''}">
-        <select id="swal-estado" class="swal2-select" style="margin-top:10px;padding:8px;border:1px solid #d9d9d9;border-radius:4px;width:80%">
-          <option value="true" ${p.estado !== false ? 'selected' : ''}>Activo</option>
-          <option value="false" ${p.estado === false ? 'selected' : ''}>Inactivo</option>
-        </select>
-      `,
-      focusConfirm: false,
-      showCancelButton: true,
-      confirmButtonText: 'Guardar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#0077B6',
-      preConfirm: () => {
-        const nombre = document.getElementById('swal-nombre').value.trim();
-        if (!nombre) { Swal.showValidationMessage('El nombre es obligatorio'); return false; }
-        return {
-          nombre_programa: nombre,
-          estado: document.getElementById('swal-estado').value === 'true'
-        };
-      }
-    });
-    if (!formValues) return;
-    try {
-      await apiAxios.put(`/api/programas/${p.id_programa}`, formValues);
-      Swal.fire("✅ Actualizado", "Programa actualizado correctamente", "success");
-      cargar();
-    } catch (err) {
-      Swal.fire("Error", err.response?.data?.message || "Error al actualizar", "error");
-    }
-  };
-
-  // Función que confirma y elimina un programa con doble confirmación
-  const handleEliminar = async (p) => {
+  // Alternar estado activo/inactivo del programa de formación
+  const toggleEstado = async (id, estadoActual) => {
+    const nuevoEstado = estadoActual !== false ? false : true;
     const result = await Swal.fire({
-      title: "¿Eliminar programa?",
-      text: `Se eliminará "${p.nombre_programa}" y todas las fichas asociadas podrían quedar sin programa`,
+      title: "¿Cambiar estado?",
+      text: `El programa pasará a estar ${nuevoEstado ? "ACTIVO" : "INACTIVO"}`,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#ef4444",
-      confirmButtonText: "Sí, eliminar",
+      confirmButtonColor: estadoActual !== false ? "#dc3545" : "#0077B6",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sí, cambiar",
       cancelButtonText: "Cancelar"
     });
     if (!result.isConfirmed) return;
     try {
-      await apiAxios.delete(`/api/programas/${p.id_programa}`);
-      Swal.fire("Eliminado", "Programa eliminado correctamente", "success");
+      const prog = programas.find(p => p.id_programa === id);
+      await apiAxios.put(`/api/programas/${id}`, {
+        nombre_programa: prog.nombre_programa,
+        estado: nuevoEstado
+      });
+      Swal.fire({ icon: "success", title: "Actualizado", text: "El estado fue modificado correctamente", timer: 1500, showConfirmButton: false });
       cargar();
     } catch (err) {
-      Swal.fire("Error", err.response?.data?.message || "Error al eliminar", "error");
+      Swal.fire("Error", err.response?.data?.message || "No se pudo cambiar el estado", "error");
     }
   };
 
@@ -171,8 +149,8 @@ export default function Programas() {
     <div className="container mt-4">
       {/* Encabezado con línea decorativa y título */}
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
-        <div style={{ height: "3px", width: "24px", background: "#8b5cf6", borderRadius: "99px" }} />
-        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#8b5cf6", margin: 0 }}>📚 Programas de Formación</h2>
+        <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
+        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>📚 Programas de Formación</h2>
       </div>
       <p style={{ color: "#64748b", marginBottom: "24px" }}>Gestiona los programas de formación del SENA. Crea, edita, elimina o importa desde Excel.</p>
 
@@ -184,8 +162,13 @@ export default function Programas() {
             style={{ borderColor: "#dbeafe", borderRadius: "10px", padding: "10px 15px" }} />
         </div>
         <div className="col-md-7 text-end" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', flexWrap: 'wrap' }}>
-          <button onClick={handleCrear} className="btn text-white"
-            style={{ background: "linear-gradient(135deg, #8b5cf6, #7c3aed)", borderRadius: "10px", fontWeight: "600", padding: "10px 20px", border: "none" }}>
+          <button 
+            className="btn text-white"
+            style={{ background: "#0077B6", borderRadius: "10px", fontWeight: "600", padding: "10px 20px", border: "none" }}
+            data-bs-toggle="modal"
+            data-bs-target="#modalPrograma"
+            onClick={() => setSelectedPrograma(null)}
+          >
             ➕ Nuevo Programa
           </button>
           <button onClick={handleImportar} className="btn text-white"
@@ -214,24 +197,22 @@ export default function Programas() {
             <tbody>
               {filtrados.map((p, idx) => (
                 <tr key={p.id_programa} style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                  <td style={{ padding: '14px 16px', fontWeight: '600', color: '#94a3b8', fontSize: '13px' }}>{idx + 1}</td>
-                  <td style={{ padding: '14px 16px', fontWeight: '600', color: '#0f172a' }}>{p.nombre_programa}</td>
+                  <td style={{ padding: '14px 16px', color: '#94a3b8', fontSize: '13px' }}>{idx + 1}</td>
+                  <td style={{ padding: '14px 16px', color: '#0f172a', fontSize: '13px' }}>{p.nombre_programa}</td>
                   <td style={{ padding: '14px 16px' }}>
-                    <span style={{
-                      background: p.estado !== false ? '#ecfdf5' : '#fef2f2',
-                      color: p.estado !== false ? '#059669' : '#dc2626',
-                      fontSize: '11px', fontWeight: '700', padding: '4px 12px', borderRadius: '99px'
-                    }}>
-                      {p.estado !== false ? '✅ Activo' : '❌ Inactivo'}
+                    <span className={`px-2 py-1 rounded-pill text-white fw-semibold ${p.estado !== false ? "bg-success" : "bg-danger"}`} style={{ fontSize: "0.7rem" }}>
+                      {p.estado !== false ? "ACTIVO" : "INACTIVO"}
                     </span>
                   </td>
-                  <td style={{ padding: '14px 16px', color: '#64748b', fontSize: '13px' }}>
-                    {p.fichas?.length || 0} fichas
-                  </td>
+                  <td style={{ padding: '14px 16px', color: '#64748b', fontSize: '13px' }}>{p.fichas ? p.fichas.length : 0} fichas</td>
                   <td style={{ padding: '14px 16px' }}>
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                      <button onClick={() => handleEditar(p)} style={btnStyle('#f0f9ff', '#0077B6', '1px solid #bae6fd')}>✏️</button>
-                      <button onClick={() => handleEliminar(p)} style={btnStyle('#fef2f2', '#dc2626', '1px solid #fecaca')}>🗑️</button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button onClick={() => setSelectedPrograma(p)} data-bs-toggle="modal" data-bs-target="#modalPrograma" title="Editar" className="btn btn-sm" style={{ background: "#dbeafe", color: "#0077B6", border: "none" }}>
+                        <i className="fas fa-edit"></i>
+                      </button>
+                      <button onClick={() => toggleEstado(p.id_programa, p.estado)} title={p.estado !== false ? "Inactivar" : "Activar"} className="btn btn-sm" style={{ background: p.estado !== false ? "#fee2e2" : "#dcfce7", color: p.estado !== false ? "#dc2626" : "#16a34a", border: "none" }}>
+                        <i className={`fas ${p.estado !== false ? "fa-ban" : "fa-check"}`}></i>
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -240,6 +221,32 @@ export default function Programas() {
           </table>
         </div>
       )}
+      {/* Modal editar/crear Programa */}
+      <div className="modal fade" id="modalPrograma" tabIndex="-1" aria-hidden="true">
+        <div className="modal-dialog modal-lg">
+          <div className="modal-content">
+            <div className="modal-header text-white" style={{ background: "#023E8A" }}>
+              <h5 className="modal-title" style={{ fontWeight: "700" }}>
+                {selectedPrograma ? "Editar Programa" : "Registrar Nuevo Programa"}
+              </h5>
+              <button
+                type="button"
+                className="btn-close btn-close-white"
+                data-bs-dismiss="modal"
+                onClick={() => hideModal("modalPrograma")}
+                aria-label="Close"
+              ></button>
+            </div>
+            <div className="modal-body">
+              <ProgramaForm
+                selectedPrograma={selectedPrograma}
+                refreshParent={cargar}
+                hideModal={() => hideModal("modalPrograma")}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

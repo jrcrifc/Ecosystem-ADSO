@@ -65,13 +65,8 @@ const CrudmovimientoReactivo = () => {
       width: "120px",
       // Renderizador personalizado para mostrar badge de estado
       cell: (row) => (
-        <span style={{
-          background: row.estado === 1 ? "#dcfce7" : "#fee2e2",
-          color: row.estado === 1 ? "#16a34a" : "#dc2626",
-          padding: "4px 12px", borderRadius: "99px", fontSize: "11px", fontWeight: "700",
-          border: `1px solid ${row.estado === 1 ? "#bbf7d0" : "#fecaca"}`
-        }}>
-          {row.estado === 1 ? "Activo" : "Inactivo"}
+        <span className={`px-2 py-1 rounded-pill text-white fw-semibold ${row.estado === 1 ? "bg-success" : "bg-danger"}`} style={{ fontSize: "0.7rem" }}>
+          {row.estado === 1 ? "ACTIVO" : "INACTIVO"}
         </span>
       ),
     },
@@ -391,7 +386,7 @@ const CrudmovimientoReactivo = () => {
         <div className="modal-dialog modal-lg">
           <div className="modal-content" style={{ borderRadius: "16px", overflow: "hidden" }}>
             {/* Encabezado del modal con gradiente azul */}
-            <div className="modal-header" style={{ background: "linear-gradient(135deg, #0077B6, #023E8A)", color: "#fff", border: "none" }}>
+            <div className="modal-header text-white" style={{ background: "#023E8A", border: "none" }}>
               <h5 className="modal-title">
                 {selectedMovimiento ? "Editar" : "Nuevo"} Movimiento de Reactivo
               </h5>

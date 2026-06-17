@@ -214,23 +214,7 @@ export default function CrudEstadoxSolicitud() {
         </div>
       </div>
 
-      {/* Alerta de filtro activo si se viene de una solicitud especifica */}
-      {selectedSolicitudId && (
-        <div className="alert alert-info d-flex justify-content-between align-items-center mb-3" style={{ borderRadius: "10px" }}>
-          <span>
-            <strong>Filtro activo:</strong> Mostrando el historial de la solicitud <strong>#{selectedSolicitudId}</strong>.
-          </span>
-          <button
-            className="btn btn-sm btn-outline-info"
-            onClick={() => {
-              setSelectedSolicitudId(null);
-              setFilterText("");
-            }}
-          >
-            Ver todas
-          </button>
-        </div>
-      )}
+
 
       {/* Contenedor de la tabla con bordes redondeados */}
       <div style={{ borderRadius: "14px", overflow: "hidden", border: "1px solid #dbeafe" }}>

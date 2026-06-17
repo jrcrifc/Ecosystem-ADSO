@@ -239,7 +239,7 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
       <div className="row g-3">
         {/* Selector de grupo del equipo */}
         <div className="col-md-6">
-          <label>Grupo del equipo</label>
+          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Grupo del equipo</label>
           <select className="form-select" name="grupo_equipo" value={form.grupo_equipo} onChange={handleChange} required>
             <option value="">Seleccione grupo...</option>
             <option value="Equipo de Laboratorio">Equipo de Laboratorio</option>
@@ -248,22 +248,22 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
         </div>
         {/* Campo de nombre del equipo */}
         <div className="col-md-6">
-          <label>Nombre del equipo</label>
+          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Nombre del equipo</label>
           <input className="form-control" name="nom_equipo" value={form.nom_equipo} onChange={handleChange} required />
         </div>
         {/* Campo de marca del equipo */}
         <div className="col-md-6">
-          <label>Marca</label>
+          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Marca</label>
           <input className="form-control" name="marca_equipo" value={form.marca_equipo} onChange={handleChange} />
         </div>
         {/* Campo de número de placa o serial */}
         <div className="col-md-6">
-          <label>N° Placa / Serial</label>
+          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>N° Placa / Serial</label>
           <input className="form-control" name="no_placa" value={form.no_placa} onChange={handleChange} />
         </div>
         {/* Búsqueda de cuentadante por documento */}
         <div className="col-md-6" style={{ position: "relative" }}>
-          <label>Cuentadante (Instructor)</label>
+          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Cuentadante (Instructor)</label>
           <input
             type="text"
             className="form-control"
@@ -357,17 +357,17 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
         </div>
         {/* Campo de observaciones */}
         <div className="col-12">
-          <label>Observaciones</label>
+          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Observaciones</label>
           <textarea className="form-control" name="observaciones" value={form.observaciones} onChange={handleChange} rows="3" />
         </div>
         {/* Campo de carga de foto */}
         <div className="col-12">
-          <label>Foto del equipo</label>
+          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Foto del equipo</label>
           <input type="file" className="form-control" name="foto_equipo" accept="image/*" onChange={handleChange} />
         </div>
         {/* Selector de estado activo/inactivo */}
         <div className="col-12">
-          <label>Estado</label>
+          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Estado</label>
           <select className="form-select" name="estado" value={form.estado} onChange={handleChange}>
             <option value={1}>Activo</option>
             <option value={0}>Inactivo</option>

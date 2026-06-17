@@ -1,15 +1,36 @@
 // Vista de gestión de Instructores con CRUD e importación desde Excel
 import { useState, useEffect } from "react";
+import * as bootstrap from "bootstrap";
 import apiAxios from "../api/axiosConfig";
 import Swal from "sweetalert2";
+import InstructorForm from "./InstructorForm.jsx";
 
 export default function Instructores() {
   const [instructores, setInstructores] = useState([]);
   const [filterText, setFilterText] = useState("");
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
+  const [selectedInstructor, setSelectedInstructor] = useState(null);
 
-  useEffect(() => { cargar(); }, []);
+  useEffect(() => {
+    cargar();
+    const modalInstructor = document.getElementById("modalInstructor");
+    const handleHidden = () => {
+      setSelectedInstructor(null);
+      document.body.classList.remove("modal-open");
+      document.body.style.removeProperty("overflow");
+      document.body.style.removeProperty("padding-right");
+      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+    };
+    if (modalInstructor) {
+      modalInstructor.addEventListener("hidden.bs.modal", handleHidden);
+    }
+    return () => {
+      if (modalInstructor) {
+        modalInstructor.removeEventListener("hidden.bs.modal", handleHidden);
+      }
+    };
+  }, []);
   useEffect(() => { setPage(1); }, [filterText]);
 
   const cargar = async () => {
@@ -19,73 +40,20 @@ export default function Instructores() {
     } catch { Swal.fire("Error", "No se pudieron cargar los instructores", "error"); }
   };
 
-  // Crear instructor manualmente
-  const handleCrear = async () => {
-    const { value: formValues } = await Swal.fire({
-      title: '👨‍🏫 Nuevo Instructor',
-      html: `
-        <input id="swal-doc" class="swal2-input" placeholder="Documento (solo números)">
-        <input id="swal-nombre" class="swal2-input" placeholder="Nombres y Apellidos">
-        <input id="swal-email" class="swal2-input" placeholder="Correo electrónico institucional">
-        <input id="swal-telefono" class="swal2-input" placeholder="Teléfono de contacto (opcional)">
-        <select id="swal-vinculacion" class="swal2-select" style="margin-top:10px;padding:8px;border:1px solid #d9d9d9;border-radius:4px;width:80%">
-          <option value="">Tipo de vinculación</option>
-          <option value="Instructor de planta">Instructor de planta</option>
-          <option value="Instructor por prestacion de servicios">Instructor por prestacion de servicios</option>
-        </select>
-      `,
-      focusConfirm: false, showCancelButton: true,
-      confirmButtonText: 'Registrar', cancelButtonText: 'Cancelar', confirmButtonColor: '#0077B6',
-      preConfirm: () => ({
-        documento: document.getElementById('swal-doc').value,
-        nombres_apellidos: document.getElementById('swal-nombre').value,
-        email: document.getElementById('swal-email').value,
-        telefono: document.getElementById('swal-telefono').value || null,
-        tipo_vinculacion: document.getElementById('swal-vinculacion').value || null
-      })
-    });
-    if (!formValues) return;
-    try {
-      await apiAxios.post("/api/instructores", formValues);
-      Swal.fire("✅ Creado", "Instructor registrado correctamente", "success");
-      cargar();
-    } catch (err) {
-      Swal.fire("Error", err.response?.data?.message || "Error al crear", "error");
-    }
-  };
-
-  // Editar instructor
-  const handleEditar = async (inst) => {
-    const { value: formValues } = await Swal.fire({
-      title: '✏️ Editar Instructor',
-      html: `
-        <input id="swal-doc" class="swal2-input" placeholder="Documento" value="${inst.documento || ''}">
-        <input id="swal-nombre" class="swal2-input" placeholder="Nombres y Apellidos" value="${inst.nombres_apellidos || ''}">
-        <input id="swal-email" class="swal2-input" placeholder="Correo institucional" value="${inst.email || inst.usuario?.email || ''}">
-        <input id="swal-telefono" class="swal2-input" placeholder="Teléfono" value="${inst.telefono || ''}">
-        <select id="swal-vinculacion" class="swal2-select" style="margin-top:10px;padding:8px;border:1px solid #d9d9d9;border-radius:4px;width:80%">
-          <option value="">Tipo de vinculación</option>
-          <option value="Instructor de planta" ${inst.tipo_vinculacion === 'Instructor de planta' ? 'selected' : ''}>Instructor de planta</option>
-          <option value="Instructor por prestacion de servicios" ${inst.tipo_vinculacion === 'Instructor por prestacion de servicios' ? 'selected' : ''}>Instructor por prestacion de servicios</option>
-        </select>
-      `,
-      focusConfirm: false, showCancelButton: true,
-      confirmButtonText: 'Guardar', cancelButtonText: 'Cancelar', confirmButtonColor: '#0077B6',
-      preConfirm: () => ({
-        documento: document.getElementById('swal-doc').value,
-        nombres_apellidos: document.getElementById('swal-nombre').value,
-        email: document.getElementById('swal-email').value,
-        telefono: document.getElementById('swal-telefono').value || null,
-        tipo_vinculacion: document.getElementById('swal-vinculacion').value || null
-      })
-    });
-    if (!formValues) return;
-    try {
-      await apiAxios.put(`/api/instructores/${inst.id_instructor}`, formValues);
-      Swal.fire("✅ Actualizado", "Datos del instructor actualizados", "success");
-      cargar();
-    } catch (err) {
-      Swal.fire("Error", err.response?.data?.message || "Error al actualizar", "error");
+  // Funciones de SweetAlert eliminadas, se usa InstructorForm
+  const hideModal = (modalId) => {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      const closeBtn = modal.querySelector(".btn-close");
+      if (closeBtn) closeBtn.click();
+      else {
+        const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
+        bsModal.hide();
+      }
+      document.body.classList.remove("modal-open");
+      document.body.style.removeProperty("overflow");
+      document.body.style.removeProperty("padding-right");
+      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
     }
   };
 
@@ -107,21 +75,31 @@ export default function Instructores() {
     });
   };
 
-  // Eliminar instructor
-  const handleEliminar = async (inst) => {
+  // Alternar estado activo/inactivo del instructor
+  const toggleEstado = async (inst) => {
+    if (!inst.usuario) {
+      Swal.fire("Error", "Este instructor no tiene un usuario asociado para cambiar su estado", "warning");
+      return;
+    }
+    const estadoActual = inst.usuario.estado;
+    const nuevoEstado = estadoActual === "aprobado" ? "INACTIVO" : "ACTIVO";
     const result = await Swal.fire({
-      title: "¿Eliminar instructor?",
-      text: `Se eliminará a ${inst.nombres_apellidos} y su cuenta de usuario`,
-      icon: "warning", showCancelButton: true,
-      confirmButtonColor: "#ef4444", confirmButtonText: "Sí, eliminar", cancelButtonText: "Cancelar"
+      title: "¿Cambiar estado?",
+      text: `El instructor pasará a estar ${nuevoEstado}`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: estadoActual === "aprobado" ? "#dc3545" : "#0077B6",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sí, cambiar",
+      cancelButtonText: "Cancelar"
     });
     if (!result.isConfirmed) return;
     try {
-      await apiAxios.delete(`/api/instructores/${inst.id_instructor}`);
-      Swal.fire("Eliminado", "Instructor eliminado correctamente", "success");
+      await apiAxios.put(`/api/auth/usuarios/${inst.usuario.id_usuario}/toggle-activo`);
+      Swal.fire({ icon: "success", title: "Actualizado", text: "El estado fue modificado correctamente", timer: 1500, showConfirmButton: false });
       cargar();
     } catch (err) {
-      Swal.fire("Error", err.response?.data?.message || "Error al eliminar", "error");
+      Swal.fire("Error", err.response?.data?.message || "No se pudo cambiar el estado", "error");
     }
   };
 
@@ -195,8 +173,8 @@ export default function Instructores() {
   return (
     <div className="container mt-4">
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
-        <div style={{ height: "3px", width: "24px", background: "#10b981", borderRadius: "99px" }} />
-        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#10b981", margin: 0 }}>👨‍🏫 Instructores</h2>
+        <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
+        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>👨‍🏫 Instructores</h2>
       </div>
       <p style={{ color: "#64748b", marginBottom: "24px" }}>Gestiona los instructores del sistema. Crea, edita, elimina o importa desde Excel.</p>
 
@@ -207,8 +185,13 @@ export default function Instructores() {
             style={{ borderColor: "#dbeafe", borderRadius: "10px", padding: "10px 15px" }} />
         </div>
         <div className="col-md-7 text-end" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', flexWrap: 'wrap' }}>
-          <button onClick={handleCrear} className="btn text-white"
-            style={{ background: "linear-gradient(135deg, #10b981, #059669)", borderRadius: "10px", fontWeight: "600", padding: "10px 20px", border: "none" }}>
+          <button 
+            className="btn text-white"
+            style={{ background: "#0077B6", borderRadius: "10px", fontWeight: "600", padding: "10px 20px", border: "none" }}
+            data-bs-toggle="modal"
+            data-bs-target="#modalInstructor"
+            onClick={() => setSelectedInstructor(null)}
+          >
             ➕ Nuevo Instructor
           </button>
           <button onClick={handleImportar} className="btn text-white"
@@ -236,8 +219,8 @@ export default function Instructores() {
             <tbody>
               {paginados.map(i => (
                 <tr key={i.id_instructor} style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                  <td style={{ padding: '14px 16px', fontWeight: '600', color: '#0f172a' }}>{i.documento}</td>
-                  <td style={{ padding: '14px 16px', color: '#334155' }}>{i.nombres_apellidos}</td>
+                  <td style={{ padding: '14px 16px', color: '#0f172a', fontSize: '13px' }}>{i.documento}</td>
+                  <td style={{ padding: '14px 16px', color: '#334155', fontSize: '13px' }}>{i.nombres_apellidos}</td>
                   <td style={{ padding: '14px 16px', color: '#64748b', fontSize: '13px' }}>{i.email || i.usuario?.email}</td>
                   <td style={{ padding: '14px 16px', color: '#334155', fontSize: '13px' }}>{i.telefono || '—'}</td>
 
@@ -247,15 +230,37 @@ export default function Instructores() {
                     </span>
                   </td>
                   <td style={{ padding: '14px 16px' }}>
-                    <span style={{ background: i.usuario?.estado === 'aprobado' ? '#ecfdf5' : '#fef2f2', color: i.usuario?.estado === 'aprobado' ? '#059669' : '#dc2626', fontSize: '11px', fontWeight: '700', padding: '4px 12px', borderRadius: '99px' }}>
-                      {i.usuario?.estado === 'aprobado' ? '✅ Activo' : i.usuario?.estado || 'N/A'}
+                    <span className={`px-2 py-1 rounded-pill text-white fw-semibold ${i.usuario?.estado === 'aprobado' ? "bg-success" : "bg-danger"}`} style={{ fontSize: "0.7rem" }}>
+                      {i.usuario?.estado === 'aprobado' ? "ACTIVO" : (i.usuario?.estado ? i.usuario.estado.toUpperCase() : "INACTIVO")}
                     </span>
                   </td>
                   <td style={{ padding: '14px 16px' }}>
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                      <button onClick={() => handleVerDetalle(i)} style={btnStyle('#f5f3ff', '#7c3aed', '1px solid #ddd6fe')}>👁️</button>
-                      <button onClick={() => handleEditar(i)} style={btnStyle('#f0f9ff', '#0077B6', '1px solid #bae6fd')}>✏️</button>
-                      <button onClick={() => handleEliminar(i)} style={btnStyle('#fef2f2', '#dc2626', '1px solid #fecaca')}>🗑️</button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button onClick={() => handleVerDetalle(i)} title="Ver Detalle" className="btn btn-sm" style={{ background: "#dbeafe", color: "#0077B6", border: "none" }}>
+                        <i className="fa-solid fa-eye"></i>
+                      </button>
+                      <button 
+                        onClick={() => setSelectedInstructor(i)} 
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalInstructor"
+                        title="Editar"
+                        className="btn btn-sm"
+                        style={{ background: "#dbeafe", color: "#0077B6", border: "none" }}
+                      >
+                        <i className="fas fa-edit"></i>
+                      </button>
+                      <button 
+                        onClick={() => toggleEstado(i)} 
+                        title={i.usuario?.estado === 'aprobado' ? "Inactivar" : "Activar"} 
+                        className="btn btn-sm" 
+                        style={{ 
+                          background: i.usuario?.estado === 'aprobado' ? "#fee2e2" : "#dcfce7", 
+                          color: i.usuario?.estado === 'aprobado' ? "#dc2626" : "#16a34a", 
+                          border: "none" 
+                        }}
+                      >
+                        <i className={`fas ${i.usuario?.estado === 'aprobado' ? "fa-ban" : "fa-check"}`}></i>
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -311,6 +316,32 @@ export default function Instructores() {
           )}
         </div>
       )}
+      {/* Modal editar/crear Instructor */}
+      <div className="modal fade" id="modalInstructor" tabIndex="-1" aria-hidden="true">
+        <div className="modal-dialog modal-lg">
+          <div className="modal-content">
+            <div className="modal-header text-white" style={{ background: "#023E8A" }}>
+              <h5 className="modal-title" style={{ fontWeight: "700" }}>
+                {selectedInstructor ? "Editar Instructor" : "Registrar Nuevo Instructor"}
+              </h5>
+              <button
+                type="button"
+                className="btn-close btn-close-white"
+                data-bs-dismiss="modal"
+                onClick={() => hideModal("modalInstructor")}
+                aria-label="Close"
+              ></button>
+            </div>
+            <div className="modal-body">
+              <InstructorForm
+                selectedInstructor={selectedInstructor}
+                refreshParent={cargar}
+                hideModal={() => hideModal("modalInstructor")}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

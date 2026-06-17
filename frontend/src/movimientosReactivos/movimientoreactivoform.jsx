@@ -223,7 +223,7 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
 
         {/* Campo de cantidad inicial con unidad */}
         <div className="col-md-6">
-          <label className="form-label fw-semibold text-muted">Cantidad de Ingreso</label>
+          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Cantidad de Ingreso</label>
           <div className="input-group">
             <input
               type="number"
@@ -251,7 +251,7 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
 
         {/* Campo de numero de lote */}
         <div className="col-md-6">
-          <label className="form-label fw-semibold text-muted">Lote</label>
+          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Lote</label>
           <input
             type="text"
             name="lote"
@@ -265,7 +265,7 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
 
         {/* Campo de fecha de vencimiento */}
         <div className="col-md-6">
-          <label className="form-label fw-semibold text-muted">Fecha de Vencimiento</label>
+          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Fecha de Vencimiento</label>
           <input
             type="date"
             name="fecha_vencimiento"
@@ -284,7 +284,7 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
 
         {/* Campo de seleccion de proveedor */}
         <div className="col-md-6">
-          <label className="form-label fw-semibold text-muted">Proveedor</label>
+          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Proveedor</label>
           <select
             name="id_proveedor"
             className="form-select"

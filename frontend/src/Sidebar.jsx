@@ -104,12 +104,11 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
       ]
     },
     {
-      key: "formacion", icon: "🎓", text: "Formación", show: esAdmin,
+      key: "formacion", icon: "📚", text: "Formación",
+      show: esAdmin,
       items: [
-        { icon: "📚", text: "Programas", path: "/programas", show: true },
+        { icon: "🎓", text: "Programas", path: "/programas", show: true },
         { icon: "📋", text: "Fichas", path: "/fichas", show: true },
-        { icon: "🎓", text: "Aprendices", path: "/aprendices", show: true },
-        { icon: "👨‍🏫", text: "Instructores", path: "/instructores", show: true },
       ]
     },
     {
