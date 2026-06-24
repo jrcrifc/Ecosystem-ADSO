@@ -184,6 +184,16 @@ try {
       NOT NULL DEFAULT 'pendiente';
     `).catch(err => console.warn("⚠️ Advertencia al sincronizar ENUM en DB:", err.message));
 
+    // Asegura que la columna tipo_documento exista en la tabla usuarios
+    await db.query(`
+      ALTER TABLE usuarios 
+      ADD COLUMN tipo_documento VARCHAR(50) NULL DEFAULT 'CC';
+    `).catch(err => {
+      if (!err.message.toLowerCase().includes("duplicate column") && !err.message.toLowerCase().includes("already exists")) {
+        console.warn("⚠️ Advertencia al agregar tipo_documento a la tabla usuarios:", err.message);
+      }
+    });
+
     // Actualiza ENUM de instructores para soportar los nuevos y viejos valores temporalmente
     await db.query(`
       ALTER TABLE instructores

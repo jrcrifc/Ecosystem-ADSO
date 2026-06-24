@@ -85,3 +85,41 @@ body {
     transform: translateY(0) scale(1);
   }
 }
+
+/* Ajustes responsivos para el contenedor principal de contenido */
+.content-container {
+  padding: 24px 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .content-container {
+    padding: 16px 12px;
+  }
+}
+
+/* Ajustes responsivos para la barra superior (TopBar) */
+.topbar-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 12px 24px;
+  background: #fff;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 768px) {
+  .topbar-container {
+    padding: 10px 12px 10px 60px !important;
+    gap: 12px;
+  }
+  .topbar-user-text {
+    display: none !important;
+  }
+}

@@ -7,7 +7,7 @@ import apiAxios from "../api/axiosConfig.js";
 // Importa SweetAlert2 para alertas modales
 import Swal from "sweetalert2";
 // Importa íconos de react-icons para el formulario
-import { FaEnvelope, FaLock } from "react-icons/fa";
+import { FaIdCard, FaUser, FaLock } from "react-icons/fa";
 // Importa la imagen de fondo del laboratorio
 import fondoLaboratorio from "../Home/laboratorio.png";
 // Importa el logo de Ecosystem
@@ -19,7 +19,7 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
   const navigate = useNavigate();
 
   // Estado del formulario con documento y contraseña
-  const [form, setForm] = useState({ documento: "", password: "" });
+  const [form, setForm] = useState({ tipo_documento: "CC", documento: "", password: "" });
   // Estado para mostrar mensajes de error al usuario
   const [error, setError] = useState("");
   // Estado que indica si la petición de login está en curso
@@ -250,11 +250,22 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
 
         {/* Formulario de inicio de sesión */}
         <form onSubmit={gestionarLogin}>
-          {/* Campo de documento o correo */}
+          {/* Campo de tipo de documento */}
           <div className="mb-3 position-relative">
-            <FaEnvelope className="input-icon" style={{ position: "absolute", top: "12px", left: "15px", color: "#0077B6" }} />
+            <FaIdCard className="input-icon" style={{ position: "absolute", top: "12px", left: "15px", color: "#0077B6" }} />
+            <select name="tipo_documento" value={form.tipo_documento} onChange={handleChange}
+              className="form-control ps-5" required style={{ ...inputStyle, appearance: "auto" }}>
+              <option value="CC">Cédula de Ciudadanía</option>
+              <option value="TI">Tarjeta de Identidad</option>
+              <option value="CE">Cédula de Extranjería</option>
+            </select>
+          </div>
+
+          {/* Campo de documento */}
+          <div className="mb-3 position-relative">
+            <FaUser className="input-icon" style={{ position: "absolute", top: "12px", left: "15px", color: "#0077B6" }} />
             <input type="text" name="documento" value={form.documento} onChange={handleChange}
-              className="form-control ps-5" placeholder="Documento o Correo" required style={inputStyle} />
+              className="form-control ps-5" placeholder="Número de Documento" required style={inputStyle} />
           </div>
 
           {/* Campo de contraseña */}
@@ -276,7 +287,7 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
           <p className="mt-3" style={{ color: "#334155", fontSize: "14px" }}>
             ¿Eres Pasante o Gestor?{" "}
             <span onClick={() => navigate("/register")}
-              style={{ color: "#0077B6", fontWeight: "bold", cursor: "pointer" }}>
+              style={{ color: "#334155", fontWeight: "bold", cursor: "pointer" }}>
               Regístrate aquí
             </span>
           </p>

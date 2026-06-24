@@ -69,7 +69,7 @@ class UserService {
   // Registra un nuevo usuario en el sistema con validaciones del lado del servidor
   async registerUser(data) {
     // Desestructura los datos del formulario de registro
-    let { documento, nombres_apellidos, email, rol, id_ficha, id_programa } = data;
+    let { tipo_documento, documento, nombres_apellidos, email, rol, id_ficha, id_programa } = data;
     // Limpia y normaliza espacios y minúsculas en los campos de texto
     documento = (documento || "").trim();
     nombres_apellidos = (nombres_apellidos || "").trim();
@@ -99,6 +99,7 @@ class UserService {
     // Crea el usuario en la base de datos con estado pendiente por defecto
     const user = await UserModel.create({
       uuid: uuidv4(),
+      tipo_documento: tipo_documento || 'CC',
       documento,
       nombres_apellidos,
       email,
@@ -498,6 +499,7 @@ class UserService {
         // Crea el usuario en la base de datos con estado aprobado automáticamente
         const nuevoUsuario = await UserModel.create({
           uuid: uuidv4(),
+          tipo_documento: tipo_documento || 'CC',
           documento,
           nombres_apellidos,
           email,

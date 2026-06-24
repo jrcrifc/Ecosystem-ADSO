@@ -326,7 +326,7 @@ function App() {
           />
         )}
         {/* Contenedor del contenido con ancho máximo centrado */}
-        <div style={{ padding: "24px 32px", maxWidth: "1200px", margin: "0 auto" }}>
+        <div className="content-container">
           {/* Define todas las rutas de la aplicación */}
           <Routes>
 

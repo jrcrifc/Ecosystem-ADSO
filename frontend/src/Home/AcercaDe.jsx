@@ -69,16 +69,16 @@ const AcercaDe = () => {
                 {/*
                   Botón que abre Google Maps en una nueva pestaña
                 */}
-                <a 
-                  href="https://www.google.com/maps/search/?api=1&query=SENA+Centro+Agropecuario+La+Granja+Espinal+Tolima" 
-                  target="_blank" 
+                <a
+                  href="https://www.google.com/maps/search/?api=1&query=SENA+Centro+Agropecuario+La+Granja+Espinal+Tolima"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="btn"
-                  style={{ 
-                    borderRadius: "14px", 
-                    fontWeight: "800", 
-                    fontSize: "14px", 
-                    color: "#0077B6", 
+                  style={{
+                    borderRadius: "14px",
+                    fontWeight: "800",
+                    fontSize: "14px",
+                    color: "#0077B6",
                     background: "#ffffff",
                     padding: "12px 24px",
                     boxShadow: "0 10px 20px rgba(0,0,0,0.1)",
@@ -97,12 +97,12 @@ const AcercaDe = () => {
                 Panel derecho con mapa interactivo embebido de Google Maps
               */}
               <div className="col-lg-7 p-0" style={{ minHeight: "380px" }}>
-                <iframe 
-                  src="https://maps.google.com/maps?q=SENA%20Centro%20Agropecuario%20La%20Granja%20Espinal&t=&z=17&ie=UTF8&iwloc=&output=embed" 
-                  width="100%" 
-                  height="100%" 
-                  style={{ border: 0, minHeight: "380px", display: "block" }} 
-                  allowFullScreen="" 
+                <iframe
+                  src="https://maps.google.com/maps?q=SENA%20Centro%20Agropecuario%20La%20Granja%20Espinal&t=&z=17&ie=UTF8&iwloc=&output=embed"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0, minHeight: "380px", display: "block" }}
+                  allowFullScreen=""
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                 ></iframe>
@@ -127,10 +127,10 @@ const AcercaDe = () => {
               { r: "Gerente del Proyecto y Full Stack", n: "Miguel Santiago Bocanegra Useche", img: "Miguel santiago Bocanegra Useche.jpeg" },
               { r: "Subgerente", n: "Luis Fernando Pinto Niño", img: "Luis fernando pinto niño.jpeg" },
               { r: "Especialista Frontend", n: "Christiam Ivan Mosquera Cantor", img: "Christiam Ivan Mosquera Cantor.jpeg" },
-              { r: "Especialista Backend", n: "Juan Pablo Tocarema Avila", img: null }
+              { r: "Especialista Backend", n: "Juan Pablo Tocarema Avila", img: "tocarema.jpeg" }
             ].map((m, i) => {
               // Construye la URL de la imagen del desarrollador o null si no tiene foto
-              const imgUrl = m.img ? `http://localhost:8000/uploads/${m.img}` : null;
+              const imgUrl = m.img ? `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/uploads/${m.img}` : null;
               // Calcula las iniciales del nombre para el placeholder
               const initials = m.n.split(" ").map(w => w[0]).join("").substring(0, 2).toUpperCase();
               return (
@@ -138,10 +138,10 @@ const AcercaDe = () => {
                   {/*
                     Tarjeta del desarrollador con efecto de elevación al hover
                   */}
-                  <div 
-                    className="card border-0 shadow-sm p-4 text-center h-100" 
-                    style={{ 
-                      borderRadius: "20px", 
+                  <div
+                    className="card border-0 shadow-sm p-4 text-center h-100"
+                    style={{
+                      borderRadius: "20px",
                       transition: "transform 0.3s ease, box-shadow 0.3s ease",
                       background: "#ffffff",
                       border: "1px solid #e2e8f0"
@@ -162,28 +162,28 @@ const AcercaDe = () => {
                         Muestra la foto del desarrollador si existe, o las iniciales como placeholder
                       */}
                       {imgUrl ? (
-                        <img 
-                          src={imgUrl} 
-                          alt={m.n} 
-                          style={{ 
-                            width: "100%", 
-                            height: "280px", 
-                            borderRadius: "16px", 
-                            objectFit: "cover", 
+                        <img
+                          src={imgUrl}
+                          alt={m.n}
+                          style={{
+                            width: "100%",
+                            height: "280px",
+                            borderRadius: "16px",
+                            objectFit: "cover",
                             border: "3px solid #0077B6",
                             boxShadow: "0 8px 24px rgba(0, 119, 182, 0.15)"
-                          }} 
+                          }}
                         />
                       ) : (
                         // Placeholder con iniciales cuando no hay foto disponible
-                        <div style={{ 
-                          width: "100%", 
-                          height: "280px", 
-                          background: "#0077B6", 
-                          borderRadius: "16px", 
-                          display: "flex", 
-                          alignItems: "center", 
-                          justifyContent: "center", 
+                        <div style={{
+                          width: "100%",
+                          height: "280px",
+                          background: "#0077B6",
+                          borderRadius: "16px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
                           fontSize: "56px",
                           fontWeight: "800",
                           color: "#ffffff",
@@ -201,12 +201,12 @@ const AcercaDe = () => {
                     {/*
                       Badge con el rol del desarrollador
                     */}
-                    <span 
-                      className="px-3 py-1 d-inline-block rounded-pill" 
-                      style={{ 
-                        fontSize: "12px", 
-                        fontWeight: "700", 
-                        color: "#0077B6", 
+                    <span
+                      className="px-3 py-1 d-inline-block rounded-pill"
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: "700",
+                        color: "#0077B6",
                         border: "1px solid #0077B6",
                         background: "transparent",
                         width: "fit-content",
@@ -242,13 +242,13 @@ const AcercaDe = () => {
                   {/*
                     Tarjeta de instalación clickeable que abre el lightbox
                   */}
-                  <div 
-                    className="card border-0 shadow-sm overflow-hidden" 
-                    style={{ 
-                      borderRadius: "16px", 
-                      height: "100%", 
+                  <div
+                    className="card border-0 shadow-sm overflow-hidden"
+                    style={{
+                      borderRadius: "16px",
+                      height: "100%",
                       cursor: "pointer",
-                      transition: "transform 0.3s ease, box-shadow 0.3s ease" 
+                      transition: "transform 0.3s ease, box-shadow 0.3s ease"
                     }}
                     // Al hacer clic abre la foto en el lightbox con su título
                     onClick={() => setLightboxPhoto({ src: ins.img, caption: ins.title })}
@@ -265,10 +265,10 @@ const AcercaDe = () => {
                     {/*
                       Imagen de la instalación
                     */}
-                    <img 
-                      src={ins.img} 
-                      alt={ins.title} 
-                      style={{ height: "380px", objectFit: "cover", width: "100%" }} 
+                    <img
+                      src={ins.img}
+                      alt={ins.title}
+                      style={{ height: "380px", objectFit: "cover", width: "100%" }}
                     />
                     {/*
                       Pie con el título de la imagen
@@ -317,13 +317,13 @@ const AcercaDe = () => {
       {/*
         Footer institucional con datos del SENA
       */}
-      <footer 
-        className="text-center mt-5 p-4" 
-        style={{ 
-          background: "#0077B6", 
-          color: "#ffffff", 
-          borderRadius: "20px", 
-          fontSize: "14px", 
+      <footer
+        className="text-center mt-5 p-4"
+        style={{
+          background: "#0077B6",
+          color: "#ffffff",
+          borderRadius: "20px",
+          fontSize: "14px",
           fontWeight: "600",
           boxShadow: "0 8px 24px rgba(0, 119, 182, 0.2)"
         }}

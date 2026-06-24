@@ -336,14 +336,14 @@ export default function Campanita({ userData, onAprobado, userRol }) {
           </div>
 
           {/* Lista de notificaciones */}
-          <div style={{ overflowX: "auto", display: "flex", flexDirection: "column", flex: 1 }}>
+          <div style={{ overflowY: "auto", display: "flex", flexDirection: "column", flex: 1 }}>
             {/* Mensaje si no hay notificaciones */}
             {notificaciones.length === 0 ? (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#94a3b8" }}>
                 <div style={{ fontSize: "32px", marginBottom: "8px" }}>🔕</div>
                 <p style={{ margin: 0, fontSize: "14px" }}>Sin notificaciones</p>
               </div>
-            ) : (verTodas ? notificaciones : notificaciones.slice(0, 5)).map(n => (
+            ) : (verTodas ? notificaciones : notificaciones.slice(0, 1)).map(n => (
               // Elemento de notificacion individual
               <div key={n.id_notificacion} style={{
                 padding: "14px 20px",
@@ -397,8 +397,8 @@ export default function Campanita({ userData, onAprobado, userRol }) {
               </div>
             ))}
 
-            {/* Boton Ver todas / Ver menos cuando hay mas de 5 notificaciones */}
-            {notificaciones.length > 5 && (
+            {/* Boton Ver todas / Ver menos cuando hay mas de 1 notificaciones */}
+            {notificaciones.length > 1 && (
               <button
                 onClick={() => setVerTodas(prev => !prev)}
                 style={{
@@ -411,7 +411,7 @@ export default function Campanita({ userData, onAprobado, userRol }) {
                 onMouseEnter={(e) => { e.currentTarget.style.background = "#e2e8f0"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = "#f8fafc"; }}
               >
-                {verTodas ? `Mostrar menos ▲` : `Ver todas (${notificaciones.length}) ▼`}
+                {verTodas ? `Ver menos ▲` : `Ver más...`}
               </button>
             )}
           </div>

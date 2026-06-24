@@ -53,6 +53,13 @@ const UserModel = sequelize.define('usuarios', {
     defaultValue: 'pendiente'
   },
   
+  // Campo tipo_documento - tipo de documento de identidad
+  tipo_documento: {
+    type: DataTypes.STRING(50),
+    allowNull: true,
+    defaultValue: 'CC'
+  },
+  
 
   
   // Campo id_ficha - relación con tabla fichas para pasantes/gestores si aplica

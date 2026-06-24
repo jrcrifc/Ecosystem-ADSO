@@ -2,6 +2,7 @@
 import React from "react";
 // Importa Link de React Router para navegación sin recargar la página
 import { Link } from "react-router-dom";
+import { FaPowerOff } from "react-icons/fa";
 import Campanita from "./FormularioAcceso/Campanita.jsx";
 
 // Define el componente TopBar que renderiza la barra superior con perfil y notificaciones
@@ -17,19 +18,7 @@ const TopBar = ({ userData, userRol, logOut, onAprobado }) => {
 
   return (
     // Barra superior con diseño flex, fondo blanco y posición sticky
-    <div style={{
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "flex-end",
-      gap: "16px",
-      padding: "12px 24px",
-      background: "#fff",
-      borderBottom: "1px solid #e2e8f0",
-      position: "sticky",
-      top: 0,
-      zIndex: 50,
-      marginBottom: "8px",
-    }}>
+    <div className="topbar-container">
 
       {/* Notificaciones */}
       <Campanita userData={userData} onAprobado={onAprobado} userRol={userRol} />
@@ -55,7 +44,7 @@ const TopBar = ({ userData, userRol, logOut, onAprobado }) => {
             {userName ? userName.charAt(0).toUpperCase() : "?"}
           </div>
           {/* Contenedor con nombre y rol */}
-          <div>
+          <div className="topbar-user-text">
             {/* Nombre completo del usuario */}
             <p style={{
               margin: 0, fontSize: "13px", fontWeight: "600", color: "#0f172a",
@@ -88,7 +77,7 @@ const TopBar = ({ userData, userRol, logOut, onAprobado }) => {
         onMouseLeave={(e) => { e.target.style.background = "transparent"; e.target.style.borderColor = "#fee2e2"; }}
       >
         {/* Ícono de apagado/encendido */}
-        ⏻
+        <FaPowerOff />
       </button>
     </div>
   );

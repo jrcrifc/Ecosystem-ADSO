@@ -16,6 +16,7 @@ const Register = () => {
 
   // Estado del formulario con todos los campos de registro (sin password, ya que será el documento)
   const [form, setForm] = useState({
+    tipo_documento: "CC",
     documento: "",
     nombres_apellidos: "",
     email: "",
@@ -126,6 +127,7 @@ const Register = () => {
     try {
       // Construye el payload con los datos del formulario
       const data = {
+        tipo_documento: form.tipo_documento,
         documento: docTrim,
         nombres_apellidos: nombreTrim,
         email: emailTrim,
@@ -140,6 +142,7 @@ const Register = () => {
       // Muestra mensaje de éxito y reinicia el formulario
       setSuccess("✅ Registro exitoso. Tu cuenta está en revisión por el administrador.");
       setForm({
+        tipo_documento: "CC",
         documento: "",
         nombres_apellidos: "",
         email: "",
@@ -297,7 +300,7 @@ const Register = () => {
         <form onSubmit={registrarUsuario}>
           {/* Selector de tipo de usuario con botones de opción */}
           <div className="mb-3">
-            <label style={{ fontSize: "12px", color: "#64748b", fontWeight: "600", marginBottom: "8px", display: "block" }}>¿Cuál es tu rol?</label>
+            <label style={{ fontSize: "12px", color: "#1f2937", fontWeight: "700", marginBottom: "8px", display: "block" }}>¿Cuál es tu rol?</label>
             <div style={{ display: "flex", gap: "8px" }}>
               {["Pasante", "Gestor"].map((rolValue) => (
                 // Botón de rol individual con estilo activo/inactivo
@@ -309,7 +312,7 @@ const Register = () => {
                     textAlign: "center", cursor: "pointer", fontSize: "11px", fontWeight: "700",
                     border: form.rol === rolValue ? "2px solid #0077B6" : "2px solid #f1f5f9",
                     background: form.rol === rolValue ? "#0077B6" : "#f8fafc",
-                    color: form.rol === rolValue ? "#fff" : "#64748b",
+                    color: form.rol === rolValue ? "#fff" : "#1f2937",
                     transition: "all 0.2s ease"
                   }}
                 >
@@ -319,19 +322,27 @@ const Register = () => {
             </div>
           </div>
 
-          {/* Campo de documento de identidad */}
+          {/* Tipo de Documento y Documento de Identidad */}
           <div className="row g-2 mb-2">
-            <div className="col-12">
-              <label className="mb-1" style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Documento de Identidad</label>
+            <div className="col-6">
+              <label className="mb-1" style={{ fontSize: "12px", fontWeight: "700", color: "#1f2937" }}>Tipo de Documento</label>
+              <select className="form-control" name="tipo_documento" value={form.tipo_documento} onChange={handleChange} required style={inputStyle}>
+                <option value="CC">Cédula de Ciudadanía</option>
+                <option value="TI">Tarjeta de Identidad</option>
+                <option value="CE">Cédula de Extranjería</option>
+              </select>
+            </div>
+            <div className="col-6">
+              <label className="mb-1" style={{ fontSize: "12px", fontWeight: "700", color: "#1f2937" }}>Documento de Identidad</label>
               <input className="form-control" name="documento" placeholder="Ingresa solo números"
-                value={form.documento} onChange={handleChange} required style={inputStyle} maxLength={11} />
+                value={form.documento} onChange={handleChange} required style={inputStyle} maxLength={10} />
               {fieldErrors.documento && <div style={errorStyle}>{fieldErrors.documento}</div>}
             </div>
           </div>
 
           {/* Campo de nombres y apellidos */}
           <div className="mb-2">
-            <label className="mb-1" style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Nombres y Apellidos Completos</label>
+            <label className="mb-1" style={{ fontSize: "12px", fontWeight: "700", color: "#1f2937" }}>Nombres y Apellidos Completos</label>
             <input className="form-control" name="nombres_apellidos" placeholder="Ej: Juan Pérez"
               value={form.nombres_apellidos} onChange={handleChange} required style={inputStyle} />
             {fieldErrors.nombres_apellidos && <div style={errorStyle}>{fieldErrors.nombres_apellidos}</div>}
@@ -339,7 +350,7 @@ const Register = () => {
 
           {/* Campo de correo electrónico */}
           <div className="mb-2">
-            <label className="mb-1" style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Correo Electrónico</label>
+            <label className="mb-1" style={{ fontSize: "12px", fontWeight: "700", color: "#1f2937" }}>Correo Electrónico</label>
             <input className="form-control" type="email" name="email" placeholder="ejemplo@gmail.com"
               value={form.email} onChange={handleChange} required style={inputStyle} />
             {fieldErrors.email && <div style={errorStyle}>{fieldErrors.email}</div>}
@@ -348,7 +359,7 @@ const Register = () => {
           {/* Selectores de Programa y Ficha */}
           <div className="row g-2 mb-4 mt-2">
             <div className="col-6">
-              <label className="mb-1" style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Programa</label>
+              <label className="mb-1" style={{ fontSize: "12px", fontWeight: "700", color: "#1f2937" }}>Programa</label>
               <select className="form-control" name="id_programa" value={form.id_programa} onChange={handleChange} required style={inputStyle}>
                 <option value="">Selecciona un Programa</option>
                 {programas.map(p => (
@@ -357,7 +368,7 @@ const Register = () => {
               </select>
             </div>
             <div className="col-6">
-              <label className="mb-1" style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Ficha</label>
+              <label className="mb-1" style={{ fontSize: "12px", fontWeight: "700", color: "#1f2937" }}>Ficha</label>
               <select className="form-control" name="id_ficha" value={form.id_ficha} onChange={handleChange} required style={inputStyle} disabled={!form.id_programa}>
                 <option value="">Selecciona una Ficha</option>
                 {fichasFiltradas.map(f => (
@@ -380,7 +391,7 @@ const Register = () => {
           </button>
 
           {/* Enlace a la página de inicio de sesión */}
-          <p className="mt-4 text-center" style={{ fontSize: "13px", color: "#64748b" }}>
+          <p className="mt-4 text-center" style={{ fontSize: "13px", color: "#1f2937" }}>
             ¿Ya tienes cuenta?{" "}
             <span style={{ color: "#0077B6", cursor: "pointer", fontWeight: "700", textDecoration: "underline" }}
               onClick={() => navigate("/UserLogin")}>

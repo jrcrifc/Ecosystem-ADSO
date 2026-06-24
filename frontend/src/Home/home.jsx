@@ -108,22 +108,110 @@ const Home = () => {
   return (
     <div style={{ fontFamily: "'Inter', 'Segoe UI', sans-serif", background: "#f0f7ff", minHeight: "100vh", padding: "20px" }}>
 
-      {/* Define la animación fadeUp para las secciones */}
+      {/* Define la animación fadeUp y estilos del Hero para las secciones */}
       <style>{`
         @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+
+        .home-hero {
+          position: relative;
+          border-radius: 24px;
+          overflow: hidden;
+          min-height: 320px;
+          display: flex;
+          align-items: center;
+          background: linear-gradient(135deg, #023E8A 0%, #0077B6 50%, #0096C7 100%);
+          margin-bottom: 30px;
+          box-shadow: 0 20px 40px rgba(2,62,138,0.2);
+          transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+          width: 100%;
+        }
+
+        .home-hero-content {
+          position: relative;
+          z-index: 2;
+          padding: 40px;
+          max-width: 600px;
+        }
+
+        .home-hero-title {
+          color: #fff;
+          font-size: 38px;
+          font-weight: 800;
+          margin: 0 0 10px;
+          line-height: 1.2;
+        }
+
+        .home-hero-logo-container {
+          position: absolute;
+          right: 40px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 120px;
+          height: 120px;
+          border-radius: 24px;
+          background: rgba(255,255,255,0.1);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid rgba(255,255,255,0.1);
+          backdrop-filter: blur(10px);
+          transition: all 0.3s ease;
+        }
+
+        .home-hero-logo {
+          width: 80px;
+          height: 80px;
+          border-radius: 14px;
+        }
+
+        @media (max-width: 768px) {
+          .home-hero {
+            flex-direction: column;
+            align-items: center;
+            min-height: auto;
+            padding: 30px 20px;
+          }
+
+          .home-hero-content {
+            padding: 0;
+            max-width: 100%;
+            text-align: center;
+          }
+
+          .home-hero-title {
+            font-size: 26px;
+          }
+
+          .home-hero-logo-container {
+            position: relative;
+            right: auto;
+            top: auto;
+            transform: none;
+            margin-top: 24px;
+            width: 100px;
+            height: 100px;
+            border-radius: 20px;
+            align-self: center;
+          }
+
+          .home-hero-logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+          }
+        }
       `}</style>
 
       {/* Hero de bienvenida con gradiente azul y animación de entrada */}
-      <div style={{
-        position: "relative", borderRadius: "24px", overflow: "hidden",
-        minHeight: "320px", display: "flex", alignItems: "center",
-        background: "linear-gradient(135deg, #023E8A 0%, #0077B6 50%, #0096C7 100%)",
-        opacity: heroVisible ? 1 : 0, transform: heroVisible ? "translateY(0)" : "translateY(20px)",
-        transition: "all 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
-        marginBottom: "30px", boxShadow: "0 20px 40px rgba(2,62,138,0.2)"
-      }}>
+      <div
+        className="home-hero"
+        style={{
+          opacity: heroVisible ? 1 : 0,
+          transform: heroVisible ? "translateY(0)" : "translateY(20px)"
+        }}
+      >
         {/* Contenido textual del hero */}
-        <div style={{ position: "relative", zIndex: 2, padding: "40px", maxWidth: "600px" }}>
+        <div className="home-hero-content">
           {/* Etiqueta SENA Laboratorio Ambiental */}
           <div style={{
             display: "inline-flex", alignItems: "center", gap: "8px",
@@ -137,7 +225,7 @@ const Home = () => {
           </div>
 
           {/* Saludo personalizado al usuario */}
-          <h1 style={{ color: "#fff", fontSize: "38px", fontWeight: "800", margin: "0 0 10px" }}>
+          <h1 className="home-hero-title">
             Hola, {userName.split(" ")[0]} 👋
           </h1>
 
@@ -159,14 +247,8 @@ const Home = () => {
         </div>
 
         {/* Logo flotante de Ecosystem en la esquina derecha */}
-        <div style={{
-          position: "absolute", right: "40px", top: "50%", transform: "translateY(-50%)",
-          width: "120px", height: "120px", borderRadius: "24px",
-          background: "rgba(255,255,255,0.1)", display: "flex",
-          alignItems: "center", justifyContent: "center",
-          border: "1px solid rgba(255,255,255,0.1)", backdropFilter: "blur(10px)"
-        }}>
-          <img src={ecosystemLogo} alt="Ecosystem" style={{ width: "80px", height: "80px", borderRadius: "14px" }} />
+        <div className="home-hero-logo-container">
+          <img src={ecosystemLogo} alt="Ecosystem" className="home-hero-logo" />
         </div>
       </div>
 

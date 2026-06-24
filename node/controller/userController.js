@@ -17,7 +17,7 @@ export const RegisterUser = async (req, res) => {
   // Ejecuta el bloque en try-catch para manejar errores
   try {
     // Extrae los campos del cuerpo de la petición
-    const { documento, nombres_apellidos, email, password, rol, numero_ficha, nombre_ficha, es_sena_empresa } = req.body;
+    const { tipo_documento, documento, nombres_apellidos, email, password, rol, numero_ficha, nombre_ficha, es_sena_empresa } = req.body;
     // Valida que los campos obligatorios estén presentes
     if (!documento || !nombres_apellidos || !email || !password || !rol) {
       // Responde con error 400 si faltan campos obligatorios
@@ -25,6 +25,7 @@ export const RegisterUser = async (req, res) => {
     }
     // Llama al servicio para registrar el usuario con los datos proporcionados
     const user = await UserService.registerUser({ 
+      tipo_documento,
       documento, 
       nombres_apellidos, 
       email, 

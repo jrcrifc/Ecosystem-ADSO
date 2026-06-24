@@ -3,8 +3,8 @@ import axios from "axios";
 
 // Crea una instancia personalizada de Axios con la URL base del servidor
 const apiAxios = axios.create({
-  // Toma la URL desde las variables de entorno de Vite, con fallback a localhost:8000
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000",
+  // Toma la URL desde las variables de entorno de Vite, con fallback a /api
+  baseURL: import.meta.env.VITE_API_URL || "/api",
   // Define el tipo de contenido JSON para todas las peticiones
   headers: {
     "Content-Type": "application/json",
