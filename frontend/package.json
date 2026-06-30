@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/is-prop-valid": "^1.4.0",
     "axios": "^1.13.1",
     "bootstrap": "^5.3.8",
     "jspdf": "^4.2.1",
@@ -21,6 +22,7 @@
     "react-router-dom": "^7.9.5",
     "recharts": "^3.8.1",
     "socket.io-client": "^4.8.3",
+    "styled-components": "^6.4.3",
     "sweetalert2": "^11.26.3",
     "sweetalert2-react-content": "^5.1.0",
     "xlsx": "^0.18.5"

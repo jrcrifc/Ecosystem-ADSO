@@ -123,3 +123,11 @@ body {
     display: none !important;
   }
 }
+
+/* Ajustes responsivos globales para tablas */
+table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}

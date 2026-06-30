@@ -66,9 +66,9 @@ const TopBar = ({ userData, userRol, logOut, onAprobado }) => {
         title="Cerrar sesión"
         style={{
           background: "transparent", border: "1px solid #fee2e2",
-          borderRadius: "8px", padding: "6px 10px",
+          borderRadius: "8px", padding: "6px 12px",
           cursor: "pointer", color: "#ef4444", fontSize: "14px",
-          display: "flex", alignItems: "center", justifyContent: "center",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
           transition: "all 0.2s ease",
         }}
         // Cambia el fondo y borde al pasar el mouse
@@ -78,6 +78,7 @@ const TopBar = ({ userData, userRol, logOut, onAprobado }) => {
       >
         {/* Ícono de apagado/encendido */}
         <FaPowerOff />
+        <span className="d-none d-sm-block" style={{ fontWeight: "600", fontSize: "13px" }}>Cerrar sesión</span>
       </button>
     </div>
   );

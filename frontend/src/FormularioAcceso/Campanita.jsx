@@ -153,7 +153,7 @@ export default function Campanita({ userData, onAprobado, userRol }) {
 
       // Guarda todas las notificaciones en el estado
       setNotificaciones(nuevas);
-    } catch { }
+    } catch (e) { console.error("Error cargando notificaciones", e); }
   };
 
   // ===== Marcar todas las notificaciones como leidas =====
@@ -165,7 +165,7 @@ export default function Campanita({ userData, onAprobado, userRol }) {
       await apiAxios.put(`/api/notificaciones/${id_usuario}/todas-leidas`);
       // Actualiza el estado local marcando todas como leidas
       setNotificaciones(prev => prev.map(n => ({ ...n, leida: true })));
-    } catch { }
+    } catch (e) { console.error("Error al marcar todas como leídas", e); }
   };
 
   // ===== Manejar clic en notificacion: marcar leida y redirigir =====
@@ -179,7 +179,7 @@ export default function Campanita({ userData, onAprobado, userRol }) {
         setNotificaciones(prev => prev.map(x =>
           x.id_notificacion === n.id_notificacion ? { ...x, leida: true } : x
         ));
-      } catch { }
+      } catch (e) { console.error("Error al marcar como leída", e); }
     }
 
     // Redirige segun el tipo de notificacion

@@ -30,12 +30,12 @@ const EstadoEquipoForm = ({ selectedEstado, refreshData, hideModal }) => {
         // Actualiza el estado existente vía PUT
         const res = await apiAxios.put(`/api/estadoequipo/${selectedEstado.id_estado_equipo}`, data);
         Swal.fire("¡Éxito!", "Estado actualizado", "success");
-        if (typeof onSaved === 'function') onSaved(res.data, true);
+        if (typeof refreshData === 'function') refreshData(res.data, true);
       } else {
         // Crea un nuevo estado vía POST
         const res = await apiAxios.post("/api/estadoequipo", data);
         Swal.fire("¡Éxito!", "Estado creado", "success");
-        if (typeof onSaved === 'function') onSaved(res.data, false);
+        if (typeof refreshData === 'function') refreshData(res.data, false);
       }
       hideModal();
     } catch (error) {
