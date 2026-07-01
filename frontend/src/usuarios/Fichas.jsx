@@ -133,10 +133,10 @@ export default function Fichas() {
       const res = await apiAxios.post("/api/fichas/importar-excel", formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
-      const { creados, omitidos, errores } = res.data;
+      const { creados, actualizados, errores } = res.data;
       let html = `<div style="text-align:left;font-size:14px">
         <p style="color:#2e7d32;font-weight:600">✅ Creadas: ${creados || 0}</p>
-        <p style="color:#64748b">ℹ️ Omitidas: ${omitidos || 0}</p>`;
+        <p style="color:#023E8A;font-weight:600">🔄 Actualizadas: ${actualizados || 0}</p>`;
       if (errores?.length > 0) {
         html += `<hr/><p style="color:#c62828;font-weight:bold">⚠️ Errores (${errores.length}):</p>
           <div style="max-height:150px;overflow-y:auto;background:#fff1f2;border:1px solid #fecdd3;border-radius:8px;padding:10px;font-size:11px;font-family:monospace;color:#9f1239">
@@ -209,7 +209,7 @@ export default function Fichas() {
           <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
             <thead>
               <tr style={{ background: '#f8fafc' }}>
-                {['N° Ficha', 'Programa', 'Lectiva', 'Estado', 'Acciones'].map(h => (
+                {['N° Ficha', 'Programa', 'Fecha Inicio Lectiva', 'Fecha Fin Lectiva', 'Estado', 'Acciones'].map(h => (
                   <th key={h} style={{ padding: '12px 16px', fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>{h}</th>
                 ))}
               </tr>
@@ -226,7 +226,10 @@ export default function Fichas() {
                     {f.programa?.nombre_programa || <span style={{ color: '#94a3b8', fontSize: '12px' }}>Sin programa</span>}
                   </td>
                   <td style={{ padding: '14px 16px', color: '#64748b', fontSize: '11px' }}>
-                    {f.fecha_inicio && f.fecha_fin ? `${f.fecha_inicio} a ${f.fecha_fin}` : 'No definida'}
+                    {f.fecha_inicio ? f.fecha_inicio : '-'}
+                  </td>
+                  <td style={{ padding: '14px 16px', color: '#64748b', fontSize: '11px' }}>
+                    {f.fecha_fin ? f.fecha_fin : '-'}
                   </td>
 
                   <td style={{ padding: '14px 16px' }}>

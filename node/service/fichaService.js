@@ -116,7 +116,7 @@ class FichaService {
     const workbook = XLSX.read(buffer, { type: 'buffer', cellDates: true });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const data = XLSX.utils.sheet_to_json(sheet);
-    let creados = 0, omitidos = 0, errores = [];
+    let creados = 0, actualizados = 0, errores = [];
 
     for (let i = 0; i < data.length; i++) {
       const row = data[i];
@@ -145,10 +145,18 @@ class FichaService {
         continue;
       }
 
-      try {
-        const existe = await FichaModel.findOne({ where: { numero_ficha } });
-        if (existe) { omitidos++; continue; }
+      // Extraer solo la parte entera (sin decimales)
+      if (numero_ficha.includes('.')) {
+        numero_ficha = numero_ficha.split('.')[0];
+      }
 
+      // Validar que sea un número entero válido
+      if (!/^\d+$/.test(numero_ficha)) {
+        errores.push(`Fila ${filaNum}: "${numero_ficha}" no es un número de ficha válido`);
+        continue;
+      }
+
+      try {
         let id_programa = null;
         if (nombre_programa) {
           const [programa] = await ProgramaModel.findOrCreate({
@@ -156,6 +164,18 @@ class FichaService {
             defaults: { estado: true }
           });
           id_programa = programa.id_programa;
+        }
+
+        const existe = await FichaModel.findOne({ where: { numero_ficha } });
+        if (existe) { 
+          await existe.update({
+            id_programa: id_programa || existe.id_programa,
+            fecha_inicio: fecha_inicio || existe.fecha_inicio,
+            fecha_fin: fecha_fin || existe.fecha_fin,
+            estado: true
+          });
+          actualizados++; 
+          continue; 
         }
 
         await FichaModel.create({
@@ -170,7 +190,7 @@ class FichaService {
         errores.push(`Fila ${filaNum} (${numero_ficha}): ${err.message}`);
       }
     }
-    return { creados, omitidos, errores };
+    return { creados, omitidos: 0, actualizados, errores };
   }
 }
 

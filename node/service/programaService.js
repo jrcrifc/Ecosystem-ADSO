@@ -1,11 +1,19 @@
 // Servicio para gestionar los programas de formación
 import ProgramaModel from "../models/programaModel.js";
+import FichaModel from "../models/fichaModel.js";
 import XLSX from "xlsx";
 
 class ProgramaService {
-  // Obtiene todos los programas activos
+  // Obtiene todos los programas activos con sus fichas asociadas
   async getAll() {
-    return await ProgramaModel.findAll({ where: { estado: true } });
+    return await ProgramaModel.findAll({
+      where: { estado: true },
+      include: [{
+        model: FichaModel,
+        as: 'fichas',
+        attributes: ['id_ficha', 'numero_ficha', 'fecha_inicio', 'fecha_fin', 'estado']
+      }]
+    });
   }
 
   // Crea un nuevo programa
