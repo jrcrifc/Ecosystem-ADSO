@@ -73,7 +73,7 @@ export default function Aprendices() {
           <p style="font-weight:700;color:#0077B6;border-bottom:1px solid #e2e8f0;padding-bottom:4px">📝 Datos Básicos</p>
           <p><strong>📄 Documento:</strong> ${a.tipo_documento ? a.tipo_documento + ' ' : ''}${a.documento}</p>
           <p><strong>📧 Email:</strong> ${a.email || a.usuario?.email || 'N/A'}</p>
-          <p><strong>📋 Ficha:</strong> ${a.ficha?.numero_ficha || 'Sin ficha'}</p>
+          <p><strong>📋 Ficha:</strong> ${a.ficha?.numero_ficha || 'Sin ficha'} ${a.ficha?.programa ? ' - ' + a.ficha.programa.nombre_programa : ''}</p>
           <p><strong>📅 Lectiva:</strong> ${a.ficha?.fecha_inicio && a.ficha?.fecha_fin ? `${a.ficha.fecha_inicio} a ${a.ficha.fecha_fin}` : 'No definida'}</p>
           
           <p style="font-weight:700;color:#0077B6;border-bottom:1px solid #e2e8f0;padding-bottom:4px;margin-top:12px">📋 Información Personal</p>
@@ -250,9 +250,16 @@ export default function Aprendices() {
                   </td>
                   <td style={{ padding: '14px 16px' }}>
                     {a.ficha ? (
-                      <span style={{ background: '#ecfdf5', color: '#059669', fontSize: '11px', fontWeight: '700', padding: '4px 12px', borderRadius: '99px' }}>
-                        📋 {a.ficha.numero_ficha}
-                      </span>
+                      <div>
+                        <span style={{ background: '#ecfdf5', color: '#059669', fontSize: '11px', fontWeight: '700', padding: '4px 12px', borderRadius: '99px' }}>
+                          📋 {a.ficha.numero_ficha}
+                        </span>
+                        {a.ficha.programa && (
+                          <div style={{ fontSize: '10px', color: '#64748b', marginTop: '4px', fontWeight: '600' }}>
+                            {a.ficha.programa.nombre_programa}
+                          </div>
+                        )}
+                      </div>
                     ) : <span style={{ color: '#94a3b8', fontSize: '12px' }}>Sin ficha</span>}
                   </td>
                   <td style={{ padding: '14px 16px', color: '#334155', fontSize: '13px' }}>{a.telefono || '—'}</td>

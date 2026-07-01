@@ -109,10 +109,10 @@ export default function Fichas() {
         <div style="text-align:left;font-size:14px;color:#475569;line-height:1.5">
           <p>Sube un archivo <strong>.xlsx</strong> o <strong>.xls</strong> con las columnas:</p>
           <ul style="padding-left:20px;font-size:13px">
-            <li><strong>numero_ficha</strong> (obligatorio, número único)</li>
-            <li><strong>nombre_programa</strong> (opcional, nombre del programa)</li>
-            <li><strong>fecha_inicio</strong> (opcional, formato AAAA-MM-DD)</li>
-            <li><strong>fecha_fin</strong> (opcional, formato AAAA-MM-DD)</li>
+            <li><strong>ficha</strong> o <strong>numero_ficha</strong> (obligatorio, número único)</li>
+            <li><strong>programa</strong> o <strong>nombre_programa</strong> (opcional, nombre del programa)</li>
+            <li><strong>fecha inicio lectiva</strong> o <strong>fecha_inicio</strong> (opcional)</li>
+            <li><strong>fecha fin lectiva</strong> o <strong>fecha_fin</strong> (opcional)</li>
           </ul>
           <p style="font-size:12px;color:#f59e0b;font-weight:600">Las fichas con número duplicado serán omitidas</p>
         </div>

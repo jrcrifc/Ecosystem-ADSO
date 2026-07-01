@@ -3,6 +3,72 @@ import FichaModel from "../models/fichaModel.js";
 import ProgramaModel from "../models/programaModel.js";
 import XLSX from "xlsx";
 
+function parseExcelDate(val) {
+  if (val === null || val === undefined) return null;
+
+  // If it's already a Date object
+  if (val instanceof Date) {
+    if (isNaN(val.getTime())) return null;
+    return val.toISOString().split('T')[0];
+  }
+
+  // If it's a number (Excel serial date)
+  if (typeof val === 'number' || (typeof val === 'string' && val.trim() !== "" && !isNaN(val))) {
+    const num = Number(val);
+    const date = new Date(Math.round((num - 25569) * 86400 * 1000));
+    if (!isNaN(date.getTime())) {
+      return date.toISOString().split('T')[0];
+    }
+  }
+
+  const str = String(val).trim();
+  if (!str) return null;
+
+  // Try to match YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    return str;
+  }
+
+  // Try to match DD/MM/YYYY or MM/DD/YYYY
+  const parts = str.split(/[-/]/);
+  if (parts.length === 3) {
+    let year = parts[2];
+    let month = parts[0];
+    let day = parts[1];
+    
+    if (year.length === 2) {
+      year = "20" + year;
+    }
+    
+    // If year is in parts[0] (YYYY/MM/DD)
+    if (parts[0].length === 4) {
+      year = parts[0];
+      month = parts[1];
+      day = parts[2];
+    } else if (parseInt(parts[0]) > 12) {
+      // It is DD/MM/YYYY
+      day = parts[0];
+      month = parts[1];
+    }
+    
+    month = month.padStart(2, '0');
+    day = day.padStart(2, '0');
+    
+    const formatted = `${year}-${month}-${day}`;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(formatted)) {
+      return formatted;
+    }
+  }
+
+  // Fallback to JS Date parser
+  const parsed = new Date(str);
+  if (!isNaN(parsed.getTime())) {
+    return parsed.toISOString().split('T')[0];
+  }
+
+  return null;
+}
+
 class FichaService {
   // Obtiene todas las fichas activas junto con su programa
   async getAll() {
@@ -47,7 +113,7 @@ class FichaService {
 
   // Importa fichas desde un archivo Excel
   async importarExcel(buffer) {
-    const workbook = XLSX.read(buffer, { type: 'buffer' });
+    const workbook = XLSX.read(buffer, { type: 'buffer', cellDates: true });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const data = XLSX.utils.sheet_to_json(sheet);
     let creados = 0, omitidos = 0, errores = [];
@@ -62,15 +128,15 @@ class FichaService {
 
       for (const key of Object.keys(row)) {
         const nk = key.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-        const val = String(row[key] ?? "").trim();
+        const val = row[key];
         if (nk === "numero_ficha" || nk === "ficha" || nk === "numero de ficha" || nk === "nro ficha") {
-          numero_ficha = val;
+          numero_ficha = String(val ?? "").trim();
         } else if (nk === "programa" || nk === "nombre_programa" || nk === "programa de formacion" || nk === "nombre del programa") {
-          nombre_programa = val;
-        } else if (nk === "fecha_inicio" || nk === "fecha de inicio" || nk === "fecha inicio" || nk === "inicio") {
-          fecha_inicio = val || null;
-        } else if (nk === "fecha_fin" || nk === "fecha de fin" || nk === "fecha fin" || nk === "fin") {
-          fecha_fin = val || null;
+          nombre_programa = String(val ?? "").trim();
+        } else if (nk === "fecha_inicio" || nk === "fecha de inicio" || nk === "fecha inicio" || nk === "inicio" || nk.includes("inicio lectiva") || nk.includes("fecha inicio")) {
+          fecha_inicio = parseExcelDate(val);
+        } else if (nk === "fecha_fin" || nk === "fecha de fin" || nk === "fecha fin" || nk === "fin" || nk.includes("fin lectiva") || nk.includes("fecha fin")) {
+          fecha_fin = parseExcelDate(val);
         }
       }
 

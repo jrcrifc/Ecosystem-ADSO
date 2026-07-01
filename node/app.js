@@ -218,6 +218,16 @@ try {
     process.exit(1);
 }
 
+// Iniciar tarea en segundo plano para inhabilitar aprendices expirados
+import aprendizService from './service/aprendizService.js';
+setInterval(() => {
+    aprendizService.inactivarExpirados();
+}, 1000 * 60 * 60 * 24); // Cada 24 horas
+
+setTimeout(() => {
+    aprendizService.inactivarExpirados();
+}, 1000 * 10); // A los 10 segundos de arrancar el servidor
+
 // Define el puerto del servidor desde variable de entorno o 8000 por defecto
 const PORT = process.env.PORT || 8000;
 

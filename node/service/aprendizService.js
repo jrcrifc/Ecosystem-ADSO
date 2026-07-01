@@ -2,6 +2,7 @@
 import AprendizModel from "../models/aprendizModel.js";
 import UserModel from "../models/userModel.js";
 import FichaModel from "../models/fichaModel.js";
+import ProgramaModel from "../models/programaModel.js";
 
 class AprendizService {
   // Obtiene todos los aprendices
@@ -9,7 +10,14 @@ class AprendizService {
     return await AprendizModel.findAll({
       include: [
         { model: UserModel, as: 'usuario', attributes: ['email', 'estado', 'documento', 'nombres_apellidos'] },
-        { model: FichaModel, as: 'ficha', attributes: ['numero_ficha', 'fecha_inicio', 'fecha_fin'] }
+        { 
+          model: FichaModel, 
+          as: 'ficha', 
+          attributes: ['numero_ficha', 'fecha_inicio', 'fecha_fin'],
+          include: [
+            { model: ProgramaModel, as: 'programa', attributes: ['nombre_programa'] }
+          ]
+        }
       ],
       order: [['id_aprendiz', 'DESC']]
     });
@@ -129,6 +137,37 @@ class AprendizService {
       await user.destroy();
     }
     return true;
+  }
+
+  // Inactivar automáticamente aprendices cuya ficha haya finalizado
+  async inactivarExpirados() {
+    try {
+      const { Op } = await import('sequelize');
+      const today = new Date().toISOString().split('T')[0];
+      
+      const fichasExpiradas = await FichaModel.findAll({
+        where: {
+          fecha_fin: { [Op.lt]: today }
+        }
+      });
+
+      if (fichasExpiradas.length > 0) {
+        const idsFichas = fichasExpiradas.map(f => f.id_ficha);
+        await UserModel.update(
+          { estado: 'inactivo' },
+          {
+            where: {
+              id_ficha: { [Op.in]: idsFichas },
+              rol: 'Aprendiz',
+              estado: 'aprobado'
+            }
+          }
+        );
+        console.log("✅ Aprendices expirados inhabilitados automáticamente.");
+      }
+    } catch (error) {
+      console.error("❌ Error al inhabilitar aprendices expirados:", error);
+    }
   }
 }
 
