@@ -176,41 +176,6 @@ try {
     // Verifica que la conexión a la base de datos funcione correctamente
     await db.authenticate();
     console.log('✅ Conexión a la base de datos establecida');
-    
-    // Ejecuta una consulta ALTER TABLE para asegurar que el ENUM de usuarios soporte el estado inactivo
-    await db.query(`
-      ALTER TABLE usuarios 
-      MODIFY COLUMN estado ENUM('pendiente', 'aprobado', 'rechazado', 'inactivo') 
-      NOT NULL DEFAULT 'pendiente';
-    `).catch(err => console.warn("⚠️ Advertencia al sincronizar ENUM en DB:", err.message));
-
-    // Asegura que la columna tipo_documento exista en la tabla usuarios
-    await db.query(`
-      ALTER TABLE usuarios 
-      ADD COLUMN tipo_documento VARCHAR(50) NULL DEFAULT 'CC';
-    `).catch(err => {
-      if (!err.message.toLowerCase().includes("duplicate column") && !err.message.toLowerCase().includes("already exists")) {
-        console.warn("⚠️ Advertencia al agregar tipo_documento a la tabla usuarios:", err.message);
-      }
-    });
-
-    // Actualiza ENUM de instructores para soportar los nuevos y viejos valores temporalmente
-    await db.query(`
-      ALTER TABLE instructores
-      MODIFY COLUMN tipo_vinculacion ENUM('Instructor de planta', 'Instructor por prestacion de servicios', 'Planta', 'Contrato') 
-      NULL DEFAULT NULL;
-    `).catch(err => console.warn("⚠️ Advertencia al sincronizar ENUM instructores en DB:", err.message));
-
-    // Migrar los antiguos a los nuevos valores
-    await db.query(`UPDATE instructores SET tipo_vinculacion = 'Instructor de planta' WHERE tipo_vinculacion = 'Planta';`).catch(()=>null);
-    await db.query(`UPDATE instructores SET tipo_vinculacion = 'Instructor por prestacion de servicios' WHERE tipo_vinculacion = 'Contrato';`).catch(()=>null);
-
-    // Luego dejar solo los correctos en el enum
-    await db.query(`
-      ALTER TABLE instructores
-      MODIFY COLUMN tipo_vinculacion ENUM('Instructor de planta', 'Instructor por prestacion de servicios') 
-      NULL DEFAULT NULL;
-    `).catch(err => console.warn("⚠️ Advertencia al limpiar ENUM instructores en DB:", err.message));
 } catch (error) {
     // Imprime el error de conexión en consola
     console.error('❌ Error al conectar a la base de datos:', error);
