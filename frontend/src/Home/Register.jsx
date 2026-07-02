@@ -30,13 +30,15 @@ const Register = () => {
   const [fichas, setFichas] = useState([]);
   const [fichasFiltradas, setFichasFiltradas] = useState([]);
 
-  // Cargar programas y fichas al montar el componente
+  // Cargar programas y fichas al montar el componente de manera paralela para mayor velocidad
   useEffect(() => {
     const fetchDatos = async () => {
       try {
-        const resProg = await apiAxios.get('/api/programas');
+        const [resProg, resFich] = await Promise.all([
+          apiAxios.get('/api/programas'),
+          apiAxios.get('/api/fichas')
+        ]);
         setProgramas(resProg.data);
-        const resFich = await apiAxios.get('/api/fichas');
         setFichas(resFich.data);
       } catch (error) {
         console.error("Error cargando programas o fichas", error);
