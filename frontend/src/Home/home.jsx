@@ -228,9 +228,9 @@ const Home = () => {
           <h1 className="home-hero-title" style={{ marginBottom: "10px" }}>
             Hola {(() => {
               const hour = new Date().getHours();
-              if (hour >= 5 && hour < 12) return "buenos días";
-              if (hour >= 12 && hour < 19) return "buenas tardes";
-              return "buenas noches";
+              if (hour >= 5 && hour < 12) return "Buenos Días";
+              if (hour >= 12 && hour < 19) return "Buenas Tardes";
+              return "Buenas Noches";
             })()}
           </h1>
 
