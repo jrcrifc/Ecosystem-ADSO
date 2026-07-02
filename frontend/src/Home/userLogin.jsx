@@ -9,7 +9,7 @@ import Swal from "sweetalert2";
 // Importa íconos de react-icons para el formulario
 import { FaIdCard, FaUser, FaLock } from "react-icons/fa";
 // Importa la imagen de fondo del laboratorio
-import fondoLaboratorio from "../Home/laboratorio.png";
+import fondoLaboratorio from "../Home/laboratorio.webp";
 // Importa el logo de Ecosystem
 import logo from "../Home/ecosystem_logo.png";
 

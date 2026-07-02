@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 // Importa la instancia de Axios configurada para peticiones HTTP
 import apiAxios from "../api/axiosConfig";
 // Importa la imagen de fondo para la página de registro
-import fondoRegistro from "../Home/laboratorio.png";
+import fondoRegistro from "../Home/laboratorio.webp";
 // Importa el logo de Ecosystem
 import logo from "../Home/ecosystem_logo.png";
 
