@@ -146,8 +146,8 @@ const Home = () => {
           right: 40px;
           top: 50%;
           transform: translateY(-50%);
-          width: 120px;
-          height: 120px;
+          width: 150px;
+          height: 150px;
           border-radius: 24px;
           background: rgba(255,255,255,0.1);
           display: flex;
@@ -155,13 +155,25 @@ const Home = () => {
           justify-content: center;
           border: 1px solid rgba(255,255,255,0.1);
           backdrop-filter: blur(10px);
-          transition: all 0.3s ease;
+          transition: all 0.4s ease;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .home-hero-logo-container:hover {
+          transform: translateY(-50%) scale(1.08) rotate(3deg);
+          box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+          background: rgba(255,255,255,0.2);
         }
 
         .home-hero-logo {
-          width: 80px;
-          height: 80px;
+          width: 110px;
+          height: 110px;
           border-radius: 14px;
+          transition: transform 0.4s ease;
+        }
+
+        .home-hero-logo-container:hover .home-hero-logo {
+          transform: scale(1.05);
         }
 
         @media (max-width: 768px) {
@@ -228,9 +240,9 @@ const Home = () => {
           <h1 className="home-hero-title" style={{ marginBottom: "10px" }}>
             Hola {(() => {
               const hour = new Date().getHours();
-              if (hour >= 5 && hour < 12) return "Buenos Días";
-              if (hour >= 12 && hour < 19) return "Buenas Tardes";
-              return "Buenas Noches";
+              if (hour >= 5 && hour < 12) return "Buenos Días ☀️";
+              if (hour >= 12 && hour < 19) return "Buenas Tardes ⛅";
+              return "Buenas Noches 🌙";
             })()}
           </h1>
 
