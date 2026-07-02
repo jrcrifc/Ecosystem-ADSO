@@ -212,38 +212,15 @@ const Home = () => {
       >
         {/* Contenido textual del hero */}
         <div className="home-hero-content">
-          {/* Etiqueta SENA Laboratorio Ambiental */}
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: "8px",
-            background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)",
-            borderRadius: "99px", padding: "6px 16px", marginBottom: "20px"
-          }}>
-            <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#48CAE4" }} />
-            <span style={{ color: "#CAF0F8", fontSize: "10px", fontWeight: "700", letterSpacing: "2px" }}>
-              SENA · LABORATORIO AMBIENTAL
-            </span>
-          </div>
-
           {/* Saludo personalizado al usuario */}
-          <h1 className="home-hero-title">
-            Hola, {userName.split(" ")[0]} 👋
+          <h1 className="home-hero-title" style={{ marginBottom: "0" }}>
+            Hola, {(() => {
+              const hour = new Date().getHours();
+              if (hour >= 5 && hour < 12) return "buenos días";
+              if (hour >= 12 && hour < 19) return "buenas tardes";
+              return "buenas noches";
+            })()}, {rolLabel[userRolLower] || userRol}
           </h1>
-
-          {/* Etiqueta con el rol del usuario */}
-          <div style={{
-            display: "inline-block", background: "rgba(255,255,255,0.15)",
-            border: "1px solid rgba(255,255,255,0.25)", borderRadius: "8px",
-            padding: "4px 12px", marginBottom: "15px"
-          }}>
-            <span style={{ color: "#CAF0F8", fontSize: "12px", fontWeight: "700" }}>
-              {rolLabel[userRolLower] || userRol}
-            </span>
-          </div>
-
-          {/* Texto de bienvenida */}
-          <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "14px", lineHeight: "1.6", margin: 0 }}>
-            Bienvenido a tu panel de control. Selecciona una acción rápida para comenzar.
-          </p>
         </div>
 
         {/* Logo flotante de Ecosystem en la esquina derecha */}
