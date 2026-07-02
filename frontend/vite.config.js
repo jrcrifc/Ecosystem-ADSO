@@ -18,27 +18,6 @@ export default defineConfig({
     react() // Activa el soporte para React con SWC (compilación rápida de JSX/TSX)
   ],
   build: {
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
-              return 'vendor-react';
-            }
-            if (id.includes('sweetalert2')) {
-              return 'vendor-sweetalert';
-            }
-            if (id.includes('axios')) {
-              return 'vendor-axios';
-            }
-            if (id.includes('socket.io')) {
-              return 'vendor-socket';
-            }
-            return 'vendor'; // Cualquier otra dependencia
-          }
-        }
-      }
-    },
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 2500,
   }
 })
