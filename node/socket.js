@@ -15,6 +15,7 @@ let io;
 export const initSocket = (server) => {
   // Crea una nueva instancia de Socket.io asociada al servidor HTTP
   io = new Server(server, {
+    path: "/api/socket.io/",
     cors: {
       origin: "*",
       methods: ["GET", "POST"]

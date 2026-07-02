@@ -37,7 +37,7 @@ const UserModel = sequelize.define('usuarios', {
   uuid: { type: DataTypes.STRING },
   
   // Campo token - token JWT actual de autenticación
-  token: { type: DataTypes.STRING },
+  token: { type: DataTypes.TEXT },
   
   // Campo rol - enum con los roles disponibles en el sistema
   rol: {
