@@ -201,3 +201,24 @@ export const ImportarExcel = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// Solicitar restablecer contraseña
+export const getResetPassword = async (req, res) => {
+    const { email } = req.body
+    try {
+        await UserService.resetPassword(email)
+        res.status(200).json({ message: 'El mensaje para restablecer contraseña fue enviado correctamente.' })
+    } catch (error) {
+        res.status(400).json({ message: error.message })
+    }
+}
+
+// Recibir la nueva contraseña
+export const setNewPassword = async (req, res) => {
+    try {
+        await UserService.setNewPassword(req.body)
+        res.status(200).json({ message: "Contraseña actualizada correctamente." })
+    } catch (error) {
+        res.status(400).json({ message: "Información inválida o el tiempo ha expirado." })
+    }
+}

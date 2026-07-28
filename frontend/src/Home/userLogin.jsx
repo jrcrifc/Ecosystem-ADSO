@@ -1,75 +1,50 @@
-// Importa el hook useState para manejar el estado del formulario
 import { useState } from "react";
-// Importa useNavigate para redirigir al usuario después del login
-import { useNavigate } from "react-router-dom";
-// Importa la instancia de Axios configurada para peticiones HTTP
+import { useNavigate, Link } from "react-router-dom";
 import apiAxios from "../api/axiosConfig.js";
-// Importa SweetAlert2 para alertas modales
 import Swal from "sweetalert2";
-// Importa íconos de react-icons para el formulario
-import { FaIdCard, FaUser, FaLock } from "react-icons/fa";
-// Importa la imagen de fondo del laboratorio
-import fondoLaboratorio from "../Home/laboratorio.webp";
-// Importa el logo de Ecosystem
+import { FaIdCard, FaUser, FaLock, FaTimes } from "react-icons/fa";
 import logo from "../Home/ecosystem_logo.png";
+import labEquipos from "../Home/lab_equipos.png";
+import fondoLaboratorio from "../Home/laboratorio.webp";
 
-// Define el componente UserLogin con el formulario de inicio de sesión
 const UserLogin = ({ setIsAuth, setUserData }) => {
-  // Hook para navegar programáticamente a otras rutas
   const navigate = useNavigate();
-
-  // Estado del formulario con documento y contraseña
   const [form, setForm] = useState({ tipo_documento: "CC", documento: "", password: "" });
-  // Estado para mostrar mensajes de error al usuario
   const [error, setError] = useState("");
-  // Estado que indica si la petición de login está en curso
   const [loading, setLoading] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
-  // Actualiza el estado del formulario cuando el usuario escribe en los campos
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Maneja el envío del formulario de inicio de sesión
   const gestionarLogin = async (e) => {
-    // Previene el comportamiento por defecto del formulario
     e.preventDefault();
-    // Limpia el mensaje de error anterior
     setError("");
-    // Activa el indicador de carga
     setLoading(true);
 
     try {
-      // Prepara los datos limpiando espacios en blanco
       const data = {
         documento: form.documento.trim(),
         password: form.password.trim(),
       };
 
-      // Valida que ambos campos estén completos
       if (!data.documento || !data.password) {
         setError("Todos los campos son obligatorios");
         setLoading(false);
         return;
       }
 
-      // Envía la petición POST al backend para autenticar al usuario
       const response = await apiAxios.post("/api/auth/login", data);
       const { token, user } = response.data;
 
-      // Verifica que el servidor haya devuelto token y datos del usuario
       if (!token || !user) throw new Error("Respuesta inválida del servidor");
 
-      // Guarda el token y los datos del usuario en sessionStorage
       sessionStorage.setItem("token", token);
       sessionStorage.setItem("user", JSON.stringify({ ...user, token }));
       setUserData({ ...user, token });
-
-      // Actualiza los estados de autenticación y datos del usuario
-      setUserData(user);
       setIsAuth(true);
 
-      // Redirige al dashboard correspondiente según el rol del usuario
       switch (user.rol) {
         case "Administrador":
           navigate("/dashboardAdmin");
@@ -90,19 +65,15 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
           navigate("/home");
       }
 
-      // Limpia el formulario después del inicio de sesión exitoso
       setForm({ email: "", password: "" });
     } catch (err) {
-      // Muestra el mensaje de error del servidor o uno genérico
       const errorMsg = err.response?.data?.message || err.message || "Documento/Correo o contraseña incorrectos";
       setError(errorMsg);
     } finally {
-      // Desactiva el indicador de carga
       setLoading(false);
     }
   };
 
-  // Estilos inline para los inputs del formulario
   const inputStyle = {
     borderRadius: "20px",
     padding: "10px 15px",
@@ -111,25 +82,124 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
     border: "1px solid #ccc",
     outline: "none",
   };
+  
+  // Date format for the widget
+  const today = new Date();
+  const dateOptions = { weekday: 'long', day: 'numeric', month: 'long' };
+  const formattedDate = today.toLocaleDateString('es-ES', dateOptions);
+  const formattedDateCapitalized = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
+  
+  // Current time
+  const timeOptions = { hour: 'numeric', minute: '2-digit', hour12: true };
+  const formattedTime = today.toLocaleTimeString('es-ES', timeOptions);
 
   return (
-    // Contenedor principal que ocupa toda la pantalla
-    <div
-      style={{
-        position: "fixed", top: 0, left: 0,
-        height: "100vh", width: "100vw",
-        overflowY: "auto", overflowX: "hidden",
-        zIndex: 9999,
-        display: "grid", placeItems: "center", padding: "20px"
-      }}
-    >
-      {/* Definición de animaciones CSS para el login */}
+    <div className="landing-container">
       <style>{`
-        @keyframes bubble {
-          0% { transform: translateY(0) translateX(0px); opacity: 0; }
-          10% { opacity: 0.75; }
-          50% { transform: translateY(-60vh) translateX(8px); opacity: 0.75; }
-          100% { transform: translateY(-120vh) translateX(-8px); opacity: 0; }
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;500;600&display=swap');
+        
+        .landing-container {
+          position: fixed; top: 0; left: 0;
+          height: 100vh; width: 100vw;
+          overflow-y: auto; overflow-x: hidden;
+          background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url(${fondoLaboratorio}) center/cover no-repeat;
+          font-family: 'Outfit', 'Inter', sans-serif;
+          z-index: 9999;
+          display: flex;
+          flex-direction: column;
+        }
+
+        /* Navbar */
+        .landing-nav {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 20px 50px;
+          background: transparent;
+        }
+        
+        .landing-nav .brand {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+        }
+
+        .landing-nav .brand img {
+          width: 50px;
+          border-radius: 12px;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .landing-nav .brand-name {
+          font-size: 24px;
+          font-weight: 800;
+          color: #ffffff;
+        }
+
+        .login-trigger-btn {
+          background: #10b981;
+          color: white;
+          border: none;
+          padding: 12px 28px;
+          border-radius: 30px;
+          font-weight: 600;
+          font-size: 16px;
+          cursor: pointer;
+          transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+          box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+        
+        .login-trigger-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+          background: #059669;
+        }
+
+        /* Hero Section */
+        .hero-section {
+          display: flex;
+          flex: 1;
+          padding: 0 50px;
+          align-items: center;
+          justify-content: space-between;
+          max-width: 1400px;
+          margin: 0 auto;
+          width: 100%;
+        }
+
+        .hero-left {
+          flex: 1;
+          max-width: 600px;
+        }
+
+        .platform-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: rgba(255, 255, 255, 0.9);
+          padding: 8px 16px;
+          border-radius: 20px;
+          color: #000000;
+          font-weight: 700;
+          font-size: 14px;
+          margin-bottom: 20px;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+          backdrop-filter: blur(10px);
+        }
+
+        .hero-title {
+          font-size: 4rem;
+          font-weight: 800;
+          line-height: 1.1;
+          color: #ffffff;
+          text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+          margin-bottom: 20px;
+        }
+        
+        .hero-title span {
+          display: block;
+          color: #000000;
+          text-shadow: 0px 0px 10px rgba(255,255,255,0.8);
         }
 
         @keyframes textFlow {
@@ -138,160 +208,336 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
           100% { background-position: 0% 50%; }
         }
 
-        .flowing-title {
-          background: linear-gradient(120deg, #0077B6, #00B4D8, #6366F1, #0077B6);
-          background-size: 200% auto;
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          animation: textFlow 6s linear infinite;
-          display: inline-block;
+        .hero-desc {
+          font-size: 1.1rem;
+          color: #555;
+          line-height: 1.6;
+          margin-bottom: 40px;
+          max-width: 500px;
         }
 
-        @keyframes cardEntrance {
-          from { opacity: 0; transform: translateY(20px) scale(0.98); }
-          to   { opacity: 1; transform: translateY(0)    scale(1); }
+        .explore-btn {
+          background: #e9598b;
+          color: white;
+          border: none;
+          padding: 16px 40px;
+          border-radius: 30px;
+          font-weight: 600;
+          font-size: 18px;
+          cursor: pointer;
+          transition: transform 0.2s, box-shadow 0.2s;
+          box-shadow: 0 8px 25px rgba(233, 89, 139, 0.4);
+        }
+        
+        .explore-btn:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 12px 30px rgba(233, 89, 139, 0.6);
         }
 
+        /* Hero Right */
+        .hero-right {
+          flex: 1;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          position: relative;
+        }
+
+        .floating-element {
+          width: 350px;
+          height: auto;
+          animation: float 6s ease-in-out infinite;
+          filter: drop-shadow(0 20px 30px rgba(0,0,0,0.15));
+        }
+
+        @keyframes float {
+          0% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+          100% { transform: translateY(0px); }
+        }
+
+        /* Widget */
+        .status-widget {
+          position: absolute;
+          bottom: 20px;
+          right: 20px;
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(20px);
+          padding: 20px;
+          border-radius: 20px;
+          box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+          width: 320px;
+          border: 1px solid rgba(255,255,255,0.8);
+        }
+
+        .widget-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 15px;
+          border-bottom: 1px solid #eee;
+          padding-bottom: 15px;
+        }
+        
+        .widget-icon {
+          background: #ffeb3b;
+          width: 40px; height: 40px;
+          border-radius: 50%;
+          display: flex; justify-content: center; align-items: center;
+          font-size: 20px;
+          box-shadow: 0 4px 10px rgba(255, 235, 59, 0.4);
+        }
+
+        .widget-time h4 {
+          margin: 0;
+          font-size: 16px;
+          color: #333;
+          font-weight: 700;
+        }
+        .widget-time p {
+          margin: 0;
+          font-size: 12px;
+          color: #888;
+        }
+        
+        .widget-date {
+          font-size: 12px;
+          color: #d15c7e;
+          font-weight: 600;
+        }
+
+        .widget-body h5 {
+          font-size: 10px;
+          text-transform: uppercase;
+          color: #e9598b;
+          margin-bottom: 8px;
+          letter-spacing: 1px;
+          font-weight: 700;
+        }
+        .widget-body p {
+          margin: 0;
+          font-size: 14px;
+          color: #444;
+          font-weight: 600;
+        }
+        
+        .dots {
+          display: flex;
+          gap: 4px;
+          margin-top: 15px;
+        }
+        .dot {
+          width: 6px; height: 6px;
+          border-radius: 50%;
+          background: #eee;
+        }
+        .dot.active {
+          background: #e9598b;
+        }
+
+        /* Modal Background */
+        .modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.4);
+          backdrop-filter: blur(5px);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 10000;
+          opacity: 0;
+          visibility: hidden;
+          transition: all 0.3s ease;
+        }
+        
+        .modal-overlay.show {
+          opacity: 1;
+          visibility: visible;
+        }
+
+        /* Login Card Inside Modal */
         .login-card {
-          animation: cardEntrance 0.7s cubic-bezier(0.16,1,0.3,1) both;
           width: 100%;
-          max-width: 390px;
-          background: rgba(255,255,255,0.91);
+          max-width: 400px;
+          background: rgba(255,255,255,0.95);
           backdrop-filter: blur(25px);
           border: 1px solid rgba(255,255,255,0.6);
+          border-radius: 24px;
+          padding: 40px;
           text-align: center;
           position: relative;
-          z-index: 10;
-          margin: auto;
+          box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+          transform: translateY(20px) scale(0.95);
+          transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+        }
+        
+        .modal-overlay.show .login-card {
+          transform: translateY(0) scale(1);
         }
 
-        @media (max-width: 480px) {
-          .login-card {
-            padding: 30px 20px !important;
-          }
+        .close-modal-btn {
+          position: absolute;
+          top: 15px;
+          right: 15px;
+          background: #f1f5f9;
+          border: none;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          color: #64748b;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .close-modal-btn:hover {
+          background: #e2e8f0;
+          color: #334155;
         }
 
         .login-btn {
+          background: linear-gradient(135deg, #0077B6, #023E8A);
+          border-radius: 20px;
+          padding: 12px;
+          color: #fff;
+          border: none;
+          width: 100%;
+          font-weight: bold;
+          margin-top: 10px;
+          box-shadow: 0 8px 20px rgba(0,119,182,0.35);
           transition: transform 0.2s, box-shadow 0.2s;
         }
         .login-btn:hover:not(:disabled) {
           transform: translateY(-2px);
-          box-shadow: 0 12px 30px rgba(0,119,182,0.45) !important;
+          box-shadow: 0 12px 30px rgba(0,119,182,0.45);
         }
-        .login-input:focus {
-          border-color: #6366F1 !important;
-          box-shadow: 0 0 12px rgba(99, 102, 241, 0.25) !important;
-          background: #fff !important;
-        }
-
+        
         .input-icon {
+          position: absolute; top: 12px; left: 15px; color: #0077B6;
           transition: all 0.3s ease;
         }
         .position-relative:has(.form-control:focus) .input-icon {
           transform: scale(1.22);
-          color: #6366F1 !important;
         }
-
-        .hologram-grid {
-          position: fixed; inset: 0; z-index: 1;
-          background-image: linear-gradient(rgba(0, 180, 216, 0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 180, 216, 0.035) 1px, transparent 1px);
-          background-size: 45px 45px; pointer-events: none;
+        
+        @media (max-width: 900px) {
+          .hero-section { flex-direction: column; text-align: center; padding: 20px; }
+          .hero-left { margin-bottom: 40px; }
+          .hero-desc { margin: 0 auto 30px auto; }
+          .status-widget { position: relative; bottom: auto; right: auto; margin-top: 30px; }
+          .landing-nav { padding: 20px; }
         }
       `}</style>
 
-      {/* Fondo de pantalla con la imagen del laboratorio */}
-      <div style={{
-        position: "fixed", inset: 0, zIndex: 0,
-        backgroundImage: `url(${fondoLaboratorio})`,
-        backgroundSize: "cover", backgroundPosition: "center",
-      }} />
+      {/* Navbar */}
+      <nav className="landing-nav">
+        <div className="brand">
+          <img src={logo} alt="Ecosystem Logo" />
+          <span className="brand-name">Ecosystem</span>
+        </div>
+        <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+          <button
+            onClick={() => navigate('/acerca-de')}
+            style={{
+              background: 'rgba(255,255,255,0.15)',
+              color: 'white',
+              border: '2px solid rgba(255,255,255,0.6)',
+              padding: '10px 24px',
+              borderRadius: '30px',
+              fontWeight: '600',
+              fontSize: '15px',
+              cursor: 'pointer',
+              backdropFilter: 'blur(10px)',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.3)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+          >
+            Acerca de
+          </button>
+          <button className="login-trigger-btn" onClick={() => setShowLoginModal(true)}>
+            Iniciar sesión
+          </button>
+        </div>
+      </nav>
 
-      {/* Capa decorativa de cuadrícula holográfica */}
-      <div className="hologram-grid" />
-
-      {/* Contenedor de burbujas flotantes animadas */}
-      <div style={{ position: "fixed", inset: 0, zIndex: 9, pointerEvents: "none", overflow: "hidden" }}>
-        {[
-          { size: 45, left: 3, delay: 0.5, dur: 12 }, { size: 75, left: 18, delay: 2.1, dur: 18 },
-          { size: 30, left: 25, delay: 4.3, dur: 10 }, { size: 90, left: 36, delay: 1.2, dur: 22 },
-          { size: 55, left: 45, delay: 3.8, dur: 15 }, { size: 40, left: 52, delay: 0.8, dur: 11 },
-          { size: 80, left: 63, delay: 5.4, dur: 19 }, { size: 65, left: 72, delay: 2.7, dur: 16 },
-          { size: 35, left: 81, delay: 6.1, dur: 13 }, { size: 85, left: 91, delay: 8.2, dur: 24 },
-          { size: 60, left: 12, delay: 3.3, dur: 14 }, { size: 50, left: 30, delay: 4.1, dur: 15 },
-          { size: 70, left: 68, delay: 2.5, dur: 17 }, { size: 40, left: 76, delay: 0.6, dur: 10 },
-          { size: 80, left: 88, delay: 6.4, dur: 20 }, { size: 45, left: 96, delay: 4.8, dur: 12 },
-          { size: 30, left: 10, delay: 11.2, dur: 9 }, { size: 90, left: 54, delay: 2.3, dur: 23 },
-          { size: 75, left: 20, delay: 7.1, dur: 18 }, { size: 55, left: 50, delay: 6.0, dur: 14 },
-        ].map((p, i) => (
-          // Burbuja individual con posición, tamaño y animación personalizados
-          <div key={i} style={{
-            position: "absolute", bottom: "-100px", left: `${p.left}%`,
-            width: `${p.size}px`, height: `${p.size}px`, borderRadius: "50%",
-            background: i % 2 === 0 ? "rgba(0,180,216,0.15)" : "rgba(255,255,255,0.12)",
-            border: "1.5px solid rgba(255,255,255,0.4)",
-            animation: `bubble ${p.dur}s ease-in-out infinite`,
-            animationDelay: `${p.delay}s`,
-          }} />
-        ))}
-      </div>
-
-      {/* Tarjeta de login con logo, formulario y enlaces */}
-      <div className="login-card p-5 rounded-4">
-
-        {/* Logo y título de Ecosystem */}
-        <div className="mb-4">
-          <img src={logo} alt="Logo" style={{ width: "80px", height: "80px", borderRadius: "16px", border: "2.5px solid #0077B6", display: "block", margin: "0 auto" }} />
-          <h2 className="mt-2 flowing-title" style={{ fontWeight: "bold" }}>Ecosystem</h2>
-          <p style={{ color: "#64748b", fontSize: "13px", margin: 0 }}>Laboratorio Ambiental SENA</p>
+      {/* Hero Section */}
+      <main className="hero-section">
+        {/* Left Content */}
+        <div className="hero-left">
+          <div className="platform-badge">
+            Laboratorio Ambiental
+          </div>
+          <h1 className="hero-title">
+            Ecosystem
+            <span>Gestión de Laboratorio Inteligente</span>
+          </h1>
+          <p className="hero-desc" style={{ color: "#eee" }}>
+            Control eficiente y avanzado del proceso en el laboratorio. Registra equipos, 
+            movimientos de reactivos, solicitudes y auditorías desde una sola plataforma profesional.
+          </p>
         </div>
 
-        {/* Muestra mensaje de error si existe */}
-        {error && <div className="alert alert-danger py-2">{error}</div>}
+        {/* Right Content */}
+        <div className="hero-right">
+          <img src={logo} alt="Laboratorio 3D" className="floating-element" />
+        </div>
+      </main>
 
-        {/* Formulario de inicio de sesión */}
-        <form onSubmit={gestionarLogin}>
-          {/* Campo de tipo de documento */}
-          <div className="mb-3 position-relative">
-            <FaIdCard className="input-icon" style={{ position: "absolute", top: "12px", left: "15px", color: "#0077B6" }} />
-            <select name="tipo_documento" value={form.tipo_documento} onChange={handleChange}
-              className="form-control ps-5" required style={{ ...inputStyle, appearance: "auto" }}>
-              <option value="CC">Cédula de Ciudadanía</option>
-              <option value="TI">Tarjeta de Identidad</option>
-              <option value="CE">Cédula de Extranjería</option>
-            </select>
-          </div>
-
-          {/* Campo de documento */}
-          <div className="mb-3 position-relative">
-            <FaUser className="input-icon" style={{ position: "absolute", top: "12px", left: "15px", color: "#0077B6" }} />
-            <input type="text" name="documento" value={form.documento} onChange={handleChange}
-              className="form-control ps-5" placeholder="Número de Documento" required style={inputStyle} />
-          </div>
-
-          {/* Campo de contraseña */}
-          <div className="mb-3 position-relative">
-            <FaLock className="input-icon" style={{ position: "absolute", top: "12px", left: "15px", color: "#0077B6" }} />
-            <input type="password" name="password" value={form.password} onChange={handleChange}
-              className="form-control ps-5" placeholder="Contraseña" required style={inputStyle} />
-          </div>
-
-          {/* Enlace eliminado para recuperar contraseña */}
-
-          {/* Botón de inicio de sesión */}
-          <button type="submit" className="btn w-100 fw-bold mt-2 login-btn" disabled={loading}
-            style={{ background: "linear-gradient(135deg, #0077B6, #023E8A)", borderRadius: "20px", padding: "12px", color: "#fff", border: "none", boxShadow: "0 8px 20px rgba(0,119,182,0.35)" }}>
-            {loading ? "Ingresando..." : "Iniciar Sesión"}
+      {/* Login Modal Overlay */}
+      <div className={`modal-overlay ${showLoginModal ? 'show' : ''}`} onClick={(e) => {
+        if (e.target.classList.contains('modal-overlay')) setShowLoginModal(false);
+      }}>
+        <div className="login-card">
+          <button className="close-modal-btn" onClick={() => setShowLoginModal(false)}>
+            <FaTimes />
           </button>
+          
+          <div className="mb-4">
+            <img src={logo} alt="Logo" style={{ width: "70px", height: "70px", borderRadius: "16px", border: "2.5px solid #0077B6", display: "block", margin: "0 auto" }} />
+            <h2 className="mt-3" style={{ fontWeight: "800", color: "#0077B6" }}>Bienvenido</h2>
+            <p style={{ color: "#64748b", fontSize: "14px", margin: 0 }}>Laboratorio Ambiental SENA</p>
+          </div>
 
-          {/* Enlace a la página de registro */}
-          <p className="mt-3" style={{ color: "#334155", fontSize: "14px" }}>
-            ¿Eres Pasante o Gestor?{" "}
-            <span onClick={() => navigate("/register")}
-              style={{ color: "#334155", fontWeight: "bold", cursor: "pointer" }}>
-              Regístrate aquí
-            </span>
-          </p>
-        </form>
+          {error && <div className="alert alert-danger py-2" style={{ fontSize: "14px" }}>{error}</div>}
+
+          <form onSubmit={gestionarLogin}>
+            <div className="mb-3 position-relative">
+              <FaIdCard className="input-icon" />
+              <select name="tipo_documento" value={form.tipo_documento} onChange={handleChange}
+                className="form-control ps-5" required style={{ ...inputStyle, appearance: "auto", width: "100%" }}>
+                <option value="CC">Cédula de Ciudadanía</option>
+                <option value="TI">Tarjeta de Identidad</option>
+                <option value="CE">Cédula de Extranjería</option>
+              </select>
+            </div>
+
+            <div className="mb-3 position-relative">
+              <FaUser className="input-icon" />
+              <input type="text" name="documento" value={form.documento} onChange={handleChange}
+                className="form-control ps-5" placeholder="Número de Documento" required style={{ ...inputStyle, width: "100%" }} />
+            </div>
+
+            <div className="mb-3 position-relative">
+              <FaLock className="input-icon" />
+              <input type="password" name="password" value={form.password} onChange={handleChange}
+                className="form-control ps-5" placeholder="Contraseña" required style={{ ...inputStyle, width: "100%" }} />
+            </div>
+
+            <button type="submit" className="login-btn" disabled={loading}>
+              {loading ? "Ingresando..." : "Iniciar Sesión"}
+            </button>
+
+            <div className="mt-3">
+              <Link to="/forgotPassword" style={{ color: "#0077B6", fontSize: "14px", textDecoration: "none", fontWeight: "600" }}>
+                Olvidé la contraseña
+              </Link>
+            </div>
+
+
+          </form>
+        </div>
       </div>
     </div>
   );

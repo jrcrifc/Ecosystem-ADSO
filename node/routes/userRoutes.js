@@ -10,7 +10,8 @@ import multer from "multer";
 import {
   RegisterUser, LoginUser, GetPendientes, 
   GetTodos, AprobarUsuario, RechazarUsuario, ToggleActivoUsuario,
-  GetProfile, UpdateProfile, ChangePasswordByAdmin, ImportarExcel
+  GetProfile, UpdateProfile, ChangePasswordByAdmin, ImportarExcel,
+  getResetPassword, setNewPassword
 } from "../controller/userController.js";
 // Importa los middlewares de autorización por roles
 import { soloAdmin, adminOGestor } from '../middleware/roleMiddleware.js';
@@ -30,6 +31,10 @@ router.post("/", [
 
 // Define la ruta POST /api/auth/login para iniciar sesión y obtener el token JWT
 router.post("/login", LoginUser);
+
+// Define las rutas para recuperar la contraseña
+router.post('/request-reset-password', getResetPassword);
+router.post('/reset-password', setNewPassword);
 
 // Define la ruta GET /api/auth/usuarios para listar todos los usuarios
 router.get("/usuarios", adminOGestor, GetTodos);

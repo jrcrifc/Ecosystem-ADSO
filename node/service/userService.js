@@ -555,6 +555,37 @@ class UserService {
     // Retorna el resumen de la importación
     return { creados, omitidos, errores };
   }
+  // Solicita restablecimiento de contraseña enviando correo
+  async resetPassword(email) {
+    const user = await UserModel.findOne( { where: { email: email } } )
+    
+    if (!user) throw new Error("Ups, algo pasó.")
+    
+    const tokenForPassword = jwt.sign( { user: { id: user.id_usuario } }, 
+        process.env.JWT_SECRET,
+        { expiresIn: '15m' } )
+        
+    await emailService.sendPasswordResetEmail(email, tokenForPassword)
+    return
+  }
+
+  // Recibe la nueva contraseña y la actualiza
+  async setNewPassword(data) {
+    const { tokenForPassword, newPassword } = data
+    
+    // extrae los datos que se enviaron en el token
+    const decodificado = jwt.verify(tokenForPassword, process.env.JWT_SECRET)
+    
+    const user = await UserModel.findByPk(decodificado.user.id)
+    if (!user) throw new Error("Ups, algo pasó.")
+    
+    let hashedPassword = await bcrypt.hash(newPassword, 10)
+    
+    await user.update({
+        password: hashedPassword
+    })
+    return
+  }
 }
 
 // Exporta una instancia única del servicio para usar como singleton

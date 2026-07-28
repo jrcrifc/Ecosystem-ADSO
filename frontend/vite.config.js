@@ -19,5 +19,16 @@ export default defineConfig({
   ],
   build: {
     chunkSizeWarningLimit: 2500,
+  },
+  server: {
+    proxy: {
+      // Redirige todas las peticiones /api (incluyendo socket.io) al backend en puerto 8000
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        ws: true,  // Habilita el proxy para WebSockets (Socket.IO)
+      }
+    }
   }
 })
+

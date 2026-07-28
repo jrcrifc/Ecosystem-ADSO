@@ -24,6 +24,8 @@ import CrudEstadoxSolicitud from "./estadoxsolicitud/cruestadoxsolicitud.jsx";
 import Home from "./Home/home.jsx";
 import UserLogin from "./Home/userLogin.jsx";
 import Register from "./Home/Register.jsx";
+import ForgotPassword from "./Home/forgotPassword.jsx";
+import ResetPassword from "./Home/resetPassword.jsx";
 import GestionSolicitudes from "./Solicitud/GestionSolicitudes.jsx";
 import HistorialEstadoEquipo from "./estadoequipo/HistorialEstadoEquipo.jsx";
 import GestionEstadoEquipo from "./estadoequipo/GestionEstadoEquipo.jsx";
@@ -336,8 +338,12 @@ function App() {
             {/* Ruta pública de registro con redirección si ya está autenticado */}
             <Route path="/register" element={isAuth ? <Navigate to="/home" replace /> : <Register />} />
 
-            {/* Ruta de Acerca de, requiere autenticación */}
-            <Route path="/acerca-de" element={isAuth ? <AcercaDe /> : <Navigate to="/UserLogin" replace />} />
+            {/* Rutas para recuperación de contraseña */}
+            <Route path="/forgotPassword" element={isAuth ? <Navigate to="/home" replace /> : <ForgotPassword />} />
+            <Route path="/reset-password/:token" element={isAuth ? <Navigate to="/home" replace /> : <ResetPassword />} />
+
+            {/* Ruta de Acerca de, pública para usuarios no autenticados */}
+            <Route path="/acerca-de" element={isAuth ? <AcercaDe /> : <AcercaDe isPublic={true} />} />
 
             {/* Ruta protegida del dashboard principal con FormularioRoute */}
             <Route path="/home" element={
