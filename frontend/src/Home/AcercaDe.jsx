@@ -1,5 +1,7 @@
 // Importa React y el hook de estado para controlar el lightbox
 import React, { useState } from "react";
+// Importa useNavigate para los botones de navegación pública
+import { useNavigate } from "react-router-dom";
 // Importa el logo de Ecosystem
 import ecosystemLogo from "./ecosystem_logo.png";
 // Importa imágenes de las instalaciones del laboratorio
@@ -7,14 +9,96 @@ import labOficina from "./labAmbien.jpeg";
 import labEquipos from "./lab_equipos.png";
 import labFlujo from "./lab_flujo.png";
 import labEntrada from "./lab_entrada.png";
+import fondoLaboratorio from "./fondo.jpeg";
 
 // Componente de información institucional y del equipo de desarrollo
-const AcercaDe = () => {
+// isPublic: si es true, muestra navbar propio (sin login requerido)
+const AcercaDe = ({ isPublic = false }) => {
+  const navigate = useNavigate();
   // Controla la foto seleccionada para el lightbox (null = cerrado)
   const [lightboxPhoto, setLightboxPhoto] = useState(null);
 
+  const textColor = "#0A1628";
+  const subTextColor = "#64748b";
+  const cardBg = "#ffffff";
+  const cardBorder = "1px solid #e2e8f0";
+  const primaryColor = "#0077B6";
+
   return (
-    <div className="container mt-4 mb-5" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ 
+      display: 'flex',
+      flexDirection: 'column',
+      fontFamily: "'Inter', sans-serif", 
+      minHeight: "100vh", 
+      background: isPublic ? "#ffffff" : "transparent", 
+      color: textColor,
+      ...(isPublic && {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        zIndex: 9999
+      })
+    }}>
+
+      {/* Navbar pública: solo visible cuando se accede sin login */}
+      {isPublic && (
+        <nav style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          padding: '16px 40px',
+          background: 'linear-gradient(135deg, #1a5c2e 0%, #2d8a4e 100%)',
+          backgroundColor: '#1a5c2e',
+          boxShadow: '0 2px 20px rgba(0,0,0,0.2)',
+          position: 'sticky', top: 0, zIndex: 100,
+        }}>
+          {/* Logo y nombre */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
+            onClick={() => navigate('/UserLogin')}>
+            <img src={ecosystemLogo} alt="Logo" style={{ width: '44px', borderRadius: '10px' }} />
+            <span style={{ fontWeight: '800', fontSize: '20px', color: '#ffffff', fontFamily: "'Outfit', sans-serif" }}>Ecosystem</span>
+          </div>
+          {/* Botones de acción */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button
+              onClick={() => navigate('/UserLogin')}
+              style={{
+                background: 'rgba(255,255,255,0.12)',
+                color: 'white',
+                border: '1.5px solid rgba(255,255,255,0.4)',
+                padding: '9px 22px',
+                borderRadius: '30px',
+                fontWeight: '600',
+                fontSize: '14px',
+                cursor: 'pointer',
+              }}
+            >
+              ← Volver
+            </button>
+            <button
+              onClick={() => navigate('/UserLogin')}
+              style={{
+                background: '#10b981',
+                color: 'white',
+                border: 'none',
+                padding: '9px 22px',
+                borderRadius: '30px',
+                fontWeight: '600',
+                fontSize: '14px',
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(16,185,129,0.4)',
+              }}
+            >
+              Iniciar sesión
+            </button>
+          </div>
+        </nav>
+      )}
+
+      {/* Contenido principal */}
+      <div className="container mt-4 mb-5">
       {/*
         HEADER INSTITUCIONAL
         Logo, título y descripción del sistema
@@ -23,19 +107,19 @@ const AcercaDe = () => {
         {/*
           Logo de Ecosystem centrado
         */}
-        <img src={ecosystemLogo} alt="Logo Ecosystem" style={{ width: "160px", borderRadius: "24px", marginBottom: "16px" }} />
+        <img src={ecosystemLogo} alt="Logo Ecosystem" style={{ width: "160px", borderRadius: "24px", marginBottom: "16px", boxShadow: "0 10px 30px rgba(0,0,0,0.1)" }} />
         {/*
           Título principal de la página
         */}
-        <h1 style={{ fontWeight: "800", color: "#0077B6" }}>Acerca de Ecosystem</h1>
+        <h1 style={{ fontWeight: "800", color: primaryColor }}>Acerca de Ecosystem</h1>
         {/*
           Subtítulo descriptivo del sistema
         */}
-        <p style={{ color: "#0A1628", fontWeight: "600" }}>Sistema de Gestión Integral para el Laboratorio Ambiental</p>
+        <p style={{ color: subTextColor, fontWeight: "500", fontSize: "1.1rem" }}>Sistema de Gestión Integral para el Laboratorio Ambiental</p>
         {/*
           Línea decorativa azul
         */}
-        <div style={{ height: "3px", width: "60px", background: "#0077B6", margin: "0 auto", borderRadius: "99px" }} />
+        <div style={{ height: "4px", width: "80px", background: primaryColor, margin: "10px auto 0", borderRadius: "99px" }} />
       </div>
 
       <div className="row g-4">
@@ -44,7 +128,7 @@ const AcercaDe = () => {
           Panel con dirección y mapa embebido de Google Maps
         */}
         <div className="col-12">
-          <div className="card border-0 shadow p-0 overflow-hidden" style={{ borderRadius: "24px", border: "1px solid #0077B6", boxShadow: "0 10px 30px rgba(0, 119, 182, 0.15)" }}>
+          <div className="card border-0 p-0 overflow-hidden" style={{ borderRadius: "24px", background: cardBg, border: cardBorder, boxShadow: "0 10px 30px rgba(0, 119, 182, 0.15)" }}>
             <div className="row g-0">
               {/*
                 Panel izquierdo con información institucional de la sede
@@ -80,9 +164,9 @@ const AcercaDe = () => {
                     fontSize: "14px",
                     color: "#0077B6",
                     background: "#ffffff",
+                    border: "none",
                     padding: "12px 24px",
                     boxShadow: "0 10px 20px rgba(0,0,0,0.1)",
-                    border: "none",
                     transition: "transform 0.2s"
                   }}
                   // Efecto hover de escala en el botón
@@ -116,7 +200,7 @@ const AcercaDe = () => {
           Grid con tarjetas de cada miembro del equipo
         */}
         <div className="col-12 mt-5">
-          <h3 className="text-center mb-4" style={{ fontWeight: "800", color: "#0A1628", fontSize: "26px" }}>
+          <h3 className="text-center mb-4" style={{ fontWeight: "800", color: textColor, fontSize: "26px" }}>
             Equipo de Desarrolladores
           </h3>
           <div className="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4 justify-content-center">
@@ -143,8 +227,8 @@ const AcercaDe = () => {
                     style={{
                       borderRadius: "20px",
                       transition: "transform 0.3s ease, box-shadow 0.3s ease",
-                      background: "#ffffff",
-                      border: "1px solid #e2e8f0"
+                      background: cardBg,
+                      border: cardBorder
                     }}
                     // Eleva la tarjeta al pasar el mouse
                     onMouseEnter={(e) => {
@@ -197,7 +281,7 @@ const AcercaDe = () => {
                     {/*
                       Nombre completo del desarrollador
                     */}
-                    <h5 className="mb-2" style={{ fontWeight: "800", fontSize: "16px", color: "#0A1628" }}>{m.n}</h5>
+                    <h5 className="mb-2" style={{ fontWeight: "800", fontSize: "16px", color: textColor }}>{m.n}</h5>
                     {/*
                       Badge con el rol del desarrollador
                     */}
@@ -227,8 +311,8 @@ const AcercaDe = () => {
           Grid de imágenes del laboratorio con lightbox al hacer clic
         */}
         <div className="col-12 mt-5">
-          <div className="card border-0 shadow-sm p-4" style={{ borderRadius: "20px", background: "#ffffff", border: "1px solid #e2e8f0" }}>
-            <h3 className="text-center mb-4" style={{ fontWeight: "800", color: "#0A1628", fontSize: "22px" }}>Nuestras Instalaciones</h3>
+          <div className="card border-0 p-4" style={{ borderRadius: "20px", background: cardBg, border: cardBorder, boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
+            <h3 className="text-center mb-4" style={{ fontWeight: "800", color: textColor, fontSize: "26px" }}>Nuestras Instalaciones</h3>
             <div className="row row-cols-1 row-cols-md-3 g-3">
               {/*
                 Mapea las imágenes de instalaciones con título y source
@@ -314,18 +398,21 @@ const AcercaDe = () => {
         </div>
       )}
 
+      </div>
+
       {/*
         Footer institucional con datos del SENA
       */}
       <footer
-        className="text-center mt-5 p-4"
+        className="text-center p-4 mt-auto"
         style={{
-          background: "#0077B6",
+          background: "linear-gradient(135deg, #1a5c2e 0%, #2d8a4e 100%)",
+          backgroundColor: "#1a5c2e",
           color: "#ffffff",
-          borderRadius: "20px",
           fontSize: "14px",
           fontWeight: "600",
-          boxShadow: "0 8px 24px rgba(0, 119, 182, 0.2)"
+          boxShadow: "0 -4px 20px rgba(0,0,0,0.1)",
+          width: "100%"
         }}
       >
         <p className="mb-0">

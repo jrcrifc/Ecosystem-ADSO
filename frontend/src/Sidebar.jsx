@@ -65,7 +65,7 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
       items: [
         { icon: "🏠", text: "Inicio", path: "/home", show: true },
         { icon: "👤", text: "Mi Perfil", path: "/perfil", show: true },
-        { icon: "ℹ️", text: "Acerca de Ecosystem", path: "/acerca-de", show: true },
+
       ]
     },
     {
@@ -74,7 +74,7 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
         { icon: "📝", text: "Mis Solicitudes",      path: "/solicitud",           show: !esAdmin },
         { icon: "📝", text: "Nueva Solicitud",       path: "/solicitud",           show: esAdmin },
         { icon: "📑", text: "Gestión Solicitudes",   path: "/gestion-solicitudes", show: esAdmin },
-        { icon: "🏷️", text: "Estados Solicitud",    path: "/estadoSolicitud",     show: esAdmin },
+
       ]
     },
     {
@@ -91,7 +91,7 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
       show: esAdmin || esGestorPasante,
       items: [
         { icon: "💻", text: "Lista de Equipos", path: "/equipos", show: true },
-        { icon: "🔧", text: "Estado del Equipo", path: "/estadoequipo", show: true },
+
         { icon: "⚙️", text: "Gestión Equipos", path: "/gestion-equipo", show: true },
       ]
     },

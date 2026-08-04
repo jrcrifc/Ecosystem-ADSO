@@ -31,6 +31,23 @@ export default function GestionUsuarios() {
   // Prepara el encabezado de autorizacion con el token
   const headers = { Authorization: `Bearer ${token}` };
 
+  // ===== Modal de registro manual de Pasante/Gestor =====
+  // Controla la visibilidad del modal de registro
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  // Pestaña activa dentro del modal (Pasante | Gestor)
+  const [registerTab, setRegisterTab] = useState("Pasante");
+  // Estado del formulario de registro
+  const [registerForm, setRegisterForm] = useState({
+    tipo_documento: "CC",
+    documento: "",
+    nombres_apellidos: "",
+    email: "",
+    password: "",
+    es_sena_empresa: "no",
+  });
+  // Controla el loading del formulario de registro
+  const [registerLoading, setRegisterLoading] = useState(false);
+
   // Efecto que carga los usuarios cada vez que cambia la pestana activa
   useEffect(() => { cargar(); setPage(1); }, [tab]);
   // Resetear pagina cuando cambia el filtro de busqueda
@@ -313,6 +330,43 @@ export default function GestionUsuarios() {
     }
   };
 
+  // ===== Registrar manualmente un Pasante o Gestor =====
+
+  // Resetea el formulario de registro al cerrar o cambiar de pestaña
+  const resetRegisterForm = () => setRegisterForm({
+    tipo_documento: "CC",
+    documento: "",
+    nombres_apellidos: "",
+    email: "",
+    password: "",
+    es_sena_empresa: "no",
+  });
+
+  // Maneja el envio del formulario de registro manual
+  const handleRegistrarUsuario = async (e) => {
+    e.preventDefault();
+    setRegisterLoading(true);
+    try {
+      await apiAxios.post("/api/auth/register", {
+        ...registerForm,
+        rol: registerTab,
+      }, { headers });
+      Swal.fire({
+        icon: "success",
+        title: `✅ ${registerTab} registrado`,
+        text: `El usuario fue creado correctamente. Estado: pendiente de aprobación.`,
+        confirmButtonColor: "#0077B6",
+      });
+      setShowRegisterModal(false);
+      resetRegisterForm();
+      cargar();
+    } catch (err) {
+      Swal.fire("Error", err.response?.data?.message || "No se pudo registrar el usuario", "error");
+    } finally {
+      setRegisterLoading(false);
+    }
+  };
+
   // ===== Renderizar badge de estado del usuario =====
 
   // Funcion que renderiza un badge visual segun el estado del usuario
@@ -458,7 +512,7 @@ export default function GestionUsuarios() {
       </div>
       <p style={{ color: "#64748b", marginBottom: "24px" }}>Aprueba, rechaza, activa o inactiva usuarios del sistema</p>
 
-      {/* Barra de busqueda y boton de importar Excel (solo para pendientes, gestores y pasantes) */}
+      {/* Barra de búsqueda — visible en pendientes, gestores y pasantes */}
       {["pendientes", "gestores", "pasantes"].includes(tab) && (
         <div className="row mb-4 align-items-center">
           <div className="col-md-7">
@@ -471,29 +525,66 @@ export default function GestionUsuarios() {
               style={{ borderColor: "#dbeafe", borderRadius: "10px", padding: "10px 15px" }}
             />
           </div>
-          <div className="col-md-5 text-end">
-            {/* Boton para importar usuarios desde Excel */}
-            <button 
-              onClick={handleImportarExcel}
-              className="btn text-white" 
-              style={{ 
-                background: "linear-gradient(135deg, #0077B6, #023E8A)", 
-                borderRadius: "10px", 
-                fontWeight: "600",
-                padding: "10px 20px",
-                border: "none",
-                boxShadow: "0 2px 4px rgba(0, 119, 182, 0.2)",
-                transition: "transform 0.15s ease, opacity 0.15s ease"
-              }}
-              // Efecto hover en el boton
-              onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.02)"; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
-            >
-              📥 Importar Excel
-            </button>
+          <div className="col-md-5 text-end" style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+
+            {/* Botón "Registrar Gestor" — solo en pestaña Gestores */}
+            {tab === "gestores" && (
+              <button
+                onClick={() => { resetRegisterForm(); setRegisterTab("Gestor"); setShowRegisterModal(true); }}
+                className="btn text-white"
+                style={{
+                  background: "linear-gradient(135deg, #0077B6, #023E8A)",
+                  borderRadius: "10px", fontWeight: "600", padding: "10px 20px",
+                  border: "none", boxShadow: "0 2px 4px rgba(0,119,182,0.25)",
+                  transition: "transform 0.15s ease"
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.02)"; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
+              >
+                🔑 Registrar Gestor
+              </button>
+            )}
+
+            {/* Botón "Registrar Pasante" — solo en pestaña Pasantes */}
+            {tab === "pasantes" && (
+              <button
+                onClick={() => { resetRegisterForm(); setRegisterTab("Pasante"); setShowRegisterModal(true); }}
+                className="btn text-white"
+                style={{
+                  background: "linear-gradient(135deg, #059669, #065f46)",
+                  borderRadius: "10px", fontWeight: "600", padding: "10px 20px",
+                  border: "none", boxShadow: "0 2px 4px rgba(5,150,105,0.25)",
+                  transition: "transform 0.15s ease"
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.02)"; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
+              >
+                🔬 Registrar Pasante
+              </button>
+            )}
+
+            {/* Botón Importar Excel — solo en pestaña Solicitudes (pendientes) */}
+            {tab === "pendientes" && (
+              <button
+                onClick={handleImportarExcel}
+                className="btn text-white"
+                style={{
+                  background: "linear-gradient(135deg, #0077B6, #023E8A)",
+                  borderRadius: "10px", fontWeight: "600", padding: "10px 20px",
+                  border: "none", boxShadow: "0 2px 4px rgba(0,119,182,0.2)",
+                  transition: "transform 0.15s ease, opacity 0.15s ease"
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.02)"; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
+              >
+                📥 Importar Excel
+              </button>
+            )}
+
           </div>
         </div>
       )}
+
 
       {/* Pestañas de navegacion */}
       <div style={{ display: "flex", gap: "8px", marginBottom: "24px", flexWrap: "wrap" }}>
@@ -718,6 +809,167 @@ export default function GestionUsuarios() {
           </div>
         );
       })()}
+      {/* ===== MODAL: Registrar Pasante / Gestor ===== */}
+      {showRegisterModal && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 9999,
+          background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)",
+          display: "flex", alignItems: "center", justifyContent: "center", padding: "16px"
+        }}>
+          <div style={{
+            background: "#fff", borderRadius: "20px", width: "100%", maxWidth: "520px",
+            boxShadow: "0 24px 60px rgba(0,0,0,0.2)", overflow: "hidden"
+          }}>
+            {/* Cabecera del modal */}
+            <div style={{
+              background: "linear-gradient(135deg, #059669, #065f46)",
+              padding: "24px 28px", display: "flex", justifyContent: "space-between", alignItems: "center"
+            }}>
+              <div>
+                <h5 style={{ color: "#fff", fontWeight: "800", margin: 0, fontSize: "18px" }}>
+                  ➕ Registrar Pasante / Gestor
+                </h5>
+                <p style={{ color: "rgba(255,255,255,0.75)", margin: 0, fontSize: "13px" }}>
+                  El usuario quedará en estado pendiente de aprobación
+                </p>
+              </div>
+              <button onClick={() => { setShowRegisterModal(false); resetRegisterForm(); }}
+                style={{ background: "rgba(255,255,255,0.2)", border: "none", borderRadius: "50%",
+                  width: "34px", height: "34px", color: "#fff", fontSize: "16px", cursor: "pointer" }}>✕
+              </button>
+            </div>
+
+            {/* Pestañas Pasante / Gestor */}
+            <div style={{ display: "flex", borderBottom: "2px solid #e2e8f0", background: "#f8fafc" }}>
+              {["Pasante", "Gestor"].map(t => (
+                <button key={t} onClick={() => setRegisterTab(t)} style={{
+                  flex: 1, padding: "12px", border: "none", cursor: "pointer", fontWeight: "700",
+                  fontSize: "14px", background: "transparent", transition: "all 0.2s",
+                  borderBottom: registerTab === t ? "3px solid #059669" : "3px solid transparent",
+                  color: registerTab === t ? "#059669" : "#94a3b8",
+                }}>
+                  {t === "Pasante" ? "🔬 Pasante" : "🔑 Gestor"}
+                </button>
+              ))}
+            </div>
+
+            {/* Formulario */}
+            <form onSubmit={handleRegistrarUsuario} style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: "14px" }}>
+
+              {/* Tipo de documento */}
+              <div>
+                <label style={{ fontSize: "12px", fontWeight: "700", color: "#475569", marginBottom: "6px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                  Tipo de Documento
+                </label>
+                <select
+                  value={registerForm.tipo_documento}
+                  onChange={e => setRegisterForm(f => ({ ...f, tipo_documento: e.target.value }))}
+                  required style={{ width: "100%", padding: "10px 14px", borderRadius: "10px",
+                    border: "1.5px solid #dbeafe", fontSize: "14px", color: "#1e293b", outline: "none" }}
+                >
+                  <option value="CC">Cédula de Ciudadanía</option>
+                  <option value="TI">Tarjeta de Identidad</option>
+                  <option value="CE">Cédula de Extranjería</option>
+                  <option value="PA">Pasaporte</option>
+                </select>
+              </div>
+
+              {/* Número de documento */}
+              <div>
+                <label style={{ fontSize: "12px", fontWeight: "700", color: "#475569", marginBottom: "6px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                  Número de Documento
+                </label>
+                <input type="text" required placeholder="Ej: 1234567890"
+                  value={registerForm.documento}
+                  onChange={e => setRegisterForm(f => ({ ...f, documento: e.target.value }))}
+                  style={{ width: "100%", padding: "10px 14px", borderRadius: "10px",
+                    border: "1.5px solid #dbeafe", fontSize: "14px", color: "#1e293b", outline: "none" }}
+                />
+              </div>
+
+              {/* Nombres y apellidos */}
+              <div>
+                <label style={{ fontSize: "12px", fontWeight: "700", color: "#475569", marginBottom: "6px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                  Nombres y Apellidos
+                </label>
+                <input type="text" required placeholder="Nombre completo"
+                  value={registerForm.nombres_apellidos}
+                  onChange={e => setRegisterForm(f => ({ ...f, nombres_apellidos: e.target.value }))}
+                  style={{ width: "100%", padding: "10px 14px", borderRadius: "10px",
+                    border: "1.5px solid #dbeafe", fontSize: "14px", color: "#1e293b", outline: "none" }}
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label style={{ fontSize: "12px", fontWeight: "700", color: "#475569", marginBottom: "6px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                  Correo Electrónico
+                </label>
+                <input type="email" required placeholder="correo@ejemplo.com"
+                  value={registerForm.email}
+                  onChange={e => setRegisterForm(f => ({ ...f, email: e.target.value }))}
+                  style={{ width: "100%", padding: "10px 14px", borderRadius: "10px",
+                    border: "1.5px solid #dbeafe", fontSize: "14px", color: "#1e293b", outline: "none" }}
+                />
+              </div>
+
+              {/* Contraseña */}
+              <div>
+                <label style={{ fontSize: "12px", fontWeight: "700", color: "#475569", marginBottom: "6px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                  Contraseña Inicial
+                </label>
+                <input type="password" required placeholder="Mínimo 8 caracteres" minLength={8}
+                  value={registerForm.password}
+                  onChange={e => setRegisterForm(f => ({ ...f, password: e.target.value }))}
+                  style={{ width: "100%", padding: "10px 14px", borderRadius: "10px",
+                    border: "1.5px solid #dbeafe", fontSize: "14px", color: "#1e293b", outline: "none" }}
+                />
+              </div>
+
+              {/* Campo exclusivo de Pasante: es_sena_empresa */}
+              {registerTab === "Pasante" && (
+                <div>
+                  <label style={{ fontSize: "12px", fontWeight: "700", color: "#475569", marginBottom: "6px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                    ¿Es SENA Empresa?
+                  </label>
+                  <select
+                    value={registerForm.es_sena_empresa}
+                    onChange={e => setRegisterForm(f => ({ ...f, es_sena_empresa: e.target.value }))}
+                    style={{ width: "100%", padding: "10px 14px", borderRadius: "10px",
+                      border: "1.5px solid #dbeafe", fontSize: "14px", color: "#1e293b", outline: "none" }}
+                  >
+                    <option value="no">No</option>
+                    <option value="si">Sí</option>
+                  </select>
+                </div>
+              )}
+
+              {/* Nota informativa */}
+              <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "10px", padding: "10px 14px" }}>
+                <p style={{ margin: 0, fontSize: "12px", color: "#065f46" }}>
+                  ℹ️ El {registerTab} quedará en estado <strong>pendiente</strong> hasta que un administrador lo apruebe.
+                </p>
+              </div>
+
+              {/* Botones */}
+              <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
+                <button type="button" onClick={() => { setShowRegisterModal(false); resetRegisterForm(); }}
+                  style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "1.5px solid #e2e8f0",
+                    background: "#f8fafc", color: "#64748b", fontWeight: "600", cursor: "pointer", fontSize: "14px" }}>
+                  Cancelar
+                </button>
+                <button type="submit" disabled={registerLoading}
+                  style={{ flex: 2, padding: "11px", borderRadius: "10px", border: "none",
+                    background: "linear-gradient(135deg, #059669, #065f46)", color: "#fff",
+                    fontWeight: "700", cursor: registerLoading ? "not-allowed" : "pointer",
+                    fontSize: "14px", opacity: registerLoading ? 0.75 : 1 }}>
+                  {registerLoading ? "Registrando..." : `✅ Registrar ${registerTab}`}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
