@@ -22,6 +22,14 @@ import equipoModel from "../models/EquiposModel.js";
 import solicitudxequipoModel from "../models/solicitudxequipoModel.js";
 // Importa el modelo de historial de estados de equipo
 import Estadoxequipo from "../models/estadoxequipoModel.js";
+// Importa el servicio de notificaciones
+import NotificacionService from "./notificacionService.js";
+// Importa el servicio de emails
+import emailService from "./emailService.js";
+// Importa operadores de Sequelize
+import { Op } from "sequelize";
+// Importa el modelo de notificaciones para verificar envíos previos
+import NotificacionModel from "../models/notificacionModel.js";
 
 // Define la clase de servicio para solicitudes de préstamo con flujo completo de estados
 class solicitudService {
@@ -223,6 +231,67 @@ class solicitudService {
         if (!deleted) throw new Error('Solicitud no encontrada');
         // Retorna true indicando que la eliminación fue exitosa
         return true;
+    }
+    // Verifica qué préstamos están vencidos (más de 15 días) y alerta al usuario
+    async checkOverdueLoans() {
+        console.log("⏳ Iniciando revisión de préstamos vencidos...");
+        try {
+            // Busca todas las solicitudes con su usuario e historial de estados
+            const solicitudes = await this.getAll();
+            
+            // Fecha actual para calcular la diferencia
+            const now = new Date();
+
+            let vencidasCount = 0;
+
+            for (const sol of solicitudes) {
+                // Solo nos interesan las que están actualmente en estado "prestado"
+                if (sol.ultimoEstado === "prestado" && sol.fecha_inicio) {
+                    const fechaInicio = new Date(sol.fecha_inicio);
+                    const diffTime = Math.abs(now - fechaInicio);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+
+                    // Si pasaron más de 15 días (o 15 días exactos)
+                    if (diffDays >= 15) {
+                        // Verifica si ya se envió la notificación anteriormente buscando en NotificacionModel
+                        const alreadyNotified = await NotificacionModel.findOne({
+                            where: {
+                                id_usuario_destino: sol.id_usuario,
+                                titulo: 'Préstamo Vencido',
+                                mensaje: { [Op.like]: `%solicitud #${sol.id_solicitud}%` }
+                            }
+                        });
+
+                        if (!alreadyNotified) {
+                            console.log(`⚠️ Préstamo vencido detectado para Solicitud #${sol.id_solicitud} (Usuario: ${sol.usuario.nombres_apellidos})`);
+                            
+                            // Envía la notificación en la app
+                            await NotificacionService.crearNotificacion({
+                                id_usuario_destino: sol.id_usuario,
+                                id_usuario_origen: null,
+                                titulo: "Préstamo Vencido",
+                                mensaje: `Tu préstamo de la solicitud #${sol.id_solicitud} ha superado los 15 días límite. Por favor, acércate a devolver el equipo.`,
+                                tipo: "alerta"
+                            });
+
+                            // Envía el correo si tiene email
+                            if (sol.usuario.email) {
+                                await emailService.sendOverdueReturnAlert(
+                                    sol.usuario.email,
+                                    sol.usuario.nombres_apellidos,
+                                    sol.id_solicitud
+                                ).catch(e => console.error("Error enviando correo de vencimiento:", e));
+                            }
+                            
+                            vencidasCount++;
+                        }
+                    }
+                }
+            }
+            console.log(`✅ Revisión terminada. Se enviaron ${vencidasCount} nuevas alertas de vencimiento.`);
+        } catch (error) {
+            console.error("❌ Error verificando préstamos vencidos:", error);
+        }
     }
 }
 

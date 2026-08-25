@@ -13,6 +13,10 @@ import equipoModel from "../models/EquiposModel.js";
 import solicitudModel from "../models/solicitudModel.js";
 // Importa el modelo de movimientos de reactivos para consultar vencimientos
 import movimientoreactivoModel from "../models/movimientoreactivosModel.js";
+// Importa el modelo de usuarios
+import userModel from "../models/userModel.js";
+// Importa el modelo de proveedores
+import proveedoresModel from "../models/proveedoresModel.js";
 // Importa el operador Op de Sequelize para consultas con rangos de fechas
 import { Op } from "sequelize";
 
@@ -35,10 +39,14 @@ export const getDashboardStats = async (req, res) => {
       });
 
       // Responde con datos limitados a las solicitudes personales del usuario
+      const totalSols = solicitudesStats.reduce((acc, curr) => acc + parseInt(curr.getDataValue('count')), 0);
       return res.json({
         totals: {
           reactivos: 0,
-          equipos: 0
+          equipos: 0,
+          usuarios: 0,
+          proveedores: 0,
+          solicitudes: totalSols
         },
         vencimientos: [],
         solicitudes: solicitudesStats,
@@ -53,6 +61,12 @@ export const getDashboardStats = async (req, res) => {
     const totalReactivos = await reactivoModel.count();
     // Obtiene el conteo total de equipos registrados
     const totalEquipos = await equipoModel.count();
+    // Obtiene el conteo total de usuarios registrados
+    const totalUsuarios = await userModel.count();
+    // Obtiene el conteo total de proveedores
+    const totalProveedores = await proveedoresModel.count();
+    // Obtiene el conteo total de solicitudes
+    const totalSolicitudes = await solicitudModel.count();
 
     // Calcula la fecha actual y la fecha dentro de 30 días para filtrar vencimientos
     const hoy = new Date();
@@ -87,7 +101,10 @@ export const getDashboardStats = async (req, res) => {
     res.json({
       totals: {
         reactivos: totalReactivos,
-        equipos: totalEquipos
+        equipos: totalEquipos,
+        usuarios: totalUsuarios,
+        proveedores: totalProveedores,
+        solicitudes: totalSolicitudes
       },
       vencimientos: reactivosVencimiento,
       solicitudes: solicitudesStats,

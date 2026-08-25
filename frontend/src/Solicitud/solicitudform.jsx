@@ -376,21 +376,34 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
         {(() => {
           const hoy = new Date();
           const minDate = new Date(hoy);
-          minDate.setDate(minDate.getDate() + 3);
+          // Fecha de inicio desde el día actual
+          
           const maxDate = new Date(hoy);
           maxDate.setMonth(maxDate.getMonth() + 2);
           const minStr = minDate.toISOString().slice(0, 10);
           const maxStr = maxDate.toISOString().slice(0, 10);
-          // Para instructor: fecha fin máxima = fecha_inicio + 30 días
+          
+          // Para instructor: fecha fin
+          let minFinStr = minStr;
           let maxFinStr = maxStr;
           if (fecha_inicio && esInstructor) {
             const [yyyy, mm, dd] = fecha_inicio.split("-").map(Number);
+            
+            // Mínimo 5 días para la entrega
+            const minFin = new Date(yyyy, mm - 1, dd);
+            minFin.setDate(minFin.getDate() + 5);
+            const yMin = minFin.getFullYear();
+            const mMin = String(minFin.getMonth() + 1).padStart(2, '0');
+            const dMin = String(minFin.getDate()).padStart(2, '0');
+            minFinStr = `${yMin}-${mMin}-${dMin}`;
+
+            // Máximo 15 días para la entrega
             const maxFin = new Date(yyyy, mm - 1, dd);
-            maxFin.setDate(maxFin.getDate() + 30);
-            const y = maxFin.getFullYear();
-            const m = String(maxFin.getMonth() + 1).padStart(2, '0');
-            const d = String(maxFin.getDate()).padStart(2, '0');
-            maxFinStr = `${y}-${m}-${d}`;
+            maxFin.setDate(maxFin.getDate() + 15);
+            const yMax = maxFin.getFullYear();
+            const mMax = String(maxFin.getMonth() + 1).padStart(2, '0');
+            const dMax = String(maxFin.getDate()).padStart(2, '0');
+            maxFinStr = `${yMax}-${mMax}-${dMax}`;
           }
           return (
             <>
@@ -417,7 +430,7 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
                 {errors.fecha_inicio ? (
                   <div className="invalid-feedback" style={{ fontSize: "11px" }}>{errors.fecha_inicio}</div>
                 ) : (
-                  <small style={{ color: "#94a3b8", fontSize: "10px" }}>Solicitar con mín. 3 días de anticipación</small>
+                  <small style={{ color: "#94a3b8", fontSize: "10px" }}>5 a 8 días y máximo 15 días para entregarlo</small>
                 )}
               </div>
               {/* Instructor: Fecha de devolución */}
@@ -428,30 +441,21 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
                   </label>
                   <input type="date" className={`form-control form-control-sm ${errors.fecha_fin ? 'is-invalid' : ''}`}
                     value={fecha_fin} onChange={e => { setFecha_fin(e.target.value); setErrors({...errors, fecha_fin: null}); }}
-                    min={fecha_inicio || minStr} max={maxFinStr} required />
+                    min={minFinStr} max={maxFinStr} required />
                   {errors.fecha_fin ? (
                     <div className="invalid-feedback" style={{ fontSize: "11px" }}>{errors.fecha_fin}</div>
                   ) : (
-                    <small style={{ color: "#94a3b8", fontSize: "10px" }}>Máx. 1 mes después del inicio</small>
+                    <small style={{ color: "#94a3b8", fontSize: "10px" }}>Entre 5 a 15 días después del inicio</small>
                   )}
                 </div>
               )}
               {/* Horario de uso (siempre visible) */}
               <div className={esInstructor ? "col-12" : "col-md-6"}>
                 <label className="form-label fw-bold" style={{ color: "#0A1628", fontSize: "13px" }}>
-                  ⏰ {esAprendiz ? "Horario de Uso (Mismo día)" : "Horario"}
+                  ⏰ {esAprendiz ? "Horario de Devolución" : "Horario de Entrega"}
                 </label>
                 <div className="d-flex gap-2 align-items-center">
                   <div style={{ flex: 1 }}>
-                    <small className="text-muted" style={{ fontSize: "10px" }}>Hora inicio</small>
-                    <input type="time" className={`form-control form-control-sm ${errors.hora_inicio ? 'is-invalid' : ''}`}
-                      value={hora_inicio} onChange={e => { setHora_inicio(e.target.value); setErrors({...errors, hora_inicio: null}); }}
-                      min="07:00" max="16:00" required />
-                    {errors.hora_inicio && <div className="invalid-feedback" style={{ fontSize: "11px" }}>{errors.hora_inicio}</div>}
-                  </div>
-                  <span className="text-muted small" style={{ paddingTop: "16px" }}>a</span>
-                  <div style={{ flex: 1 }}>
-                    <small className="text-muted" style={{ fontSize: "10px" }}>Hora {esAprendiz ? "devolución" : "fin"}</small>
                     <input type="time" className={`form-control form-control-sm ${errors.hora_fin ? 'is-invalid' : ''}`}
                       value={hora_fin} onChange={e => { setHora_fin(e.target.value); setErrors({...errors, hora_fin: null}); }}
                       min="07:00" max="16:00" required />

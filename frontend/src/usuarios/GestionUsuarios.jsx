@@ -10,7 +10,6 @@ import Swal from "sweetalert2";
 import socket from "../socket.js";
 
 // Importa los subcomponentes de formación para renderizar en pestañas
-import Aprendices from "./Aprendices.jsx";
 import Instructores from "./Instructores.jsx";
 
 // Define el componente principal de gestion de usuarios
@@ -106,7 +105,7 @@ export default function GestionUsuarios() {
       }
 
       // Si la pestana activa es alguna de las de rol, carga todos los usuarios excepto Administrador
-      if (["aprendices", "instructores", "gestores", "pasantes"].includes(tab)) {
+      if (["instructores", "gestores", "pasantes"].includes(tab)) {
         const resUsuarios = await apiAxios.get("/api/auth/usuarios", { headers });
         let filtrados = resUsuarios.data.filter(u => u.rol !== 'Administrador');
         filtrados = ordenarUsuarios(filtrados);
@@ -395,7 +394,6 @@ export default function GestionUsuarios() {
   const rolSections = [
     { key: "Gestor",     icon: "🔑", label: "Gestores",     color: "#0077B6" },
     { key: "Pasante",    icon: "🔬", label: "Pasantes",     color: "#0077B6" },
-    { key: "Aprendiz",   icon: "🎓", label: "Aprendices",   color: "#0077B6" },
     { key: "Instructor", icon: "👨‍🏫", label: "Instructores", color: "#0077B6" },
   ];
 
@@ -590,7 +588,6 @@ export default function GestionUsuarios() {
       <div style={{ display: "flex", gap: "8px", marginBottom: "24px", flexWrap: "wrap" }}>
         {[
           ["pendientes", "🔑 Solicitudes"],
-          ["aprendices", "🎓 Aprendices"],
           ["instructores", "👨‍🏫 Instructores"],
           ["gestores", "🔑 Gestores"],
           ["pasantes", "🔬 Pasantes"]
@@ -633,7 +630,6 @@ export default function GestionUsuarios() {
         </div>
       )}
 
-      {tab === "aprendices" && <Aprendices />}
       {tab === "instructores" && <Instructores />}
 
       {/* Pestañas por rol: Gestores, Pasantes */}
@@ -817,55 +813,43 @@ export default function GestionUsuarios() {
           display: "flex", alignItems: "center", justifyContent: "center", padding: "16px"
         }}>
           <div style={{
-            background: "#fff", borderRadius: "20px", width: "100%", maxWidth: "520px",
+            background: "#fff", borderRadius: "16px", width: "100%", maxWidth: "420px",
             boxShadow: "0 24px 60px rgba(0,0,0,0.2)", overflow: "hidden"
           }}>
             {/* Cabecera del modal */}
             <div style={{
               background: "linear-gradient(135deg, #059669, #065f46)",
-              padding: "24px 28px", display: "flex", justifyContent: "space-between", alignItems: "center"
+              padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center"
             }}>
               <div>
-                <h5 style={{ color: "#fff", fontWeight: "800", margin: 0, fontSize: "18px" }}>
-                  ➕ Registrar Pasante / Gestor
+                <h5 style={{ color: "#fff", fontWeight: "800", margin: 0, fontSize: "16px" }}>
+                  ➕ Registrar {registerTab}
                 </h5>
-                <p style={{ color: "rgba(255,255,255,0.75)", margin: 0, fontSize: "13px" }}>
+                <p style={{ color: "rgba(255,255,255,0.75)", margin: 0, fontSize: "12px" }}>
                   El usuario quedará en estado pendiente de aprobación
                 </p>
               </div>
               <button onClick={() => { setShowRegisterModal(false); resetRegisterForm(); }}
                 style={{ background: "rgba(255,255,255,0.2)", border: "none", borderRadius: "50%",
-                  width: "34px", height: "34px", color: "#fff", fontSize: "16px", cursor: "pointer" }}>✕
+                  width: "28px", height: "28px", color: "#fff", fontSize: "14px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕
               </button>
             </div>
 
-            {/* Pestañas Pasante / Gestor */}
-            <div style={{ display: "flex", borderBottom: "2px solid #e2e8f0", background: "#f8fafc" }}>
-              {["Pasante", "Gestor"].map(t => (
-                <button key={t} onClick={() => setRegisterTab(t)} style={{
-                  flex: 1, padding: "12px", border: "none", cursor: "pointer", fontWeight: "700",
-                  fontSize: "14px", background: "transparent", transition: "all 0.2s",
-                  borderBottom: registerTab === t ? "3px solid #059669" : "3px solid transparent",
-                  color: registerTab === t ? "#059669" : "#94a3b8",
-                }}>
-                  {t === "Pasante" ? "🔬 Pasante" : "🔑 Gestor"}
-                </button>
-              ))}
-            </div>
+
 
             {/* Formulario */}
-            <form onSubmit={handleRegistrarUsuario} style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: "14px" }}>
+            <form onSubmit={handleRegistrarUsuario} style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: "10px" }}>
 
               {/* Tipo de documento */}
               <div>
-                <label style={{ fontSize: "12px", fontWeight: "700", color: "#475569", marginBottom: "6px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                <label style={{ fontSize: "11px", fontWeight: "700", color: "#475569", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                   Tipo de Documento
                 </label>
                 <select
                   value={registerForm.tipo_documento}
                   onChange={e => setRegisterForm(f => ({ ...f, tipo_documento: e.target.value }))}
-                  required style={{ width: "100%", padding: "10px 14px", borderRadius: "10px",
-                    border: "1.5px solid #dbeafe", fontSize: "14px", color: "#1e293b", outline: "none" }}
+                  required style={{ width: "100%", padding: "8px 12px", borderRadius: "8px",
+                    border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b", outline: "none" }}
                 >
                   <option value="CC">Cédula de Ciudadanía</option>
                   <option value="TI">Tarjeta de Identidad</option>
@@ -876,93 +860,91 @@ export default function GestionUsuarios() {
 
               {/* Número de documento */}
               <div>
-                <label style={{ fontSize: "12px", fontWeight: "700", color: "#475569", marginBottom: "6px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                <label style={{ fontSize: "11px", fontWeight: "700", color: "#475569", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                   Número de Documento
                 </label>
                 <input type="text" required placeholder="Ej: 1234567890"
                   value={registerForm.documento}
                   onChange={e => setRegisterForm(f => ({ ...f, documento: e.target.value }))}
-                  style={{ width: "100%", padding: "10px 14px", borderRadius: "10px",
-                    border: "1.5px solid #dbeafe", fontSize: "14px", color: "#1e293b", outline: "none" }}
+                  style={{ width: "100%", padding: "8px 12px", borderRadius: "8px",
+                    border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b", outline: "none" }}
                 />
               </div>
 
               {/* Nombres y apellidos */}
               <div>
-                <label style={{ fontSize: "12px", fontWeight: "700", color: "#475569", marginBottom: "6px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                <label style={{ fontSize: "11px", fontWeight: "700", color: "#475569", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                   Nombres y Apellidos
                 </label>
                 <input type="text" required placeholder="Nombre completo"
                   value={registerForm.nombres_apellidos}
                   onChange={e => setRegisterForm(f => ({ ...f, nombres_apellidos: e.target.value }))}
-                  style={{ width: "100%", padding: "10px 14px", borderRadius: "10px",
-                    border: "1.5px solid #dbeafe", fontSize: "14px", color: "#1e293b", outline: "none" }}
+                  style={{ width: "100%", padding: "8px 12px", borderRadius: "8px",
+                    border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b", outline: "none" }}
                 />
               </div>
 
               {/* Email */}
               <div>
-                <label style={{ fontSize: "12px", fontWeight: "700", color: "#475569", marginBottom: "6px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                <label style={{ fontSize: "11px", fontWeight: "700", color: "#475569", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                   Correo Electrónico
                 </label>
                 <input type="email" required placeholder="correo@ejemplo.com"
                   value={registerForm.email}
                   onChange={e => setRegisterForm(f => ({ ...f, email: e.target.value }))}
-                  style={{ width: "100%", padding: "10px 14px", borderRadius: "10px",
-                    border: "1.5px solid #dbeafe", fontSize: "14px", color: "#1e293b", outline: "none" }}
+                  style={{ width: "100%", padding: "8px 12px", borderRadius: "8px",
+                    border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b", outline: "none" }}
                 />
               </div>
 
               {/* Contraseña */}
               <div>
-                <label style={{ fontSize: "12px", fontWeight: "700", color: "#475569", marginBottom: "6px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                <label style={{ fontSize: "11px", fontWeight: "700", color: "#475569", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                   Contraseña Inicial
                 </label>
                 <input type="password" required placeholder="Mínimo 8 caracteres" minLength={8}
                   value={registerForm.password}
                   onChange={e => setRegisterForm(f => ({ ...f, password: e.target.value }))}
-                  style={{ width: "100%", padding: "10px 14px", borderRadius: "10px",
-                    border: "1.5px solid #dbeafe", fontSize: "14px", color: "#1e293b", outline: "none" }}
+                  style={{ width: "100%", padding: "8px 12px", borderRadius: "8px",
+                    border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b", outline: "none" }}
                 />
               </div>
 
-              {/* Campo exclusivo de Pasante: es_sena_empresa */}
-              {registerTab === "Pasante" && (
-                <div>
-                  <label style={{ fontSize: "12px", fontWeight: "700", color: "#475569", marginBottom: "6px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                    ¿Es SENA Empresa?
-                  </label>
-                  <select
-                    value={registerForm.es_sena_empresa}
-                    onChange={e => setRegisterForm(f => ({ ...f, es_sena_empresa: e.target.value }))}
-                    style={{ width: "100%", padding: "10px 14px", borderRadius: "10px",
-                      border: "1.5px solid #dbeafe", fontSize: "14px", color: "#1e293b", outline: "none" }}
-                  >
-                    <option value="no">No</option>
-                    <option value="si">Sí</option>
-                  </select>
-                </div>
-              )}
+              {/* Campo exclusivo de Pasante: es_sena_empresa, o un placeholder para mantener el mismo tamaño */}
+              <div style={{ visibility: registerTab === "Pasante" ? "visible" : "hidden", height: registerTab === "Pasante" ? "auto" : "55px" }}>
+                <label style={{ fontSize: "11px", fontWeight: "700", color: "#475569", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                  ¿Es SENA Empresa?
+                </label>
+                <select
+                  value={registerForm.es_sena_empresa}
+                  onChange={e => setRegisterForm(f => ({ ...f, es_sena_empresa: e.target.value }))}
+                  style={{ width: "100%", padding: "8px 12px", borderRadius: "8px",
+                    border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b", outline: "none" }}
+                >
+                  <option value="no">No</option>
+                  <option value="si">Sí</option>
+                </select>
+              </div>
 
               {/* Nota informativa */}
-              <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "10px", padding: "10px 14px" }}>
-                <p style={{ margin: 0, fontSize: "12px", color: "#065f46" }}>
+              <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", padding: "8px 12px" }}>
+                <p style={{ margin: 0, fontSize: "11px", color: "#065f46" }}>
                   ℹ️ El {registerTab} quedará en estado <strong>pendiente</strong> hasta que un administrador lo apruebe.
                 </p>
               </div>
 
               {/* Botones */}
-              <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
+              <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
                 <button type="button" onClick={() => { setShowRegisterModal(false); resetRegisterForm(); }}
-                  style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "1.5px solid #e2e8f0",
-                    background: "#f8fafc", color: "#64748b", fontWeight: "600", cursor: "pointer", fontSize: "14px" }}>
+                  style={{ flex: 1, padding: "8px", borderRadius: "8px", border: "1.5px solid #e2e8f0",
+                    background: "#f8fafc", color: "#64748b", fontWeight: "600", cursor: "pointer", fontSize: "13px" }}>
                   Cancelar
                 </button>
                 <button type="submit" disabled={registerLoading}
-                  style={{ flex: 2, padding: "11px", borderRadius: "10px", border: "none",
+                  style={{ flex: 2, padding: "8px", borderRadius: "8px", border: "none",
                     background: "linear-gradient(135deg, #059669, #065f46)", color: "#fff",
                     fontWeight: "700", cursor: registerLoading ? "not-allowed" : "pointer",
-                    fontSize: "14px", opacity: registerLoading ? 0.75 : 1 }}>
+                    fontSize: "13px", opacity: registerLoading ? 0.75 : 1 }}>
                   {registerLoading ? "Registrando..." : `✅ Registrar ${registerTab}`}
                 </button>
               </div>

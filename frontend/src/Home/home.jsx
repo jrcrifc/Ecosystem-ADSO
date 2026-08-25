@@ -23,6 +23,14 @@ const Home = () => {
     usuariosPendientes: 0,
     solicitudesPendientes: 0
   });
+  // Estado con los totales de registros para mostrar en las tarjetas
+  const [totals, setTotals] = useState({
+    solicitudes: 0,
+    reactivos: 0,
+    equipos: 0,
+    usuarios: 0,
+    proveedores: 0
+  });
 
   // Lee los datos del usuario desde sessionStorage
   const stored = sessionStorage.getItem("user");
@@ -47,40 +55,37 @@ const Home = () => {
     setTimeout(() => setSectionsVisible(true), 400);
   }, []);
 
-  // Efecto que carga el resumen de novedades solo si el usuario es administrador
+  // Efecto que carga el resumen de novedades y totales
   useEffect(() => {
-    // Sale si el usuario no es administrador
-    if (!esAdmin) return;
-
-    // Función asíncrona que obtiene estadísticas y usuarios del backend
-    const fetchResumen = async () => {
+    const fetchStats = async () => {
       try {
-        // Realiza peticiones paralelas de estadísticas y lista de usuarios
-        const [statsRes, usersRes] = await Promise.all([
-          apiAxios.get("/api/dashboard/stats"),
-          apiAxios.get("/api/auth/usuarios")
-        ]);
-
+        const statsRes = await apiAxios.get("/api/dashboard/stats");
         const stats = statsRes.data;
-        const users = usersRes.data;
+        
+        if (stats.totals) {
+          setTotals(stats.totals);
+        }
 
-        // Calcula los indicadores: reactivos por vencer, usuarios pendientes y solicitudes activas
-        const reactivosPorVencer = stats.vencimientos?.length || 0;
-        const usuariosPendientes = users.filter(u => u.estado === "pendiente").length;
-        const solicitudesPendientes = stats.solicitudes?.find(s => s.estado === 1)?.count || 0;
+        // Si es admin, también calculamos las alertas y usuarios pendientes
+        if (esAdmin) {
+          const usersRes = await apiAxios.get("/api/auth/usuarios");
+          const users = usersRes.data;
+          
+          const reactivosPorVencer = stats.vencimientos?.length || 0;
+          const usuariosPendientes = users.filter(u => u.estado === "pendiente").length;
+          const solicitudesPendientes = stats.solicitudes?.find(s => s.estado === 1)?.count || 0;
 
-        // Actualiza el estado del resumen con los indicadores calculados
-        setResumenData({
-          reactivosPorVencer,
-          usuariosPendientes,
-          solicitudesPendientes
-        });
+          setResumenData({
+            reactivosPorVencer,
+            usuariosPendientes,
+            solicitudesPendientes
+          });
+        }
       } catch (error) {
-        console.error("Error cargando resumen para admin", error);
+        console.error("Error cargando dashboard stats", error);
       }
     };
-
-    fetchResumen();
+    fetchStats();
   }, [esAdmin]);
 
   // Etiqueta legible para mostrar el rol del usuario en el hero
@@ -95,14 +100,14 @@ const Home = () => {
 
   // Define las tarjetas de acceso rápido filtradas según el rol del usuario
   const cards = [
-    { show: esAprendiz || esInstructor, icon: "📋", title: "Nueva Solicitud", desc: "Crea solicitudes de préstamo.", color: "#0077B6", href: "/solicitud" },
-    { show: esAdmin, icon: "📋", title: "Nueva Solicitud", desc: "Registra solicitud por un solicitante.", color: "#0077B6", href: "/solicitud" },
-    { show: esAdmin, icon: "📊", title: "Gestión Solicitudes", desc: "Revisa y aprueba solicitudes.", color: "#0096C7", href: "/gestion-solicitudes" },
-    { show: esAdmin || esGestor || esPasante, icon: "🧪", title: "Reactivos", desc: "Gestión de stock de reactivos.", color: "#00B4D8", href: "/reactivos" },
-    { show: esAdmin || esGestor || esPasante, icon: "🔬", title: "Equipos", desc: "Administración de equipos.", color: "#023E8A", href: "/equipos" },
-    { show: esAdmin, icon: "👥", title: "Usuarios", desc: "Administra permisos y roles.", color: "#0353A4", href: "/gestion-usuarios" },
-    { show: esAdmin, icon: "🏢", title: "Proveedores", desc: "Administra proveedores.", color: "#48CAE4", href: "/proveedor" },
-    { show: esAprendiz || esInstructor, icon: "📁", title: "Mi Historial", desc: "Estado de tus solicitudes.", color: "#1d4ed8", href: "/estadoxsolicitud" },
+    { id: "solicitudes", show: esAprendiz || esInstructor, icon: "📋", title: "Nueva Solicitud", desc: "Crea solicitudes de préstamo.", color: "#0077B6", href: "/solicitud" },
+    { id: "solicitudes", show: esAdmin, icon: "📋", title: "Nueva Solicitud", desc: "Registra solicitud por un solicitante.", color: "#0077B6", href: "/solicitud" },
+    { id: "solicitudes", show: esAdmin, icon: "📊", title: "Gestión Solicitudes", desc: "Revisa y aprueba solicitudes.", color: "#0096C7", href: "/gestion-solicitudes" },
+    { id: "reactivos", show: esAdmin || esGestor || esPasante, icon: "🧪", title: "Reactivos", desc: "Gestión de stock de reactivos.", color: "#00B4D8", href: "/reactivos" },
+    { id: "equipos", show: esAdmin || esGestor || esPasante, icon: "🔬", title: "Equipos", desc: "Administración de equipos.", color: "#023E8A", href: "/equipos" },
+    { id: "usuarios", show: esAdmin, icon: "👥", title: "Usuarios", desc: "Administra permisos y roles.", color: "#0353A4", href: "/gestion-usuarios" },
+    { id: "proveedores", show: esAdmin, icon: "🏢", title: "Proveedores", desc: "Administra proveedores.", color: "#48CAE4", href: "/proveedor" },
+    { id: "solicitudes", show: esAprendiz || esInstructor, icon: "📁", title: "Mi Historial", desc: "Estado de tus solicitudes.", color: "#1d4ed8", href: "/estadoxsolicitud" },
   ];
 
   return (
@@ -146,34 +151,26 @@ const Home = () => {
           right: 40px;
           top: 50%;
           transform: translateY(-50%);
-          width: 150px;
-          height: 150px;
-          border-radius: 24px;
-          background: rgba(255,255,255,0.1);
           display: flex;
           align-items: center;
           justify-content: center;
-          border: 1px solid rgba(255,255,255,0.1);
-          backdrop-filter: blur(10px);
           transition: all 0.4s ease;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
         }
 
         .home-hero-logo-container:hover {
-          transform: translateY(-50%) scale(1.08) rotate(3deg);
-          box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
-          background: rgba(255,255,255,0.2);
+          transform: translateY(-50%) scale(1.05) rotate(3deg);
         }
 
         .home-hero-logo {
-          width: 110px;
-          height: 110px;
-          border-radius: 14px;
-          transition: transform 0.4s ease;
+          width: 280px;
+          height: auto;
+          filter: drop-shadow(0 15px 25px rgba(0,0,0,0.25));
+          transition: transform 0.4s ease, filter 0.4s ease;
         }
 
         .home-hero-logo-container:hover .home-hero-logo {
-          transform: scale(1.05);
+          transform: scale(1.08);
+          filter: drop-shadow(0 20px 35px rgba(0,0,0,0.35));
         }
 
         @media (max-width: 768px) {
@@ -200,16 +197,14 @@ const Home = () => {
             top: auto;
             transform: none;
             margin-top: 24px;
-            width: 100px;
-            height: 100px;
-            border-radius: 20px;
+            width: 120px;
+            height: 120px;
             align-self: center;
           }
 
           .home-hero-logo {
-            width: 60px;
-            height: 60px;
-            border-radius: 10px;
+            width: 110px;
+            height: 110px;
           }
         }
       `}</style>
@@ -338,13 +333,28 @@ const Home = () => {
                   e.currentTarget.style.borderColor = "#e2e8f0";
                 }}
               >
-                {/* Ícono de la tarjeta con fondo de color */}
-                <div style={{
-                  width: "48px", height: "48px", borderRadius: "12px",
-                  background: item.color + "15", display: "flex", alignItems: "center",
-                  justifyContent: "center", fontSize: "22px", marginBottom: "16px",
-                  color: item.color
-                }}>{item.icon}</div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div style={{
+                    width: "48px", height: "48px", borderRadius: "12px",
+                    background: item.color + "15", display: "flex", alignItems: "center",
+                    justifyContent: "center", fontSize: "22px", marginBottom: "16px",
+                    color: item.color
+                  }}>{item.icon}</div>
+                  
+                  {/* Badge con el total de registros */}
+                  {(totals[item.id] !== undefined && totals[item.id] > 0) && (
+                    <div style={{
+                      background: item.color + "20",
+                      color: item.color,
+                      padding: "4px 10px",
+                      borderRadius: "12px",
+                      fontSize: "12px",
+                      fontWeight: "800"
+                    }}>
+                      {totals[item.id]} registros
+                    </div>
+                  )}
+                </div>
                 {/* Título de la tarjeta */}
                 <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#0A1628", marginBottom: "8px" }}>{item.title}</h3>
                 {/* Descripción de la tarjeta */}

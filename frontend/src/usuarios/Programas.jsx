@@ -189,28 +189,34 @@ export default function Programas() {
           <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
             <thead>
               <tr style={{ background: '#f8fafc' }}>
-                {['#', 'Nombre del Programa', 'Estado', 'Fichas Asociadas', 'Acciones'].map(h => (
-                  <th key={h} style={{ padding: '12px 16px', fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>{h}</th>
-                ))}
+                <th style={{ padding: '16px 24px', width: '5%', fontSize: '11px', fontWeight: '700', color: '#64748b' }}>#</th>
+                <th style={{ padding: '16px 24px', width: '45%', fontSize: '11px', fontWeight: '700', color: '#64748b', letterSpacing: '0.5px' }}>NOMBRE DEL PROGRAMA</th>
+                <th style={{ padding: '16px 24px', width: '15%', fontSize: '11px', fontWeight: '700', color: '#64748b', letterSpacing: '0.5px' }}>ESTADO</th>
+                <th style={{ padding: '16px 24px', width: '20%', fontSize: '11px', fontWeight: '700', color: '#64748b', letterSpacing: '0.5px' }}>FICHAS ASOCIADAS</th>
+                <th style={{ padding: '16px 24px', width: '15%', fontSize: '11px', fontWeight: '700', color: '#64748b', letterSpacing: '0.5px' }}>ACCIONES</th>
               </tr>
             </thead>
             <tbody>
               {filtrados.map((p, idx) => (
                 <tr key={p.id_programa} style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                  <td style={{ padding: '14px 16px', color: '#94a3b8', fontSize: '13px' }}>{idx + 1}</td>
-                  <td style={{ padding: '14px 16px', color: '#0f172a', fontSize: '13px' }}>{p.nombre_programa}</td>
-                  <td style={{ padding: '14px 16px' }}>
-                    <span className={`px-2 py-1 rounded-pill text-white fw-semibold ${p.estado !== false ? "bg-success" : "bg-danger"}`} style={{ fontSize: "0.7rem" }}>
+                  <td style={{ padding: '16px 24px', color: '#94a3b8', fontSize: '14px', verticalAlign: 'middle' }}>{idx + 1}</td>
+                  <td style={{ padding: '16px 24px', color: '#0f172a', fontSize: '14px', fontWeight: '500', verticalAlign: 'middle' }}>{p.nombre_programa}</td>
+                  <td style={{ padding: '16px 24px', verticalAlign: 'middle' }}>
+                    <span className={`px-3 py-1 rounded-pill fw-semibold ${p.estado !== false ? "text-success" : "text-danger"}`} style={{ fontSize: "12px", background: p.estado !== false ? "#dcfce7" : "#fee2e2" }}>
                       {p.estado !== false ? "ACTIVO" : "INACTIVO"}
                     </span>
                   </td>
-                  <td style={{ padding: '14px 16px', color: '#64748b', fontSize: '13px' }}>{p.fichas ? p.fichas.length : 0} fichas</td>
-                  <td style={{ padding: '14px 16px' }}>
+                  <td style={{ padding: '16px 24px', color: '#64748b', fontSize: '14px', verticalAlign: 'middle' }}>
+                    <span style={{ background: '#f1f5f9', padding: '4px 10px', borderRadius: '6px' }}>
+                      {p.fichas ? p.fichas.length : 0} fichas
+                    </span>
+                  </td>
+                  <td style={{ padding: '16px 24px', verticalAlign: 'middle' }}>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={() => setSelectedPrograma(p)} data-bs-toggle="modal" data-bs-target="#modalPrograma" title="Editar" className="btn btn-sm" style={{ background: "#dbeafe", color: "#0077B6", border: "none" }}>
+                      <button onClick={() => setSelectedPrograma(p)} data-bs-toggle="modal" data-bs-target="#modalPrograma" title="Editar" className="btn btn-sm" style={{ background: "#e0f2fe", color: "#0284c7", border: "none", padding: "6px 10px" }}>
                         <i className="fas fa-edit"></i>
                       </button>
-                      <button onClick={() => toggleEstado(p.id_programa, p.estado)} title={p.estado !== false ? "Inactivar" : "Activar"} className="btn btn-sm" style={{ background: p.estado !== false ? "#fee2e2" : "#dcfce7", color: p.estado !== false ? "#dc2626" : "#16a34a", border: "none" }}>
+                      <button onClick={() => toggleEstado(p.id_programa, p.estado)} title={p.estado !== false ? "Inactivar" : "Activar"} className="btn btn-sm" style={{ background: p.estado !== false ? "#fee2e2" : "#dcfce7", color: p.estado !== false ? "#dc2626" : "#16a34a", border: "none", padding: "6px 10px" }}>
                         <i className={`fas ${p.estado !== false ? "fa-ban" : "fa-check"}`}></i>
                       </button>
                     </div>

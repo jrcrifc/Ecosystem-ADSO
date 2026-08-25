@@ -29,7 +29,7 @@ import XLSX from "xlsx";
 // Importa modelos adicionales para la lógica de importación
 import ProgramaModel from "../models/programaModel.js";
 import FichaModel from "../models/fichaModel.js";
-import AprendizModel from "../models/aprendizModel.js";
+
 import InstructorModel from "../models/instructorModel.js";
 
 // Define la clase de servicio para usuarios con registro, login, aprobación e importación masiva
@@ -112,7 +112,7 @@ class UserService {
     // Registra la acción en la tabla de auditoría
     await registrarLog(email, 'REGISTRO', 'AUTH', `Usuario registrado como ${rol}`);
     // Notifica a los administradores si el nuevo usuario requiere aprobación
-    if (['Pasante', 'Gestor', 'Aprendiz', 'Instructor'].includes(rol)) {
+    if (['Pasante', 'Gestor', 'Instructor'].includes(rol)) {
       // Registra notificación en el sistema para el panel del administrador
       await NotificacionService.notificarAdmins({
         id_usuario_origen: user.id_usuario,
@@ -328,7 +328,7 @@ class UserService {
     let omitidos = 0;
     let errores = [];
     // Define los roles válidos en el sistema
-    const rolesValidos = ['Aprendiz', 'Pasante', 'Gestor', 'Instructor', 'Administrador'];
+    const rolesValidos = ['Pasante', 'Gestor', 'Instructor', 'Administrador'];
     // Recorre cada fila del Excel para procesar los usuarios
     for (let i = 0; i < data.length; i++) {
       const row = data[i];
@@ -337,7 +337,7 @@ class UserService {
       let documento = "";
       let nombres_apellidos = "";
       let email = "";
-      let rol = "Aprendiz";
+      let rol = "Pasante";
       let numero_ficha = null;
       let nombre_ficha = null;
       let es_sena_empresa = false;
@@ -510,25 +510,7 @@ class UserService {
           id_programa
         });
 
-        // Si es Aprendiz, se registra en su tabla con todos los campos extendidos
-        if (rol.toLowerCase() === 'aprendiz') {
-          await AprendizModel.create({
-            documento,
-            nombres_apellidos,
-            email,
-            id_ficha,
-            tipo_documento,
-            fecha_nacimiento,
-            genero,
-            direccion,
-            tipo_direccion,
-            telefono,
-            estrato,
-            estado_civil,
-            tipo_aprendiz,
-            id_usuario: nuevoUsuario.id_usuario
-          });
-        }
+
         
         // Si es Instructor, se registra en su tabla con todos los campos extendidos
         if (rol.toLowerCase() === 'instructor') {

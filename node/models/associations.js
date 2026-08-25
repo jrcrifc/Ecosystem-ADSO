@@ -31,7 +31,6 @@ import LogModel from "./logModel.js";
 // Importa nuevos modelos
 import programaModel from "./programaModel.js";
 import fichaModel from "./fichaModel.js";
-import aprendizModel from "./aprendizModel.js";
 import instructorModel from "./instructorModel.js";
 
 // Define la relación: un equipo pertenece a un usuario (instructor)
@@ -43,9 +42,7 @@ userModel.hasMany(equipoModel,   { foreignKey: 'id_usuario', as: 'equipos_asigna
 programaModel.hasMany(fichaModel, { foreignKey: 'id_programa', as: 'fichas' });
 fichaModel.belongsTo(programaModel, { foreignKey: 'id_programa', as: 'programa' });
 
-// Relaciones Ficha - Aprendiz
-fichaModel.hasMany(aprendizModel, { foreignKey: 'id_ficha', as: 'aprendices' });
-aprendizModel.belongsTo(fichaModel, { foreignKey: 'id_ficha', as: 'ficha' });
+
 
 // Relaciones Ficha - Usuario (Pasantes/Gestores)
 fichaModel.hasMany(userModel, { foreignKey: 'id_ficha', as: 'usuarios' });
@@ -55,9 +52,6 @@ userModel.belongsTo(fichaModel, { foreignKey: 'id_ficha', as: 'ficha' });
 programaModel.hasMany(userModel, { foreignKey: 'id_programa', as: 'usuarios' });
 userModel.belongsTo(programaModel, { foreignKey: 'id_programa', as: 'programa' });
 
-// Relación Aprendiz - Usuario
-aprendizModel.belongsTo(userModel, { foreignKey: 'id_usuario', as: 'usuario' });
-userModel.hasOne(aprendizModel, { foreignKey: 'id_usuario', as: 'aprendiz' });
 
 // Relación Instructor - Usuario
 instructorModel.belongsTo(userModel, { foreignKey: 'id_usuario', as: 'usuario' });

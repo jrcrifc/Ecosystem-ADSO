@@ -14,8 +14,7 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
   // Estado individual para cada campo del formulario de reactivo
   const [presentacion_reactivo, setPresentacion_reactivo] = useState("");
   const [nom_reactivo, setNom_reactivo] = useState("");
-  const [nom_reactivo_ingles, setNom_reactivo_ingles] = useState("");
-  const [formula_reactivo, setFormula_reactivo] = useState("");
+
   const [color_almacenamiento, setColor_almacenamiento] = useState("");
   const [color_stand, setColor_stand] = useState("");
   const [stand, setStand] = useState("");
@@ -51,8 +50,7 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
       // Asigna cada valor del reactivo existente a su estado correspondiente
       setPresentacion_reactivo(selectedReactivo.presentacion_reactivo || "");
       setNom_reactivo(selectedReactivo.nom_reactivo || "");
-      setNom_reactivo_ingles(selectedReactivo.nom_reactivo_ingles || "");
-      setFormula_reactivo(selectedReactivo.formula_reactivo || "");
+
       setColor_almacenamiento(selectedReactivo.color_almacenamiento || "");
       setColor_stand(selectedReactivo.color_stand || "");
       setStand(selectedReactivo.stand || "");
@@ -64,8 +62,7 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
       // Resetea todos los campos si es una creacion nueva
       setPresentacion_reactivo("");
       setNom_reactivo("");
-      setNom_reactivo_ingles("");
-      setFormula_reactivo("");
+
       setColor_almacenamiento("");
       setColor_stand("");
       setStand("");
@@ -94,8 +91,7 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
     const data = {
       presentacion_reactivo: presentacion_reactivo || null,
       nom_reactivo: nom_reactivo.trim(),
-      nom_reactivo_ingles: nom_reactivo_ingles.trim() || null,
-      formula_reactivo: formula_reactivo.trim() || null,
+
       color_almacenamiento: color_almacenamiento || null,
       color_stand: color_stand || null,
       stand: stand.trim() || null,
@@ -161,31 +157,7 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
           />
         </div>
 
-        {/* Campo de nombre en ingles */}
-        <div className="col-md-6">
-          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Nombre en inglés</label>
-          <input
-            type="text"
-            className="form-control"
-            style={inputStyle}
-            value={nom_reactivo_ingles}
-            onChange={(e) => setNom_reactivo_ingles(e.target.value)}
-            placeholder="Ej: Sulfuric Acid"
-          />
-        </div>
 
-        {/* Campo de formula quimica */}
-        <div className="col-md-6">
-          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Fórmula química</label>
-          <input
-            type="text"
-            className="form-control"
-            style={inputStyle}
-            value={formula_reactivo}
-            onChange={(e) => setFormula_reactivo(e.target.value)}
-            placeholder="Ej: H2SO4"
-          />
-        </div>
 
         {/* Campo de unidad de medida o presentacion */}
         <div className="col-md-6">

@@ -82,13 +82,13 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
     border: "1px solid #ccc",
     outline: "none",
   };
-  
+
   // Date format for the widget
   const today = new Date();
   const dateOptions = { weekday: 'long', day: 'numeric', month: 'long' };
   const formattedDate = today.toLocaleDateString('es-ES', dateOptions);
   const formattedDateCapitalized = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
-  
+
   // Current time
   const timeOptions = { hour: 'numeric', minute: '2-digit', hour12: true };
   const formattedTime = today.toLocaleTimeString('es-ES', timeOptions);
@@ -125,9 +125,8 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
         }
 
         .landing-nav .brand img {
-          width: 50px;
-          border-radius: 12px;
-          box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+          width: 95px;
+          filter: drop-shadow(0 4px 10px rgba(0,0,0,0.25));
         }
         
         .landing-nav .brand-name {
@@ -471,10 +470,10 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
           </div>
           <h1 className="hero-title">
             Ecosystem
-            <span>Gestión de Laboratorio Inteligente</span>
+            <span>Gestión de Laboratorio Ambiental</span>
           </h1>
           <p className="hero-desc" style={{ color: "#eee" }}>
-            Control eficiente y avanzado del proceso en el laboratorio. Registra equipos, 
+            Control eficiente y avanzado del proceso en el laboratorio. Registra equipos,
             movimientos de reactivos, solicitudes y auditorías desde una sola plataforma profesional.
           </p>
         </div>
@@ -493,7 +492,7 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
           <button className="close-modal-btn" onClick={() => setShowLoginModal(false)}>
             <FaTimes />
           </button>
-          
+
           <div className="mb-4">
             <img src={logo} alt="Logo" style={{ width: "70px", height: "70px", borderRadius: "16px", border: "2.5px solid #0077B6", display: "block", margin: "0 auto" }} />
             <h2 className="mt-3" style={{ fontWeight: "800", color: "#0077B6" }}>Bienvenido</h2>
@@ -516,7 +515,7 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
             <div className="mb-3 position-relative">
               <FaUser className="input-icon" />
               <input type="text" name="documento" value={form.documento} onChange={handleChange}
-                className="form-control ps-5" placeholder="Número de Documento" required style={{ ...inputStyle, width: "100%" }} />
+                className="form-control ps-5" placeholder="Número de Documento o Correo" required style={{ ...inputStyle, width: "100%" }} />
             </div>
 
             <div className="mb-3 position-relative">

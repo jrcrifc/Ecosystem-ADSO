@@ -24,6 +24,9 @@ class InstructorService {
     const existDoc = await UserModel.findOne({ where: { documento } });
     if (existDoc) throw new Error("El documento ya está registrado en el sistema");
     
+    const existName = await UserModel.findOne({ where: { nombres_apellidos } });
+    if (existName) throw new Error("Ya existe un usuario registrado con este nombre exacto");
+    
     const existEmail = await UserModel.findOne({ where: { email } });
     if (existEmail) throw new Error("El correo ya está registrado en el sistema");
 
@@ -72,6 +75,10 @@ class InstructorService {
     if (email && email !== user.email) {
       const exist = await UserModel.findOne({ where: { email } });
       if (exist) throw new Error("El correo ya está en uso");
+    }
+    if (nombres_apellidos && nombres_apellidos !== user.nombres_apellidos) {
+      const exist = await UserModel.findOne({ where: { nombres_apellidos } });
+      if (exist) throw new Error("Ya existe un usuario registrado con este nombre exacto");
     }
 
     await user.update({

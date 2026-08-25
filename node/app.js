@@ -57,6 +57,8 @@ import salidasRoutes from './routes/salidasRoutes.js';
 import estadoxequipoRoutes from './routes/estadoxequipoRoutes.js';
 // Importa las rutas de notificaciones
 import notificacionRoutes from './routes/notificacionRoutes.js';
+// Importa el servicio de solicitudes
+import solicitudService from './service/solicitudService.js';
 
 // Importa las rutas del dashboard
 import dashboardRoutes from './routes/dashboardRoutes.js';
@@ -69,7 +71,6 @@ import auditoriaMiddleware from './middleware/auditoriaMiddleware.js';
 // Nuevas rutas
 import programaRoutes from './routes/programaRoutes.js';
 import fichaRoutes from './routes/fichaRoutes.js';
-import aprendizRoutes from './routes/aprendizRoutes.js';
 import instructorRoutes from './routes/instructorRoutes.js';
 // Importa fs para verificar la existencia de archivos
 import fs from 'fs';
@@ -163,7 +164,6 @@ app.use('/api/auditoria', auditoriaRoutes);
 // Monta las nuevas rutas
 app.use('/api/programas', programaRoutes);
 app.use('/api/fichas', fichaRoutes);
-app.use('/api/aprendices', aprendizRoutes);
 app.use('/api/instructores', instructorRoutes);
 
 // Define la ruta base que retorna un mensaje de bienvenida
@@ -183,15 +183,19 @@ try {
     process.exit(1);
 }
 
-// Iniciar tarea en segundo plano para inhabilitar aprendices expirados
-import aprendizService from './service/aprendizService.js';
-setInterval(() => {
-    aprendizService.inactivarExpirados();
-}, 1000 * 60 * 60 * 24); // Cada 24 horas
+// Configura la tarea programada para verificar préstamos vencidos cada 24 horas (86400000 ms)
+setInterval(async () => {
+    try {
+        await solicitudService.checkOverdueLoans();
+    } catch (err) {
+        console.error("Error en tarea de préstamos vencidos:", err);
+    }
+}, 24 * 60 * 60 * 1000);
 
+// Ejecuta la revisión una vez al iniciar el servidor (opcional, pero útil para testing)
 setTimeout(() => {
-    aprendizService.inactivarExpirados();
-}, 1000 * 10); // A los 10 segundos de arrancar el servidor
+    solicitudService.checkOverdueLoans().catch(console.error);
+}, 5000); // Se ejecuta a los 5 segundos de arrancar
 
 // Define el puerto del servidor desde variable de entorno o 8000 por defecto
 const PORT = process.env.PORT || 8000;

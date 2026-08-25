@@ -38,7 +38,6 @@ import TopBar from "./TopBar.jsx";
 import PerfilUsuario from "./Home/PerfilUsuario.jsx";
 import AcercaDe from "./Home/AcercaDe.jsx";
 // Importa los nuevos componentes de gestión de formación
-import Aprendices from "./usuarios/Aprendices.jsx";
 import Instructores from "./usuarios/Instructores.jsx";
 import Programas from "./usuarios/Programas.jsx";
 import Fichas from "./usuarios/Fichas.jsx";
@@ -382,7 +381,6 @@ function App() {
             <Route path="/estadoSolicitud" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Crudestadosolicitud /></SoloAdminRoute>} />
 
             {/* Rutas de gestión de formación — solo administrador */}
-            <Route path="/aprendices" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Aprendices /></SoloAdminRoute>} />
             <Route path="/instructores" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Instructores /></SoloAdminRoute>} />
             <Route path="/programas" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Programas /></SoloAdminRoute>} />
             <Route path="/fichas" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Fichas /></SoloAdminRoute>} />
