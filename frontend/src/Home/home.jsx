@@ -148,29 +148,59 @@ const Home = () => {
 
         .home-hero-logo-container {
           position: absolute;
-          right: 40px;
+          right: 50px;
           top: 50%;
-          transform: translateY(-50%);
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: all 0.4s ease;
+          animation: floatLogo 4s ease-in-out infinite;
+          cursor: pointer;
         }
 
-        .home-hero-logo-container:hover {
-          transform: translateY(-50%) scale(1.05) rotate(3deg);
+        .home-hero-logo-container::before {
+          content: '';
+          position: absolute;
+          width: 220px;
+          height: 220px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(72, 202, 228, 0.4) 0%, rgba(0, 119, 182, 0) 70%);
+          animation: pulseAura 3s ease-in-out infinite alternate;
+          z-index: 0;
+          pointer-events: none;
+        }
+
+        @keyframes floatLogo {
+          0%, 100% {
+            transform: translateY(-50%) translateY(0px) rotate(0deg);
+          }
+          50% {
+            transform: translateY(-50%) translateY(-12px) rotate(2.5deg);
+          }
+        }
+
+        @keyframes pulseAura {
+          0% {
+            transform: scale(0.9);
+            opacity: 0.5;
+          }
+          100% {
+            transform: scale(1.3);
+            opacity: 0.95;
+          }
         }
 
         .home-hero-logo {
-          width: 280px;
+          width: 260px;
           height: auto;
-          filter: drop-shadow(0 15px 25px rgba(0,0,0,0.25));
-          transition: transform 0.4s ease, filter 0.4s ease;
+          position: relative;
+          z-index: 1;
+          filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.25)) drop-shadow(0 0 20px rgba(202, 240, 248, 0.35));
+          transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.4s ease;
         }
 
         .home-hero-logo-container:hover .home-hero-logo {
-          transform: scale(1.08);
-          filter: drop-shadow(0 20px 35px rgba(0,0,0,0.35));
+          transform: scale(1.12) rotate(-3deg);
+          filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.35)) drop-shadow(0 0 35px rgba(72, 202, 228, 0.85));
         }
 
         @media (max-width: 768px) {
@@ -197,14 +227,24 @@ const Home = () => {
             top: auto;
             transform: none;
             margin-top: 24px;
-            width: 120px;
-            height: 120px;
+            width: 130px;
+            height: 130px;
             align-self: center;
+            animation: floatLogoMobile 4s ease-in-out infinite;
+          }
+
+          @keyframes floatLogoMobile {
+            0%, 100% {
+              transform: translateY(0px) rotate(0deg);
+            }
+            50% {
+              transform: translateY(-8px) rotate(2.5deg);
+            }
           }
 
           .home-hero-logo {
-            width: 110px;
-            height: 110px;
+            width: 120px;
+            height: auto;
           }
         }
       `}</style>

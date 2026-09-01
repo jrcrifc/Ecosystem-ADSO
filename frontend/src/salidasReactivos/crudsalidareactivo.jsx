@@ -16,9 +16,13 @@ import { paginationComponentOptions, tableCustomStyles } from "../config/dataTab
 import SalidaReactivoForm from "./salidareactivoform.jsx";
 // Importa la instancia centralizada de Socket.IO
 import socket from "../socket.js";
+// Importa el hook useNavigate de react-router-dom
+import { useNavigate } from "react-router-dom";
 
 // Define el componente CRUD de salidas de reactivos
 const CrudSalidasReactivos = () => {
+  // Hook de navegacion
+  const navigate = useNavigate();
   // Estado que almacena el listado de salidas
   const [salidas, setSalidas] = useState([]);
   // Estado que almacena el texto de busqueda para filtrar la tabla
@@ -289,8 +293,36 @@ const CrudSalidasReactivos = () => {
   // Renderiza la interfaz del componente
   return (
     <div className="container mt-4" style={{ maxWidth: "1000px" }}>
-      {/* Encabezado centrado con titulo */}
-      <div style={{ textAlign: "center", marginBottom: "32px" }}>
+      {/* Encabezado con boton de regreso y titulo */}
+      <div style={{ position: "relative", textAlign: "center", marginBottom: "32px" }}>
+        {/* Boton de flecha para regresar a Movimientos de Reactivos */}
+        <button
+          onClick={() => navigate("/movimientoreactivo")}
+          title="Volver a Movimientos de Reactivos"
+          style={{
+            position: "absolute",
+            left: 0,
+            top: "50%",
+            transform: "translateY(-50%)",
+            background: "#e0f2fe",
+            border: "none",
+            borderRadius: "50%",
+            width: "40px",
+            height: "40px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            fontSize: "20px",
+            color: "#0077B6",
+            boxShadow: "0 2px 8px rgba(0,119,182,0.15)",
+            transition: "background 0.2s, transform 0.2s",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = "#bae6fd"; e.currentTarget.style.transform = "translateY(-50%) scale(1.1)"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "#e0f2fe"; e.currentTarget.style.transform = "translateY(-50%) scale(1)"; }}
+        >
+          ←
+        </button>
         <div style={{ height: "3px", width: "40px", background: "#0077B6", borderRadius: "99px", margin: "0 auto 12px" }} />
         <h2 style={{ fontSize: "28px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Salidas de Reactivos</h2>
         <p style={{ color: "#64748b", marginTop: "8px", fontSize: "14px" }}>

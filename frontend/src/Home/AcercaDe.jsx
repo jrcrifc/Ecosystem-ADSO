@@ -49,9 +49,9 @@ const AcercaDe = ({ isPublic = false }) => {
         <nav style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           padding: '16px 40px',
-          background: 'linear-gradient(135deg, #1a5c2e 0%, #2d8a4e 100%)',
-          backgroundColor: '#1a5c2e',
-          boxShadow: '0 2px 20px rgba(0,0,0,0.2)',
+          background: 'linear-gradient(135deg, #0077B6 0%, #023E8A 100%)',
+          backgroundColor: '#0077B6',
+          boxShadow: '0 4px 20px rgba(0, 119, 182, 0.3)',
           position: 'sticky', top: 0, zIndex: 100,
         }}>
           {/* Logo y nombre */}
@@ -65,7 +65,7 @@ const AcercaDe = ({ isPublic = false }) => {
             <button
               onClick={() => navigate('/UserLogin')}
               style={{
-                background: 'rgba(255,255,255,0.12)',
+                background: 'rgba(255,255,255,0.15)',
                 color: 'white',
                 border: '1.5px solid rgba(255,255,255,0.4)',
                 padding: '9px 22px',
@@ -73,22 +73,34 @@ const AcercaDe = ({ isPublic = false }) => {
                 fontWeight: '600',
                 fontSize: '14px',
                 cursor: 'pointer',
+                transition: 'all 0.2s',
               }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.25)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
             >
               ← Volver
             </button>
             <button
               onClick={() => navigate('/UserLogin')}
               style={{
-                background: '#10b981',
-                color: 'white',
+                background: '#ffffff',
+                color: '#0077B6',
                 border: 'none',
                 padding: '9px 22px',
                 borderRadius: '30px',
-                fontWeight: '600',
+                fontWeight: '700',
                 fontSize: '14px',
                 cursor: 'pointer',
-                boxShadow: '0 4px 12px rgba(16,185,129,0.4)',
+                boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 18px rgba(0,0,0,0.2)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,0.15)';
               }}
             >
               Iniciar sesión
@@ -406,12 +418,12 @@ const AcercaDe = ({ isPublic = false }) => {
       <footer
         className="text-center p-4 mt-auto"
         style={{
-          background: "linear-gradient(135deg, #1a5c2e 0%, #2d8a4e 100%)",
-          backgroundColor: "#1a5c2e",
+          background: "linear-gradient(135deg, #0077B6 0%, #023E8A 100%)",
+          backgroundColor: "#0077B6",
           color: "#ffffff",
           fontSize: "14px",
           fontWeight: "600",
-          boxShadow: "0 -4px 20px rgba(0,0,0,0.1)",
+          boxShadow: "0 -4px 20px rgba(0, 119, 182, 0.25)",
           width: "100%"
         }}
       >

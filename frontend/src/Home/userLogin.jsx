@@ -136,7 +136,7 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
         }
 
         .login-trigger-btn {
-          background: #10b981;
+          background: linear-gradient(135deg, #0077B6, #023E8A);
           color: white;
           border: none;
           padding: 12px 28px;
@@ -145,13 +145,13 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
           font-size: 16px;
           cursor: pointer;
           transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
-          box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+          box-shadow: 0 4px 15px rgba(0, 119, 182, 0.4);
         }
         
         .login-trigger-btn:hover {
           transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
-          background: #059669;
+          box-shadow: 0 6px 20px rgba(0, 119, 182, 0.6);
+          background: linear-gradient(135deg, #0096C7, #0077B6);
         }
 
         /* Hero Section */

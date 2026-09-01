@@ -2,8 +2,8 @@
 
 // Importa los hooks de React para manejar estado y efectos secundarios
 import { useEffect, useState } from "react";
-// Importa useLocation de react-router-dom para recibir parametros de navegacion
-import { useLocation } from "react-router-dom";
+// Importa useLocation y useNavigate de react-router-dom para navegacion
+import { useLocation, useNavigate } from "react-router-dom";
 // Importa DataTable para mostrar los registros en una tabla interactiva
 import DataTable from "react-data-table-component";
 // Importa la instancia centralizada de Axios para peticiones HTTP
@@ -12,6 +12,8 @@ import apiAxios from "../api/axiosConfig";
 import Swal from "sweetalert2";
 // Importa configuraciones personalizadas de paginacion y estilos de tabla
 import { paginationComponentOptions, tableCustomStyles } from "../config/dataTableConfig";
+// Importa el socket para actualizaciones en tiempo real
+import socket from "../socket.js";
 
 // Parsea la fecha desde el string ISO sin conversion de zona horaria
 // Evita el bug de UTC que muestra un dia menos en UTC-5 (Colombia)
@@ -30,6 +32,8 @@ const formatFechaISO = (isoString) => {
 export default function CrudEstadoxSolicitud() {
   // Hook para obtener el estado de la navegacion
   const location = useLocation();
+  // Hook para navegar entre rutas
+  const navigate = useNavigate();
   // Estado que almacena el listado de registros del historial
   const [registros, setRegistros] = useState([]);
   // Estado que almacena el texto de busqueda para filtrar la tabla
@@ -56,6 +60,20 @@ export default function CrudEstadoxSolicitud() {
       setFilterText(String(location.state.id_solicitud));
     }
   }, [location.state]);
+
+  // Efecto para escuchar el evento de socket 'solicitud_actualizada' y recargar automaticamente
+  useEffect(() => {
+    // Handler que recarga los registros cuando el servidor emite el evento
+    const handleActualizacion = () => {
+      cargarRegistros();
+    };
+    // Suscribe al evento de actualizacion de solicitud en tiempo real
+    socket.on("solicitud_actualizada", handleActualizacion);
+    // Limpieza: elimina el listener al desmontar el componente
+    return () => {
+      socket.off("solicitud_actualizada", handleActualizacion);
+    };
+  }, []);
 
   // ===== Obtener historial (todas las solicitudes o solo las del usuario) =====
 
@@ -179,8 +197,36 @@ export default function CrudEstadoxSolicitud() {
   // Renderiza la interfaz del componente
   return (
     <div className="container mt-4" style={{ maxWidth: "1000px" }}>
-      {/* Encabezado centrado con titulo segun el rol del usuario */}
-      <div style={{ textAlign: "center", marginBottom: "32px" }}>
+      {/* Encabezado con boton de regreso y titulo segun el rol del usuario */}
+      <div style={{ position: "relative", textAlign: "center", marginBottom: "32px" }}>
+        {/* Boton de flecha para regresar a la pagina de solicitudes */}
+        <button
+          onClick={() => navigate("/solicitud")}
+          title="Volver a Solicitudes"
+          style={{
+            position: "absolute",
+            left: 0,
+            top: "50%",
+            transform: "translateY(-50%)",
+            background: "#e0f2fe",
+            border: "none",
+            borderRadius: "50%",
+            width: "40px",
+            height: "40px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            fontSize: "20px",
+            color: "#0077B6",
+            boxShadow: "0 2px 8px rgba(0,119,182,0.15)",
+            transition: "background 0.2s, transform 0.2s",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = "#bae6fd"; e.currentTarget.style.transform = "translateY(-50%) scale(1.1)"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "#e0f2fe"; e.currentTarget.style.transform = "translateY(-50%) scale(1)"; }}
+        >
+          ←
+        </button>
         <div style={{ height: "3px", width: "40px", background: "#0077B6", borderRadius: "99px", margin: "0 auto 12px" }} />
         <h2 style={{ fontSize: "28px", fontWeight: "800", color: "#0077B6", margin: 0 }}>
           {esAdmin ? "Historial de Todas las Solicitudes" : "Mi Historial de Solicitudes"}
