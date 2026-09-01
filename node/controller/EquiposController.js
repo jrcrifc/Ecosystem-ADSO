@@ -129,6 +129,17 @@ export const updateEquipos = async (req, res) => {
   }
 };
 
+// Controlador para eliminar o desactivar lógicamente un equipo del sistema
+export const deleteEquipos = async (req, res) => {
+  try {
+    await EquiposService.delete(req.params.id);
+    res.status(200).json({ mensaje: 'Equipo eliminado' });
+  } catch (error) {
+    console.error('Error eliminando:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // Controlador para importar equipos masivamente desde un archivo Excel
 export const ImportarExcelEquipos = async (req, res) => {
   try {
@@ -145,4 +156,5 @@ export const ImportarExcelEquipos = async (req, res) => {
     console.error('Error importando equipos:', error);
     res.status(500).json({ message: error.message });
   }
-};
+};
+
