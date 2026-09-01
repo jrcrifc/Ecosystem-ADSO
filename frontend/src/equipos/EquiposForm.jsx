@@ -13,7 +13,7 @@ import * as bootstrap from 'bootstrap';
 export default function EquipoForm({ selectedEquipo, refreshParent, hideModal }) {
   // Estado local del formulario con todos los campos del equipo
   const [form, setForm] = useState({
-    grupo_equipo: "",
+    grupo_equipo: "Equipo de Laboratorio",
     nom_equipo: "",
     marca_equipo: "",
     no_placa: "",
@@ -115,7 +115,7 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
       }
     } else {
       setForm({
-        grupo_equipo: "",
+        grupo_equipo: "Equipo de Laboratorio",
         nom_equipo: "",
         marca_equipo: "",
         no_placa: "",
@@ -241,9 +241,7 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
         <div className="col-md-6">
           <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Grupo del equipo</label>
           <select className="form-select" name="grupo_equipo" value={form.grupo_equipo} onChange={handleChange} required>
-            <option value="">Seleccione grupo...</option>
             <option value="Equipo de Laboratorio">Equipo de Laboratorio</option>
-            <option value="Maquinaria, Equipos y Herramientas">Maquinaria, Equipos y Herramientas</option>
           </select>
         </div>
         {/* Campo de nombre del equipo */}

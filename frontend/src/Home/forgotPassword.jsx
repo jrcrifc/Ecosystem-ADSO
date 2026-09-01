@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import apiNode from "../api/axiosConfig"
 import { FaEnvelope, FaArrowLeft, FaCheckCircle } from "react-icons/fa"
-import logo from "../Home/ecosystem_logo.png"
+import logo from "../Home/nuevologoecosystem.png"
 import fondoLaboratorio from "../Home/laboratorio.webp"
 
 const ForgotPassword = () => {
@@ -104,7 +104,7 @@ const ForgotPassword = () => {
                 .fp-logo {
                     width: 72px;
                     height: 72px;
-                    border-radius: 18px;
+                    border-radius: 50%;
                     border: 2.5px solid #0077B6;
                     display: block;
                     margin: 0 auto 18px auto;

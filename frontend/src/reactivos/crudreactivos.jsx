@@ -135,9 +135,91 @@ const CrudReactivos = () => {
     }
   };
 
-  // ===== Cerrar modal con limpieza de backdrop =====
+  // ===== Importar reactivos desde archivo Excel =====
+  const handleImportarExcel = async () => {
+    const { value: file } = await Swal.fire({
+      title: '📥 Importar Reactivos desde Excel',
+      html: `
+        <div style="text-align: left; font-size: 14px; color: #475569; line-height: 1.5;">
+          <p>Sube un archivo de Excel (<strong>.xlsx</strong> o <strong>.xls</strong>) con las columnas:</p>
+          <ul style="padding-left: 20px; margin-bottom: 12px; font-size: 13px;">
+            <li><strong>nombre</strong> (nombre del reactivo - obligatorio)</li>
+            <li><strong>presentacion</strong> (kilogramos, gramos, litros, sobres)</li>
+            <li><strong>ingles</strong> (nombre en inglés - opcional)</li>
+            <li><strong>formula</strong> (fórmula química - opcional)</li>
+            <li><strong>color_almacenamiento</strong> (opcional)</li>
+            <li><strong>color_stand</strong> (opcional)</li>
+            <li><strong>stand</strong>, <strong>columna</strong>, <strong>fila</strong> (ubicación - opcional)</li>
+            <li><strong>clasificacion</strong> (opcional)</li>
+          </ul>
+        </div>
+      `,
+      input: 'file',
+      inputAttributes: {
+        'accept': '.xlsx, .xls',
+        'aria-label': 'Subir archivo Excel'
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Subir archivo',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#0077B6',
+      customClass: { input: 'form-control form-control-sm' }
+    });
 
-  // Funcion para cerrar el modal de reactivo y limpiar backdrops residuales
+    if (!file) return;
+
+    Swal.fire({
+      title: 'Procesando archivo...',
+      text: 'Espere un momento por favor',
+      allowOutsideClick: false,
+      didOpen: () => { Swal.showLoading(); }
+    });
+
+    const formData = new FormData();
+    formData.append('archivo', file);
+
+    try {
+      const token = sessionStorage.getItem("token");
+      const res = await apiAxios.post("/api/reactivos/importar-excel", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data"
+        }
+      });
+
+      const { creados, omitidos, errores } = res.data.data;
+
+      let htmlResult = `
+        <div style="text-align: left; font-size: 14px;">
+          <p style="color: #2e7d32; font-weight: 600;">✅ Creados exitosamente: ${creados} reactivos</p>
+          <p style="color: #64748b;">ℹ️ Omitidos (ya registrados): ${omitidos} reactivos</p>
+      `;
+
+      if (errores && errores.length > 0) {
+        htmlResult += `
+          <hr style="margin: 10px 0; border-top: 1px solid #cbd5e1;"/>
+          <p style="color: #c62828; font-weight: bold; margin-bottom: 5px;">⚠️ Advertencias/Errores (${errores.length}):</p>
+          <div style="max-height: 150px; overflow-y: auto; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; padding: 10px; font-size: 11.5px; font-family: monospace; color: #9f1239; line-height: 1.4;">
+            ${errores.map(e => `• ${e}`).join('<br/>')}
+          </div>
+        `;
+      }
+      htmlResult += `</div>`;
+
+      Swal.fire({
+        title: '¡Importación Finalizada!',
+        html: htmlResult,
+        icon: creados > 0 ? 'success' : 'info',
+        confirmButtonColor: '#0077B6'
+      });
+
+      cargarReactivos();
+    } catch (err) {
+      Swal.fire("Error", err.response?.data?.message || "Error al procesar el archivo Excel", "error");
+    }
+  };
+
+  // ===== Cerrar modal con limpieza de backdrop =====
   const hideModal = () => {
     // Obtiene la referencia al elemento del modal
     const modal = document.getElementById("modalReactivo");
@@ -227,6 +309,10 @@ const CrudReactivos = () => {
           {/* Boton para exportar a Excel */}
           <button className="btn btn-outline-success" onClick={() => exportToExcel(formatDataForExport(filtered), "Inventario_Reactivos")}>
             <i className="fa-solid fa-file-excel me-2"></i> Excel
+          </button>
+          {/* Boton para importar desde Excel */}
+          <button className="btn btn-outline-secondary" onClick={handleImportarExcel} style={{ fontWeight: "600", borderRadius: "10px" }} title="Importar reactivos desde archivo Excel">
+            <i className="fa-solid fa-file-import me-2"></i> Importar Excel
           </button>
           {/* Boton para abrir el modal de nuevo reactivo */}
           <button className="btn" style={{ background: "#0077B6", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }} data-bs-toggle="modal" data-bs-target="#modalReactivo" onClick={() => setSelectedReactivo(null)}>

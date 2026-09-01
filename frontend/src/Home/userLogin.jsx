@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import apiAxios from "../api/axiosConfig.js";
 import Swal from "sweetalert2";
 import { FaIdCard, FaUser, FaLock, FaTimes } from "react-icons/fa";
-import logo from "../Home/ecosystem_logo.png";
+import logo from "../Home/nuevologoecosystem.png";
 import labEquipos from "../Home/lab_equipos.png";
 import fondoLaboratorio from "../Home/laboratorio.webp";
 
@@ -480,7 +480,7 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
 
         {/* Right Content */}
         <div className="hero-right">
-          <img src={logo} alt="Laboratorio 3D" className="floating-element" />
+          <img src={logo} alt="Laboratorio 3D" className="floating-element" style={{ borderRadius: "50%" }} />
         </div>
       </main>
 
@@ -494,7 +494,7 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
           </button>
 
           <div className="mb-4">
-            <img src={logo} alt="Logo" style={{ width: "70px", height: "70px", borderRadius: "16px", border: "2.5px solid #0077B6", display: "block", margin: "0 auto" }} />
+            <img src={logo} alt="Logo" style={{ width: "70px", height: "70px", borderRadius: "50%", border: "2.5px solid #0077B6", display: "block", margin: "0 auto" }} />
             <h2 className="mt-3" style={{ fontWeight: "800", color: "#0077B6" }}>Bienvenido</h2>
             <p style={{ color: "#64748b", fontSize: "14px", margin: 0 }}>Laboratorio Ambiental SENA</p>
           </div>

@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 // Importa el logo de Ecosystem para la cabecera del sidebar
-import ecosystemLogo from "./Home/ecosystem_logo.png";
+import ecosystemLogo from "./Home/nuevologoecosystem.png";
 // Importa los estilos CSS del sidebar
 import "./Sidebar.css";
 
@@ -71,10 +71,7 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
     {
       key: "solicitudes", icon: "📋", text: "Solicitudes", show: !esGestorPasante,
       items: [
-        { icon: "📝", text: "Mis Solicitudes",      path: "/solicitud",           show: !esAdmin },
-        { icon: "📝", text: "Nueva Solicitud",       path: "/solicitud",           show: esAdmin },
-        { icon: "📑", text: "Gestión Solicitudes",   path: "/gestion-solicitudes", show: esAdmin },
-
+        { icon: "📝", text: "Solicitudes", path: "/solicitud", show: true },
       ]
     },
     {

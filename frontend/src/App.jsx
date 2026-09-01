@@ -26,7 +26,7 @@ import UserLogin from "./Home/userLogin.jsx";
 import Register from "./Home/Register.jsx";
 import ForgotPassword from "./Home/forgotPassword.jsx";
 import ResetPassword from "./Home/resetPassword.jsx";
-import GestionSolicitudes from "./Solicitud/GestionSolicitudes.jsx";
+// GestionSolicitudes ahora está integrado dentro de crudsolicitud.jsx (pestaña admin)
 import HistorialEstadoEquipo from "./estadoequipo/HistorialEstadoEquipo.jsx";
 import GestionEstadoEquipo from "./estadoequipo/GestionEstadoEquipo.jsx";
 import ControlReactivos from "./movimientosReactivos/ControlReactivos.jsx";
@@ -377,7 +377,7 @@ function App() {
             {/* Rutas exclusivas del administrador */}
             <Route path="/gestion-usuarios" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><GestionUsuarios /></SoloAdminRoute>} />
             <Route path="/auditoria" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><LogActividades /></SoloAdminRoute>} />
-            <Route path="/gestion-solicitudes" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><GestionSolicitudes /></SoloAdminRoute>} />
+            {/* Ruta /gestion-solicitudes eliminada: ahora integrada como pestaña en /solicitud */}
             <Route path="/estadoSolicitud" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Crudestadosolicitud /></SoloAdminRoute>} />
 
             {/* Rutas de gestión de formación — solo administrador */}

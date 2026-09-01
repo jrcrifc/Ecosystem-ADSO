@@ -6,7 +6,8 @@ import {
   getreactivos,
   createreactivos,
   updatereactivos,
-  deletereactivos
+  deletereactivos,
+  ImportarExcelReactivos
 } from '../controller/reactivosController.js';
 // Importa el modelo de reactivos para consultas en la base de datos
 import reactivosModel from '../models/reactivosModel.js';
@@ -14,9 +15,16 @@ import reactivosModel from '../models/reactivosModel.js';
 import movimientoreactivoModel from '../models/movimientoreactivosModel.js';
 // Importa el middleware de autorización para administradores y gestores
 import { adminOGestor } from '../middleware/roleMiddleware.js';
+// Importa multer para carga de archivos Excel
+import multer from 'multer';
+
+const uploadExcel = multer({ storage: multer.memoryStorage() });
 
 // Crea una nueva instancia del Router
 const router = express.Router();
+
+// Define la ruta POST /api/reactivos/importar-excel para importar masivamente desde Excel
+router.post('/importar-excel', adminOGestor, uploadExcel.single('archivo'), ImportarExcelReactivos);
 
 // Define la ruta GET /api/reactivos/stock/disponibilidad para calcular el stock disponible por lote
 router.get('/stock/disponibilidad', adminOGestor, async (req, res) => {

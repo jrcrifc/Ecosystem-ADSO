@@ -7,7 +7,7 @@ import apiAxios from "../api/axiosConfig";
 // Importa la imagen de fondo para la página de registro
 import fondoRegistro from "../Home/laboratorio.webp";
 // Importa el logo de Ecosystem
-import logo from "../Home/ecosystem_logo.png";
+import logo from "../Home/nuevologoecosystem.png";
 
 // Define el componente Register con el formulario de registro de usuarios
 const Register = () => {
@@ -290,7 +290,7 @@ const Register = () => {
             Crear Cuenta
           </h2>
           <div style={{ marginTop: "10px" }}>
-            <img src={logo} alt="Logo" style={{ width: "70px", height: "70px", borderRadius: "14px", border: "2.5px solid #0077B6", display: "block", margin: "0 auto" }} />
+            <img src={logo} alt="Logo" style={{ width: "70px", height: "70px", borderRadius: "50%", border: "2.5px solid #0077B6", display: "block", margin: "0 auto" }} />
           </div>
         </div>
 

@@ -1,13 +1,13 @@
 // Importa Express para crear las rutas del servidor
 import express from 'express';
 // Importa los controladores de equipos para manejar la lógica de cada endpoint
-import { getAllEquipos, getEquipos, createEquipos, updateEquipos, deleteEquipos } from '../controller/EquiposController.js';
-// Importa multer para la carga de archivos (fotos de equipos)
+import { getAllEquipos, getEquipos, createEquipos, updateEquipos, deleteEquipos, ImportarExcelEquipos } from '../controller/EquiposController.js';
+// Importa multer para la carga de archivos (fotos de equipos y excel)
 import multer from 'multer';
 // Importa el middleware de autenticación JWT
 import authMiddleware from '../middleware/authMiddleware.js';
 // Importa el middleware de autorización para administradores y gestores
-import { adminOGestor } from '../middleware/roleMiddleware.js';
+import { adminOGestor, soloAdmin } from '../middleware/roleMiddleware.js';
 // Importa path para resolver rutas de archivos
 import path from 'path';
 // Importa fileURLToPath para obtener __dirname en ESM
@@ -52,11 +52,17 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Instancia Multer con almacenamiento local y filtro de archivos
+// Instancia Multer con almacenamiento local y filtro de archivos para fotos
 const upload = multer({ storage: almacenamiento, fileFilter, limits: { fileSize: 5 * 1024 * 1024 } });
+
+// Multer en memoria para archivos de Excel
+const uploadExcel = multer({ storage: multer.memoryStorage() });
 
 // Define la ruta GET /api/equipos para obtener todos los equipos
 router.get('/', adminOGestor, getAllEquipos);
+
+// Define la ruta POST /api/equipos/importar-excel para importar masivamente desde Excel
+router.post('/importar-excel', adminOGestor, uploadExcel.single('archivo'), ImportarExcelEquipos);
 
 // Define la ruta GET /api/equipos/:id para obtener un equipo por ID
 router.get('/:id', adminOGestor, getEquipos);

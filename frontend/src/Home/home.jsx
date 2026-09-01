@@ -1,7 +1,7 @@
 // Importa React y los hooks useEffect y useState para efectos y estado
 import React, { useEffect, useState } from "react";
 // Importa el logo de Ecosystem para mostrarlo en el hero
-import ecosystemLogo from "./ecosystem_logo.png";
+import ecosystemLogo from "./nuevologoecosystem.png";
 // Importa el componente de gráficas del dashboard
 import DashboardCharts from "./DashboardCharts.jsx";
 // Importa la instancia de Axios configurada para peticiones HTTP

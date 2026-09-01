@@ -3,7 +3,7 @@ import React, { useState } from "react";
 // Importa useNavigate para los botones de navegación pública
 import { useNavigate } from "react-router-dom";
 // Importa el logo de Ecosystem
-import ecosystemLogo from "./ecosystem_logo.png";
+import ecosystemLogo from "./nuevologoecosystem.png";
 // Importa imágenes de las instalaciones del laboratorio
 import labOficina from "./labAmbien.jpeg";
 import labEquipos from "./lab_equipos.png";
@@ -119,7 +119,7 @@ const AcercaDe = ({ isPublic = false }) => {
         {/*
           Logo de Ecosystem centrado
         */}
-        <img src={ecosystemLogo} alt="Logo Ecosystem" style={{ width: "160px", borderRadius: "24px", marginBottom: "16px", boxShadow: "0 10px 30px rgba(0,0,0,0.1)" }} />
+        <img src={ecosystemLogo} alt="Logo Ecosystem" style={{ width: "160px", marginBottom: "16px", filter: "drop-shadow(0 10px 20px rgba(0,0,0,0.1))" }} />
         {/*
           Título principal de la página
         */}

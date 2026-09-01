@@ -129,18 +129,20 @@ export const updateEquipos = async (req, res) => {
   }
 };
 
-// Controlador para eliminar o desactivar lógicamente un equipo del sistema
-export const deleteEquipos = async (req, res) => {
-  // Ejecuta el bloque en try-catch para manejar errores
+// Controlador para importar equipos masivamente desde un archivo Excel
+export const ImportarExcelEquipos = async (req, res) => {
   try {
-    // Llama al servicio para eliminar el equipo por su ID
-    await EquiposService.delete(req.params.id);
-    // Responde con estado 200 y mensaje de éxito
-    res.status(200).json({ mensaje: 'Equipo eliminado' });
+    if (!req.file) {
+      return res.status(400).json({ message: "No se proporcionó ningún archivo Excel" });
+    }
+    const userEmailLog = req.user?.email || 'admin@laboratorio.com';
+    const result = await EquiposService.importarExcel(req.file.buffer, userEmailLog);
+    res.json({
+      message: "Proceso de importación de equipos finalizado",
+      data: result
+    });
   } catch (error) {
-    // Registra el error en consola para depuración
-    console.error('Error eliminando:', error);
-    // Responde con estado 500 y el mensaje de error
+    console.error('Error importando equipos:', error);
     res.status(500).json({ message: error.message });
   }
-};
+};

@@ -14,8 +14,9 @@ const EquiposModel = db.define('equipos', {
   
   // Campo grupo_equipo - clasificación del grupo al que pertenece el equipo
   grupo_equipo: { 
-    type: DataTypes.ENUM('Equipo de Laboratorio', 'Maquinaria, Equipos y Herramientas'),
-    allowNull: false
+    type: DataTypes.ENUM('Equipo de Laboratorio'),
+    allowNull: false,
+    defaultValue: 'Equipo de Laboratorio'
   },
   
   // Campo nom_equipo - nombre comercial del equipo

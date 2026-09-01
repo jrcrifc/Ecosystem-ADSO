@@ -128,6 +128,91 @@ export default function CrudEquipo() {
       Swal.fire("Error", "No se pudo cambiar el estado", "error");
     }
   };
+
+  // Función para importar equipos desde un archivo Excel
+  const handleImportarExcel = async () => {
+    const { value: file } = await Swal.fire({
+      title: '📥 Importar Equipos desde Excel',
+      html: `
+        <div style="text-align: left; font-size: 14px; color: #475569; line-height: 1.5;">
+          <p>Sube un archivo de Excel (<strong>.xlsx</strong> o <strong>.xls</strong>) con las columnas:</p>
+          <ul style="padding-left: 20px; margin-bottom: 12px; font-size: 13px;">
+            <li><strong>nombre</strong> (nombre del equipo - obligatorio)</li>
+            <li><strong>marca</strong> (opcional)</li>
+            <li><strong>placa</strong> (N° placa o serial - opcional)</li>
+            <li><strong>cuentadante</strong> (documento del instructor - opcional)</li>
+            <li><strong>observaciones</strong> (opcional)</li>
+          </ul>
+          <p style="font-size: 12px; color: #0284c7; margin-bottom: 0;">
+            * El grupo se asignará automáticamente a <strong>Equipo de Laboratorio</strong> y su estado a <strong>Disponible</strong>.
+          </p>
+        </div>
+      `,
+      input: 'file',
+      inputAttributes: {
+        'accept': '.xlsx, .xls',
+        'aria-label': 'Subir archivo Excel'
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Subir archivo',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#0077B6',
+      customClass: { input: 'form-control form-control-sm' }
+    });
+
+    if (!file) return;
+
+    Swal.fire({
+      title: 'Procesando archivo...',
+      text: 'Espere un momento por favor',
+      allowOutsideClick: false,
+      didOpen: () => { Swal.showLoading(); }
+    });
+
+    const formData = new FormData();
+    formData.append('archivo', file);
+
+    try {
+      const token = sessionStorage.getItem("token");
+      const res = await apiAxios.post("/api/equipos/importar-excel", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data"
+        }
+      });
+
+      const { creados, omitidos, errores } = res.data.data;
+
+      let htmlResult = `
+        <div style="text-align: left; font-size: 14px;">
+          <p style="color: #2e7d32; font-weight: 600;">✅ Creados exitosamente: ${creados} equipos</p>
+          <p style="color: #64748b;">ℹ️ Omitidos (placa duplicada): ${omitidos} equipos</p>
+      `;
+
+      if (errores && errores.length > 0) {
+        htmlResult += `
+          <hr style="margin: 10px 0; border-top: 1px solid #cbd5e1;"/>
+          <p style="color: #c62828; font-weight: bold; margin-bottom: 5px;">⚠️ Advertencias/Errores (${errores.length}):</p>
+          <div style="max-height: 150px; overflow-y: auto; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; padding: 10px; font-size: 11.5px; font-family: monospace; color: #9f1239; line-height: 1.4;">
+            ${errores.map(e => `• ${e}`).join('<br/>')}
+          </div>
+        `;
+      }
+      htmlResult += `</div>`;
+
+      Swal.fire({
+        title: '¡Importación Finalizada!',
+        html: htmlResult,
+        icon: creados > 0 ? 'success' : 'info',
+        confirmButtonColor: '#0077B6'
+      });
+
+      getAllEquipos();
+    } catch (err) {
+      Swal.fire("Error", err.response?.data?.message || "Error al procesar el archivo Excel", "error");
+    }
+  };
+
   // Función para cerrar un modal con limpieza de backdrop
   const hideModal = (modalId) => {
     const modal = document.getElementById(modalId);
@@ -364,6 +449,9 @@ export default function CrudEquipo() {
           </button>
           <button className="btn btn-outline-success" onClick={() => exportToExcel(formatEquiposForExport(filteredEquipos), "Inventario_Equipos")}>
             <i className="fa-solid fa-file-excel me-2"></i> Excel
+          </button>
+          <button className="btn btn-outline-secondary" onClick={handleImportarExcel} style={{ fontWeight: "600", borderRadius: "10px" }} title="Importar equipos desde archivo Excel">
+            <i className="fa-solid fa-file-import me-2"></i> Importar Excel
           </button>
           <button
             className="btn"

@@ -95,3 +95,25 @@ export const deletereactivos = async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 };
+
+// Controlador para importar reactivos masivamente desde un archivo Excel
+export const ImportarExcelReactivos = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: "No se proporcionó ningún archivo Excel" });
+        }
+        const userEmailLog = req.user?.email || 'admin@laboratorio.com';
+        const result = await reactivosService.importarExcel(req.file.buffer, userEmailLog);
+        
+        await registrarLog(userEmailLog, 'IMPORTAR_EXCEL', 'REACTIVOS', `Importados ${result.creados} reactivos vía Excel`);
+
+        res.json({
+            message: "Proceso de importación de reactivos finalizado",
+            data: result
+        });
+    } catch (error) {
+        console.error('Error importando reactivos:', error);
+        res.status(500).json({ message: error.message });
+    }
+};
+

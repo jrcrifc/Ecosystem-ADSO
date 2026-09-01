@@ -103,7 +103,117 @@ class reactivosService {
             return true
     }
     
+    // Importa reactivos de forma masiva desde un archivo de Excel
+    async importarExcel(buffer, userEmailLog) {
+        const XLSX = (await import('xlsx')).default;
+        const workbook = XLSX.read(buffer, { type: 'buffer' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const data = XLSX.utils.sheet_to_json(sheet);
+
+        let creados = 0;
+        let omitidos = 0;
+        let errores = [];
+
+        const presentacionesValidas = ["kilogramos", "gramos", "litros", "sobres"];
+        const clasificacionesValidas = [
+            'Peligro de contacto', 'Peligro de reactividad', 
+            'Peligro de inflamabilidad', 'Riesgo minimo', 'Peligro para salud'
+        ];
+
+        for (let i = 0; i < data.length; i++) {
+            const row = data[i];
+            const filaNum = i + 2;
+
+            let nom_reactivo = "";
+            let nom_reactivo_ingles = "";
+            let formula_reactivo = "";
+            let presentacion_reactivo = "litros";
+            let color_almacenamiento = "Riesgo minimo";
+            let color_stand = "Morado";
+            let stand = "";
+            let columna = "";
+            let fila = "";
+            let clasificacion_reactivo = "Riesgo minimo";
+
+            for (const key of Object.keys(row)) {
+                const normalizedKey = key.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+                const val = String(row[key] ?? "").trim();
+
+                if (normalizedKey === "nombre" || normalizedKey === "nom_reactivo" || normalizedKey === "reactivo" || normalizedKey === "nombre reactivo" || normalizedKey === "nombre del reactivo") {
+                    nom_reactivo = val;
+                } else if (normalizedKey === "ingles" || normalizedKey === "nom_reactivo_ingles" || normalizedKey === "nombre en ingles" || normalizedKey.includes("ingles")) {
+                    nom_reactivo_ingles = val;
+                } else if (normalizedKey === "formula" || normalizedKey === "formula_reactivo" || normalizedKey === "formula quimica" || normalizedKey.includes("formula")) {
+                    formula_reactivo = val;
+                } else if (normalizedKey === "presentacion" || normalizedKey === "presentacion_reactivo" || normalizedKey === "unidad" || normalizedKey.includes("presentacion")) {
+                    const presLow = val.toLowerCase();
+                    if (presentacionesValidas.includes(presLow)) {
+                        presentacion_reactivo = presLow;
+                    } else if (presLow.includes("kilo") || presLow === "kg") {
+                        presentacion_reactivo = "kilogramos";
+                    } else if (presLow.includes("gram") || presLow === "g" || presLow === "gr") {
+                        presentacion_reactivo = "gramos";
+                    } else if (presLow.includes("litr") || presLow === "l" || presLow === "lt" || presLow === "ml") {
+                        presentacion_reactivo = "litros";
+                    } else if (presLow.includes("sobr")) {
+                        presentacion_reactivo = "sobres";
+                    }
+                } else if (normalizedKey === "color_almacenamiento" || normalizedKey === "color almacenamiento" || normalizedKey.includes("almacenamiento")) {
+                    color_almacenamiento = val;
+                } else if (normalizedKey === "color_stand" || normalizedKey === "color stand" || normalizedKey === "color estante") {
+                    color_stand = val;
+                } else if (normalizedKey === "stand" || normalizedKey === "estante") {
+                    stand = val;
+                } else if (normalizedKey === "columna" || normalizedKey === "col") {
+                    columna = val;
+                } else if (normalizedKey === "fila") {
+                    fila = val;
+                } else if (normalizedKey === "clasificacion" || normalizedKey === "clasificacion_reactivo" || normalizedKey.includes("clasificac")) {
+                    clasificacion_reactivo = val;
+                }
+            }
+
+            // Validar si la fila está vacía
+            const isRowEmpty = Object.values(row).every(v => v === null || v === undefined || String(v).trim() === "");
+            if (isRowEmpty) continue;
+
+            if (!nom_reactivo) {
+                errores.push(`Fila ${filaNum}: El nombre del reactivo es obligatorio`);
+                continue;
+            }
+
+            // Validar si ya existe un reactivo con este nombre exacto
+            const existe = await reactivosModel.findOne({ where: { nom_reactivo } });
+            if (existe) {
+                omitidos++;
+                continue;
+            }
+
+            try {
+                await reactivosModel.create({
+                    nom_reactivo,
+                    nom_reactivo_ingles: nom_reactivo_ingles || null,
+                    formula_reactivo: formula_reactivo || null,
+                    presentacion_reactivo,
+                    color_almacenamiento: color_almacenamiento || "Riesgo minimo",
+                    color_stand: color_stand || "Morado",
+                    stand: stand || null,
+                    columna: columna || null,
+                    fila: fila || null,
+                    clasificacion_reactivo: clasificacion_reactivo || "Riesgo minimo",
+                    estado: 1
+                });
+                creados++;
+            } catch (err) {
+                errores.push(`Fila ${filaNum} (${nom_reactivo}): ${err.message}`);
+            }
+        }
+
+        return { creados, omitidos, errores };
+    }
 }
 
 // Exporta una instancia única del servicio para usar como singleton
 export default new reactivosService()
+
