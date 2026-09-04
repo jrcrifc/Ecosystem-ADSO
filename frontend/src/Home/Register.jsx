@@ -93,7 +93,7 @@ const Register = () => {
     }
     // Valida que se ingresen nombres y apellidos completos
     if (name === "nombres_apellidos") {
-      if (value && value.trim().split(" ").length < 2) errors.nombres_apellidos = "Ingresa nombres y apellidos completos.";
+      if (value && value.trim().length < 3) errors.nombres_apellidos = "Ingresa un nombre válido.";
       else delete errors.nombres_apellidos;
     }
     // Valida que el email tenga formato correcto
@@ -119,7 +119,7 @@ const Register = () => {
     const emailTrim = form.email.trim().toLowerCase();
     // Validaciones finales antes de enviar al servidor
     if (docTrim.length < 5) return setError("El documento es demasiado corto.");
-    if (nombreTrim.split(" ").length < 2) return setError("Por favor, ingresa nombres y apellidos completos.");
+    if (nombreTrim.length < 3) return setError("Por favor, ingresa un nombre válido.");
     if (!form.id_programa) return setError("El programa es obligatorio.");
     if (!form.id_ficha) return setError("La ficha es obligatoria.");
 
@@ -290,7 +290,7 @@ const Register = () => {
             Crear Cuenta
           </h2>
           <div style={{ marginTop: "10px" }}>
-            <img src={logo} alt="Logo" style={{ width: "70px", height: "70px", borderRadius: "50%", border: "2.5px solid #0077B6", display: "block", margin: "0 auto" }} />
+            <img src={logo} alt="Logo" style={{ width: "70px", height: "70px", display: "block", margin: "0 auto", objectFit: "contain" }} />
           </div>
         </div>
 

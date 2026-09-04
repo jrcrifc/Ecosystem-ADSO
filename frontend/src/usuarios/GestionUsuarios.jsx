@@ -21,7 +21,7 @@ export default function GestionUsuarios() {
   // Estado que almacena el texto de busqueda para filtrar usuarios
   const [filterText, setFilterText] = useState("");
   // Estado que controla la pestana activa
-  const [tab, setTab] = useState("pendientes");
+  const [tab, setTab] = useState("instructores");
   // Estado para la pagina actual de la paginacion
   const [page, setPage] = useState(1);
   const perPage = 20;
@@ -167,6 +167,10 @@ export default function GestionUsuarios() {
 
   // Funcion asincrona para alternar activo/inactivo de un usuario
   const toggleActivo = async (id_usuario, estadoActual) => {
+    if (!id_usuario) {
+      Swal.fire("Error en cliente", "El ID del usuario es inválido o no está definido.", "error");
+      return;
+    }
     // Determina si se va a activar o inactivar
     const activar = estadoActual === 'inactivo';
     // Muestra dialogo de confirmacion al usuario
@@ -346,14 +350,15 @@ export default function GestionUsuarios() {
     e.preventDefault();
     setRegisterLoading(true);
     try {
-      await apiAxios.post("/api/auth/register", {
+      await apiAxios.post("/api/auth", {
         ...registerForm,
         rol: registerTab,
+        estado: "aprobado",
       }, { headers });
       Swal.fire({
         icon: "success",
         title: `✅ ${registerTab} registrado`,
-        text: `El usuario fue creado correctamente. Estado: pendiente de aprobación.`,
+        text: `El usuario fue creado correctamente y ya está aprobado.`,
         confirmButtonColor: "#0077B6",
       });
       setShowRegisterModal(false);
@@ -587,7 +592,6 @@ export default function GestionUsuarios() {
       {/* Pestañas de navegacion */}
       <div style={{ display: "flex", gap: "8px", marginBottom: "24px", flexWrap: "wrap" }}>
         {[
-          ["pendientes", "🔑 Solicitudes"],
           ["instructores", "👨‍🏫 Instructores"],
           ["gestores", "🔑 Gestores"],
           ["pasantes", "🔬 Pasantes"]
@@ -826,7 +830,7 @@ export default function GestionUsuarios() {
                   ➕ Registrar {registerTab}
                 </h5>
                 <p style={{ color: "rgba(255,255,255,0.75)", margin: 0, fontSize: "12px" }}>
-                  El usuario quedará en estado pendiente de aprobación
+                  El usuario quedará registrado y aprobado automáticamente
                 </p>
               </div>
               <button onClick={() => { setShowRegisterModal(false); resetRegisterForm(); }}
@@ -863,7 +867,7 @@ export default function GestionUsuarios() {
                 <label style={{ fontSize: "11px", fontWeight: "700", color: "#475569", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                   Número de Documento
                 </label>
-                <input type="text" required placeholder="Ej: 1234567890"
+                <input type="text" required placeholder="Ej: 1234567890" autoComplete="off"
                   value={registerForm.documento}
                   onChange={e => setRegisterForm(f => ({ ...f, documento: e.target.value }))}
                   style={{ width: "100%", padding: "8px 12px", borderRadius: "8px",
@@ -876,7 +880,7 @@ export default function GestionUsuarios() {
                 <label style={{ fontSize: "11px", fontWeight: "700", color: "#475569", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                   Nombres y Apellidos
                 </label>
-                <input type="text" required placeholder="Nombre completo"
+                <input type="text" required placeholder="Nombre completo" autoComplete="off"
                   value={registerForm.nombres_apellidos}
                   onChange={e => setRegisterForm(f => ({ ...f, nombres_apellidos: e.target.value }))}
                   style={{ width: "100%", padding: "8px 12px", borderRadius: "8px",
@@ -889,7 +893,7 @@ export default function GestionUsuarios() {
                 <label style={{ fontSize: "11px", fontWeight: "700", color: "#475569", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                   Correo Electrónico
                 </label>
-                <input type="email" required placeholder="correo@ejemplo.com"
+                <input type="email" required placeholder="correo@ejemplo.com" autoComplete="off"
                   value={registerForm.email}
                   onChange={e => setRegisterForm(f => ({ ...f, email: e.target.value }))}
                   style={{ width: "100%", padding: "8px 12px", borderRadius: "8px",
@@ -902,7 +906,7 @@ export default function GestionUsuarios() {
                 <label style={{ fontSize: "11px", fontWeight: "700", color: "#475569", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                   Contraseña Inicial
                 </label>
-                <input type="password" required placeholder="Mínimo 8 caracteres" minLength={8}
+                <input type="password" required placeholder="Mínimo 8 caracteres" minLength={8} autoComplete="new-password"
                   value={registerForm.password}
                   onChange={e => setRegisterForm(f => ({ ...f, password: e.target.value }))}
                   style={{ width: "100%", padding: "8px 12px", borderRadius: "8px",

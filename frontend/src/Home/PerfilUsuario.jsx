@@ -156,6 +156,29 @@ const PerfilUsuario = () => {
   // Envía los cambios del perfil al servidor
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
+
+    // Verificación de seguridad para todos los usuarios
+    const { value: password, isConfirmed } = await Swal.fire({
+        title: 'Verificación de Seguridad',
+        text: 'Ingresa tu clave de acceso para autorizar los cambios:',
+        input: 'password',
+        inputPlaceholder: 'Contraseña...',
+        showCancelButton: true,
+        confirmButtonColor: '#0077B6',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Verificar y Guardar',
+        cancelButtonText: 'Cancelar'
+      });
+
+      if (!isConfirmed) return; // Acción cancelada
+      if (!password) {
+        Swal.fire('Cancelado', 'Debes ingresar tu contraseña para continuar.', 'warning');
+        return;
+      }
+      
+      // Adjuntamos la clave para que el backend la verifique si está configurado para ello
+      formData.passwordConfirmacion = password;
+
     setSaving(true);
     try {
       // Envía los datos actualizados al endpoint de perfil

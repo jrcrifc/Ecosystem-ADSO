@@ -100,14 +100,7 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
         // El ítem de Cuentadantes ha sido eliminado ya que ahora los responsables son los Instructores
       ]
     },
-    {
-      key: "formacion", icon: "📚", text: "Formación",
-      show: esAdmin,
-      items: [
-        { icon: "🎓", text: "Programas", path: "/programas", show: true },
-        { icon: "📋", text: "Fichas", path: "/fichas", show: true },
-      ]
-    },
+
     {
       key: "admin", icon: "👑", text: "Administración", show: esAdmin,
       items: [

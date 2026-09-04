@@ -188,7 +188,7 @@ export default function Campanita({ userData, onAprobado, userRol }) {
       navigate('/gestion-usuarios');
     } else if (n.tipo === 'nueva_solicitud') {
       setOpen(false);
-      navigate(esAdmin ? '/gestion-solicitudes' : '/solicitud');
+      navigate('/solicitud');
     } else if (n.tipo === 'cambio_estado_solicitud') {
       setOpen(false);
       navigate('/solicitud');
@@ -286,7 +286,7 @@ export default function Campanita({ userData, onAprobado, userRol }) {
             <button
               onClick={() => {
                 setOpen(false);
-                navigate(esAdmin ? '/gestion-solicitudes' : '/solicitud');
+                navigate('/solicitud');
               }}
               style={{
                 flex: 1,

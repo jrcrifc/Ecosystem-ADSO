@@ -14,6 +14,12 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
   const [loading, setLoading] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
+  const openLoginModal = () => {
+    setForm({ tipo_documento: "CC", documento: "", password: "" });
+    setError("");
+    setShowLoginModal(true);
+  };
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -455,7 +461,7 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
           >
             Acerca de
           </button>
-          <button className="login-trigger-btn" onClick={() => setShowLoginModal(true)}>
+          <button className="login-trigger-btn" onClick={openLoginModal}>
             Iniciar sesión
           </button>
         </div>
@@ -473,14 +479,14 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
             <span>Gestión de Laboratorio Ambiental</span>
           </h1>
           <p className="hero-desc" style={{ color: "#eee" }}>
-            Control eficiente y avanzado del proceso en el laboratorio. Registra equipos,
-            movimientos de reactivos, solicitudes y auditorías desde una sola plataforma profesional.
+            Control eficiente y avanzado del proceso en el laboratorio. Gestionar equipos,
+            Inventario de reactivos, Gestionar  solicitudes  desde una sola plataforma profesional.
           </p>
         </div>
 
         {/* Right Content */}
         <div className="hero-right">
-          <img src={logo} alt="Laboratorio 3D" className="floating-element" style={{ borderRadius: "50%" }} />
+          <img src={logo} alt="Laboratorio 3D" className="floating-element" />
         </div>
       </main>
 
@@ -494,7 +500,7 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
           </button>
 
           <div className="mb-4">
-            <img src={logo} alt="Logo" style={{ width: "70px", height: "70px", borderRadius: "50%", border: "2.5px solid #0077B6", display: "block", margin: "0 auto" }} />
+            <img src={logo} alt="Logo" style={{ width: "70px", height: "70px", display: "block", margin: "0 auto", objectFit: "contain" }} />
             <h2 className="mt-3" style={{ fontWeight: "800", color: "#0077B6" }}>Bienvenido</h2>
             <p style={{ color: "#64748b", fontSize: "14px", margin: 0 }}>Laboratorio Ambiental SENA</p>
           </div>
@@ -515,13 +521,13 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
             <div className="mb-3 position-relative">
               <FaUser className="input-icon" />
               <input type="text" name="documento" value={form.documento} onChange={handleChange}
-                className="form-control ps-5" placeholder="Número de Documento o Correo" required style={{ ...inputStyle, width: "100%" }} />
+                className="form-control ps-5" placeholder="Número de Documento o Correo" required style={{ ...inputStyle, width: "100%" }} autoComplete="off" />
             </div>
 
             <div className="mb-3 position-relative">
               <FaLock className="input-icon" />
               <input type="password" name="password" value={form.password} onChange={handleChange}
-                className="form-control ps-5" placeholder="Contraseña" required style={{ ...inputStyle, width: "100%" }} />
+                className="form-control ps-5" placeholder="Contraseña" required style={{ ...inputStyle, width: "100%" }} autoComplete="new-password" />
             </div>
 
             <button type="submit" className="login-btn" disabled={loading}>

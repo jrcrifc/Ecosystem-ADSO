@@ -104,8 +104,7 @@ const ForgotPassword = () => {
                 .fp-logo {
                     width: 72px;
                     height: 72px;
-                    border-radius: 50%;
-                    border: 2.5px solid #0077B6;
+                    object-fit: contain;
                     display: block;
                     margin: 0 auto 18px auto;
                     box-shadow: 0 6px 20px rgba(0,119,182,0.2);

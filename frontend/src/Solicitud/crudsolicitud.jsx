@@ -132,9 +132,9 @@ const CrudSolicitudPrestamos = () => {
       sortable: true, width: "155px", wrap: true
     },
     {
-      name: "Fecha Fin",
+      name: "Fecha de Devolución",
       selector: r => formatDateTime(r.fecha_fin),
-      sortable: true, width: "155px", wrap: true
+      sortable: true, width: "165px", wrap: true
     },
     {
       name: "Equipos", width: "220px",
@@ -183,30 +183,6 @@ const CrudSolicitudPrestamos = () => {
             title="Ver historial">
             <i className="fas fa-history"></i>
           </button>
-          {/* Botón Editar — solo si estado es generado o aceptado */}
-          <button className="btn btn-sm"
-            style={{ 
-              background: ['generado', 'aceptado'].includes(r.ultimoEstado) ? "#dbeafe" : "#f1f5f9", 
-              color: ['generado', 'aceptado'].includes(r.ultimoEstado) ? "#0077B6" : "#94a3b8", 
-              border: "none",
-              opacity: ['generado', 'aceptado'].includes(r.ultimoEstado) ? 1 : 0.5
-            }}
-            data-bs-toggle={['generado', 'aceptado'].includes(r.ultimoEstado) ? "modal" : ""}
-            data-bs-target={['generado', 'aceptado'].includes(r.ultimoEstado) ? "#modalSolicitud" : ""}
-            onClick={() => {
-              if (!['generado', 'aceptado'].includes(r.ultimoEstado)) {
-                Swal.fire({
-                  icon: "info", title: "Edición no permitida",
-                  text: `No se puede editar una solicitud que ya está en estado ${r.ultimoEstado.toUpperCase()}.`
-                });
-              } else {
-                setSelectedSolicitud(r);
-              }
-            }}
-            disabled={!['generado', 'aceptado'].includes(r.ultimoEstado)}
-            title={['generado', 'aceptado'].includes(r.ultimoEstado) ? "Editar" : `No se puede editar en estado ${r.ultimoEstado}`}>
-            <i className="fa-solid fa-pencil"></i>
-          </button>
           {/* Botón Cancelar por Solicitante — solo si está en generado y es el dueño o admin */}
           {r.ultimoEstado === "generado" && (
             <button className="btn btn-sm"
@@ -216,17 +192,6 @@ const CrudSolicitudPrestamos = () => {
               <i className="fas fa-times-circle"></i>
             </button>
           )}
-          {/* Botón Activar/Inactivar */}
-          <button className="btn btn-sm"
-            style={{
-              background: r.estado === 1 ? "#fee2e2" : "#dcfce7",
-              color: r.estado === 1 ? "#dc2626" : "#16a34a",
-              border: "none"
-            }}
-            onClick={() => toggleEstado(r.id_solicitud, r.estado)}
-            title={r.estado === 1 ? "Inactivar" : "Activar"}>
-            <i className={`fas ${r.estado === 1 ? "fa-ban" : "fa-check"}`}></i>
-          </button>
         </div>
       ),
     },

@@ -17,9 +17,10 @@ export const RegisterUser = async (req, res) => {
   // Ejecuta el bloque en try-catch para manejar errores
   try {
     // Extrae los campos del cuerpo de la petición
-    const { tipo_documento, documento, nombres_apellidos, email, password, rol, numero_ficha, nombre_ficha, es_sena_empresa } = req.body;
-    // Valida que los campos obligatorios estén presentes
-    if (!documento || !nombres_apellidos || !email || !password || !rol) {
+    // Extrae los campos del cuerpo de la petición, incluyendo los nuevos campos de ficha y programa
+    const { tipo_documento, documento, nombres_apellidos, email, rol, numero_ficha, nombre_ficha, es_sena_empresa, id_programa, id_ficha, estado } = req.body;
+    // Valida que los campos obligatorios estén presentes (la contraseña se genera a partir del documento)
+    if (!documento || !nombres_apellidos || !email || !rol) {
       // Responde con error 400 si faltan campos obligatorios
       return res.status(400).json({ message: "Todos los campos son obligatorios" });
     }
@@ -29,11 +30,14 @@ export const RegisterUser = async (req, res) => {
       documento, 
       nombres_apellidos, 
       email, 
-      password, 
+      password: "", // El userService la sobrescribe con el documento
       rol, 
       numero_ficha, 
       nombre_ficha, 
-      es_sena_empresa 
+      es_sena_empresa,
+      id_programa,
+      id_ficha,
+      estado
     });
     // Responde con estado 201 y los datos del usuario creado
     res.status(201).json({ message: "Usuario registrado correctamente", user });

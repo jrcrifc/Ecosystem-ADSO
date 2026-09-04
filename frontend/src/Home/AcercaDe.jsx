@@ -1,5 +1,5 @@
-// Importa React y el hook de estado para controlar el lightbox
-import React, { useState } from "react";
+// Importa React y el hook de estado y efecto para controlar el lightbox
+import React, { useState, useEffect } from "react";
 // Importa useNavigate para los botones de navegación pública
 import { useNavigate } from "react-router-dom";
 // Importa el logo de Ecosystem
@@ -15,8 +15,27 @@ import fondoLaboratorio from "./fondo.jpeg";
 // isPublic: si es true, muestra navbar propio (sin login requerido)
 const AcercaDe = ({ isPublic = false }) => {
   const navigate = useNavigate();
-  // Controla la foto seleccionada para el lightbox (null = cerrado)
-  const [lightboxPhoto, setLightboxPhoto] = useState(null);
+  // Controla la foto seleccionada por índice para el carrusel (null = cerrado)
+  const [lightboxIndex, setLightboxIndex] = useState(null);
+
+  const fotos = [
+    { title: "Área de Ensayos y Oficina", img: labOficina },
+    { title: "Equipos de Análisis y Reactivos", img: labEquipos },
+    { title: "Líneas de Flujo de Trabajo", img: labFlujo }
+  ];
+
+  // Cerrar lightbox con tecla ESC
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setLightboxIndex(null);
+      if (e.key === 'ArrowRight') setLightboxIndex(prev => prev !== null ? (prev + 1) % fotos.length : null);
+      if (e.key === 'ArrowLeft') setLightboxIndex(prev => prev !== null ? (prev - 1 + fotos.length) % fotos.length : null);
+    };
+    if (lightboxIndex !== null) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxIndex]);
 
   const textColor = "#0A1628";
   const subTextColor = "#64748b";
@@ -25,12 +44,12 @@ const AcercaDe = ({ isPublic = false }) => {
   const primaryColor = "#0077B6";
 
   return (
-    <div style={{ 
+    <div style={{
       display: 'flex',
       flexDirection: 'column',
-      fontFamily: "'Inter', sans-serif", 
-      minHeight: "100vh", 
-      background: isPublic ? "#ffffff" : "transparent", 
+      fontFamily: "'Inter', sans-serif",
+      minHeight: "100vh",
+      background: isPublic ? "#ffffff" : "transparent",
       color: textColor,
       ...(isPublic && {
         position: 'fixed',
@@ -111,304 +130,326 @@ const AcercaDe = ({ isPublic = false }) => {
 
       {/* Contenido principal */}
       <div className="container mt-4 mb-5">
-      {/*
+        {/*
         HEADER INSTITUCIONAL
         Logo, título y descripción del sistema
       */}
-      <div className="text-center mb-5">
-        {/*
+        <div className="text-center mb-5">
+          {/*
           Logo de Ecosystem centrado
         */}
-        <img src={ecosystemLogo} alt="Logo Ecosystem" style={{ width: "160px", marginBottom: "16px", filter: "drop-shadow(0 10px 20px rgba(0,0,0,0.1))" }} />
-        {/*
+          <img src={ecosystemLogo} alt="Logo Ecosystem" style={{ width: "160px", marginBottom: "16px", filter: "drop-shadow(0 10px 20px rgba(0,0,0,0.1))" }} />
+          {/*
           Título principal de la página
         */}
-        <h1 style={{ fontWeight: "800", color: primaryColor }}>Acerca de Ecosystem</h1>
-        {/*
+          <h1 style={{ fontWeight: "800", color: primaryColor }}>Acerca de Ecosystem</h1>
+          {/*
           Subtítulo descriptivo del sistema
         */}
-        <p style={{ color: subTextColor, fontWeight: "500", fontSize: "1.1rem" }}>Sistema de Gestión Integral para el Laboratorio Ambiental</p>
-        {/*
+          <p style={{ color: subTextColor, fontWeight: "500", fontSize: "1.1rem" }}>Sistema de Gestión Integral para el Laboratorio Ambiental</p>
+          {/*
           Línea decorativa azul
         */}
-        <div style={{ height: "4px", width: "80px", background: primaryColor, margin: "10px auto 0", borderRadius: "99px" }} />
-      </div>
+          <div style={{ height: "4px", width: "80px", background: primaryColor, margin: "10px auto 0", borderRadius: "99px" }} />
+        </div>
 
-      <div className="row g-4">
-        {/*
+        <div className="row g-4">
+          {/*
           UBICACIÓN DEL LABORATORIO
           Panel con dirección y mapa embebido de Google Maps
         */}
-        <div className="col-12">
-          <div className="card border-0 p-0 overflow-hidden" style={{ borderRadius: "24px", background: cardBg, border: cardBorder, boxShadow: "0 10px 30px rgba(0, 119, 182, 0.15)" }}>
-            <div className="row g-0">
-              {/*
+          <div className="col-12">
+            <div className="card border-0 p-0 overflow-hidden" style={{ borderRadius: "24px", background: cardBg, border: cardBorder, boxShadow: "0 10px 30px rgba(0, 119, 182, 0.15)" }}>
+              <div className="row g-0">
+                {/*
                 Panel izquierdo con información institucional de la sede
               */}
-              <div className="col-lg-5 p-5 d-flex flex-column justify-content-center text-white" style={{ background: "#0077B6" }}>
-                {/*
+                <div className="col-lg-5 p-5 d-flex flex-column justify-content-center text-white" style={{ background: "#0077B6" }}>
+                  {/*
                   Etiqueta de "Sede Oficial"
                 */}
-                <span style={{ fontSize: "11px", fontWeight: "800", color: "#ffffff", letterSpacing: "2px", textTransform: "uppercase", opacity: "0.8" }}>Sede Oficial</span>
-                {/*
+                  <span style={{ fontSize: "11px", fontWeight: "800", color: "#ffffff", letterSpacing: "2px", textTransform: "uppercase", opacity: "0.8" }}>Sede Oficial</span>
+                  {/*
                   Título de la ubicación
                 */}
-                <h3 className="my-3" style={{ fontWeight: "900", fontSize: "28px", color: "#ffffff" }}>Ubicación del Laboratorio</h3>
-                {/*
+                  <h3 className="my-3" style={{ fontWeight: "900", fontSize: "28px", color: "#ffffff" }}>Ubicación del Laboratorio</h3>
+                  {/*
                   Descripción de la ubicación del laboratorio
                 */}
-                <p style={{ color: "#ffffff", fontSize: "14px", lineHeight: "1.7", marginBottom: "30px", opacity: "0.95" }}>
-                  El <strong>Laboratorio Ambiental</strong> se encuentra ubicado dentro de las instalaciones del Centro Agropecuario "La Granja" - SENA Regional Tolima, Espinal.
-                  <br /><br />
-                  Haz clic en el botón a continuación para abrir la ubicación interactiva y Street View oficial en Google Maps.
-                </p>
-                {/*
+                  <p style={{ color: "#ffffff", fontSize: "14px", lineHeight: "1.7", marginBottom: "30px", opacity: "0.95" }}>
+                    El <strong>Laboratorio Ambiental</strong> se encuentra ubicado dentro de las instalaciones del Centro Agropecuario "La Granja" - SENA Regional Tolima, EL Espinal.
+                    <br /><br />
+                    Haz clic en el botón a continuación para abrir la ubicación interactiva y Street View oficial en Google Maps.
+                  </p>
+                  {/*
                   Botón que abre Google Maps en una nueva pestaña
                 */}
-                <a
-                  href="https://www.google.com/maps/search/?api=1&query=SENA+Centro+Agropecuario+La+Granja+Espinal+Tolima"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn"
-                  style={{
-                    borderRadius: "14px",
-                    fontWeight: "800",
-                    fontSize: "14px",
-                    color: "#0077B6",
-                    background: "#ffffff",
-                    border: "none",
-                    padding: "12px 24px",
-                    boxShadow: "0 10px 20px rgba(0,0,0,0.1)",
-                    transition: "transform 0.2s"
-                  }}
-                  // Efecto hover de escala en el botón
-                  onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.05)"}
-                  onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
-                >
-                  Abrir en Google Maps
-                </a>
-              </div>
+                  <a
+                    href="https://www.google.com/maps/search/?api=1&query=SENA+Centro+Agropecuario+La+Granja+El Espinal+Tolima"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn"
+                    style={{
+                      borderRadius: "14px",
+                      fontWeight: "800",
+                      fontSize: "14px",
+                      color: "#0077B6",
+                      background: "#ffffff",
+                      border: "none",
+                      padding: "12px 24px",
+                      boxShadow: "0 10px 20px rgba(0,0,0,0.1)",
+                      transition: "transform 0.2s"
+                    }}
+                    // Efecto hover de escala en el botón
+                    onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.05)"}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+                  >
+                    Abrir en Google Maps
+                  </a>
+                </div>
 
-              {/*
+                {/*
                 Panel derecho con mapa interactivo embebido de Google Maps
               */}
-              <div className="col-lg-7 p-0" style={{ minHeight: "380px" }}>
-                <iframe
-                  src="https://maps.google.com/maps?q=SENA%20Centro%20Agropecuario%20La%20Granja%20Espinal&t=&z=17&ie=UTF8&iwloc=&output=embed"
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0, minHeight: "380px", display: "block" }}
-                  allowFullScreen=""
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                ></iframe>
+                <div className="col-lg-7 p-0" style={{ minHeight: "380px" }}>
+                  <iframe
+                    src="https://maps.google.com/maps?q=SENA%20Centro%20Agropecuario%20La%20Granja%20Espinal&t=&z=17&ie=UTF8&iwloc=&output=embed"
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0, minHeight: "380px", display: "block" }}
+                    allowFullScreen=""
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  ></iframe>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/*
+          {/*
           EQUIPO DE DESARROLLO
           Grid con tarjetas de cada miembro del equipo
         */}
-        <div className="col-12 mt-5">
-          <h3 className="text-center mb-4" style={{ fontWeight: "800", color: textColor, fontSize: "26px" }}>
-            Equipo de Desarrolladores
-          </h3>
-          <div className="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4 justify-content-center">
-            {/*
+          <div className="col-12 mt-5">
+            <h3 className="text-center mb-4" style={{ fontWeight: "800", color: textColor, fontSize: "26px" }}>
+              Equipo de Desarrolladores
+            </h3>
+            <div className="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4 justify-content-center">
+              {/*
               Mapea los miembros del equipo con su rol, nombre y foto
             */}
-            {[
-              { r: "Gerente del Proyecto y Full Stack", n: "Miguel Santiago Bocanegra Useche", img: "Miguel santiago Bocanegra Useche.jpeg" },
-              { r: "Subgerente", n: "Luis Fernando Pinto Niño", img: "Luis fernando pinto niño.jpeg" },
-              { r: "Especialista Frontend", n: "Christiam Ivan Mosquera Cantor", img: "Christiam Ivan Mosquera Cantor.jpeg" },
-              { r: "Especialista Backend", n: "Juan Pablo Tocarema Avila", img: "tocarema.jpeg" }
-            ].map((m, i) => {
-              // Construye la URL de la imagen del desarrollador o null si no tiene foto
-              const imgUrl = m.img ? `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/uploads/${m.img}` : null;
-              // Calcula las iniciales del nombre para el placeholder
-              const initials = m.n.split(" ").map(w => w[0]).join("").substring(0, 2).toUpperCase();
-              return (
-                <div key={i} className="col">
-                  {/*
+              {[
+                { r: "Gerente del Proyecto y Full Stack", n: "Miguel Santiago Bocanegra Useche", img: "Miguel santiago Bocanegra Useche.jpeg" },
+                { r: "Subgerente", n: "Luis Fernando Pinto Niño", img: "Luis fernando pinto niño.jpeg" },
+                { r: "Especialista Frontend", n: "Christiam Ivan Mosquera Cantor", img: "Christiam Ivan Mosquera Cantor.jpeg" },
+                { r: "Especialista Backend", n: "Juan Pablo Tocarema Avila", img: "tocarema.jpeg" }
+              ].map((m, i) => {
+                // Construye la URL de la imagen del desarrollador o null si no tiene foto
+                const imgUrl = m.img ? `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/uploads/${m.img}` : null;
+                // Calcula las iniciales del nombre para el placeholder
+                const initials = m.n.split(" ").map(w => w[0]).join("").substring(0, 2).toUpperCase();
+                return (
+                  <div key={i} className="col">
+                    {/*
                     Tarjeta del desarrollador con efecto de elevación al hover
                   */}
-                  <div
-                    className="card border-0 shadow-sm p-4 text-center h-100"
-                    style={{
-                      borderRadius: "20px",
-                      transition: "transform 0.3s ease, box-shadow 0.3s ease",
-                      background: cardBg,
-                      border: cardBorder
-                    }}
-                    // Eleva la tarjeta al pasar el mouse
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = "translateY(-8px)";
-                      e.currentTarget.style.boxShadow = "0 20px 25px -5px rgba(0, 0, 0, 0.05)";
-                    }}
-                    // Restaura la posición al salir
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = "translateY(0)";
-                      e.currentTarget.style.boxShadow = "none";
-                    }}
-                  >
-                    <div className="mb-4" style={{ width: "100%" }}>
-                      {/*
-                        Muestra la foto del desarrollador si existe, o las iniciales como placeholder
-                      */}
-                      {imgUrl ? (
-                        <img
-                          src={imgUrl}
-                          alt={m.n}
-                          style={{
-                            width: "100%",
-                            height: "280px",
-                            borderRadius: "16px",
-                            objectFit: "cover",
-                            border: "3px solid #0077B6",
-                            boxShadow: "0 8px 24px rgba(0, 119, 182, 0.15)"
-                          }}
-                        />
-                      ) : (
-                        // Placeholder con iniciales cuando no hay foto disponible
-                        <div style={{
-                          width: "100%",
-                          height: "280px",
-                          background: "#0077B6",
-                          borderRadius: "16px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: "56px",
-                          fontWeight: "800",
-                          color: "#ffffff",
-                          border: "3px solid #ffffff",
-                          boxShadow: "0 8px 24px rgba(0, 119, 182, 0.15)"
-                        }}>
-                          {initials}
-                        </div>
-                      )}
-                    </div>
-                    {/*
-                      Nombre completo del desarrollador
-                    */}
-                    <h5 className="mb-2" style={{ fontWeight: "800", fontSize: "16px", color: textColor }}>{m.n}</h5>
-                    {/*
-                      Badge con el rol del desarrollador
-                    */}
-                    <span
-                      className="px-3 py-1 d-inline-block rounded-pill"
+                    <div
+                      className="card border-0 shadow-sm p-4 text-center h-100"
                       style={{
-                        fontSize: "12px",
-                        fontWeight: "700",
-                        color: "#0077B6",
-                        border: "1px solid #0077B6",
-                        background: "transparent",
-                        width: "fit-content",
-                        margin: "0 auto"
+                        borderRadius: "20px",
+                        transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                        background: cardBg,
+                        border: cardBorder
+                      }}
+                      // Eleva la tarjeta al pasar el mouse
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "translateY(-8px)";
+                        e.currentTarget.style.boxShadow = "0 20px 25px -5px rgba(0, 0, 0, 0.05)";
+                      }}
+                      // Restaura la posición al salir
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "translateY(0)";
+                        e.currentTarget.style.boxShadow = "none";
                       }}
                     >
-                      {m.r}
-                    </span>
+                      <div className="mb-4" style={{ width: "100%" }}>
+                        {/*
+                        Muestra la foto del desarrollador si existe, o las iniciales como placeholder
+                      */}
+                        {imgUrl ? (
+                          <img
+                            src={imgUrl}
+                            alt={m.n}
+                            style={{
+                              width: "100%",
+                              height: "280px",
+                              borderRadius: "16px",
+                              objectFit: "cover",
+                              border: "3px solid #0077B6",
+                              boxShadow: "0 8px 24px rgba(0, 119, 182, 0.15)"
+                            }}
+                          />
+                        ) : (
+                          // Placeholder con iniciales cuando no hay foto disponible
+                          <div style={{
+                            width: "100%",
+                            height: "280px",
+                            background: "#0077B6",
+                            borderRadius: "16px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "56px",
+                            fontWeight: "800",
+                            color: "#ffffff",
+                            border: "3px solid #ffffff",
+                            boxShadow: "0 8px 24px rgba(0, 119, 182, 0.15)"
+                          }}>
+                            {initials}
+                          </div>
+                        )}
+                      </div>
+                      <div className="mt-3 d-flex flex-column" style={{ flex: 1 }}>
+                        {/*
+                        Nombre del desarrollador
+                      */}
+                        <h5 style={{ fontWeight: "800", color: "#0A1628", fontSize: "16px", marginBottom: "8px" }}>{m.n}</h5>
+                        {/*
+                        Rol del desarrollador destacado como píldora alineada al final
+                      */}
+                        <div className="mt-auto">
+                          <span
+                            className="px-3 py-1 d-inline-block rounded-pill"
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: "700",
+                              color: "#0077B6",
+                              border: "1px solid #0077B6",
+                              background: "transparent",
+                              width: "fit-content",
+                              margin: "0 auto"
+                            }}
+                          >
+                            {m.r}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+          </div>
+
+          {/*
+          GALERÍA DE INSTALACIONES
+          Grid de imágenes del laboratorio con lightbox al hacer clic
+        */}
+          <div className="col-12 mt-5">
+            <div className="card border-0 p-4" style={{ borderRadius: "20px", background: cardBg, border: cardBorder, boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
+              <h3 className="text-center mb-4" style={{ fontWeight: "800", color: textColor, fontSize: "26px" }}>Nuestras Instalaciones</h3>
+              <div className="row row-cols-1 row-cols-md-3 g-3">
+                {/*
+                Mapea las imágenes de instalaciones con título y source
+              */}
+                {fotos.map((ins, i) => (
+                  <div key={i} className="col">
+                    {/*
+                    Tarjeta de instalación clickeable que abre el carrusel
+                  */}
+                    <div
+                      className="card border-0 shadow-sm overflow-hidden"
+                      style={{
+                        borderRadius: "16px",
+                        height: "100%",
+                        cursor: "pointer",
+                        transition: "transform 0.3s ease, box-shadow 0.3s ease"
+                      }}
+                      // Al hacer clic abre el carrusel en el índice seleccionado
+                      onClick={() => setLightboxIndex(i)}
+                      // Escala la tarjeta al pasar el mouse
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "scale(1.03)";
+                        e.currentTarget.style.boxShadow = "0 12px 24px rgba(0,0,0,0.08)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "scale(1)";
+                        e.currentTarget.style.boxShadow = "none";
+                      }}
+                    >
+                      {/*
+                      Imagen de la instalación
+                    */}
+                      <img
+                        src={ins.img}
+                        alt={ins.title}
+                        style={{ height: "380px", objectFit: "cover", width: "100%" }}
+                      />
+                      {/*
+                      Pie con el título de la imagen
+                    */}
+                      <div className="p-3 text-center" style={{ background: "#ffffff" }}>
+                        <span style={{ fontSize: "14px", fontWeight: "700", color: "#0A1628" }}>{ins.title}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
         {/*
-          GALERÍA DE INSTALACIONES
-          Grid de imágenes del laboratorio con lightbox al hacer clic
-        */}
-        <div className="col-12 mt-5">
-          <div className="card border-0 p-4" style={{ borderRadius: "20px", background: cardBg, border: cardBorder, boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
-            <h3 className="text-center mb-4" style={{ fontWeight: "800", color: textColor, fontSize: "26px" }}>Nuestras Instalaciones</h3>
-            <div className="row row-cols-1 row-cols-md-3 g-3">
-              {/*
-                Mapea las imágenes de instalaciones con título y source
-              */}
-              {[
-                { title: "Área de Ensayos y Oficina", img: labOficina },
-                { title: "Equipos de Análisis y Reactivos", img: labEquipos },
-                { title: "Líneas de Flujo de Trabajo", img: labFlujo }
-              ].map((ins, i) => (
-                <div key={i} className="col">
-                  {/*
-                    Tarjeta de instalación clickeable que abre el lightbox
-                  */}
-                  <div
-                    className="card border-0 shadow-sm overflow-hidden"
-                    style={{
-                      borderRadius: "16px",
-                      height: "100%",
-                      cursor: "pointer",
-                      transition: "transform 0.3s ease, box-shadow 0.3s ease"
-                    }}
-                    // Al hacer clic abre la foto en el lightbox con su título
-                    onClick={() => setLightboxPhoto({ src: ins.img, caption: ins.title })}
-                    // Escala la tarjeta al pasar el mouse
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = "scale(1.03)";
-                      e.currentTarget.style.boxShadow = "0 12px 24px rgba(0,0,0,0.08)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = "scale(1)";
-                      e.currentTarget.style.boxShadow = "none";
-                    }}
-                  >
-                    {/*
-                      Imagen de la instalación
-                    */}
-                    <img
-                      src={ins.img}
-                      alt={ins.title}
-                      style={{ height: "380px", objectFit: "cover", width: "100%" }}
-                    />
-                    {/*
-                      Pie con el título de la imagen
-                    */}
-                    <div className="p-3 text-center" style={{ background: "#ffffff" }}>
-                      <span style={{ fontSize: "14px", fontWeight: "700", color: "#0A1628" }}>{ins.title}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+        MODAL / CARRUSEL A PANTALLA COMPLETA
+      */}
+        {lightboxIndex !== null && (
+          // Overlay oscuro
+          <div style={{
+            position: "fixed", inset: 0, zIndex: 99999,
+            background: "rgba(10, 22, 40, 0.95)", display: "flex",
+            alignItems: "center", justifyContent: "center"
+          }}>
+            {/* Botón Cerrar */}
+            <button onClick={() => setLightboxIndex(null)} style={{
+              position: "absolute", top: "20px", right: "30px", background: "none", border: "none",
+              color: "#fff", fontSize: "40px", cursor: "pointer", zIndex: 100000
+            }}>
+              &times;
+            </button>
+            
+            {/* Botón Anterior */}
+            <button onClick={(e) => { e.stopPropagation(); setLightboxIndex((lightboxIndex - 1 + fotos.length) % fotos.length); }} style={{
+              position: "absolute", left: "20px", background: "rgba(255,255,255,0.2)", border: "none",
+              color: "#fff", fontSize: "30px", cursor: "pointer", borderRadius: "50%", width: "60px", height: "60px",
+              display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100000
+            }}>
+              <i className="fas fa-chevron-left"></i>
+            </button>
+
+            {/* Imagen a pantalla completa */}
+            <img src={fotos[lightboxIndex].img} alt={fotos[lightboxIndex].title} style={{
+              maxWidth: "90vw", maxHeight: "80vh", borderRadius: "24px", boxShadow: "0 25px 60px rgba(0,0,0,0.6)",
+              border: "4px solid #ffffff", objectFit: "contain", cursor: "default"
+            }} />
+            
+            {/* Botón Siguiente */}
+            <button onClick={(e) => { e.stopPropagation(); setLightboxIndex((lightboxIndex + 1) % fotos.length); }} style={{
+              position: "absolute", right: "20px", background: "rgba(255,255,255,0.2)", border: "none",
+              color: "#fff", fontSize: "30px", cursor: "pointer", borderRadius: "50%", width: "60px", height: "60px",
+              display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100000
+            }}>
+              <i className="fas fa-chevron-right"></i>
+            </button>
+
+            {/* Leyenda */}
+            <div style={{
+              position: "absolute", bottom: "30px", background: "rgba(0,0,0,0.7)", padding: "10px 24px",
+              borderRadius: "99px", color: "#ffffff", fontWeight: "700", fontSize: "16px"
+            }}>
+              {fotos[lightboxIndex].title} ({lightboxIndex + 1} / {fotos.length})
             </div>
           </div>
-        </div>
-      </div>
-
-      {/*
-        LIGHTBOX PARA VER FOTOS A PANTALLA COMPLETA
-        Overlay oscuro con la imagen seleccionada y su leyenda
-      */}
-      {lightboxPhoto && (
-        // Al hacer clic fuera de la imagen se cierra el lightbox
-        <div onClick={() => setLightboxPhoto(null)} style={{
-          position: "fixed", inset: 0, zIndex: 99999,
-          background: "rgba(10, 22, 40, 0.95)", display: "flex",
-          alignItems: "center", justifyContent: "center", cursor: "zoom-out"
-        }}>
-          {/*
-            Imagen a pantalla completa con bordes redondeados
-          */}
-          <img src={lightboxPhoto.src} alt={lightboxPhoto.caption} style={{
-            maxWidth: "90vw", maxHeight: "80vh", borderRadius: "24px", boxShadow: "0 25px 60px rgba(0,0,0,0.6)",
-            border: "4px solid #ffffff"
-          }} />
-          {/*
-            Leyenda de la foto en la parte inferior del lightbox
-          */}
-          <div style={{
-            position: "absolute", bottom: "30px", background: "rgba(0,0,0,0.7)", padding: "10px 24px",
-            borderRadius: "99px", color: "#ffffff", fontWeight: "700", fontSize: "16px"
-          }}>
-            {lightboxPhoto.caption}
-          </div>
-        </div>
-      )}
+        )}
 
       </div>
 

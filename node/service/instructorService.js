@@ -9,7 +9,7 @@ class InstructorService {
       include: [{
         model: UserModel,
         as: 'usuario',
-        attributes: ['email', 'estado', 'documento', 'nombres_apellidos']
+        attributes: ['id_usuario', 'email', 'estado', 'documento', 'nombres_apellidos']
       }],
       order: [['id_instructor', 'DESC']]
     });

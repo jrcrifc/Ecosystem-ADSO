@@ -69,7 +69,7 @@ class UserService {
   // Registra un nuevo usuario en el sistema con validaciones del lado del servidor
   async registerUser(data) {
     // Desestructura los datos del formulario de registro
-    let { tipo_documento, documento, nombres_apellidos, email, rol, id_ficha, id_programa } = data;
+    let { tipo_documento, documento, nombres_apellidos, email, rol, id_ficha, id_programa, estado } = data;
     // Limpia y normaliza espacios y minúsculas en los campos de texto
     documento = (documento || "").trim();
     nombres_apellidos = (nombres_apellidos || "").trim();
@@ -79,8 +79,8 @@ class UserService {
     // VALIDACIONES DE SEGURIDAD EN EL SERVIDOR
     // Valida que el documento contenga solo números
     if (!/^\d+$/.test(documento)) throw new Error("El documento debe contener solo números");
-    // Valida que se hayan ingresado nombres y apellidos completos
-    if (nombres_apellidos.split(" ").length < 2) throw new Error("Por favor ingresa nombres y apellidos completos");
+    // Valida que se hayan ingresado nombres y apellidos (al menos 3 caracteres)
+    if (nombres_apellidos.length < 3) throw new Error("Por favor ingresa un nombre válido");
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     // Valida el formato del correo electrónico
     if (!emailRegex.test(email)) throw new Error("El formato del correo electrónico no es válido");
@@ -105,9 +105,9 @@ class UserService {
       email,
       password: hashedPassword,
       rol,
-      estado: 'pendiente',
-      id_ficha,    // Se guarda la ficha seleccionada
-      id_programa  // Se guarda el programa seleccionado
+      estado: estado || 'pendiente',
+      id_ficha: id_ficha || null,
+      id_programa: id_programa || null
     });
     // Registra la acción en la tabla de auditoría
     await registrarLog(email, 'REGISTRO', 'AUTH', `Usuario registrado como ${rol}`);
