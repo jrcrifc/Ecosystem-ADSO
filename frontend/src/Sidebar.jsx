@@ -69,9 +69,9 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
       ]
     },
     {
-      key: "solicitudes", icon: "📋", text: "Solicitudes", show: !esGestorPasante,
+      key: "solicitudes", icon: "📋", text: (esAdmin || esGestorPasante) ? "Gestión" : "Solicitudes", show: true,
       items: [
-        { icon: "📝", text: "Solicitudes", path: "/solicitud", show: true },
+        { icon: "📝", text: (esAdmin || esGestorPasante) ? "Gestión de Solicitudes" : "Solicitudes", path: "/solicitud", show: true },
       ]
     },
     {

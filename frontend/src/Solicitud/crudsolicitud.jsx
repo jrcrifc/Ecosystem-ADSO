@@ -1,4 +1,4 @@
-// Archivo: crudsolicitud.jsx — Vista unificada de Solicitudes con pestañas (Mis Solicitudes + Gestión Admin)
+// Archivo: crudsolicitud.jsx — Vista unificada de Solicitudes (tabla única con acciones de gestión por rol)
 
 // Importa la instancia centralizada de Axios para peticiones HTTP
 import apiAxios from "../api/axiosConfig.js";
@@ -19,54 +19,16 @@ import { paginationComponentOptions, tableCustomStyles } from "../config/dataTab
 // Importa la instancia de Socket.io para comunicación en tiempo real
 import socket from "../socket.js";
 
-// Función que formatea una fecha ISO a formato legible local
-const formatDateTime = (isoString) => {
+// Función que formatea una fecha ISO en dos líneas: fecha arriba, hora abajo
+const formatDateCompact = (isoString) => {
   if (!isoString) return "-";
   const d = new Date(isoString);
   if (isoString.endsWith("T00:00:00.000Z") || isoString.includes("T00:00:00")) {
-    return `${isoString.substring(0, 10)} 07:00 AM`;
+    return { fecha: isoString.substring(0, 10), hora: "07:00 AM" };
   }
-  return d.toLocaleString('es-CO', { 
-    year: 'numeric', month: '2-digit', day: '2-digit', 
-    hour: '2-digit', minute: '2-digit', hour12: true 
-  });
-};
-
-// Componente que renderiza las pills de equipos dentro de la celda de la tabla
-const EquiposPills = ({ equipos }) => {
-  const [expandido, setExpandido] = useState(false);
-  if (!equipos || equipos.length === 0)
-    return <span className="text-muted small">Sin equipos</span>;
-  const visibles = expandido ? equipos : equipos.slice(0, 2);
-  return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", alignItems: "center" }}>
-      {visibles.map((eq) => (
-        <span
-          key={eq.id_equipo}
-          title={`${eq.marca_equipo || "Sin marca"} · ${eq.no_placa || "Sin placa"}`}
-          style={{
-            padding: "2px 8px", borderRadius: 20, fontSize: "0.7rem",
-            fontWeight: 600, backgroundColor: "#e7f1ff", color: "#1d4ed8",
-            border: "1px solid #bfdbfe", whiteSpace: "nowrap"
-          }}
-        >
-          {eq.nom_equipo}
-        </span>
-      ))}
-      {equipos.length > 2 && (
-        <button
-          onClick={() => setExpandido(!expandido)}
-          style={{
-            background: "none", border: "none", padding: "2px 6px",
-            fontSize: "0.7rem", color: "#6b7280", cursor: "pointer",
-            fontWeight: 600
-          }}
-        >
-          {expandido ? "Ver menos" : `+${equipos.length - 2} más`}
-        </button>
-      )}
-    </div>
-  );
+  const fecha = d.toLocaleDateString('es-CO', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  const hora = d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true });
+  return { fecha, hora };
 };
 
 // Componente principal del CRUD unificado de solicitudes de préstamo
@@ -76,8 +38,6 @@ const CrudSolicitudPrestamos = () => {
   const [filterText, setFilterText] = useState("");
   const [selectedSolicitud, setSelectedSolicitud] = useState(null);
   const [verDetalle, setVerDetalle] = useState(null);
-  // Pestaña activa: "solicitudes" o "gestionar"
-  const [tabActiva, setTabActiva] = useState("solicitudes");
 
   const getToken = () => sessionStorage.getItem("token");
   const stored = sessionStorage.getItem("user");
@@ -85,8 +45,15 @@ const CrudSolicitudPrestamos = () => {
   const userRol = (userData?.user?.rol || userData?.rol || "").toLowerCase();
   const userId = userData?.id_usuario || userData?.user?.id_usuario;
   const esAdmin = userRol === "administrador" || userRol === "admin";
+  const esPasante = userRol === "pasante";
+  const esGestor = userRol === "gestor";
+  // Los roles que pueden gestionar solicitudes (aceptar, prestar, entregar, cancelar)
+  const puedeGestionar = esAdmin || esPasante || esGestor;
 
-  // Mapa de transiciones permitidas entre estados (para pestaña Gestionar)
+  // Título dinámico según el rol del usuario
+  const tituloVista = (esAdmin || esPasante) ? "Gestión de Solicitudes" : "Solicitudes";
+
+  // Mapa de transiciones permitidas entre estados (para botones de acción)
   const estadosSiguientes = {
     generado: ["aceptado", "cancelado"],
     aceptado: ["prestado"],
@@ -114,184 +81,162 @@ const CrudSolicitudPrestamos = () => {
     return map[estado] || { bg: "#f3f4f6", color: "#374151" };
   };
 
-  // ===================== COLUMNAS PESTAÑA "SOLICITUDES" =====================
-  const columnsSolicitudes = [
+  // ===================== COLUMNAS DE LA TABLA UNIFICADA =====================
+  const columns = [
     {
-      name: "ID", selector: r => r.id_solicitud, sortable: true,
-      width: "70px", center: true,
-    },
-    {
-      name: "Solicitante",
-      selector: r => r.usuario?.nombres_apellidos || "-",
-      sortable: true, minWidth: "150px", grow: 1, wrap: true,
-      omit: !esAdmin,
-    },
-    {
-      name: "Fecha Inicio",
-      selector: r => formatDateTime(r.fecha_inicio),
-      sortable: true, width: "155px", wrap: true
-    },
-    {
-      name: "Fecha de Devolución",
-      selector: r => formatDateTime(r.fecha_fin),
-      sortable: true, width: "165px", wrap: true
-    },
-    {
-      name: "Equipos", width: "220px",
-      cell: r => <EquiposPills equipos={r.equipos} />,
-    },
-    {
-      name: "Estado",
-      selector: r => r.ultimoEstado || "generado",
-      sortable: true, width: "150px",
-      cell: r => {
-        const c = getBadgeStyle(r.ultimoEstado);
-        return (
-          <span style={{
-            padding: "5px 12px", borderRadius: 20, fontSize: "0.75rem",
-            fontWeight: 700, backgroundColor: c.bg, color: c.color,
-            display: "inline-block"
-          }}>
-            {r.ultimoEstado || "generado"}
-          </span>
-        );
-      }
-    },
-    {
-      name: "Activo", width: "90px", center: true,
-      cell: r => (
-        <span className={`px-2 py-1 rounded-pill text-white fw-semibold ${r.estado === 1 ? "bg-success" : "bg-danger"}`}
-          style={{ fontSize: "0.7rem" }}>
-          {r.estado === 1 ? "SÍ" : "NO"}
-        </span>
-      ),
-    },
-    {
-      name: "Acciones", center: true, width: "200px",
-      cell: r => (
-        <div className="d-flex gap-1 justify-content-center">
-          {/* Botón Ver Detalle */}
-          <button className="btn btn-sm"
-            style={{ background: "#dbeafe", color: "#0077B6", border: "none" }}
-            onClick={() => setVerDetalle(r)} title="Ver detalle">
-            <i className="fas fa-eye"></i>
-          </button>
-          {/* Botón Histórico */}
-          <button className="btn btn-sm"
-            style={{ background: "#f1f5f9", color: "#64748b", border: "none" }}
-            onClick={() => navigate("/estadoxsolicitud", { state: { id_solicitud: r.id_solicitud } })}
-            title="Ver historial">
-            <i className="fas fa-history"></i>
-          </button>
-          {/* Botón Cancelar por Solicitante — solo si está en generado y es el dueño o admin */}
-          {r.ultimoEstado === "generado" && (
-            <button className="btn btn-sm"
-              style={{ background: "#fef2f2", color: "#dc2626", border: "none" }}
-              onClick={() => cancelarPorSolicitante(r.id_solicitud)}
-              title="Cancelar solicitud">
-              <i className="fas fa-times-circle"></i>
-            </button>
-          )}
-        </div>
-      ),
-    },
-  ];
-
-  // ===================== COLUMNAS PESTAÑA "GESTIONAR" (ADMIN) =====================
-  const columnsGestionar = [
-    { name: "ID", selector: r => r.id_solicitud, sortable: true, width: "80px" },
-    {
-      name: "Solicitante", width: "250px",
+      name: "Solicitante", minWidth: "220px", center: true,
       cell: r => {
         const u = r.usuario;
         if (!u) return <span>-</span>;
         return (
-          <div style={{ padding: "6px 0" }}>
+          <div style={{ padding: "6px 0", textAlign: "center" }}>
             <div style={{ fontWeight: "700", color: "#0f172a", fontSize: "13px" }}>{u.nombres_apellidos}</div>
-            <div style={{ fontSize: "11px", color: "#64748b", marginTop: "2px" }}>{u.rol}</div>
-            <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "2px" }}>{u.email}</div>
+            <div style={{ fontSize: "11px", color: "#0284c7", fontWeight: "600", marginTop: "2px" }}>{u.rol}</div>
           </div>
         );
       },
       sortable: true,
     },
     {
-      name: "Fecha Inicio",
-      selector: r => formatDateTime(r.fecha_inicio),
-      sortable: true, width: "155px", wrap: true
-    },
-    {
-      name: "Fecha Fin",
-      selector: r => formatDateTime(r.fecha_fin),
-      sortable: true, width: "155px", wrap: true
-    },
-    {
-      name: "Estado Actual", width: "150px",
+      name: "Equipo(s)", minWidth: "200px", center: true,
       cell: r => {
-        const style = getBadgeStyle(r.ultimoEstado);
+        if (!r.equipos || r.equipos.length === 0) return <span className="text-muted small">-</span>;
+        return (
+          <div style={{ padding: "6px 0", display: "flex", flexDirection: "column", gap: "2px", alignItems: "center" }}>
+            {r.equipos.map(eq => (
+              <div key={eq.id_equipo} style={{ fontSize: "12px", color: "#0f172a", fontWeight: "600" }}>
+                • {eq.nom_equipo}
+              </div>
+            ))}
+          </div>
+        );
+      },
+    },
+    {
+      name: "Fecha Recogida", minWidth: "190px", center: true,
+      cell: r => {
+        const f = formatDateCompact(r.fecha_inicio);
+        if (f === "-") return "-";
+        return (
+          <div style={{ lineHeight: "1.4", textAlign: "center" }}>
+            <div style={{ fontWeight: "600", fontSize: "12px", color: "#0f172a" }}>{f.fecha}</div>
+            <div style={{ fontSize: "11px", color: "#64748b" }}>{f.hora}</div>
+          </div>
+        );
+      },
+      sortable: true,
+    },
+    {
+      name: "Fecha Devolución", minWidth: "210px", center: true,
+      cell: r => {
+        const f = formatDateCompact(r.fecha_fin);
+        if (f === "-") return "-";
+        return (
+          <div style={{ lineHeight: "1.4", textAlign: "center" }}>
+            <div style={{ fontWeight: "600", fontSize: "12px", color: "#0f172a" }}>{f.fecha}</div>
+            <div style={{ fontSize: "11px", color: "#64748b" }}>{f.hora}</div>
+          </div>
+        );
+      },
+      sortable: true,
+    },
+    {
+      name: "Estado Actual", minWidth: puedeGestionar ? "260px" : "130px", center: true,
+      cell: r => {
+        const estadoActual = r.ultimoEstado || "generado";
+        const c = getBadgeStyle(estadoActual);
+
+        // Si el usuario puede gestionar, mostramos botones de acción
+        if (puedeGestionar) {
+          const siguientes = estadosSiguientes[estadoActual] || [];
+          return (
+            <div className="d-flex gap-1 py-1 align-items-center flex-wrap">
+              {siguientes.length === 0 && (
+                <span style={{
+                  background: c.bg, color: c.color,
+                  fontSize: "11px", fontWeight: "700",
+                  padding: "4px 12px", borderRadius: "99px"
+                }}>
+                  {estadoActual}
+                </span>
+              )}
+              {siguientes.includes("aceptado") && (
+                <button className="btn btn-sm"
+                  onClick={() => cambiarEstadoAdmin(r.id_solicitud, "aceptado")}
+                  title="Aceptar Solicitud"
+                  style={{ background: "#dbeafe", color: "#0077B6", border: "none", borderRadius: "20px", padding: "5px 10px", fontWeight: "700", fontSize: "11px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                  <i className="fas fa-check-circle"></i> Aceptar
+                </button>
+              )}
+              {siguientes.includes("cancelado") && (
+                <button className="btn btn-sm"
+                  onClick={() => cambiarEstadoAdmin(r.id_solicitud, "cancelado")}
+                  title="Cancelar Solicitud"
+                  style={{ background: "#fee2e2", color: "#dc2626", border: "none", borderRadius: "20px", padding: "5px 10px", fontWeight: "700", fontSize: "11px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                  <i className="fas fa-times-circle"></i> Cancelar
+                </button>
+              )}
+              {siguientes.includes("prestado") && (
+                <button className="btn btn-sm"
+                  onClick={() => cambiarEstadoAdmin(r.id_solicitud, "prestado")}
+                  title="Prestar Equipo"
+                  style={{ background: "#fef3c7", color: "#d97706", border: "none", borderRadius: "20px", padding: "5px 10px", fontWeight: "700", fontSize: "11px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                  <i className="fas fa-box"></i> Prestar
+                </button>
+              )}
+              {siguientes.includes("entregado") && (
+                <button className="btn btn-sm"
+                  onClick={() => cambiarEstadoAdmin(r.id_solicitud, "entregado")}
+                  title="Recibir Equipo (Liberar)"
+                  style={{ background: "#dcfce7", color: "#16a34a", border: "none", borderRadius: "20px", padding: "5px 10px", fontWeight: "700", fontSize: "11px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                  <i className="fas fa-undo"></i> Entregar
+                </button>
+              )}
+            </div>
+          );
+        }
+
+        // Si es instructor sin permisos de gestión, solo badge
         return (
           <span style={{
-            background: style.bg, color: style.color,
-            fontSize: "11px", fontWeight: "700",
-            padding: "4px 12px", borderRadius: "99px"
+            padding: "5px 12px", borderRadius: 20, fontSize: "0.75rem",
+            fontWeight: 700, backgroundColor: c.bg, color: c.color,
+            display: "inline-block"
           }}>
-            {r.ultimoEstado || "generado"}
+            {estadoActual}
           </span>
         );
       }
     },
     {
-      name: "Acciones",
-      cell: r => {
-        const estadoActual = r.ultimoEstado || "generado";
-        const siguientes = estadosSiguientes[estadoActual] || [];
-        return (
-          <div className="d-flex gap-2 py-1 align-items-center flex-wrap">
-            {siguientes.length === 0 && <span className="text-muted small ms-1">Finalizado</span>}
-            {siguientes.includes("aceptado") && (
-              <button className="btn btn-sm"
-                onClick={() => cambiarEstadoAdmin(r.id_solicitud, "aceptado")}
-                title="Aceptar Solicitud"
-                style={{ background: "#dbeafe", color: "#0077B6", border: "none", borderRadius: "20px", padding: "6px 12px", fontWeight: "700", fontSize: "11px", display: "inline-flex", alignItems: "center", gap: "5px" }}>
-                <i className="fas fa-check-circle"></i> Aceptar
-              </button>
-            )}
-            {siguientes.includes("cancelado") && (
-              <button className="btn btn-sm"
-                onClick={() => cambiarEstadoAdmin(r.id_solicitud, "cancelado")}
-                title="Rechazar/Cancelar"
-                style={{ background: "#fee2e2", color: "#dc2626", border: "none", borderRadius: "20px", padding: "6px 12px", fontWeight: "700", fontSize: "11px", display: "inline-flex", alignItems: "center", gap: "5px" }}>
-                <i className="fas fa-times-circle"></i> Cancelar
-              </button>
-            )}
-            {siguientes.includes("prestado") && (
-              <button className="btn btn-sm"
-                onClick={() => cambiarEstadoAdmin(r.id_solicitud, "prestado")}
-                title="Entregar Equipo (Prestar)"
-                style={{ background: "#fef3c7", color: "#d97706", border: "none", borderRadius: "20px", padding: "6px 12px", fontWeight: "700", fontSize: "11px", display: "inline-flex", alignItems: "center", gap: "5px" }}>
-                <i className="fas fa-box"></i> Prestar
-              </button>
-            )}
-            {siguientes.includes("entregado") && (
-              <button className="btn btn-sm"
-                onClick={() => cambiarEstadoAdmin(r.id_solicitud, "entregado")}
-                title="Recibir Equipo (Liberar)"
-                style={{ background: "#dcfce7", color: "#16a34a", border: "none", borderRadius: "20px", padding: "6px 12px", fontWeight: "700", fontSize: "11px", display: "inline-flex", alignItems: "center", gap: "5px" }}>
-                <i className="fas fa-undo"></i> Recibir
-              </button>
-            )}
-          </div>
-        );
-      },
-      ignoreRowClick: true, allowOverflow: true, button: true, width: "280px"
-    }
+      name: "Acciones", center: true, width: "100px",
+      cell: r => (
+        <div className="d-flex gap-1 justify-content-center">
+          {/* Botón Ver Detalle (ojito) */}
+          <button className="btn btn-sm"
+            style={{ background: "#dbeafe", color: "#0077B6", border: "none" }}
+            onClick={() => setVerDetalle(r)} title="Ver detalle">
+            <i className="fas fa-eye"></i>
+          </button>
+          {/* Botón Historial (recargar) */}
+          <button className="btn btn-sm"
+            style={{ background: "#f1f5f9", color: "#64748b", border: "none" }}
+            onClick={() => navigate("/estadoxsolicitud", { state: { id_solicitud: r.id_solicitud } })}
+            title="Ver historial">
+            <i className="fas fa-history"></i>
+          </button>
+        </div>
+      ),
+    },
   ];
 
   // ===================== EFECTOS Y FUNCIONES =====================
 
   useEffect(() => {
     cargarSolicitudes();
+    // Escucha cambios en tiempo real para refrescar la tabla automáticamente
     socket.on('solicitud_actualizada', cargarSolicitudes);
+    socket.on('equipo_actualizado', cargarSolicitudes);
     const modalSolicitud = document.getElementById("modalSolicitud");
     const cleanupBackdrop = () => {
       document.body.classList.remove("modal-open");
@@ -308,6 +253,7 @@ const CrudSolicitudPrestamos = () => {
     }
     return () => {
       socket.off('solicitud_actualizada', cargarSolicitudes);
+      socket.off('equipo_actualizado', cargarSolicitudes);
       if (modalSolicitud) {
         modalSolicitud.removeEventListener("hidden.bs.modal", handleSolicitudHidden);
       }
@@ -319,7 +265,8 @@ const CrudSolicitudPrestamos = () => {
       const res = await apiAxios.get("/api/solicitud", {
         headers: { Authorization: `Bearer ${getToken()}` }
       });
-      if (esAdmin) {
+      // Admin y Pasante ven todas las solicitudes; Instructor solo las suyas
+      if (esAdmin || esPasante || esGestor) {
         setSolicitudes(res.data);
       } else {
         const misSolicitudes = res.data.filter(s => s.usuario?.id_usuario === userId || s.id_usuario === userId);
@@ -330,54 +277,7 @@ const CrudSolicitudPrestamos = () => {
     }
   };
 
-  // Toggle estado activo/inactivo
-  const toggleEstado = async (id, estadoActual) => {
-    const nuevoEstado = estadoActual === 1 ? 0 : 1;
-    const result = await Swal.fire({
-      title: "¿Cambiar estado?",
-      text: `La solicitud pasará a ${nuevoEstado === 1 ? "ACTIVO" : "INACTIVO"}`,
-      icon: "question", showCancelButton: true,
-      confirmButtonColor: nuevoEstado === 1 ? "#0077B6" : "#dc3545",
-      confirmButtonText: "Sí, cambiar", cancelButtonText: "Cancelar",
-    });
-    if (!result.isConfirmed) return;
-    try {
-      await apiAxios.put(`/api/solicitud/estado/${id}`, { estado: nuevoEstado }, {
-        headers: { Authorization: `Bearer ${getToken()}` }
-      });
-      setSolicitudes(prev =>
-        prev.map(item => item.id_solicitud === id ? { ...item, estado: nuevoEstado } : item)
-      );
-      Swal.fire({ icon: "success", title: "¡Listo!", timer: 1500, showConfirmButton: false });
-    } catch {
-      Swal.fire("Error", "No se pudo cambiar el estado", "error");
-    }
-  };
-
-  // Cancelar por solicitante — solo si está en estado "generado"
-  const cancelarPorSolicitante = async (id_solicitud) => {
-    const result = await Swal.fire({
-      title: "¿Cancelar esta solicitud?",
-      text: "Solo puedes cancelar solicitudes que aún no han sido aceptadas.",
-      icon: "warning", showCancelButton: true,
-      confirmButtonColor: "#dc2626",
-      confirmButtonText: "Sí, cancelar", cancelButtonText: "No",
-    });
-    if (!result.isConfirmed) return;
-    try {
-      await apiAxios.post(
-        `/api/solicitud/cambiarEstado/${id_solicitud}`,
-        { id_estado_solicitud: mapaEstadosId["cancelado"] },
-        { headers: { Authorization: `Bearer ${getToken()}` } }
-      );
-      Swal.fire({ icon: "success", title: "Solicitud cancelada", timer: 1500, showConfirmButton: false });
-      cargarSolicitudes();
-    } catch {
-      Swal.fire("Error", "No se pudo cancelar la solicitud", "error");
-    }
-  };
-
-  // Cambiar estado desde pestaña Gestionar (solo admin)
+  // Cambiar estado de solicitud (aceptar, prestar, entregar, cancelar)
   const cambiarEstadoAdmin = async (id_solicitud, nuevoEstado) => {
     const result = await Swal.fire({
       title: "¿Cambiar estado?",
@@ -427,6 +327,7 @@ const CrudSolicitudPrestamos = () => {
     return (
       String(item.id_solicitud || "").includes(search) ||
       String(item.usuario?.nombres_apellidos || "").toLowerCase().includes(search) ||
+      String(item.ultimoEstado || "").toLowerCase().includes(search) ||
       (item.equipos || []).some(e => 
         String(e.nom_equipo || "").toLowerCase().includes(search) ||
         String(e.marca_equipo || "").toLowerCase().includes(search) ||
@@ -437,118 +338,48 @@ const CrudSolicitudPrestamos = () => {
 
   return (
     <div className="mt-4" style={{ padding: "0 16px" }}>
-      {/* Encabezado */}
+      {/* Encabezado con título dinámico */}
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
         <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
-        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Solicitudes de Préstamo</h2>
+        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>{tituloVista}</h2>
       </div>
 
-      {/* Pestañas */}
-      <div style={{ display: "flex", gap: "0", marginBottom: "20px", borderBottom: "2px solid #e2e8f0" }}>
-        <button
-          onClick={() => setTabActiva("solicitudes")}
-          style={{
-            padding: "12px 24px", border: "none", cursor: "pointer",
-            fontWeight: tabActiva === "solicitudes" ? "700" : "500",
-            fontSize: "14px",
-            color: tabActiva === "solicitudes" ? "#0077B6" : "#64748b",
-            background: tabActiva === "solicitudes" ? "#f0f9ff" : "transparent",
-            borderBottom: tabActiva === "solicitudes" ? "3px solid #0077B6" : "3px solid transparent",
-            borderRadius: "8px 8px 0 0",
-            transition: "all 0.2s"
-          }}
-        >
-          📋 Solicitudes
-        </button>
-        {esAdmin && (
-          <button
-            onClick={() => setTabActiva("gestionar")}
-            style={{
-              padding: "12px 24px", border: "none", cursor: "pointer",
-              fontWeight: tabActiva === "gestionar" ? "700" : "500",
-              fontSize: "14px",
-              color: tabActiva === "gestionar" ? "#023E8A" : "#64748b",
-              background: tabActiva === "gestionar" ? "#f0f9ff" : "transparent",
-              borderBottom: tabActiva === "gestionar" ? "3px solid #023E8A" : "3px solid transparent",
-              borderRadius: "8px 8px 0 0",
-              transition: "all 0.2s",
-              display: "inline-flex", alignItems: "center", gap: "6px"
-            }}
-          >
-            👑 Gestionar Solicitudes
+      {/* Barra de búsqueda y botón nueva solicitud */}
+      <div className="row mb-3 align-items-center">
+        <div className="col-md-5">
+          <input type="text" className="form-control"
+            placeholder="Buscar por ID, solicitante, equipo o estado..."
+            value={filterText} onChange={e => setFilterText(e.target.value)} />
+        </div>
+        <div className="col-md-7 text-end d-flex gap-2 justify-content-end">
+          <button className="btn"
+            style={{ background: "#0077B6", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }}
+            data-bs-toggle="modal" data-bs-target="#modalSolicitud"
+            onClick={() => setSelectedSolicitud(null)}>
+            + Nueva Solicitud
           </button>
-        )}
+        </div>
       </div>
 
-      {/* ==================== PESTAÑA: SOLICITUDES ==================== */}
-      {tabActiva === "solicitudes" && (
-        <>
-          <div className="row mb-3 align-items-center">
-            <div className="col-md-5">
-              <input type="text" className="form-control"
-                placeholder="Buscar por ID, solicitante o equipo..."
-                value={filterText} onChange={e => setFilterText(e.target.value)} />
+      {/* Tabla unificada */}
+      <div style={{ borderRadius: "14px", overflow: "hidden", border: "1px solid #dbeafe" }}>
+        <DataTable
+          columns={columns}
+          data={filtered}
+          pagination
+          paginationComponentOptions={paginationComponentOptions}
+          customStyles={tableCustomStyles}
+          highlightOnHover striped responsive
+          defaultSortFieldId={1} defaultSortAsc={false}
+          noDataComponent={
+            <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
+              <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>
+              <p>No hay solicitudes registradas</p>
             </div>
-            <div className="col-md-7 text-end d-flex gap-2 justify-content-end">
-              <button className="btn"
-                style={{ background: "#0077B6", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }}
-                data-bs-toggle="modal" data-bs-target="#modalSolicitud"
-                onClick={() => setSelectedSolicitud(null)}>
-                + Nueva Solicitud
-              </button>
-            </div>
-          </div>
-          <div style={{ borderRadius: "14px", overflow: "hidden", border: "1px solid #dbeafe" }}>
-            <DataTable
-              columns={columnsSolicitudes}
-              data={filtered}
-              pagination
-              paginationComponentOptions={paginationComponentOptions}
-              customStyles={tableCustomStyles}
-              highlightOnHover striped responsive
-              defaultSortFieldId={1} defaultSortAsc={false}
-              noDataComponent={
-                <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
-                  <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>
-                  <p>No hay solicitudes registradas</p>
-                </div>
-              }
-              paginationPerPage={10}
-            />
-          </div>
-        </>
-      )}
-
-      {/* ==================== PESTAÑA: GESTIONAR (ADMIN) ==================== */}
-      {tabActiva === "gestionar" && esAdmin && (
-        <>
-          <div className="row mb-3 align-items-center">
-            <div className="col-md-5">
-              <input type="text" className="form-control"
-                placeholder="Buscar por ID, solicitante o estado..."
-                value={filterText} onChange={e => setFilterText(e.target.value)} />
-            </div>
-          </div>
-          <div style={{ borderRadius: "14px", overflow: "hidden", border: "1px solid #dbeafe" }}>
-            <DataTable
-              columns={columnsGestionar}
-              data={filtered}
-              pagination
-              paginationComponentOptions={paginationComponentOptions}
-              customStyles={tableCustomStyles}
-              highlightOnHover striped responsive
-              defaultSortFieldId={1} defaultSortAsc={false}
-              noDataComponent={
-                <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
-                  <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>
-                  <p>No hay solicitudes para gestionar</p>
-                </div>
-              }
-              paginationPerPage={10}
-            />
-          </div>
-        </>
-      )}
+          }
+          paginationPerPage={10}
+        />
+      </div>
 
       {/* Modal editar/crear solicitud */}
       <div className="modal fade" id="modalSolicitud" tabIndex="-1">
@@ -596,15 +427,15 @@ const CrudSolicitudPrestamos = () => {
                       <div className="fw-bold text-capitalize" style={{ color: "#0f172a", fontSize: "13px" }}>{verDetalle.ultimoEstado || "generado"}</div>
                     </div>
                     <div className="col-6 mt-2">
-                      <span className="text-muted d-block" style={{ fontSize: "11px", fontWeight: "600" }}>FECHA INICIO</span>
+                      <span className="text-muted d-block" style={{ fontSize: "11px", fontWeight: "600" }}>FECHA RECOGIDA</span>
                       <div className="fw-bold" style={{ color: "#0f172a", fontSize: "13px" }}>
-                        {formatDateTime(verDetalle.fecha_inicio)}
+                        {(() => { const f = formatDateCompact(verDetalle.fecha_inicio); return f === "-" ? "-" : `${f.fecha} ${f.hora}`; })()}
                       </div>
                     </div>
                     <div className="col-6 mt-2">
-                      <span className="text-muted d-block" style={{ fontSize: "11px", fontWeight: "600" }}>FECHA FIN</span>
+                      <span className="text-muted d-block" style={{ fontSize: "11px", fontWeight: "600" }}>FECHA DEVOLUCIÓN</span>
                       <div className="fw-bold" style={{ color: "#0f172a", fontSize: "13px" }}>
-                        {formatDateTime(verDetalle.fecha_fin)}
+                        {(() => { const f = formatDateCompact(verDetalle.fecha_fin); return f === "-" ? "-" : `${f.fecha} ${f.hora}`; })()}
                       </div>
                     </div>
                   </div>

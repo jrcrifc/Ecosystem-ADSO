@@ -27,8 +27,12 @@ export const tableCustomStyles = {
   // Estilos de las celdas individuales de la cabecera
   headCells: {
     style: {
-      padding: '12px 16px',
-      justifyContent: 'start',
+      padding: '12px 14px',
+      justifyContent: 'center',
+      whiteSpace: 'normal',
+      wordBreak: 'keep-all',
+      textAlign: 'center',
+      overflow: 'visible',
     },
   },
   // Estilos de las filas de datos con hover sutil

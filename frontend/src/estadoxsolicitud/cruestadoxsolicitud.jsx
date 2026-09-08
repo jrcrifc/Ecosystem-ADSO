@@ -15,17 +15,16 @@ import { paginationComponentOptions, tableCustomStyles } from "../config/dataTab
 // Importa el socket para actualizaciones en tiempo real
 import socket from "../socket.js";
 
-// Parsea la fecha desde el string ISO sin conversion de zona horaria
-// Evita el bug de UTC que muestra un dia menos en UTC-5 (Colombia)
-const formatFechaISO = (isoString) => {
-  // Retorna guion si la cadena esta vacia o es nula
+// Función que formatea una fecha ISO en dos líneas: fecha arriba, hora abajo
+const formatDateCompact = (isoString) => {
   if (!isoString) return "-";
-  // Extrae solo la parte de la fecha (primeros 10 caracteres)
-  const parte = isoString.substring(0, 10);
-  // Divide la fecha en anio, mes y dia
-  const [year, month, day] = parte.split("-");
-  // Retorna la fecha en formato dia/mes/anio
-  return `${parseInt(day)}/${parseInt(month)}/${year}`;
+  const d = new Date(isoString);
+  if (isoString.endsWith("T00:00:00.000Z") || isoString.includes("T00:00:00")) {
+    return { fecha: isoString.substring(0, 10), hora: "07:00 AM" };
+  }
+  const fecha = d.toLocaleDateString('es-CO', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  const hora = d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true });
+  return { fecha, hora };
 };
 
 // Define el componente principal de historial de estados por solicitud
@@ -51,6 +50,9 @@ export default function CrudEstadoxSolicitud() {
   const userId = userData?.id_usuario || userData?.user?.id_usuario;
   // Determina si el usuario es administrador
   const esAdmin = userRol === "administrador" || userRol === "admin";
+  const esPasante = userRol === "pasante";
+  const esGestor = userRol === "gestor";
+  const puedeVerTodos = esAdmin || esPasante || esGestor;
 
   // Efecto que carga los registros al montar el componente
   useEffect(() => {
@@ -87,8 +89,8 @@ export default function CrudEstadoxSolicitud() {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      // Si el usuario es admin, muestra todos los registros
-      if (esAdmin) {
+      // Si el usuario es admin/gestor/pasante, muestra todos los registros
+      if (puedeVerTodos) {
         setRegistros(res.data);
       } else {
         // Filtra solo las solicitudes que pertenecen al usuario actual
@@ -128,61 +130,106 @@ export default function CrudEstadoxSolicitud() {
   // Define las columnas de la tabla con sus propiedades
   const columns = [
     {
-      name: "ID",
-      selector: (row) => row.id_estadoxsolicitud,
-      sortable: true,
-      width: "80px",
-    },
-    {
       name: "Solicitante",
-      selector: (row) => row.solicitud?.usuario?.nombres_apellidos || "-",
+      minWidth: "220px", center: true,
+      cell: r => {
+        const u = r.solicitud?.usuario;
+        if (!u) return <span>-</span>;
+        return (
+          <div style={{ padding: "6px 0", textAlign: "center" }}>
+            <div style={{ fontWeight: "700", color: "#0f172a", fontSize: "13px" }}>{u.nombres_apellidos}</div>
+            <div style={{ fontSize: "11px", color: "#0284c7", fontWeight: "600", marginTop: "2px" }}>{u.rol}</div>
+          </div>
+        );
+      },
       sortable: true,
-      minWidth: "220px",
-      // Oculta la columna si el usuario no es admin
-      omit: !esAdmin,
+      omit: !puedeVerTodos, // Oculta la columna si el usuario solo ve las suyas
     },
     {
-      name: "Fecha Inicio",
-      selector: (row) => formatFechaISO(row.solicitud?.fecha_inicio),
-      sortable: true,
-      minWidth: "150px"
+      name: "Equipo(s)",
+      minWidth: "200px", center: true,
+      cell: r => {
+        const equipos = r.solicitud?.equipos;
+        if (!equipos || equipos.length === 0) return <span className="text-muted small">-</span>;
+        return (
+          <div style={{ padding: "6px 0", display: "flex", flexDirection: "column", gap: "2px", alignItems: "center" }}>
+            {equipos.map(eq => (
+              <div key={eq.id_equipo} style={{ fontSize: "12px", color: "#0f172a", fontWeight: "600" }}>
+                • {eq.nom_equipo}
+              </div>
+            ))}
+          </div>
+        );
+      },
     },
     {
-      name: "Fecha Fin",
-      selector: (row) => formatFechaISO(row.solicitud?.fecha_fin),
+      name: "Fecha Recogida",
+      minWidth: "190px", center: true,
+      cell: r => {
+        const f = formatDateCompact(r.solicitud?.fecha_inicio);
+        if (f === "-") return "-";
+        return (
+          <div style={{ lineHeight: "1.4", textAlign: "center" }}>
+            <div style={{ fontWeight: "600", fontSize: "12px", color: "#0f172a" }}>{f.fecha}</div>
+            <div style={{ fontSize: "11px", color: "#64748b" }}>{f.hora}</div>
+          </div>
+        );
+      },
       sortable: true,
-      minWidth: "150px"
+    },
+    {
+      name: "Fecha Devolución",
+      minWidth: "210px", center: true,
+      cell: r => {
+        const f = formatDateCompact(r.solicitud?.fecha_fin);
+        if (f === "-") return "-";
+        return (
+          <div style={{ lineHeight: "1.4", textAlign: "center" }}>
+            <div style={{ fontWeight: "600", fontSize: "12px", color: "#0f172a" }}>{f.fecha}</div>
+            <div style={{ fontSize: "11px", color: "#64748b" }}>{f.hora}</div>
+          </div>
+        );
+      },
+      sortable: true,
     },
     {
       name: "Estado",
-      selector: (row) => row.estadoSolicitud?.estado || "-",
-      sortable: true,
-      width: "160px",
-      // Renderizador personalizado para mostrar el badge de estado
+      minWidth: "130px", center: true,
       cell: (row) => {
-        const style = getBadgeStyle(row.estadoSolicitud?.estado);
+        const estadoActual = row.estadoSolicitud?.estado || "generado";
+        const c = getBadgeStyle(estadoActual);
         return (
           <span style={{
-            background: style.bg, color: style.color,
-            fontSize: "11px", fontWeight: "700",
-            padding: "5px 15px", borderRadius: "99px",
+            padding: "5px 12px", borderRadius: 20, fontSize: "0.75rem",
+            fontWeight: 700, backgroundColor: c.bg, color: c.color,
+            display: "inline-block"
           }}>
-            {row.estadoSolicitud?.estado || "-"}
+            {estadoActual}
           </span>
         );
-      }
+      },
+      sortable: true,
     },
     {
       name: "Fecha Cambio",
-      selector: (row) => row.createdat ? new Date(row.createdat).toLocaleString() : "-",
+      minWidth: "160px", center: true,
+      cell: r => {
+        const f = formatDateCompact(r.createdat);
+        if (f === "-") return "-";
+        return (
+          <div style={{ lineHeight: "1.4", textAlign: "center" }}>
+            <div style={{ fontWeight: "600", fontSize: "12px", color: "#0f172a" }}>{f.fecha}</div>
+            <div style={{ fontSize: "11px", color: "#64748b" }}>{f.hora}</div>
+          </div>
+        );
+      },
       sortable: true,
-      minWidth: "220px"
     },
   ];
 
   // Filtra los registros localmente segun el texto de busqueda o la solicitud seleccionada
   const filtered = registros.filter((row) => {
-    if (selectedSolicitudId) {
+    if (selectedSolicitudId && filterText === String(selectedSolicitudId)) {
       return row.solicitud?.id_solicitud === selectedSolicitudId;
     }
     const search = filterText.toLowerCase().trim();
@@ -190,13 +237,14 @@ export default function CrudEstadoxSolicitud() {
     return [
       row.solicitud?.id_solicitud?.toString(),
       row.solicitud?.usuario?.nombres_apellidos,
-      row.estadoSolicitud?.estado
+      row.estadoSolicitud?.estado,
+      ...(row.solicitud?.equipos?.map(eq => eq.nom_equipo) || [])
     ].some((field) => field?.toLowerCase().includes(search));
   });
 
   // Renderiza la interfaz del componente
   return (
-    <div className="container mt-4" style={{ maxWidth: "1000px" }}>
+    <div className="container mt-4" style={{ maxWidth: "1200px" }}>
       {/* Encabezado con boton de regreso y titulo segun el rol del usuario */}
       <div style={{ position: "relative", textAlign: "center", marginBottom: "32px" }}>
         {/* Boton de flecha para regresar a la pagina de solicitudes */}
@@ -229,11 +277,11 @@ export default function CrudEstadoxSolicitud() {
         </button>
         <div style={{ height: "3px", width: "40px", background: "#0077B6", borderRadius: "99px", margin: "0 auto 12px" }} />
         <h2 style={{ fontSize: "28px", fontWeight: "800", color: "#0077B6", margin: 0 }}>
-          {esAdmin ? "Historial de Todas las Solicitudes" : "Mi Historial de Solicitudes"}
+          {puedeVerTodos ? "Historial de Todas las Solicitudes" : "Mi Historial de Solicitudes"}
         </h2>
         <p style={{ color: "#64748b", marginTop: "8px", fontSize: "14px" }}>
           {/* Texto descriptivo segun el rol del usuario */}
-          {esAdmin
+          {puedeVerTodos
             ? "Vista completa de todos los cambios de estado de solicitudes del sistema."
             : "Aquí puedes ver el estado de tus solicitudes realizadas."
           }
@@ -246,7 +294,7 @@ export default function CrudEstadoxSolicitud() {
           <input
             type="text"
             className="form-control"
-            placeholder="Buscar por ID, estado o solicitante..."
+            placeholder="Buscar por ID, estado, equipo o solicitante..."
             value={filterText}
             onChange={(e) => {
               const val = e.target.value;
@@ -258,6 +306,13 @@ export default function CrudEstadoxSolicitud() {
             style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
           />
         </div>
+        {selectedSolicitudId && filterText === String(selectedSolicitudId) && (
+          <div className="col-md-6 text-end">
+            <span className="badge bg-primary px-3 py-2" style={{ fontSize: "14px" }}>
+              Filtrando Solicitud #{selectedSolicitudId}
+            </span>
+          </div>
+        )}
       </div>
 
 

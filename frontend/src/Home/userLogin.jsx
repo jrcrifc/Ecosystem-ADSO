@@ -253,12 +253,17 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
           height: auto;
           animation: float 6s ease-in-out infinite;
           filter: drop-shadow(0 20px 30px rgba(0,0,0,0.15));
+          image-rendering: -webkit-optimize-contrast;
+          image-rendering: crisp-edges;
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+          transform: translateZ(0);
         }
 
         @keyframes float {
-          0% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
-          100% { transform: translateY(0px); }
+          0% { transform: translateY(0px) translateZ(0); }
+          50% { transform: translateY(-20px) translateZ(0); }
+          100% { transform: translateY(0px) translateZ(0); }
         }
 
         /* Widget */

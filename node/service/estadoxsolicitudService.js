@@ -14,6 +14,8 @@ import solicitudModel from '../models/solicitudModel.js';
 import estadoSolicitudModel from '../models/Estado_solicitudModel.js';
 // Importa el modelo de usuarios para incluir datos del solicitante
 import userModel from '../models/userModel.js';
+// Importa el modelo de equipos para incluir los equipos solicitados
+import equipoModel from '../models/EquiposModel.js';
 
 // Define la clase de servicio para el historial de estados de solicitud
 class EstadoxsolicitudService {
@@ -31,7 +33,13 @@ class EstadoxsolicitudService {
                     // Incluye los datos del usuario que creó la solicitud
                     model: userModel,
                     as: 'usuario',
-                    attributes: ['nombres_apellidos']
+                    attributes: ['nombres_apellidos', 'rol']
+                },
+                {
+                    // Incluye los equipos asociados a la solicitud
+                    model: equipoModel,
+                    as: 'equipos',
+                    attributes: ['id_equipo', 'nom_equipo']
                 }]
             },
             {

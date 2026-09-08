@@ -26,7 +26,6 @@ import UserLogin from "./Home/userLogin.jsx";
 import Register from "./Home/Register.jsx";
 import ForgotPassword from "./Home/forgotPassword.jsx";
 import ResetPassword from "./Home/resetPassword.jsx";
-// GestionSolicitudes ahora está integrado dentro de crudsolicitud.jsx (pestaña admin)
 import HistorialEstadoEquipo from "./estadoequipo/HistorialEstadoEquipo.jsx";
 import GestionEstadoEquipo from "./estadoequipo/GestionEstadoEquipo.jsx";
 import ControlReactivos from "./movimientosReactivos/ControlReactivos.jsx";
@@ -133,8 +132,8 @@ const AdminRoute = ({ isAuth, rol, userData, children }) => {
 const SolicitanteRoute = ({ isAuth, rol, children }) => {
   // Redirige al login si no está autenticado
   if (!isAuth) return <Navigate to="/UserLogin" replace />;
-  // Lista de roles autorizados para crear solicitudes
-  const rolesPermitidos = ['Aprendiz', 'Instructor', 'Administrador'];
+  // Lista de roles autorizados para acceder a solicitudes
+  const rolesPermitidos = ['Instructor', 'Administrador', 'Pasante', 'Gestor'];
   // Redirige al home si el rol no está en la lista permitida
   if (!rolesPermitidos.includes(rol)) return <Navigate to="/home" replace />;
   // Renderiza el contenido si tiene permiso
