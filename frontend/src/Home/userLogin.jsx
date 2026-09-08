@@ -253,11 +253,9 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
           height: auto;
           animation: float 6s ease-in-out infinite;
           filter: drop-shadow(0 20px 30px rgba(0,0,0,0.15));
-          image-rendering: -webkit-optimize-contrast;
-          image-rendering: crisp-edges;
-          backface-visibility: hidden;
-          -webkit-backface-visibility: hidden;
+          image-rendering: auto;
           transform: translateZ(0);
+          will-change: transform;
         }
 
         @keyframes float {
