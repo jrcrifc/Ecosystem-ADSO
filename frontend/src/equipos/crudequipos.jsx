@@ -277,20 +277,27 @@ export default function CrudEquipo() {
               src={row.foto_equipo.startsWith("http") ? row.foto_equipo : `${import.meta.env.VITE_API_URL || "http://localhost:8000"}${row.foto_equipo}`}
               alt={row.nom_equipo || "Foto del equipo"}
               style={{
-                width: "80px",
-                height: "80px",
+                width: "45px",
+                height: "45px",
                 objectFit: "cover",
-                borderRadius: "8px",
+                borderRadius: "6px",
                 border: "2px solid #0077B6",
                 transition: "transform 0.2s",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
               }}
-              onMouseOver={(e) => (e.target.style.transform = "scale(1.08)")}
+              onMouseOver={(e) => (e.target.style.transform = "scale(1.1)")}
               onMouseOut={(e) => (e.target.style.transform = "scale(1)")}
               onClick={() => {
-                setLargePhoto(row.foto_equipo);
-                const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("largePhotoModal"));
-                modal.show();
+                const imgUrl = row.foto_equipo.startsWith("http") ? row.foto_equipo : `${import.meta.env.VITE_API_URL || "http://localhost:8000"}${row.foto_equipo}`;
+                Swal.fire({
+                  html: `<img src="${imgUrl}" alt="${row.nom_equipo || 'Foto del equipo'}" style="width: 100%; height: auto; max-height: 85vh; border-radius: 8px; object-fit: contain;" />`,
+                  showConfirmButton: false,
+                  showCloseButton: true,
+                  width: "80vw",
+                  padding: "1rem",
+                  background: "transparent",
+                  backdrop: "rgba(0,0,0,0.85)"
+                });
               }}
               onError={(e) => { e.target.src = "/img/no-image.png"; }}
             />
@@ -423,7 +430,7 @@ export default function CrudEquipo() {
             style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
           />
         </div>
-        <div className="col-md-6 text-end d-flex gap-2 justify-content-end">
+        <div className="col-md-6 text-end d-flex gap-2 justify-content-end flex-wrap">
           <button 
             className="btn btn-outline-primary" 
             style={{ fontWeight: "600", borderRadius: "10px" }}
@@ -431,7 +438,10 @@ export default function CrudEquipo() {
           >
             <i className="fas fa-exchange-alt me-2"></i>Estados
           </button>
-          <button className="btn btn-outline-danger" onClick={() => {
+          <button 
+            className="btn btn-outline-danger" 
+            style={{ fontWeight: "600", borderRadius: "10px" }}
+            onClick={() => {
             const cols = [
               { header: "ID", dataKey: "ID" },
               { header: "Grupo", dataKey: "Grupo" },
@@ -447,10 +457,18 @@ export default function CrudEquipo() {
           }}>
             <i className="fa-solid fa-file-pdf me-2"></i> PDF
           </button>
-          <button className="btn btn-outline-success" onClick={() => exportToExcel(formatEquiposForExport(filteredEquipos), "Inventario_Equipos")}>
+          <button 
+            className="btn btn-outline-success" 
+            style={{ fontWeight: "600", borderRadius: "10px" }}
+            onClick={() => exportToExcel(formatEquiposForExport(filteredEquipos), "Inventario_Equipos")}
+          >
             <i className="fa-solid fa-file-excel me-2"></i> Excel
           </button>
-          <button className="btn btn-outline-secondary" onClick={handleImportarExcel} style={{ fontWeight: "600", borderRadius: "10px" }} title="Importar equipos desde archivo Excel">
+          <button 
+            className="btn btn-outline-secondary" 
+            style={{ fontWeight: "600", borderRadius: "10px" }}
+            onClick={handleImportarExcel} title="Importar equipos desde archivo Excel"
+          >
             <i className="fa-solid fa-file-import me-2"></i> Importar Excel
           </button>
           <button
@@ -460,7 +478,7 @@ export default function CrudEquipo() {
             data-bs-target="#modalEquipo"
             onClick={() => setSelectedEquipo(null)}
           >
-            <i className="fas fa-plus me-2"></i>Nuevo Equipo
+            + Nuevo Equipo
           </button>
         </div>
       </div>

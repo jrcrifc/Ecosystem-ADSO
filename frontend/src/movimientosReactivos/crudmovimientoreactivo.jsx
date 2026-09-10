@@ -38,12 +38,12 @@ const CrudmovimientoReactivo = () => {
 
   // Define las columnas de la tabla con sus propiedades
   const columns = [
-    { name: "ID", selector: (row) => row.id_movimiento_reactivo, sortable: true, width: "80px", center: true },
-    { name: "Reactivo", selector: (row) => row.reactivo?.nom_reactivo || "-", sortable: true, minWidth: "200px" },
+    { name: "ID", selector: (row) => row.id_movimiento_reactivo, sortable: true, width: "70px", center: true },
+    { name: "Reactivo", selector: (row) => row.reactivo?.nom_reactivo || "-", sortable: true, wrap: true, minWidth: "180px" },
     {
       name: "Cant. Inicial",
       sortable: true,
-      minWidth: "180px",
+      minWidth: "130px",
       // Renderizador personalizado para mostrar cantidad con unidad
       cell: (row) => (
         <span>
@@ -54,18 +54,18 @@ const CrudmovimientoReactivo = () => {
         </span>
       )
     },
-    { name: "Lote", selector: (row) => row.lote || "-", sortable: true, minWidth: "150px" },
-    { name: "Proveedor", selector: (row) => row.proveedor ? `${row.proveedor.nom_proveedor} ${row.proveedor.apel_proveedor}` : "-", sortable: true, minWidth: "200px" },
-    { name: "Vencimiento", selector: (row) => row.fecha_vencimiento?.slice(0, 10) || "-", sortable: true, minWidth: "160px" },
+    { name: "Lote", selector: (row) => row.lote || "-", sortable: true, wrap: true, minWidth: "110px" },
+    { name: "Proveedor", selector: (row) => row.proveedor ? `${row.proveedor.nom_proveedor} ${row.proveedor.apel_proveedor}` : "-", sortable: true, wrap: true, minWidth: "160px" },
+    { name: "Vencimiento", selector: (row) => row.fecha_vencimiento?.slice(0, 10) || "-", sortable: true, minWidth: "120px" },
     {
       name: "Estado",
       selector: (row) => row.estado,
       sortable: true,
       center: true,
-      width: "120px",
+      width: "90px",
       // Renderizador personalizado para mostrar badge de estado
       cell: (row) => (
-        <span className={`px-2 py-1 rounded-pill text-white fw-semibold ${row.estado === 1 ? "bg-success" : "bg-danger"}`} style={{ fontSize: "0.7rem" }}>
+        <span className={`px-2 py-1 rounded-pill text-white fw-semibold ${row.estado === 1 ? "bg-success" : "bg-danger"}`} style={{ fontSize: "0.65rem" }}>
           {row.estado === 1 ? "ACTIVO" : "INACTIVO"}
         </span>
       ),
@@ -73,7 +73,7 @@ const CrudmovimientoReactivo = () => {
     {
       name: "Acciones",
       center: true,
-      width: "140px",
+      width: "90px",
       // Renderizador de botones de accion por fila
       cell: (row) => (
         <div className="d-flex gap-2 justify-content-center">

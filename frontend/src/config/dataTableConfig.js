@@ -27,12 +27,17 @@ export const tableCustomStyles = {
   // Estilos de las celdas individuales de la cabecera
   headCells: {
     style: {
-      padding: '12px 14px',
+      padding: '12px 6px',
       justifyContent: 'center',
-      whiteSpace: 'normal',
-      wordBreak: 'keep-all',
       textAlign: 'center',
-      overflow: 'visible',
+      // Forzar que el texto de la cabecera haga salto de línea en vez de mostrar '...'
+      whiteSpace: 'normal !important',
+      wordBreak: 'break-word',
+      '& > div': {
+        whiteSpace: 'normal !important',
+        overflow: 'visible !important',
+        textOverflow: 'clip !important',
+      },
     },
   },
   // Estilos de las filas de datos con hover sutil
@@ -51,6 +56,9 @@ export const tableCustomStyles = {
   cells: {
     style: {
       padding: '10px 16px',
+      textTransform: 'capitalize',
+      justifyContent: 'center',
+      textAlign: 'center',
     },
   },
   // Estilos del componente de paginación

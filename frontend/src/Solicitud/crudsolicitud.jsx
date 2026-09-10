@@ -81,6 +81,12 @@ const CrudSolicitudPrestamos = () => {
     return map[estado] || { bg: "#f3f4f6", color: "#374151" };
   };
 
+  // Función para capitalizar correctamente los textos en mayúsculas
+  const capitalizeText = (str) => {
+    if (!str) return "";
+    return String(str).toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+  };
+
   // ===================== COLUMNAS DE LA TABLA UNIFICADA =====================
   const columns = [
     {
@@ -90,8 +96,8 @@ const CrudSolicitudPrestamos = () => {
         if (!u) return <span>-</span>;
         return (
           <div style={{ padding: "6px 0", textAlign: "center" }}>
-            <div style={{ fontWeight: "700", color: "#0f172a", fontSize: "13px" }}>{u.nombres_apellidos}</div>
-            <div style={{ fontSize: "11px", color: "#0284c7", fontWeight: "600", marginTop: "2px" }}>{u.rol}</div>
+            <div style={{ fontWeight: "500", color: "#0f172a", fontSize: "13px" }}>{capitalizeText(u.nombres_apellidos)}</div>
+            <div style={{ fontSize: "11px", color: "#0284c7", fontWeight: "500", marginTop: "2px" }}>{capitalizeText(u.rol)}</div>
           </div>
         );
       },
@@ -104,8 +110,8 @@ const CrudSolicitudPrestamos = () => {
         return (
           <div style={{ padding: "6px 0", display: "flex", flexDirection: "column", gap: "2px", alignItems: "center" }}>
             {r.equipos.map(eq => (
-              <div key={eq.id_equipo} style={{ fontSize: "12px", color: "#0f172a", fontWeight: "600" }}>
-                • {eq.nom_equipo}
+              <div key={eq.id_equipo} style={{ fontSize: "12px", color: "#0f172a", fontWeight: "500" }}>
+                • {capitalizeText(eq.nom_equipo)}
               </div>
             ))}
           </div>
@@ -119,7 +125,7 @@ const CrudSolicitudPrestamos = () => {
         if (f === "-") return "-";
         return (
           <div style={{ lineHeight: "1.4", textAlign: "center" }}>
-            <div style={{ fontWeight: "600", fontSize: "12px", color: "#0f172a" }}>{f.fecha}</div>
+            <div style={{ fontWeight: "500", fontSize: "12px", color: "#0f172a" }}>{f.fecha}</div>
             <div style={{ fontSize: "11px", color: "#64748b" }}>{f.hora}</div>
           </div>
         );
@@ -133,7 +139,7 @@ const CrudSolicitudPrestamos = () => {
         if (f === "-") return "-";
         return (
           <div style={{ lineHeight: "1.4", textAlign: "center" }}>
-            <div style={{ fontWeight: "600", fontSize: "12px", color: "#0f172a" }}>{f.fecha}</div>
+            <div style={{ fontWeight: "500", fontSize: "12px", color: "#0f172a" }}>{f.fecha}</div>
             <div style={{ fontSize: "11px", color: "#64748b" }}>{f.hora}</div>
           </div>
         );

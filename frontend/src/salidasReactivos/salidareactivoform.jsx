@@ -8,6 +8,24 @@ import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 // Importa la instancia centralizada de Socket.IO
 import socket from "../socket.js";
+import DatePicker, { registerLocale } from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { es } from 'date-fns/locale';
+registerLocale('es', es);
+
+const parseDateStr = (dateStr) => {
+  if (!dateStr) return null;
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d);
+};
+
+const formatDateStr = (dateObj) => {
+  if (!dateObj) return "";
+  const y = dateObj.getFullYear();
+  const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const d = String(dateObj.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
 
 // Define el componente de formulario que recibe props para editar o crear salidas
 const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
@@ -391,13 +409,19 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
         {/* Campo de fecha de salida */}
         <div className="col-md-6">
           <label className="form-label fw-bold" style={{ color: "#0A1628" }}>📅 Fecha de salida</label>
-          <input
-            type="date"
+          <DatePicker
+            selected={parseDateStr(fecha_salida)}
+            onChange={(date) => setFechaSalida(formatDateStr(date))}
+            filterDate={(date) => {
+              const day = date.getDay();
+              return day !== 0 && day !== 6;
+            }}
+            locale="es"
+            dateFormat="dd/MM/yyyy"
             className="form-control"
             style={inputStyle}
-            value={fecha_salida}
-            onChange={(e) => setFechaSalida(e.target.value)}
-            min={new Date().toISOString().slice(0, 10)}
+            minDate={new Date()}
+            placeholderText="dd/mm/aaaa"
             required
           />
         </div>

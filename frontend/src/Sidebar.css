@@ -46,7 +46,7 @@
 
 /*  */
 .sidebar-logo {
-  width: 90px;
+  width: 65px;
   height: auto;
   flex-shrink: 0;
   display: flex;
@@ -495,9 +495,70 @@
 
 /*  */
 @media (min-width: 993px) {
-
   /*  */
   .sidebar-main-content {
     margin-left: 272px;
+  }
+  
+  /* Collapsed State Styles */
+  .sidebar-layout.sidebar-collapsed .sidebar {
+    width: 0px;
+    overflow: hidden;
+  }
+  .sidebar-layout.sidebar-collapsed .sidebar-main-content {
+    margin-left: 0px;
+  }
+}
+
+/* Floating expand button for desktop */
+.sidebar-floating-desktop-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1050;
+  background: #0077B6;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  transition: all 0.2s ease;
+}
+.sidebar-floating-desktop-btn:hover {
+  background: #023E8A;
+  transform: scale(1.05);
+}
+@media (max-width: 992px) {
+  .sidebar-floating-desktop-btn {
+    display: none;
+  }
+}
+
+.sidebar-collapse-btn-desktop {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: auto;
+  transition: all 0.2s ease;
+}
+.sidebar-collapse-btn-desktop:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+@media (max-width: 992px) {
+  .sidebar-collapse-btn-desktop {
+    display: none;
   }
 }

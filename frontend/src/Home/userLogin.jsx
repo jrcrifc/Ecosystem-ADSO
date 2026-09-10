@@ -131,7 +131,9 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
         }
 
         .landing-nav .brand img {
-          width: 95px;
+          height: 60px;
+          width: auto;
+          object-fit: contain;
           filter: drop-shadow(0 4px 10px rgba(0,0,0,0.25));
         }
         
@@ -142,7 +144,7 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
         }
 
         .login-trigger-btn {
-          background: linear-gradient(135deg, #0077B6, #023E8A);
+          background: linear-gradient(135deg, #0F4C30, #1a7a4c);
           color: white;
           border: none;
           padding: 12px 28px;
@@ -151,13 +153,13 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
           font-size: 16px;
           cursor: pointer;
           transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
-          box-shadow: 0 4px 15px rgba(0, 119, 182, 0.4);
+          box-shadow: 0 4px 15px rgba(15, 76, 48, 0.4);
         }
         
         .login-trigger-btn:hover {
           transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(0, 119, 182, 0.6);
-          background: linear-gradient(135deg, #0096C7, #0077B6);
+          box-shadow: 0 6px 20px rgba(15, 76, 48, 0.6);
+          background: linear-gradient(135deg, #1a7a4c, #0F4C30);
         }
 
         /* Hero Section */
@@ -243,14 +245,16 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
         .hero-right {
           flex: 1;
           display: flex;
-          justify-content: center;
+          justify-content: flex-end;
           align-items: center;
           position: relative;
         }
 
         .floating-element {
-          width: 350px;
-          height: auto;
+          width: 100%;
+          max-width: 270px;
+          max-height: 320px;
+          object-fit: contain;
           animation: float 6s ease-in-out infinite;
           filter: drop-shadow(0 20px 30px rgba(0,0,0,0.15));
           image-rendering: auto;
@@ -260,7 +264,7 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
 
         @keyframes float {
           0% { transform: translateY(0px) translateZ(0); }
-          50% { transform: translateY(-20px) translateZ(0); }
+          50% { transform: translateY(-20px) translateZ(0) scale(1.02); filter: drop-shadow(0 30px 40px rgba(0,0,0,0.25)); }
           100% { transform: translateY(0px) translateZ(0); }
         }
 
@@ -405,7 +409,7 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
         }
 
         .login-btn {
-          background: linear-gradient(135deg, #0077B6, #023E8A);
+          background: linear-gradient(135deg, #0F4C30, #1a7a4c);
           border-radius: 20px;
           padding: 12px;
           color: #fff;
@@ -413,16 +417,16 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
           width: 100%;
           font-weight: bold;
           margin-top: 10px;
-          box-shadow: 0 8px 20px rgba(0,119,182,0.35);
+          box-shadow: 0 8px 20px rgba(15, 76, 48, 0.35);
           transition: transform 0.2s, box-shadow 0.2s;
         }
         .login-btn:hover:not(:disabled) {
           transform: translateY(-2px);
-          box-shadow: 0 12px 30px rgba(0,119,182,0.45);
+          box-shadow: 0 12px 30px rgba(15, 76, 48, 0.45);
         }
         
         .input-icon {
-          position: absolute; top: 12px; left: 15px; color: #0077B6;
+          position: absolute; top: 12px; left: 15px; color: #0F4C30;
           transition: all 0.3s ease;
         }
         .position-relative:has(.form-control:focus) .input-icon {
@@ -504,22 +508,13 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
 
           <div className="mb-4">
             <img src={logo} alt="Logo" style={{ width: "70px", height: "70px", display: "block", margin: "0 auto", objectFit: "contain" }} />
-            <h2 className="mt-3" style={{ fontWeight: "800", color: "#0077B6" }}>Bienvenido</h2>
+            <h2 className="mt-3" style={{ fontWeight: "800", color: "#0F4C30" }}>Bienvenido</h2>
             <p style={{ color: "#64748b", fontSize: "14px", margin: 0 }}>Laboratorio Ambiental SENA</p>
           </div>
 
           {error && <div className="alert alert-danger py-2" style={{ fontSize: "14px" }}>{error}</div>}
 
           <form onSubmit={gestionarLogin}>
-            <div className="mb-3 position-relative">
-              <FaIdCard className="input-icon" />
-              <select name="tipo_documento" value={form.tipo_documento} onChange={handleChange}
-                className="form-control ps-5" required style={{ ...inputStyle, appearance: "auto", width: "100%" }}>
-                <option value="CC">Cédula de Ciudadanía</option>
-                <option value="TI">Tarjeta de Identidad</option>
-                <option value="CE">Cédula de Extranjería</option>
-              </select>
-            </div>
 
             <div className="mb-3 position-relative">
               <FaUser className="input-icon" />
@@ -538,7 +533,7 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
             </button>
 
             <div className="mt-3">
-              <Link to="/forgotPassword" style={{ color: "#0077B6", fontSize: "14px", textDecoration: "none", fontWeight: "600" }}>
+              <Link to="/forgotPassword" style={{ color: "#0F4C30", fontSize: "14px", textDecoration: "none", fontWeight: "600" }}>
                 Olvidé la contraseña
               </Link>
             </div>

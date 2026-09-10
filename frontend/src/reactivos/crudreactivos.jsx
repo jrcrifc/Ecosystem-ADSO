@@ -25,36 +25,43 @@ const CrudReactivos = () => {
   const [filterText, setFilterText] = useState("");
   // Estado que almacena el reactivo seleccionado para editar
   const [selectedReactivo, setSelectedReactivo] = useState(null);
+  const [stockLotes, setStockLotes] = useState(null);
+  const [loadingModal, setLoadingModal] = useState(false);
+  const [tabHistorial, setTabHistorial] = useState("ingresos");
 
   // ===== Definicion de columnas =====
 
   // Define las columnas de la tabla con sus propiedades
   const columns = [
-    { name: "ID", selector: (row) => row.id_reactivo, sortable: true, width: "80px", center: true },
-    { name: "Nombre", selector: (row) => row.nom_reactivo, sortable: true, minWidth: "220px" },
-    { name: "Presentación", selector: (row) => row.presentacion_reactivo, sortable: true, minWidth: "180px" },
-    { name: "Cantidad", selector: (row) => row.cantidad_presentacion, sortable: true, minWidth: "150px" },
-    { name: "Ubicación (S/C/F)", selector: (row) => `${row.stand || "-"} / ${row.columna || "-"} / ${row.fila || "-"}`, sortable: false, minWidth: "200px" },
-    { name: "Color Stand", selector: (row) => row.color_stand, sortable: true, minWidth: "150px" },
-    { name: "Clasificación", selector: (row) => row.clasificacion_reactivo, sortable: true, minWidth: "200px" },
+    { name: "ID", selector: (row) => row.id_reactivo, sortable: true, width: "60px", center: true },
+    { name: "Nombre", selector: (row) => row.nom_reactivo, sortable: true, wrap: true, minWidth: "150px" },
+    { name: "Presentación", selector: (row) => row.presentacion_reactivo, sortable: true, wrap: true, minWidth: "130px" },
+    { name: "Cantidad", selector: (row) => row.cantidad_presentacion, sortable: true, width: "100px" },
+    { name: "Ubicación", selector: (row) => `${row.stand || "-"} / ${row.columna || "-"} / ${row.fila || "-"}`, sortable: false, minWidth: "110px" },
+    { name: "Color", selector: (row) => row.color_stand, sortable: true, minWidth: "90px" },
+    { name: "Clasificación", selector: (row) => row.clasificacion_reactivo, sortable: true, wrap: true, minWidth: "140px" },
     {
       name: "Estado",
       selector: (row) => row.estado,
       sortable: true,
       center: true,
-      width: "120px",
+      width: "90px",
       // Renderizador personalizado para mostrar badge de estado
       cell: (row) => (
-        <span className={`px-2 py-1 rounded-pill text-white fw-semibold ${row.estado === 1 ? "bg-success" : "bg-danger"}`} style={{ fontSize: "0.7rem" }}>
+        <span className={`px-2 py-1 rounded-pill text-white fw-semibold ${row.estado === 1 ? "bg-success" : "bg-danger"}`} style={{ fontSize: "0.65rem" }}>
           {row.estado === 1 ? "ACTIVO" : "INACTIVO"}
         </span>
       ),
     },
     {
-      name: "Acciones", center: true, width: "140px",
+      name: "Acciones", center: true, width: "110px",
       // Renderizador de botones de accion por fila
       cell: (row) => (
         <div className="d-flex gap-1 justify-content-center">
+          {/* Boton para ver detalle de stock */}
+          <button className="btn btn-sm" style={{ background: "#0077B6", color: "#fff", border: "none" }} onClick={() => handleVerStock(row)} title="Ver stock y historial">
+            <i className="fa-solid fa-eye"></i>
+          </button>
           {/* Boton para editar el reactivo */}
           <button className="btn btn-sm" style={{ background: "#dbeafe", color: "#0077B6", border: "none" }} data-bs-toggle="modal" data-bs-target="#modalReactivo" onClick={() => setSelectedReactivo(row)}>
             <i className="fa-solid fa-pencil"></i>
@@ -132,6 +139,26 @@ const CrudReactivos = () => {
       console.error("Error al cambiar estado:", error);
       // Muestra alerta de error al usuario
       Swal.fire("Error", "No se pudo cambiar el estado", "error");
+    }
+  };
+
+  const handleVerStock = async (reactivo) => {
+    setSelectedReactivo(reactivo);
+    setLoadingModal(true);
+    try {
+      setTabHistorial("ingresos");
+      const res = await apiAxios.get(`/api/movimientos/stock-lotes/${reactivo.id_reactivo}`);
+      setStockLotes(res.data);
+      const modal = document.getElementById("modalStock");
+      if (modal) {
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+      }
+    } catch (error) {
+      console.error("Error al cargar stock:", error);
+      Swal.fire("Error", "No se pudo cargar el detalle de stock", "error");
+    } finally {
+      setLoadingModal(false);
     }
   };
 
@@ -219,20 +246,23 @@ const CrudReactivos = () => {
     }
   };
 
-  // ===== Cerrar modal con limpieza de backdrop =====
+  // ===== Cerrar modal  // Funcion para ocultar modales y limpiar backdrops
   const hideModal = () => {
-    // Obtiene la referencia al elemento del modal
-    const modal = document.getElementById("modalReactivo");
-    if (modal) {
-      // Obtiene o crea la instancia del modal de Bootstrap y lo oculta
-      const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
-      bsModal.hide();
-      // Limpieza de clases y estilos residuales de Bootstrap
-      document.body.classList.remove("modal-open");
-      document.body.style.removeProperty("overflow");
-      document.body.style.removeProperty("padding-right");
-      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+    const modalReact = document.getElementById("modalReactivo");
+    if (modalReact) {
+      const bsReact = bootstrap.Modal.getInstance(modalReact);
+      if (bsReact) bsReact.hide();
     }
+    const modalStock = document.getElementById("modalStock");
+    if (modalStock) {
+      const bsStock = bootstrap.Modal.getInstance(modalStock);
+      if (bsStock) bsStock.hide();
+    }
+    document.body.classList.remove("modal-open");
+    document.body.style.removeProperty("overflow");
+    document.body.style.removeProperty("padding-right");
+    document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+    setSelectedReactivo(null);
   };
 
   // Filtra los reactivos localmente segun el texto de busqueda
@@ -340,6 +370,161 @@ const CrudReactivos = () => {
             <div className="modal-body">
               {/* Renderiza el formulario de reactivo */}
               <ReactivoForm selectedReactivo={selectedReactivo} refreshData={cargarReactivos} hideModal={hideModal} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* MODAL STOCK Y HISTORIAL */}
+      <div className="modal fade" id="modalStock" tabIndex="-1">
+        <div className="modal-dialog modal-xl">
+          <div className="modal-content" style={{ borderRadius: "16px", border: "none" }}>
+            <div className="modal-header text-white" style={{ background: "#023E8A" }}>
+              <h5 className="modal-title fw-bold">
+                <i className="fa-solid fa-flask-vial me-2"></i>
+                Detalle de Inventario: {selectedReactivo?.nom_reactivo}
+              </h5>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" onClick={hideModal}></button>
+            </div>
+
+            <div className="modal-body p-4">
+              {loadingModal ? (
+                <div className="text-center py-5">
+                  <div className="spinner-border text-primary" role="status"></div>
+                  <p className="mt-2 text-muted">Cargando información del lote...</p>
+                </div>
+              ) : stockLotes ? (
+                <div className="row">
+                  <div className="col-lg-7 border-end">
+                    <h6 className="mb-3 fw-bold text-success">
+                      <i className="fa-solid fa-boxes-stacked me-2"></i> Lotes Disponibles
+                    </h6>
+                    <div className="table-responsive mb-4" style={{ maxHeight: "300px" }}>
+                      <table className="table table-hover table-sm align-middle">
+                        <thead style={{ background: "#f1f5f9" }}>
+                          <tr>
+                            <th>Lote</th>
+                            <th>Disponible</th>
+                            <th>Vencimiento</th>
+                            <th>Estado</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {stockLotes.lotes_disponibles?.length > 0 ? (
+                            stockLotes.lotes_disponibles.map((lote) => (
+                              <tr key={lote.id_movimiento_reactivo}>
+                                <td className="fw-semibold">{lote.lote}</td>
+                                <td>{parseFloat(parseFloat(lote.cantidad_disponible || 0).toFixed(3)).toString()} <span className="text-muted small">{selectedReactivo?.presentacion_reactivo}</span></td>
+                                <td>{lote.fecha_vencimiento ? new Date(lote.fecha_vencimiento).toLocaleDateString('es-CO') : "N/A"}</td>
+                                <td>
+                                  <span className="badge" style={{
+                                    backgroundColor: lote.dias_para_vencer === 0 ? "#f97316" :
+                                                     lote.dias_para_vencer < 0 ? "#dc2626" :
+                                                     lote.dias_para_vencer <= 7 ? "#eab308" :
+                                                     "#16a34a",
+                                    color: "#fff"
+                                  }}>
+                                    {lote.dias_para_vencer === 0 ? "Vence Hoy" : lote.dias_para_vencer < 0 ? "Vencido" : lote.dias_para_vencer <= 7 ? "Próximo" : "OK"}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr><td colSpan="4" className="text-center text-muted py-3">No hay lotes con stock disponible</td></tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {stockLotes.resumen_vencidos?.cantidad_lotes_vencidos > 0 && (
+                      <>
+                        <h6 className="mb-3 fw-bold text-danger">
+                          <i className="fa-solid fa-triangle-exclamation me-2"></i> Lotes Vencidos
+                        </h6>
+                        <div className="table-responsive mb-4" style={{ maxHeight: "200px" }}>
+                          <table className="table table-sm table-danger table-striped">
+                            <thead>
+                              <tr>
+                                <th>Lote</th>
+                                <th>Cant.</th>
+                                <th>Vencimiento</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {stockLotes.resumen_vencidos.detalles.map((lote) => (
+                                <tr key={lote.id_movimiento_reactivo}>
+                                  <td>{lote.lote}</td>
+                                  <td>{parseFloat(parseFloat(lote.cantidad_disponible || 0).toFixed(3)).toString()}</td>
+                                  <td>{lote.fecha_vencimiento ? new Date(lote.fecha_vencimiento).toLocaleDateString('es-CO') : "N/A"}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="col-lg-5">
+                    <h6 className="mb-3 fw-bold text-primary d-flex justify-content-between align-items-center">
+                      <span><i className="fa-solid fa-clock-rotate-left me-2"></i> Historial</span>
+                    </h6>
+                    <ul className="nav nav-tabs mb-3" style={{ fontSize: "14px" }}>
+                      <li className="nav-item">
+                        <button className={`nav-link ${tabHistorial === 'ingresos' ? 'active fw-bold text-success' : 'text-muted'}`} onClick={() => setTabHistorial('ingresos')} style={{ padding: "8px 12px" }}>
+                          Ingresos
+                        </button>
+                      </li>
+                      <li className="nav-item">
+                        <button className={`nav-link ${tabHistorial === 'salidas' ? 'active fw-bold text-danger' : 'text-muted'}`} onClick={() => setTabHistorial('salidas')} style={{ padding: "8px 12px" }}>
+                          Salidas
+                        </button>
+                      </li>
+                    </ul>
+                    <div style={{ maxHeight: "400px", overflowY: "auto", paddingRight: "10px" }}>
+                      {stockLotes.historial?.filter(m => m.tipo === (tabHistorial === 'ingresos' ? 'entrada' : 'salida')).length > 0 ? (
+                        <div className="timeline-container">
+                          {stockLotes.historial
+                            .filter(m => m.tipo === (tabHistorial === 'ingresos' ? 'entrada' : 'salida'))
+                            .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
+                            .map((mov, idx) => (
+                            <div key={idx} className="d-flex mb-3 border-bottom pb-2">
+                              <div className="me-3 text-center" style={{ minWidth: "50px" }}>
+                                <div className={`rounded-circle d-flex align-items-center justify-content-center mx-auto`} 
+                                     style={{ width: "32px", height: "32px", background: mov.tipo === 'entrada' ? "#dcfce7" : "#fee2e2", color: mov.tipo === 'entrada' ? "#166534" : "#991b1b" }}>
+                                  <i className={`fa-solid ${mov.tipo === 'entrada' ? 'fa-arrow-down' : 'fa-arrow-up'} small`}></i>
+                                </div>
+                                <span className="small text-muted" style={{ fontSize: '10px' }}>
+                                  {new Date(mov.fecha).toLocaleDateString()}
+                                </span>
+                              </div>
+                              <div className="flex-grow-1">
+                                <div className="d-flex justify-content-between">
+                                  <span className={`fw-bold small ${mov.tipo === 'entrada' ? 'text-success' : 'text-danger'}`}>
+                                    {mov.tipo === 'entrada' ? 'INGRESO' : 'SALIDA'}
+                                  </span>
+                                  <span className="fw-bold text-dark">
+                                    {mov.tipo === 'entrada' ? '+' : '-'}{parseFloat(parseFloat(mov.cantidad || 0).toFixed(3)).toString()} <span className="small text-muted">{selectedReactivo?.presentacion_reactivo}</span>
+                                  </span>
+                                </div>
+                                <div className="text-muted" style={{ fontSize: "11px" }}>
+                                  <strong>Lote:</strong> {mov.lote}
+                                  {mov.proveedor && <> | <strong>Prov:</strong> {mov.proveedor}</>}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-center text-muted small py-4">No hay historial de {tabHistorial} registrado</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+            <div className="modal-footer bg-light" style={{ borderRadius: "0 0 16px 16px" }}>
+              <button type="button" className="btn btn-outline-secondary px-4" data-bs-dismiss="modal" onClick={hideModal}>Cerrar</button>
             </div>
           </div>
         </div>

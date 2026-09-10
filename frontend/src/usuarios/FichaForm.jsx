@@ -1,6 +1,24 @@
 import { useEffect, useState } from "react";
 import apiAxios from "../api/axiosConfig";
 import Swal from "sweetalert2";
+import DatePicker, { registerLocale } from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { es } from 'date-fns/locale';
+registerLocale('es', es);
+
+const parseDateStr = (dateStr) => {
+  if (!dateStr) return null;
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d);
+};
+
+const formatDateStr = (dateObj) => {
+  if (!dateObj) return "";
+  const y = dateObj.getFullYear();
+  const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const d = String(dateObj.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
 
 export default function FichaForm({ selectedFicha, programas, refreshParent, hideModal }) {
   const [form, setForm] = useState({
@@ -112,23 +130,34 @@ export default function FichaForm({ selectedFicha, programas, refreshParent, hid
 
         <div className="col-md-6">
           <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Fecha de Inicio</label>
-          <input 
-            type="date"
-            className="form-control" 
-            name="fecha_inicio" 
-            value={form.fecha_inicio} 
-            onChange={handleChange} 
+          <DatePicker
+            selected={parseDateStr(form.fecha_inicio)}
+            onChange={(date) => handleChange({ target: { name: 'fecha_inicio', value: formatDateStr(date) } })}
+            filterDate={(date) => {
+              const day = date.getDay();
+              return day !== 0 && day !== 6;
+            }}
+            locale="es"
+            dateFormat="dd/MM/yyyy"
+            className="form-control"
+            placeholderText="dd/mm/aaaa"
           />
         </div>
 
         <div className="col-md-6">
           <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Fecha de Fin</label>
-          <input 
-            type="date"
-            className="form-control" 
-            name="fecha_fin" 
-            value={form.fecha_fin} 
-            onChange={handleChange} 
+          <DatePicker
+            selected={parseDateStr(form.fecha_fin)}
+            onChange={(date) => handleChange({ target: { name: 'fecha_fin', value: formatDateStr(date) } })}
+            filterDate={(date) => {
+              const day = date.getDay();
+              return day !== 0 && day !== 6;
+            }}
+            locale="es"
+            dateFormat="dd/MM/yyyy"
+            className="form-control"
+            placeholderText="dd/mm/aaaa"
+            minDate={parseDateStr(form.fecha_inicio)}
           />
         </div>
 

@@ -9,7 +9,7 @@ import ecosystemLogo from "./Home/nuevologoecosystem.png";
 import "./Sidebar.css";
 
 // Define el componente Sidebar con la barra lateral de navegación principal
-const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
+const Sidebar = ({ isAuth, logOut, users, rol, onAprobado, isCollapsed, setIsCollapsed }) => {
   // Hook para navegar programáticamente a otras rutas
   const navigate = useNavigate();
   // Hook para obtener la ruta actual y resaltar el item activo
@@ -80,7 +80,6 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
       items: [
         { icon: "⚗️", text: "Reactivos", path: "/reactivos", show: true },
         { icon: "🔄", text: "Movimiento Reactivos", path: "/movimientoreactivo", show: true },
-        { icon: "📊", text: "Control Reactivos", path: "/control-reactivos", show: true },
       ]
     },
     {
@@ -120,6 +119,17 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
 
   return (
     <>
+      {/* Botón flotante para expandir el sidebar en escritorio cuando está colapsado */}
+      {isCollapsed && (
+        <button 
+          className="sidebar-floating-desktop-btn" 
+          onClick={() => setIsCollapsed(false)}
+          title="Expandir menú"
+        >
+          →
+        </button>
+      )}
+
       {/* Botón hamburguesa para abrir o cerrar el sidebar en móviles */}
       <button className="sidebar-mobile-toggle" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Toggle sidebar">
         {/* Muestra el ícono de cerrar o de menú según el estado */}
@@ -142,6 +152,10 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado }) => {
             <h5>ECOSYSTEM</h5>
             <small>Laboratorio Ambiental</small>
           </div>
+          {/* Botón para colapsar/expandir el sidebar */}
+          <button className="sidebar-collapse-btn-desktop" onClick={() => setIsCollapsed(!isCollapsed)}>
+            {isCollapsed ? "→" : "←"}
+          </button>
         </div>
 
         {/* Menú de navegación principal */}

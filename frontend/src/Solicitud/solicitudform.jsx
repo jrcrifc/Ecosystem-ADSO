@@ -8,6 +8,11 @@ import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 // Importa Socket.io para actualizaciones en tiempo real
 import socket from "../socket.js";
+// Importa DatePicker y su CSS
+import DatePicker, { registerLocale } from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { es } from 'date-fns/locale';
+registerLocale('es', es);
 
 // ===================== UTILIDADES DE VALIDACIÓN DE FECHAS =====================
 
@@ -28,24 +33,45 @@ const esFinDeSemana = (dateStr) => {
   return dia === 0 || dia === 6;
 };
 
-// Suma N días calendario a una fecha y retorna string YYYY-MM-DD
+// Suma N días hábiles (lunes a viernes) a una fecha y retorna string YYYY-MM-DD
 const sumarDias = (dateStr, dias) => {
   const [yyyy, mm, dd] = dateStr.split("-").map(Number);
   const fecha = new Date(yyyy, mm - 1, dd);
-  fecha.setDate(fecha.getDate() + dias);
+  let diasAgregados = 0;
+  while (diasAgregados < dias) {
+    fecha.setDate(fecha.getDate() + 1);
+    if (fecha.getDay() !== 0 && fecha.getDay() !== 6) {
+      diasAgregados++;
+    }
+  }
   const y = fecha.getFullYear();
   const m = String(fecha.getMonth() + 1).padStart(2, '0');
   const d = String(fecha.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 };
 
-// Calcula la diferencia en días calendario entre dos fechas
+// Calcula la diferencia en días hábiles (lunes a viernes) entre dos fechas
 const diffDias = (fechaA, fechaB) => {
   const [yA, mA, dA] = fechaA.split("-").map(Number);
   const [yB, mB, dB] = fechaB.split("-").map(Number);
-  const a = new Date(yA, mA - 1, dA);
+  let a = new Date(yA, mA - 1, dA);
   const b = new Date(yB, mB - 1, dB);
-  return Math.round((b - a) / (1000 * 60 * 60 * 24));
+  
+  // Limpiar horas para evitar fallos por zona horaria
+  a.setHours(0,0,0,0);
+  b.setHours(0,0,0,0);
+
+  let diasHabiles = 0;
+  const inc = a < b ? 1 : -1;
+  const curr = new Date(a);
+  
+  while (curr.getTime() !== b.getTime()) {
+    curr.setDate(curr.getDate() + inc);
+    if (curr.getDay() !== 0 && curr.getDay() !== 6) {
+      diasHabiles += inc;
+    }
+  }
+  return diasHabiles;
 };
 
 // Obtiene la fecha de hoy en formato YYYY-MM-DD (local)
@@ -63,6 +89,22 @@ const isTimeValid = (time) => {
   const [hh, mm] = time.split(":").map(Number);
   const totalMinutes = hh * 60 + mm;
   return totalMinutes >= 7 * 60 && totalMinutes <= 16 * 60;
+};
+
+// Convierte Date a string YYYY-MM-DD
+const formatDateStr = (dateObj) => {
+  if (!dateObj) return "";
+  const y = dateObj.getFullYear();
+  const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const d = String(dateObj.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
+
+// Convierte string YYYY-MM-DD a Date local
+const parseDateStr = (dateStr) => {
+  if (!dateStr) return null;
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d);
 };
 
 // Componente del formulario de solicitud de préstamo
@@ -351,11 +393,11 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
     }
   };
 
-  // Calcula los rangos de fecha para hint visual en los inputs (aunque la validación real es en JS)
+  // Calcula los rangos de fecha para hint visual en los inputs
   const minRecogidaStr = sumarDias(hoyStr(), 5);
   const maxRecogidaStr = sumarDias(hoyStr(), 8);
-  const minDevolucionStr = fecha_inicio ? sumarDias(fecha_inicio, 1) : "";
-  const maxDevolucionStr = fecha_inicio ? sumarDias(fecha_inicio, 15) : "";
+  const minDevolucionStr = fecha_inicio ? sumarDias(fecha_inicio, 1) : sumarDias(hoyStr(), 6);
+  const maxDevolucionStr = fecha_inicio ? sumarDias(fecha_inicio, 15) : sumarDias(hoyStr(), 23);
 
   return (
     <form onSubmit={handleSubmit} noValidate>
@@ -584,10 +626,20 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
           <label className="form-label fw-bold" style={{ color: "#0A1628", fontSize: "13px" }}>
             📅 Fecha de Recogida
           </label>
-          <input type="date" className={`form-control form-control-sm ${errors.fecha_inicio ? 'is-invalid' : ''}`}
-            value={fecha_inicio}
-            onChange={e => handleFechaRecogidaChange(e.target.value)}
-            min={minRecogidaStr} max={maxRecogidaStr} required />
+          <DatePicker
+            selected={parseDateStr(fecha_inicio)}
+            onChange={(date) => handleFechaRecogidaChange(formatDateStr(date))}
+            minDate={parseDateStr(minRecogidaStr)}
+            maxDate={parseDateStr(maxRecogidaStr)}
+            filterDate={(date) => {
+              const day = date.getDay();
+              return day !== 0 && day !== 6;
+            }}
+            locale="es"
+            dateFormat="dd/MM/yyyy"
+            className={`form-control form-control-sm ${errors.fecha_inicio ? 'is-invalid' : ''}`}
+            placeholderText="dd/mm/aaaa"
+          />
           {errors.fecha_inicio ? (
             <div className="invalid-feedback" style={{ fontSize: "11px", display: "block" }}>{errors.fecha_inicio}</div>
           ) : (
@@ -600,9 +652,21 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
           <label className="form-label fw-bold" style={{ color: "#0A1628", fontSize: "13px" }}>
             📅 Fecha de Devolución
           </label>
-          <input type="date" className={`form-control form-control-sm ${errors.fecha_fin ? 'is-invalid' : ''}`}
-            value={fecha_fin} onChange={e => handleFechaDevolucionChange(e.target.value)}
-            min={minDevolucionStr} max={maxDevolucionStr} required />
+          <DatePicker
+            selected={parseDateStr(fecha_fin)}
+            onChange={(date) => handleFechaDevolucionChange(formatDateStr(date))}
+            minDate={parseDateStr(minDevolucionStr)}
+            maxDate={parseDateStr(maxDevolucionStr)}
+            filterDate={(date) => {
+              const day = date.getDay();
+              return day !== 0 && day !== 6;
+            }}
+            locale="es"
+            dateFormat="dd/MM/yyyy"
+            className={`form-control form-control-sm ${errors.fecha_fin ? 'is-invalid' : ''}`}
+            placeholderText="dd/mm/aaaa"
+            disabled={!fecha_inicio}
+          />
           {errors.fecha_fin ? (
             <div className="invalid-feedback" style={{ fontSize: "11px", display: "block" }}>{errors.fecha_fin}</div>
           ) : (

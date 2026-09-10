@@ -148,6 +148,8 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   // Estado que almacena los datos del usuario autenticado
   const [userData, setUserData] = useState(null);
+  // Estado para saber si el sidebar está colapsado
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Efecto para escuchar eventos de cierre de sesión forzado vía Socket.io
   useEffect(() => {
@@ -303,7 +305,7 @@ function App() {
 
   // Renderizado principal con layout sidebar + contenido
   return (
-    <div className="sidebar-layout">
+    <div className={`sidebar-layout ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       {/* Renderiza el sidebar solo si el usuario está autenticado */}
       {isAuth && (
         <Sidebar
@@ -312,6 +314,8 @@ function App() {
           users={userData}
           rol={userRol}
           onAprobado={recargarUsuario}
+          isCollapsed={isSidebarCollapsed}
+          setIsCollapsed={setIsSidebarCollapsed}
         />
       )}
       {/* Área principal de contenido */}

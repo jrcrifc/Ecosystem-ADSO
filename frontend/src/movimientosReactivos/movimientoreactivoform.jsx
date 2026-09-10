@@ -6,6 +6,24 @@ import apiAxios from "../api/axiosConfig";
 import { useState, useEffect } from "react";
 // Importa SweetAlert2 para mostrar alertas interactivas al usuario
 import Swal from "sweetalert2";
+import DatePicker, { registerLocale } from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { es } from 'date-fns/locale';
+registerLocale('es', es);
+
+const parseDateStr = (dateStr) => {
+  if (!dateStr) return null;
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d);
+};
+
+const formatDateStr = (dateObj) => {
+  if (!dateObj) return "";
+  const y = dateObj.getFullYear();
+  const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const d = String(dateObj.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
 
 // Define el componente de formulario que recibe props para editar o crear movimientos
 const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) => {
@@ -266,19 +284,23 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
         {/* Campo de fecha de vencimiento */}
         <div className="col-md-6">
           <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Fecha de Vencimiento</label>
-          <input
-            type="date"
-            name="fecha_vencimiento"
+          <DatePicker
+            selected={parseDateStr(form.fecha_vencimiento)}
+            onChange={(date) => handleChange({ target: { name: 'fecha_vencimiento', value: formatDateStr(date) } })}
+            filterDate={(date) => {
+              const day = date.getDay();
+              return day !== 0 && day !== 6;
+            }}
+            locale="es"
+            dateFormat="dd/MM/yyyy"
             className="form-control"
-            value={form.fecha_vencimiento}
-            onChange={handleChange}
-            // Calcula el minimo como el dia siguiente al actual
-            min={(() => {
+            minDate={(() => {
               const d = new Date();
               d.setDate(d.getDate() + 1);
-              return d.toISOString().slice(0, 10);
+              return d;
             })()}
             style={inputStyle}
+            placeholderText="dd/mm/aaaa"
           />
         </div>
 

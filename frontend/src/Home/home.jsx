@@ -115,92 +115,162 @@ const Home = () => {
 
       {/* Define la animación fadeUp y estilos del Hero para las secciones */}
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&display=swap');
         @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
 
         .home-hero {
           position: relative;
-          border-radius: 24px;
+          border-radius: 28px;
           overflow: hidden;
-          min-height: 320px;
+          min-height: 200px;
           display: flex;
           align-items: center;
           background: linear-gradient(135deg, #023E8A 0%, #0077B6 50%, #0096C7 100%);
-          margin-bottom: 30px;
-          box-shadow: 0 20px 40px rgba(2,62,138,0.2);
+          margin-bottom: 24px;
+          box-shadow: 0 25px 50px rgba(2,62,138,0.25);
           transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
           width: 100%;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .home-hero::before {
+          content: '';
+          position: absolute;
+          top: -150px;
+          left: -50px;
+          width: 500px;
+          height: 500px;
+          background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 60%);
+          border-radius: 50%;
+          pointer-events: none;
+        }
+
+        .home-hero::after {
+          content: '';
+          position: absolute;
+          bottom: -150px;
+          right: 250px;
+          width: 400px;
+          height: 400px;
+          background: radial-gradient(circle, rgba(0,180,216,0.2) 0%, transparent 65%);
+          border-radius: 50%;
+          pointer-events: none;
         }
 
         .home-hero-content {
           position: relative;
           z-index: 2;
-          padding: 40px;
-          max-width: 600px;
+          padding: 30px 50px;
+          max-width: 650px;
         }
 
         .home-hero-title {
-          color: #fff;
-          font-size: 38px;
+          color: #ffffff;
+          font-family: 'Outfit', 'Inter', sans-serif;
+          font-size: 46px;
           font-weight: 800;
-          margin: 0 0 10px;
-          line-height: 1.2;
+          margin: 15px 0 20px;
+          line-height: 1.15;
+          letter-spacing: -0.5px;
+          text-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .home-hero-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.25);
+          border-radius: 99px;
+          padding: 8px 20px;
+          margin-bottom: 20px;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .home-hero-badge-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #48CAE4;
+          box-shadow: 0 0 10px rgba(72,202,228,0.8);
+        }
+
+        .home-hero-badge-text {
+          color: #CAF0F8;
+          font-family: 'Outfit', sans-serif;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 2.5px;
+          text-transform: uppercase;
+        }
+
+        .home-hero-role {
+          display: inline-block;
+          background: rgba(0, 0, 0, 0.15);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 12px;
+          padding: 8px 18px;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .home-hero-role-text {
+          color: #CAF0F8;
+          font-family: 'Outfit', sans-serif;
+          font-size: 14px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 1px;
         }
 
         .home-hero-logo-container {
           position: absolute;
-          right: 50px;
+          right: 60px;
           top: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          animation: floatLogo 4s ease-in-out infinite;
+          animation: floatLogo 5s ease-in-out infinite;
           cursor: pointer;
         }
 
         .home-hero-logo-container::before {
           content: '';
           position: absolute;
-          width: 220px;
-          height: 220px;
+          width: 180px;
+          height: 180px;
           border-radius: 50%;
-          background: radial-gradient(circle, rgba(72, 202, 228, 0.4) 0%, rgba(0, 119, 182, 0) 70%);
-          animation: pulseAura 3s ease-in-out infinite alternate;
+          background: radial-gradient(circle, rgba(72, 202, 228, 0.5) 0%, rgba(0, 119, 182, 0) 70%);
+          animation: pulseAura 4s ease-in-out infinite alternate;
           z-index: 0;
           pointer-events: none;
         }
 
         @keyframes floatLogo {
-          0%, 100% {
-            transform: translateY(-50%) translateY(0px) rotate(0deg);
-          }
-          50% {
-            transform: translateY(-50%) translateY(-12px) rotate(2.5deg);
-          }
+          0%, 100% { transform: translateY(-50%) translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-50%) translateY(-15px) rotate(3deg); }
         }
 
         @keyframes pulseAura {
-          0% {
-            transform: scale(0.9);
-            opacity: 0.5;
-          }
-          100% {
-            transform: scale(1.3);
-            opacity: 0.95;
-          }
+          0% { transform: scale(0.85); opacity: 0.6; }
+          100% { transform: scale(1.35); opacity: 0.95; }
         }
 
         .home-hero-logo {
-          width: 260px;
+          width: 180px;
           height: auto;
           position: relative;
           z-index: 1;
-          filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.25)) drop-shadow(0 0 20px rgba(202, 240, 248, 0.35));
-          transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.4s ease;
+          filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.3)) drop-shadow(0 0 25px rgba(202, 240, 248, 0.4));
+          transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.5s ease;
         }
 
         .home-hero-logo-container:hover .home-hero-logo {
-          transform: scale(1.12) rotate(-3deg);
-          filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.35)) drop-shadow(0 0 35px rgba(72, 202, 228, 0.85));
+          transform: scale(1.15) rotate(-4deg);
+          filter: drop-shadow(0 25px 50px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 45px rgba(72, 202, 228, 0.9));
         }
 
         @media (max-width: 768px) {
@@ -259,20 +329,14 @@ const Home = () => {
       >
         {/* Contenido textual del hero */}
         <div className="home-hero-content">
-          {/* Título */}
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: "8px",
-            background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)",
-            borderRadius: "99px", padding: "6px 16px", marginBottom: "20px"
-          }}>
-            <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#48CAE4" }} />
-            <span style={{ color: "#CAF0F8", fontSize: "10px", fontWeight: "700", letterSpacing: "2px", textTransform: "uppercase" }}>
-              Laboratorio Ambiental
-            </span>
+          {/* Título de la app con estilo premium */}
+          <div className="home-hero-badge">
+            <div className="home-hero-badge-dot" />
+            <span className="home-hero-badge-text">Laboratorio Ambiental</span>
           </div>
 
           {/* Saludo personalizado al usuario */}
-          <h1 className="home-hero-title" style={{ marginBottom: "10px" }}>
+          <h1 className="home-hero-title">
             Hola {(() => {
               const hour = new Date().getHours();
               if (hour >= 5 && hour < 12) return "Buenos Días ☀️";
@@ -282,12 +346,8 @@ const Home = () => {
           </h1>
 
           {/* Etiqueta con el rol del usuario */}
-          <div style={{
-            display: "inline-block", background: "rgba(255,255,255,0.15)",
-            border: "1px solid rgba(255,255,255,0.25)", borderRadius: "8px",
-            padding: "4px 12px", marginBottom: "0"
-          }}>
-            <span style={{ color: "#CAF0F8", fontSize: "14px", fontWeight: "700", textTransform: "capitalize" }}>
+          <div className="home-hero-role">
+            <span className="home-hero-role-text">
               {rolLabel[userRolLower] || userRol}
             </span>
           </div>
@@ -414,15 +474,15 @@ const Home = () => {
 
       {/* Pie de página con información institucional */}
       <footer
-        className="text-center p-4 mt-5"
+        className="text-center p-4"
         style={{
           background: "#0077B6",
           color: "#ffffff",
-          borderRadius: "20px",
           fontSize: "13px",
           fontWeight: "600",
-          boxShadow: "0 8px 24px rgba(0, 119, 182, 0.2)",
-          marginBottom: "20px"
+          boxShadow: "0 -8px 24px rgba(0, 119, 182, 0.15)",
+          margin: "40px -20px -20px -20px",
+          borderRadius: "0",
         }}
       >
         <p className="mb-1">© 2025 Ecosystem - SENA Centro Agropecuario "La Granja"</p>
