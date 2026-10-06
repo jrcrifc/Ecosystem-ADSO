@@ -25,6 +25,8 @@ const CrudReactivos = () => {
   const [filterText, setFilterText] = useState("");
   // Estado que almacena el reactivo seleccionado para editar
   const [selectedReactivo, setSelectedReactivo] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [showStockModal, setShowStockModal] = useState(false);
   const [stockLotes, setStockLotes] = useState(null);
   const [loadingModal, setLoadingModal] = useState(false);
   const [tabHistorial, setTabHistorial] = useState("ingresos");
@@ -63,7 +65,7 @@ const CrudReactivos = () => {
             <i className="fa-solid fa-eye"></i>
           </button>
           {/* Boton para editar el reactivo */}
-          <button className="btn btn-sm" style={{ background: "#dbeafe", color: "#0077B6", border: "none" }} data-bs-toggle="modal" data-bs-target="#modalReactivo" onClick={() => setSelectedReactivo(row)}>
+          <button className="btn btn-sm" style={{ background: "#dbeafe", color: "#0077B6", border: "none" }} onClick={() => { setSelectedReactivo(row); setShowModal(true); }}>
             <i className="fa-solid fa-pencil"></i>
           </button>
           {/* Boton para activar o inactivar el reactivo */}
@@ -145,15 +147,11 @@ const CrudReactivos = () => {
   const handleVerStock = async (reactivo) => {
     setSelectedReactivo(reactivo);
     setLoadingModal(true);
+    setShowStockModal(true);
     try {
       setTabHistorial("ingresos");
       const res = await apiAxios.get(`/api/movimientos/stock-lotes/${reactivo.id_reactivo}`);
       setStockLotes(res.data);
-      const modal = document.getElementById("modalStock");
-      if (modal) {
-        const bsModal = new bootstrap.Modal(modal);
-        bsModal.show();
-      }
     } catch (error) {
       console.error("Error al cargar stock:", error);
       Swal.fire("Error", "No se pudo cargar el detalle de stock", "error");
@@ -246,22 +244,10 @@ const CrudReactivos = () => {
     }
   };
 
-  // ===== Cerrar modal  // Funcion para ocultar modales y limpiar backdrops
+  // Funcion para ocultar modales
   const hideModal = () => {
-    const modalReact = document.getElementById("modalReactivo");
-    if (modalReact) {
-      const bsReact = bootstrap.Modal.getInstance(modalReact);
-      if (bsReact) bsReact.hide();
-    }
-    const modalStock = document.getElementById("modalStock");
-    if (modalStock) {
-      const bsStock = bootstrap.Modal.getInstance(modalStock);
-      if (bsStock) bsStock.hide();
-    }
-    document.body.classList.remove("modal-open");
-    document.body.style.removeProperty("overflow");
-    document.body.style.removeProperty("padding-right");
-    document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+    setShowModal(false);
+    setShowStockModal(false);
     setSelectedReactivo(null);
   };
 
@@ -345,7 +331,7 @@ const CrudReactivos = () => {
             <i className="fa-solid fa-file-import me-2"></i> Importar Excel
           </button>
           {/* Boton para abrir el modal de nuevo reactivo */}
-          <button className="btn" style={{ background: "#0077B6", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }} data-bs-toggle="modal" data-bs-target="#modalReactivo" onClick={() => setSelectedReactivo(null)}>
+          <button className="btn" style={{ background: "#0077B6", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }} onClick={() => { setSelectedReactivo(null); setShowModal(true); }}>
             + Nuevo Reactivo
           </button>
         </div>
@@ -360,34 +346,67 @@ const CrudReactivos = () => {
         } />
       </div>
       {/* Modal de reactivo */}
-      <div className="modal fade" id="modalReactivo" tabIndex="-1">
-        <div className="modal-dialog modal-xl">
-          <div className="modal-content">
-            <div className="modal-header text-white" style={{ background: "#023E8A" }}>
-              <h5 className="modal-title">{selectedReactivo ? "Editar" : "Nuevo"} Reactivo</h5>
-              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" onClick={hideModal}></button>
+      {showModal && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 9999,
+          background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)",
+          display: "flex", alignItems: "center", justifyContent: "center", padding: "16px"
+        }}>
+          <div style={{
+            background: "#fff", borderRadius: "16px", width: "100%", maxWidth: "600px",
+            boxShadow: "0 24px 60px rgba(0,0,0,0.2)", overflow: "hidden", maxHeight: "90vh", display: "flex", flexDirection: "column"
+          }}>
+            <div style={{
+              background: "linear-gradient(135deg, #0077B6, #023E8A)",
+              padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0
+            }}>
+              <div>
+                <h5 style={{ color: "#fff", fontWeight: "800", margin: 0, fontSize: "16px" }}>
+                  {selectedReactivo ? "✏️ Editar Reactivo" : "➕ Nuevo Reactivo"}
+                </h5>
+                <p style={{ color: "rgba(255,255,255,0.75)", margin: 0, fontSize: "12px" }}>
+                  Gestiona la información del reactivo
+                </p>
+              </div>
+              <button onClick={hideModal}
+                style={{ background: "rgba(255,255,255,0.2)", border: "none", borderRadius: "50%",
+                  width: "28px", height: "28px", color: "#fff", fontSize: "14px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕
+              </button>
             </div>
-            <div className="modal-body">
-              {/* Renderiza el formulario de reactivo */}
+            <div style={{ overflowY: "auto", padding: "0" }}>
               <ReactivoForm selectedReactivo={selectedReactivo} refreshData={cargarReactivos} hideModal={hideModal} />
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* MODAL STOCK Y HISTORIAL */}
-      <div className="modal fade" id="modalStock" tabIndex="-1">
-        <div className="modal-dialog modal-xl">
-          <div className="modal-content" style={{ borderRadius: "16px", border: "none" }}>
-            <div className="modal-header text-white" style={{ background: "#023E8A" }}>
-              <h5 className="modal-title fw-bold">
-                <i className="fa-solid fa-flask-vial me-2"></i>
-                Detalle de Inventario: {selectedReactivo?.nom_reactivo}
-              </h5>
-              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" onClick={hideModal}></button>
+      {showStockModal && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 9999,
+          background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)",
+          display: "flex", alignItems: "center", justifyContent: "center", padding: "16px"
+        }}>
+          <div style={{
+            background: "#fff", borderRadius: "16px", width: "100%", maxWidth: "1000px",
+            boxShadow: "0 24px 60px rgba(0,0,0,0.2)", overflow: "hidden", maxHeight: "90vh", display: "flex", flexDirection: "column"
+          }}>
+            <div style={{
+              background: "linear-gradient(135deg, #0077B6, #023E8A)",
+              padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0
+            }}>
+              <div>
+                <h5 style={{ color: "#fff", fontWeight: "800", margin: 0, fontSize: "16px" }}>
+                  <i className="fa-solid fa-flask-vial me-2"></i> Detalle de Inventario: {selectedReactivo?.nom_reactivo}
+                </h5>
+              </div>
+              <button onClick={hideModal}
+                style={{ background: "rgba(255,255,255,0.2)", border: "none", borderRadius: "50%",
+                  width: "28px", height: "28px", color: "#fff", fontSize: "14px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕
+              </button>
             </div>
 
-            <div className="modal-body p-4">
+            <div style={{ overflowY: "auto", padding: "24px" }}>
               {loadingModal ? (
                 <div className="text-center py-5">
                   <div className="spinner-border text-primary" role="status"></div>
@@ -523,12 +542,9 @@ const CrudReactivos = () => {
                 </div>
               ) : null}
             </div>
-            <div className="modal-footer bg-light" style={{ borderRadius: "0 0 16px 16px" }}>
-              <button type="button" className="btn btn-outline-secondary px-4" data-bs-dismiss="modal" onClick={hideModal}>Cerrar</button>
-            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

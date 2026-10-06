@@ -32,16 +32,21 @@ const TopBar = ({ userData, userRol, logOut, onAprobado }) => {
           display: "flex", alignItems: "center", gap: "10px",
           cursor: "pointer",
         }}>
-          {/* Avatar con la inicial del nombre del usuario */}
+          {/* Avatar con la inicial del nombre del usuario o su foto de perfil */}
           <div style={{
             width: "36px", height: "36px", borderRadius: "10px",
             display: "flex", alignItems: "center", justifyContent: "center",
             fontWeight: "800", fontSize: "14px", color: "#fff",
             background: avatarBg,
             boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+            overflow: "hidden"
           }}>
-            {/* Muestra la primera letra del nombre o un signo de interrogación */}
-            {userName ? userName.charAt(0).toUpperCase() : "?"}
+            {/* Muestra la foto de perfil, la primera letra del nombre o un signo de interrogación */}
+            {userData?.avatar ? (
+              <img src={`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/uploads/perfiles/${userData.avatar}`} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (
+              userName ? userName.charAt(0).toUpperCase() : "?"
+            )}
           </div>
           {/* Contenedor con nombre y rol */}
           <div className="topbar-user-text">

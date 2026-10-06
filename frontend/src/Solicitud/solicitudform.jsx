@@ -239,7 +239,7 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
     disponible:      "#2D8A4E",
     mantenimiento:   "#d97706",
     solicitado:      "#6366f1",
-    prestado:        "#8b5cf6",
+    prestado:        "#ca8a04",
     inactivo:        "#dc3545",
   }[estado] || "#6c757d");
 
@@ -271,7 +271,6 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
     if (esFinDeSemana(valor)) return "No se pueden seleccionar sábados ni domingos";
     const diasDesdeHoy = diffDias(hoyStr(), valor);
     if (diasDesdeHoy < 5) return "Debe ser con mínimo 5 días de anticipación";
-    if (diasDesdeHoy > 8) return "Debe ser con máximo 8 días de anticipación";
     return null;
   };
 
@@ -430,8 +429,15 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
               <p className="text-muted text-center small mt-2">No se encontraron equipos</p>
             ) : (
               equiposFiltrados.map(equipo => {
-                // Determina si el equipo está físicamente disponible
-                const estaDisponibleFisicamente = equipo.ultimoEstado === "disponible";
+                // Determina si el equipo está disponible considerando la fecha de inicio deseada
+                let libreParaFecha = false;
+                if (equipo.fecha_disponible && fecha_inicio) {
+                  // Si la fecha que quiero recogerlo es posterior o igual a cuando se desocupa
+                  if (new Date(fecha_inicio + "T00:00:00") > new Date(equipo.fecha_disponible + "T00:00:00")) {
+                    libreParaFecha = true;
+                  }
+                }
+                const estaDisponibleFisicamente = (equipo.ultimoEstado === "disponible") || libreParaFecha;
                 // Verifica si el equipo está activo
                 const estaActivo = equipo.estado !== 0;
                 // Determina si se puede seleccionar: disponible y activo
@@ -475,10 +481,16 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
                           🚫 Equipo inactivo — No disponible para solicitudes
                         </div>
                       )}
-                      {/* Mensaje de equipo ocupado con fecha de disponibilidad — NO TOCAR */}
-                      {estaActivo && equipo.fecha_disponible && (
+                      {/* Mensaje de equipo ocupado con fecha de disponibilidad */}
+                      {estaActivo && equipo.fecha_disponible && !libreParaFecha && (
                         <div style={{ color: "#d97706", fontSize: "0.7rem", fontWeight: "700", marginTop: "2px" }}>
                           📅 Ocupado (Disponible el: {new Date(equipo.fecha_disponible + "T00:00:00").toLocaleDateString('es-CO')})
+                        </div>
+                      )}
+                      {/* Mensaje de equipo que se liberará a tiempo */}
+                      {estaActivo && equipo.fecha_disponible && libreParaFecha && (
+                        <div style={{ color: "#16a34a", fontSize: "0.7rem", fontWeight: "700", marginTop: "2px" }}>
+                          ✅ Estará libre para esta fecha
                         </div>
                       )}
                     </div>
@@ -514,29 +526,24 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
               👤 Solicitante <span style={{ color: "#dc3545" }}>*</span>
             </label>
             <p style={{ fontSize: "12px", color: "#64748b", margin: "0 0 8px" }}>
-              Selecciona el usuario que está realizando la solicitud de préstamo.
+              Busca y selecciona el instructor que está realizando la solicitud de préstamo.
             </p>
-            {/* Mensaje de usuario nuevo si no existe en la BD */}
-            {busquedaUsuario.trim() !== "" && usuariosFiltrados.length === 0 && (
-              <div style={{ color: "#dc3545", fontWeight: "bold", fontSize: "13px", marginBottom: "8px" }}>
-                ⚠️ Es usuario nuevo
-              </div>
-            )}
             {/* Campo de búsqueda de usuarios */}
             <input
               type="text"
               className={`form-control form-control-sm mb-1 ${errors.solicitante ? 'is-invalid' : ''}`}
-              placeholder="Buscar por nombre, documento o email..."
+              placeholder="Escribe el nombre, documento o email del instructor..."
               value={busquedaUsuario}
               onChange={e => { setBusquedaUsuario(e.target.value); setErrors({...errors, solicitante: null}); }}
               style={{ borderColor: "#dbeafe" }}
             />
             {errors.solicitante && <div className="invalid-feedback mb-2" style={{ display: 'block' }}>{errors.solicitante}</div>}
+            
             {/* Tarjeta del usuario seleccionado */}
             {selectedUser && (
               <div style={{
                 display: "flex", alignItems: "center", gap: "12px",
-                padding: "10px 14px", borderRadius: "10px", marginBottom: "8px",
+                padding: "10px 14px", borderRadius: "10px", margin: "8px 0",
                 background: "#dbeafe", border: "2px solid #0077B6"
               }}>
                 <div style={{
@@ -561,15 +568,18 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
                 }}>✕</button>
               </div>
             )}
-            {/* Lista de usuarios disponibles para seleccionar */}
-            {!selectedUser && (
+
+            {/* Lista de usuarios sugeridos únicamente cuando se escribe en la búsqueda */}
+            {!selectedUser && busquedaUsuario.trim().length > 0 && (
               <div style={{
                 maxHeight: "180px", overflowY: "auto",
-                border: "1px solid #e0e0e0", borderRadius: "8px", padding: "6px"
+                border: "1px solid #bfdbfe", borderRadius: "8px", padding: "6px",
+                background: "#ffffff", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                marginTop: "4px", marginBottom: "8px"
               }}>
                 {usuariosFiltrados.length === 0 ? (
                   <p style={{ color: "#dc3545", fontWeight: "bold", textAlign: "center", fontSize: "13px", margin: "10px 0" }}>
-                    ⚠️ Es usuario nuevo
+                    ⚠️ No se encontraron instructores con esa búsqueda
                   </p>
                 ) : usuariosFiltrados.map(u => (
                   // Tarjeta de cada usuario en la lista de selección
@@ -617,7 +627,7 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
             border: "1px solid #90caf9",
             color: "#0d47a1"
           }}>
-            📅 <strong>Importante:</strong> Puedes solicitar con <strong>5 a 8 días</strong> de anticipación y tienes hasta <strong>15 días</strong> para devolver los equipos. No se permiten sábados ni domingos.
+            📅 <strong>Importante:</strong> Puedes solicitar con mínimo <strong>5 días</strong> de anticipación y tienes hasta <strong>15 días</strong> para devolver los equipos. No se permiten sábados ni domingos.
           </div>
         </div>
 
@@ -630,7 +640,6 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
             selected={parseDateStr(fecha_inicio)}
             onChange={(date) => handleFechaRecogidaChange(formatDateStr(date))}
             minDate={parseDateStr(minRecogidaStr)}
-            maxDate={parseDateStr(maxRecogidaStr)}
             filterDate={(date) => {
               const day = date.getDay();
               return day !== 0 && day !== 6;
@@ -643,7 +652,7 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
           {errors.fecha_inicio ? (
             <div className="invalid-feedback" style={{ fontSize: "11px", display: "block" }}>{errors.fecha_inicio}</div>
           ) : (
-            <small style={{ color: "#94a3b8", fontSize: "10px" }}>Entre 5 y 8 días de anticipación (lunes a viernes)</small>
+            <small style={{ color: "#94a3b8", fontSize: "10px" }}>A partir de 5 días de anticipación (lunes a viernes)</small>
           )}
         </div>
 

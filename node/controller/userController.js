@@ -150,10 +150,14 @@ export const GetProfile = async (req, res) => {
 
 // Controlador para actualizar la información del perfil del usuario actual
 export const UpdateProfile = async (req, res) => {
-  // Ejecuta el bloque en try-catch para manejar errores
   try {
+    // Si se subió un archivo, lo agregamos al body
+    const data = { ...req.body };
+    if (req.file) {
+      data.avatar = req.file.filename;
+    }
     // Llama al servicio para actualizar el perfil con los datos del cuerpo
-    const user = await UserService.updateProfile(req.user.id, req.body);
+    const user = await UserService.updateProfile(req.user.id, data);
     // Responde con mensaje de éxito y los datos actualizados
     res.json({ message: "Perfil actualizado correctamente", user });
   } catch (error) {

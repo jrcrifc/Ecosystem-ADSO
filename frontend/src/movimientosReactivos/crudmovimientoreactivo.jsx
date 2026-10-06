@@ -14,8 +14,9 @@ import * as bootstrap from "bootstrap";
 import { paginationComponentOptions, tableCustomStyles } from "../config/dataTableConfig";
 // Importa el formulario de ingreso de reactivos
 import IngresoReactivoForm from "./movimientoreactivoform.jsx";
-// Importa el formulario de salida de reactivos
-import SalidaReactivoForm from "../salidasReactivos/salidareactivoform.jsx";
+// Importa el formulario de salida de reactivos (Removido, ya se maneja en CrudSalidasReactivos)
+// Importa el componente de Salidas completo
+import CrudSalidasReactivos from "../salidasReactivos/crudsalidareactivo.jsx";
 // Importa el hook de navegacion de React Router
 import { useNavigate } from "react-router-dom";
 // Importa la instancia centralizada de Socket.IO
@@ -31,8 +32,8 @@ const CrudmovimientoReactivo = () => {
   const [filterText, setFilterText] = useState("");
   // Estado que almacena el movimiento seleccionado para editar en el modal de ingreso
   const [selectedMovimiento, setSelectedMovimiento] = useState(null);
-  // Estado que almacena la salida seleccionada para editar en el modal de salida
-  const [selectedSalida, setSelectedSalida] = useState(null);
+  // Estado para manejar la pestaña activa (ingresos o salidas)
+  const [activeTab, setActiveTab] = useState("ingresos");
 
   // ===== Definicion de columnas =====
 
@@ -266,31 +267,6 @@ const CrudmovimientoReactivo = () => {
     }
   };
 
-  // ===== Cerrar modal de salida con limpieza de backdrop =====
-
-  // Funcion para cerrar el modal de salida y limpiar backdrops residuales
-  const hideModalSalida = () => {
-    // Obtiene la referencia al elemento del modal de salida
-    const modal = document.getElementById("modalSalida");
-    if (modal) {
-      // Intenta cerrar con el boton de cerrar del modal
-      const closeBtn = modal.querySelector(".btn-close");
-      if (closeBtn) {
-        closeBtn.click();
-      } else {
-        // Usa Bootstrap API si no encuentra el boton de cerrar
-        const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
-        bsModal.hide();
-      }
-      
-      // Limpieza inmediata para evitar backdrops huerfanos por re-renders rapidos de React
-      document.body.classList.remove("modal-open");
-      document.body.style.removeProperty("overflow");
-      document.body.style.removeProperty("padding-right");
-      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
-    }
-  };
-
   // ===== Filtro local por ID, reactivo o lote =====
 
   // Filtra los movimientos localmente segun el texto de busqueda
@@ -310,76 +286,105 @@ const CrudmovimientoReactivo = () => {
       {/* Encabezado con barra decorativa y titulo principal */}
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
         <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
-        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Movimientos de Reactivos</h2>
+        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Gestión de Inventario (Ingresos y Salidas)</h2>
       </div>
 
-      {/* Barra de herramientas con campo de busqueda y botones de accion */}
-      <div className="row mb-3 align-items-center">
-        <div className="col-md-5">
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Buscar por ID, reactivo o lote..."
-            value={filterText}
-            onChange={(e) => setFilterText(e.target.value)}
-            style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
-          />
-        </div>
-        <div className="col-md-7 text-end d-flex gap-2 justify-content-end">
-          {/* Boton para navegar al historial de salidas */}
+      {/* Pestañas de navegacion */}
+      <ul className="nav nav-tabs mb-4" style={{ borderBottom: "2px solid #e2e8f0" }}>
+        <li className="nav-item">
           <button
-            className="btn btn-outline-secondary"
-            style={{ fontWeight: "600", borderRadius: "10px" }}
-            onClick={() => navigate("/salidas")}
+            className={`nav-link ${activeTab === "ingresos" ? "active" : ""}`}
+            style={{
+              fontWeight: "600",
+              color: activeTab === "ingresos" ? "#0077B6" : "#64748b",
+              border: activeTab === "ingresos" ? "2px solid #e2e8f0" : "none",
+              borderBottom: activeTab === "ingresos" ? "2px solid #fff" : "none",
+              backgroundColor: activeTab === "ingresos" ? "#fff" : "transparent",
+              marginBottom: "-2px",
+              padding: "12px 24px"
+            }}
+            onClick={() => setActiveTab("ingresos")}
           >
-            📜 Ver Historial de Salidas
+            📥 Ingresos de Reactivos
           </button>
-          {/* Boton para abrir el modal de nueva salida */}
+        </li>
+        <li className="nav-item">
           <button
-            className="btn"
-            style={{ background: "#ef4444", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }}
-            data-bs-toggle="modal"
-            data-bs-target="#modalSalida"
-            onClick={() => setSelectedSalida(null)}
+            className={`nav-link ${activeTab === "salidas" ? "active" : ""}`}
+            style={{
+              fontWeight: "600",
+              color: activeTab === "salidas" ? "#ef4444" : "#64748b",
+              border: activeTab === "salidas" ? "2px solid #e2e8f0" : "none",
+              borderBottom: activeTab === "salidas" ? "2px solid #fff" : "none",
+              backgroundColor: activeTab === "salidas" ? "#fff" : "transparent",
+              marginBottom: "-2px",
+              padding: "12px 24px"
+            }}
+            onClick={() => setActiveTab("salidas")}
           >
-            📤 Nueva Salida
+            📤 Salidas de Reactivos
           </button>
-          {/* Boton para abrir el modal de nuevo ingreso */}
-          <button
-            className="btn"
-            style={{ background: "#0077B6", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }}
-            data-bs-toggle="modal"
-            data-bs-target="#modalIngreso"
-            onClick={() => setSelectedMovimiento(null)}
-          >
-            + Nuevo Ingreso
-          </button>
-        </div>
-      </div>
+        </li>
+      </ul>
 
-      {/* Contenedor de la tabla con bordes redondeados */}
-      <div style={{ borderRadius: "14px", overflow: "hidden", border: "1px solid #dbeafe" }}>
-        <DataTable
-          columns={columns}
-          data={filtered}
-          pagination
-          paginationPerPage={10}
-          paginationComponentOptions={paginationComponentOptions}
-          customStyles={tableCustomStyles}
-          highlightOnHover
-          striped
-          responsive
-          defaultSortFieldId={1}
-          defaultSortAsc={false}
-          // Componente que se muestra cuando no hay datos
-          noDataComponent={
-            <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
-              <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>
-              <p>No hay movimientos registrados</p>
+      {/* Contenido de la Pestaña Activa */}
+      {activeTab === "ingresos" && (
+        <>
+          {/* Barra de herramientas con campo de busqueda y botones de accion */}
+          <div className="row mb-3 align-items-center">
+            <div className="col-md-5">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Buscar por ID, reactivo o lote..."
+                value={filterText}
+                onChange={(e) => setFilterText(e.target.value)}
+                style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
+              />
             </div>
-          }
-        />
-      </div>
+            <div className="col-md-7 text-end d-flex gap-2 justify-content-end">
+              {/* Boton para abrir el modal de nuevo ingreso */}
+              <button
+                className="btn"
+                style={{ background: "#0077B6", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }}
+                data-bs-toggle="modal"
+                data-bs-target="#modalIngreso"
+                onClick={() => setSelectedMovimiento(null)}
+              >
+                + Nuevo Ingreso
+              </button>
+            </div>
+          </div>
+
+          {/* Contenedor de la tabla con bordes redondeados */}
+          <div style={{ borderRadius: "14px", overflow: "hidden", border: "1px solid #dbeafe" }}>
+            <DataTable
+              columns={columns}
+              data={filtered}
+              pagination
+              paginationPerPage={10}
+              paginationComponentOptions={paginationComponentOptions}
+              customStyles={tableCustomStyles}
+              highlightOnHover
+              striped
+              responsive
+              defaultSortFieldId={1}
+              defaultSortAsc={false}
+              // Componente que se muestra cuando no hay datos
+              noDataComponent={
+                <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
+                  <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>
+                  <p>No hay ingresos registrados</p>
+                </div>
+              }
+            />
+          </div>
+        </>
+      )}
+
+      {activeTab === "salidas" && (
+        <CrudSalidasReactivos />
+      )}
 
       {/* Modal Ingreso */}
       <div className="modal fade" id="modalIngreso" tabIndex="-1">
@@ -409,31 +414,6 @@ const CrudmovimientoReactivo = () => {
         </div>
       </div>
 
-      {/* Modal Salida */}
-      <div className="modal fade" id="modalSalida" tabIndex="-1">
-        <div className="modal-dialog modal-lg">
-          <div className="modal-content" style={{ borderRadius: "16px", overflow: "hidden" }}>
-            {/* Encabezado del modal con gradiente rojo */}
-            <div className="modal-header" style={{ background: "linear-gradient(135deg, #DC3545, #A4161A)", color: "#fff", border: "none" }}>
-              <h5 className="modal-title">Nueva Salida de Reactivo</h5>
-              <button
-                type="button"
-                className="btn-close btn-close-white"
-                data-bs-dismiss="modal"
-                onClick={hideModalSalida}
-              ></button>
-            </div>
-            <div className="modal-body">
-              {/* Renderiza el formulario de salida de reactivos */}
-              <SalidaReactivoForm
-                selectedSalida={selectedSalida}
-                refreshData={cargarMovimientos}
-                hideModal={hideModalSalida}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

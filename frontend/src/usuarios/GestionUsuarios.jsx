@@ -213,6 +213,11 @@ export default function GestionUsuarios() {
       showCancelButton: true,
       confirmButtonText: 'Guardar',
       cancelButtonText: 'Cancelar',
+      inputAttributes: {
+        autocomplete: 'new-password',
+        autocapitalize: 'off',
+        autocorrect: 'off'
+      },
       inputValidator: (value) => {
         if (!value) return 'Debes ingresar una contraseña';
         if (value.length < 8) return 'La contraseña debe tener mínimo 8 caracteres';
@@ -386,10 +391,11 @@ export default function GestionUsuarios() {
     return <span style={{ background: bg, color, fontSize: "11px", fontWeight: "700", padding: "4px 12px", borderRadius: "99px" }}>{label}</span>;
   };
 
-  // ===== Gradiente de color segun el rol =====
-
-  // Funcion que retorna un gradiente de color segun el rol del usuario
+  // Funcion que retorna un color solido o degradado segun el rol del usuario
   const gradientFor = (rol) => {
+    if (rol === 'Gestor') return "#059669";
+    if (rol === 'Pasante') return "#F97316";
+    if (rol === 'Instructor') return "#0077B6";
     return "#0077B6";
   };
 
@@ -397,8 +403,8 @@ export default function GestionUsuarios() {
 
   // Define las secciones de roles con sus propiedades visuales
   const rolSections = [
-    { key: "Gestor",     icon: "🔑", label: "Gestores",     color: "#0077B6" },
-    { key: "Pasante",    icon: "🔬", label: "Pasantes",     color: "#0077B6" },
+    { key: "Gestor",     icon: "🔑", label: "Gestores",     color: "#059669" },
+    { key: "Pasante",    icon: "🔬", label: "Pasantes",     color: "#F97316" },
     { key: "Instructor", icon: "👨‍🏫", label: "Instructores", color: "#0077B6" },
   ];
 
@@ -519,14 +525,44 @@ export default function GestionUsuarios() {
       {["pendientes", "gestores", "pasantes"].includes(tab) && (
         <div className="row mb-4 align-items-center">
           <div className="col-md-7">
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Buscar por ID, nombre, documento o email..."
-              value={filterText}
-              onChange={(e) => setFilterText(e.target.value)}
-              style={{ borderColor: "#dbeafe", borderRadius: "10px", padding: "10px 15px" }}
-            />
+            <div style={{ position: "relative" }}>
+              <input
+                type="search"
+                name="search_filter_text"
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck="false"
+                data-lpignore="true"
+                data-form-type="other"
+                className="form-control"
+                placeholder="Buscar por ID, nombre, documento o email..."
+                value={filterText}
+                onChange={(e) => setFilterText(e.target.value)}
+                style={{ borderColor: "#dbeafe", borderRadius: "10px", padding: "10px 40px 10px 15px" }}
+              />
+              {filterText && (
+                <button
+                  type="button"
+                  onClick={() => setFilterText("")}
+                  style={{
+                    position: "absolute",
+                    right: "12px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "none",
+                    border: "none",
+                    color: "#94a3b8",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                    fontWeight: "bold",
+                    padding: "4px"
+                  }}
+                  title="Limpiar búsqueda"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
           </div>
           <div className="col-md-5 text-end" style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
 
@@ -536,9 +572,9 @@ export default function GestionUsuarios() {
                 onClick={() => { resetRegisterForm(); setRegisterTab("Gestor"); setShowRegisterModal(true); }}
                 className="btn text-white"
                 style={{
-                  background: "linear-gradient(135deg, #0077B6, #023E8A)",
+                  background: "linear-gradient(135deg, #059669, #065f46)",
                   borderRadius: "10px", fontWeight: "600", padding: "10px 20px",
-                  border: "none", boxShadow: "0 2px 4px rgba(0,119,182,0.25)",
+                  border: "none", boxShadow: "0 2px 4px rgba(5,150,105,0.25)",
                   transition: "transform 0.15s ease"
                 }}
                 onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.02)"; }}
@@ -554,9 +590,9 @@ export default function GestionUsuarios() {
                 onClick={() => { resetRegisterForm(); setRegisterTab("Pasante"); setShowRegisterModal(true); }}
                 className="btn text-white"
                 style={{
-                  background: "linear-gradient(135deg, #059669, #065f46)",
+                  background: "linear-gradient(135deg, #F97316, #c2410c)",
                   borderRadius: "10px", fontWeight: "600", padding: "10px 20px",
-                  border: "none", boxShadow: "0 2px 4px rgba(5,150,105,0.25)",
+                  border: "none", boxShadow: "0 2px 4px rgba(249,115,22,0.25)",
                   transition: "transform 0.15s ease"
                 }}
                 onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.02)"; }}
@@ -639,8 +675,8 @@ export default function GestionUsuarios() {
       {/* Pestañas por rol: Gestores, Pasantes */}
       {["gestores", "pasantes"].includes(tab) && (() => {
         const rolMap = {
-          gestores: { key: "Gestor", icon: "🔑", label: "Gestores", color: "#0077B6" },
-          pasantes: { key: "Pasante", icon: "🔬", label: "Pasantes", color: "#d97706" },
+          gestores: { key: "Gestor", icon: "🔑", label: "Gestores", color: "#059669" },
+          pasantes: { key: "Pasante", icon: "🔬", label: "Pasantes", color: "#F97316" },
         };
         const section = rolMap[tab];
         const usuarios = todosUsuarios.filter(u => {
@@ -822,7 +858,9 @@ export default function GestionUsuarios() {
           }}>
             {/* Cabecera del modal */}
             <div style={{
-              background: "linear-gradient(135deg, #059669, #065f46)",
+              background: registerTab === "Pasante" 
+                ? "linear-gradient(135deg, #F97316, #ea580c)" 
+                : "linear-gradient(135deg, #059669, #065f46)",
               padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center"
             }}>
               <div>
@@ -846,7 +884,7 @@ export default function GestionUsuarios() {
 
               {/* Tipo de documento */}
               <div>
-                <label style={{ fontSize: "11px", fontWeight: "700", color: "#475569", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                   Tipo de Documento
                 </label>
                 <select
@@ -864,7 +902,7 @@ export default function GestionUsuarios() {
 
               {/* Número de documento */}
               <div>
-                <label style={{ fontSize: "11px", fontWeight: "700", color: "#475569", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                   Número de Documento
                 </label>
                 <input type="text" required placeholder="Ej: 1234567890" autoComplete="off"
@@ -877,7 +915,7 @@ export default function GestionUsuarios() {
 
               {/* Nombres y apellidos */}
               <div>
-                <label style={{ fontSize: "11px", fontWeight: "700", color: "#475569", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                   Nombres y Apellidos
                 </label>
                 <input type="text" required placeholder="Nombre completo" autoComplete="off"
@@ -890,7 +928,7 @@ export default function GestionUsuarios() {
 
               {/* Email */}
               <div>
-                <label style={{ fontSize: "11px", fontWeight: "700", color: "#475569", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                   Correo Electrónico
                 </label>
                 <input type="email" required placeholder="correo@ejemplo.com" autoComplete="off"
@@ -903,7 +941,7 @@ export default function GestionUsuarios() {
 
               {/* Contraseña */}
               <div>
-                <label style={{ fontSize: "11px", fontWeight: "700", color: "#475569", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                   Contraseña Inicial
                 </label>
                 <input type="password" required placeholder="Mínimo 8 caracteres" minLength={8} autoComplete="new-password"
@@ -916,7 +954,7 @@ export default function GestionUsuarios() {
 
               {/* Campo exclusivo de Pasante: es_sena_empresa, o un placeholder para mantener el mismo tamaño */}
               <div style={{ visibility: registerTab === "Pasante" ? "visible" : "hidden", height: registerTab === "Pasante" ? "auto" : "55px" }}>
-                <label style={{ fontSize: "11px", fontWeight: "700", color: "#475569", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                   ¿Es SENA Empresa?
                 </label>
                 <select
@@ -946,7 +984,9 @@ export default function GestionUsuarios() {
                 </button>
                 <button type="submit" disabled={registerLoading}
                   style={{ flex: 2, padding: "8px", borderRadius: "8px", border: "none",
-                    background: "linear-gradient(135deg, #059669, #065f46)", color: "#fff",
+                    background: registerTab === "Pasante" 
+                      ? "linear-gradient(135deg, #F97316, #ea580c)" 
+                      : "linear-gradient(135deg, #059669, #065f46)", color: "#fff",
                     fontWeight: "700", cursor: registerLoading ? "not-allowed" : "pointer",
                     fontSize: "13px", opacity: registerLoading ? 0.75 : 1 }}>
                   {registerLoading ? "Registrando..." : `✅ Registrar ${registerTab}`}

@@ -11,25 +11,10 @@ export default function Instructores() {
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
   const [selectedInstructor, setSelectedInstructor] = useState(null);
+  const [showInstructorModal, setShowInstructorModal] = useState(false);
 
   useEffect(() => {
     cargar();
-    const modalInstructor = document.getElementById("modalInstructor");
-    const handleHidden = () => {
-      setSelectedInstructor(null);
-      document.body.classList.remove("modal-open");
-      document.body.style.removeProperty("overflow");
-      document.body.style.removeProperty("padding-right");
-      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
-    };
-    if (modalInstructor) {
-      modalInstructor.addEventListener("hidden.bs.modal", handleHidden);
-    }
-    return () => {
-      if (modalInstructor) {
-        modalInstructor.removeEventListener("hidden.bs.modal", handleHidden);
-      }
-    };
   }, []);
   useEffect(() => { setPage(1); }, [filterText]);
 
@@ -41,20 +26,9 @@ export default function Instructores() {
   };
 
   // Funciones de SweetAlert eliminadas, se usa InstructorForm
-  const hideModal = (modalId) => {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-      const closeBtn = modal.querySelector(".btn-close");
-      if (closeBtn) closeBtn.click();
-      else {
-        const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
-        bsModal.hide();
-      }
-      document.body.classList.remove("modal-open");
-      document.body.style.removeProperty("overflow");
-      document.body.style.removeProperty("padding-right");
-      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
-    }
+  const hideModal = () => {
+    setShowInstructorModal(false);
+    setSelectedInstructor(null);
   };
 
   // Ver detalles del instructor
@@ -188,9 +162,7 @@ export default function Instructores() {
           <button 
             className="btn text-white"
             style={{ background: "#0077B6", borderRadius: "10px", fontWeight: "600", padding: "10px 20px", border: "none" }}
-            data-bs-toggle="modal"
-            data-bs-target="#modalInstructor"
-            onClick={() => setSelectedInstructor(null)}
+            onClick={() => { setSelectedInstructor(null); setShowInstructorModal(true); }}
           >
             ➕ Nuevo Instructor
           </button>
@@ -240,9 +212,7 @@ export default function Instructores() {
                         <i className="fa-solid fa-eye"></i>
                       </button>
                       <button 
-                        onClick={() => setSelectedInstructor(i)} 
-                        data-bs-toggle="modal"
-                        data-bs-target="#modalInstructor"
+                        onClick={() => { setSelectedInstructor(i); setShowInstructorModal(true); }} 
                         title="Editar"
                         className="btn btn-sm"
                         style={{ background: "#dbeafe", color: "#0077B6", border: "none" }}
@@ -317,31 +287,46 @@ export default function Instructores() {
         </div>
       )}
       {/* Modal editar/crear Instructor */}
-      <div className="modal fade" id="modalInstructor" tabIndex="-1" aria-hidden="true">
-        <div className="modal-dialog modal-lg">
-          <div className="modal-content">
-            <div className="modal-header text-white" style={{ background: "#023E8A" }}>
-              <h5 className="modal-title" style={{ fontWeight: "700" }}>
-                {selectedInstructor ? "Editar Instructor" : "Registrar Nuevo Instructor"}
-              </h5>
-              <button
-                type="button"
-                className="btn-close btn-close-white"
-                data-bs-dismiss="modal"
-                onClick={() => hideModal("modalInstructor")}
-                aria-label="Close"
-              ></button>
+      {showInstructorModal && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 9999,
+          background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)",
+          display: "flex", alignItems: "center", justifyContent: "center", padding: "16px"
+        }}>
+          <div style={{
+            background: "#fff", borderRadius: "16px", width: "100%", maxWidth: "420px",
+            boxShadow: "0 24px 60px rgba(0,0,0,0.2)", overflow: "hidden", maxHeight: "90vh", display: "flex", flexDirection: "column"
+          }}>
+            {/* Cabecera del modal */}
+            <div style={{
+              background: "linear-gradient(135deg, #0077B6, #023E8A)",
+              padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0
+            }}>
+              <div>
+                <h5 style={{ color: "#fff", fontWeight: "800", margin: 0, fontSize: "16px" }}>
+                  {selectedInstructor ? "✏️ Editar Instructor" : "➕ Registrar Instructor"}
+                </h5>
+                <p style={{ color: "rgba(255,255,255,0.75)", margin: 0, fontSize: "12px" }}>
+                  Gestiona la información del instructor
+                </p>
+              </div>
+              <button onClick={() => hideModal()}
+                style={{ background: "rgba(255,255,255,0.2)", border: "none", borderRadius: "50%",
+                  width: "28px", height: "28px", color: "#fff", fontSize: "14px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕
+              </button>
             </div>
-            <div className="modal-body">
+
+            {/* Cuerpo del modal (Formulario) */}
+            <div style={{ overflowY: "auto", padding: "0" }}>
               <InstructorForm
                 selectedInstructor={selectedInstructor}
                 refreshParent={cargar}
-                hideModal={() => hideModal("modalInstructor")}
+                hideModal={() => hideModal()}
               />
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

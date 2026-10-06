@@ -86,43 +86,19 @@ const AcercaDe = ({ isPublic = false }) => {
               style={{
                 background: 'rgba(255,255,255,0.15)',
                 color: 'white',
-                border: '1.5px solid rgba(255,255,255,0.4)',
-                padding: '9px 22px',
+                border: '2px solid rgba(255,255,255,0.6)',
+                padding: '10px 24px',
                 borderRadius: '30px',
                 fontWeight: '600',
-                fontSize: '14px',
+                fontSize: '15px',
                 cursor: 'pointer',
+                backdropFilter: 'blur(10px)',
                 transition: 'all 0.2s',
               }}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.25)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.3)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; e.currentTarget.style.transform = 'translateY(0)'; }}
             >
               ← Volver
-            </button>
-            <button
-              onClick={() => navigate('/UserLogin')}
-              style={{
-                background: '#ffffff',
-                color: '#0077B6',
-                border: 'none',
-                padding: '9px 22px',
-                borderRadius: '30px',
-                fontWeight: '700',
-                fontSize: '14px',
-                cursor: 'pointer',
-                boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 6px 18px rgba(0,0,0,0.2)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,0.15)';
-              }}
-            >
-              Iniciar sesión
             </button>
           </div>
         </nav>
@@ -231,7 +207,7 @@ const AcercaDe = ({ isPublic = false }) => {
           Grid con tarjetas de cada miembro del equipo
         */}
           <div className="col-12 mt-5">
-            <h3 className="text-center mb-4" style={{ fontWeight: "800", color: textColor, fontSize: "26px" }}>
+            <h3 className="text-center mb-4" style={{ fontWeight: "800", color: primaryColor, fontSize: "26px" }}>
               Equipo de Desarrolladores
             </h3>
             <div className="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4 justify-content-center">
@@ -239,10 +215,10 @@ const AcercaDe = ({ isPublic = false }) => {
               Mapea los miembros del equipo con su rol, nombre y foto
             */}
               {[
-                { r: "Gerente del Proyecto y Full Stack", n: "Miguel Santiago Bocanegra Useche", img: "Miguel santiago Bocanegra Useche.jpeg" },
-                { r: "Subgerente", n: "Luis Fernando Pinto Niño", img: "Luis fernando pinto niño.jpeg" },
-                { r: "Especialista Frontend", n: "Christiam Ivan Mosquera Cantor", img: "Christiam Ivan Mosquera Cantor.jpeg" },
-                { r: "Especialista Backend", n: "Juan Pablo Tocarema Avila", img: "tocarema.jpeg" }
+                { r: "Gerente del Proyecto y Full Stack", n: "Miguel Santiago Bocanegra Useche", img: "bocanegra.jpg" },
+                { r: "Subgerente", n: "Luis Fernando Pinto Niño", img: "luis.jpg" },
+                { r: "Especialista Frontend", n: "Christiam Ivan Mosquera Cantor", img: "cristiam.png" },
+                { r: "Especialista Backend", n: "Juan Pablo Tocarema Avila", img: "tocarema.jpg" }
               ].map((m, i) => {
                 // Construye la URL de la imagen del desarrollador o null si no tiene foto
                 const imgUrl = m.img ? `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/uploads/${m.img}` : null;
@@ -347,7 +323,7 @@ const AcercaDe = ({ isPublic = false }) => {
         */}
           <div className="col-12 mt-5">
             <div className="card border-0 p-4" style={{ borderRadius: "20px", background: cardBg, border: cardBorder, boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
-              <h3 className="text-center mb-4" style={{ fontWeight: "800", color: textColor, fontSize: "26px" }}>Nuestras Instalaciones</h3>
+              <h3 className="text-center mb-4" style={{ fontWeight: "800", color: primaryColor, fontSize: "26px" }}>Nuestras Instalaciones</h3>
               <div className="row row-cols-1 row-cols-md-3 g-3">
                 {/*
                 Mapea las imágenes de instalaciones con título y source
@@ -416,7 +392,7 @@ const AcercaDe = ({ isPublic = false }) => {
             }}>
               &times;
             </button>
-            
+
             {/* Botón Anterior */}
             <button onClick={(e) => { e.stopPropagation(); setLightboxIndex((lightboxIndex - 1 + fotos.length) % fotos.length); }} style={{
               position: "absolute", left: "20px", background: "rgba(255,255,255,0.2)", border: "none",
@@ -431,7 +407,7 @@ const AcercaDe = ({ isPublic = false }) => {
               maxWidth: "90vw", maxHeight: "80vh", borderRadius: "24px", boxShadow: "0 25px 60px rgba(0,0,0,0.6)",
               border: "4px solid #ffffff", objectFit: "contain", cursor: "default"
             }} />
-            
+
             {/* Botón Siguiente */}
             <button onClick={(e) => { e.stopPropagation(); setLightboxIndex((lightboxIndex + 1) % fotos.length); }} style={{
               position: "absolute", right: "20px", background: "rgba(255,255,255,0.2)", border: "none",

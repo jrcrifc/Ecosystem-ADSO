@@ -78,58 +78,61 @@ export default function InstructorForm({ selectedInstructor, refreshParent, hide
   };
 
   return (
-    <form className="p-3">
-      <div className="row g-3">
-        {/* Datos Básicos */}
-        <div className="col-12">
-          <p style={{ fontWeight: "700", color: "#0077B6", fontSize: "14px", borderBottom: "1px solid #e2e8f0", paddingBottom: "4px", marginBottom: "0" }}>
-            📝 Datos Básicos
-          </p>
-        </div>
-        
-        <div className="col-md-6">
-          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Documento</label>
-          <input className="form-control" name="documento" value={form.documento} onChange={handleChange} placeholder="Solo números" required />
-        </div>
-        <div className="col-md-6">
-          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Nombres y Apellidos</label>
-          <input className="form-control" name="nombres_apellidos" value={form.nombres_apellidos} onChange={handleChange} required />
-        </div>
-        <div className="col-md-6">
-          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Correo electrónico institucional</label>
-          <input type="email" className="form-control" name="email" value={form.email} onChange={handleChange} required />
-        </div>
-        <div className="col-md-6">
-          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Teléfono de contacto</label>
-          <input className="form-control" name="telefono" value={form.telefono} onChange={handleChange} placeholder="Opcional" />
-        </div>
-
-        {/* Vinculación */}
-        <div className="col-12 mt-4">
-          <p style={{ fontWeight: "700", color: "#0077B6", fontSize: "14px", borderBottom: "1px solid #e2e8f0", paddingBottom: "4px", marginBottom: "0" }}>
-            🏷️ Vinculación
-          </p>
-        </div>
-
-        <div className="col-md-12">
-          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Tipo de vinculación</label>
-          <select className="form-select" name="tipo_vinculacion" value={form.tipo_vinculacion} onChange={handleChange}>
-            <option value="">Seleccione...</option>
-            <option value="Instructor de planta">Instructor de planta</option>
-            <option value="Instructor por prestacion de servicios">Instructor por prestación de servicios</option>
-          </select>
-        </div>
+    <form className="p-4" style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+      {/* Datos Básicos */}
+      <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", padding: "8px 12px", marginBottom: "4px" }}>
+        <p style={{ margin: 0, fontSize: "11px", color: "#065f46" }}>
+          📝 Datos Básicos
+        </p>
+      </div>
+      
+      <div>
+        <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>Documento</label>
+        <input style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b", outline: "none" }} name="documento" value={form.documento} onChange={handleChange} placeholder="Solo números" required />
+      </div>
+      <div>
+        <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>Nombres y Apellidos</label>
+        <input style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b", outline: "none" }} name="nombres_apellidos" value={form.nombres_apellidos} onChange={handleChange} required />
+      </div>
+      <div>
+        <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>Correo electrónico institucional</label>
+        <input type="email" style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b", outline: "none" }} name="email" value={form.email} onChange={handleChange} required />
+      </div>
+      <div>
+        <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>Teléfono de contacto</label>
+        <input style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b", outline: "none" }} name="telefono" value={form.telefono} onChange={handleChange} placeholder="Opcional" />
       </div>
 
-      <button
-        type="button"
-        className="btn w-100 mt-4"
-        style={{ background: "#023E8A", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }}
-        onClick={saveData}
-        disabled={loading}
-      >
-        {loading ? "Guardando..." : selectedInstructor ? "Actualizar Instructor" : "Guardar Instructor"}
-      </button>
+      {/* Vinculación */}
+      <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", padding: "8px 12px", marginBottom: "4px", marginTop: "4px" }}>
+        <p style={{ margin: 0, fontSize: "11px", color: "#065f46" }}>
+          🏷️ Vinculación
+        </p>
+      </div>
+
+      <div>
+        <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>Tipo de vinculación</label>
+        <select style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b", outline: "none" }} name="tipo_vinculacion" value={form.tipo_vinculacion} onChange={handleChange}>
+          <option value="">Seleccione...</option>
+          <option value="Instructor de planta">Instructor de planta</option>
+          <option value="Instructor por prestacion de servicios">Instructor por prestación de servicios</option>
+        </select>
+      </div>
+
+      <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+        <button type="button" onClick={hideModal}
+          style={{ flex: 1, padding: "8px", borderRadius: "8px", border: "1.5px solid #e2e8f0", background: "#f8fafc", color: "#64748b", fontWeight: "600", cursor: "pointer", fontSize: "13px" }}>
+          Cancelar
+        </button>
+        <button
+          type="button"
+          onClick={saveData}
+          disabled={loading}
+          style={{ flex: 2, padding: "8px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, #0077B6, #023E8A)", color: "#fff", fontWeight: "700", cursor: loading ? "not-allowed" : "pointer", fontSize: "13px", opacity: loading ? 0.75 : 1 }}
+        >
+          {loading ? "Guardando..." : selectedInstructor ? "✅ Actualizar Instructor" : "✅ Guardar Instructor"}
+        </button>
+      </div>
     </form>
   );
 }

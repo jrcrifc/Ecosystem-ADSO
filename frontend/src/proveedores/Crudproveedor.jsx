@@ -23,6 +23,8 @@ const Crudproveedor = () => {
   const [filterText, setFilterText] = useState("");
   // Estado que almacena el proveedor seleccionado para editar
   const [selectedProveedor, setSelectedProveedor] = useState(null);
+  // Estado que controla la visibilidad del modal
+  const [showModal, setShowModal] = useState(false);
 
   // Efecto que carga los proveedores al montar el componente
   useEffect(() => { cargarProveedor(); }, []);
@@ -76,20 +78,10 @@ const Crudproveedor = () => {
 
   // ===== Cerrar modal con limpieza de backdrop =====
 
-  // Funcion para cerrar el modal de proveedor y limpiar backdrops residuales
+  // Funcion para cerrar el modal de proveedor
   const hideModal = () => {
-    // Obtiene la referencia al elemento del modal
-    const modal = document.getElementById("modalProveedor");
-    if (modal) {
-      // Obtiene o crea la instancia del modal de Bootstrap y lo oculta
-      const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
-      bsModal.hide();
-      // Limpieza de clases y estilos residuales de Bootstrap
-      document.body.classList.remove("modal-open");
-      document.body.style.removeProperty("overflow");
-      document.body.style.removeProperty("padding-right");
-      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
-    }
+    setShowModal(false);
+    setSelectedProveedor(null);
   };
 
   // ===== Definicion de columnas de la tabla =====
@@ -97,6 +89,7 @@ const Crudproveedor = () => {
   // Define las columnas de la tabla con sus propiedades
   const columnas = [
     { name: "ID",        selector: (row) => row.id_proveedor,   sortable: true, width: "80px" },
+    { name: "NIT",       selector: (row) => row.nit_empresa || "—",    sortable: true },
     { name: "Nombre",    selector: (row) => row.nom_proveedor,  sortable: true },
     { name: "Apellido",  selector: (row) => row.apel_proveedor, sortable: true },
     { name: "Teléfono",  selector: (row) => row.tel_proveedor,  sortable: true },
@@ -117,7 +110,7 @@ const Crudproveedor = () => {
         <div className="d-flex gap-2 justify-content-center">
           {/* Boton para editar el proveedor */}
           <button className="btn btn-sm" style={{ background: "#dbeafe", color: "#0077B6", border: "none" }}
-            data-bs-toggle="modal" data-bs-target="#modalProveedor" onClick={() => setSelectedProveedor(row)} title="Editar">
+            onClick={() => { setSelectedProveedor(row); setShowModal(true); }} title="Editar">
             <i className="fa-solid fa-pencil"></i>
           </button>
           {/* Boton para activar o inactivar el proveedor */}
@@ -138,6 +131,7 @@ const Crudproveedor = () => {
     // Verifica si varios campos coinciden con la busqueda
     return (
       String(p.id_proveedor || "").includes(search) ||
+      String(p.nit_empresa || "").toLowerCase().includes(search) ||
       String(p.nom_proveedor || "").toLowerCase().includes(search) ||
       String(p.apel_proveedor || "").toLowerCase().includes(search) ||
       String(p.tel_proveedor || "").toLowerCase().includes(search) ||
@@ -164,8 +158,8 @@ const Crudproveedor = () => {
         </div>
         <div className="col-md-5 text-end">
           {/* Boton para abrir el modal de nuevo proveedor */}
-          <button className="btn" data-bs-toggle="modal" data-bs-target="#modalProveedor"
-            onClick={() => setSelectedProveedor(null)}
+          <button className="btn"
+            onClick={() => { setSelectedProveedor(null); setShowModal(true); }}
             style={{ background: "#0077B6", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }}>
             + Nuevo Proveedor
           </button>
@@ -197,20 +191,42 @@ const Crudproveedor = () => {
       </div>
 
       {/* Modal de proveedor */}
-      <div className="modal fade" id="modalProveedor" tabIndex="-1">
-        <div className="modal-dialog modal-lg">
-          <div className="modal-content" style={{ borderRadius: "16px", overflow: "hidden" }}>
-            <div className="modal-header" style={{ background: "#023E8A", color: "#fff" }}>
-              <h5 className="modal-title fw-bold">{selectedProveedor ? "Editar Proveedor" : "Nuevo Proveedor"}</h5>
-              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" onClick={hideModal}></button>
+      {showModal && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 9999,
+          background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)",
+          display: "flex", alignItems: "center", justifyContent: "center", padding: "16px"
+        }}>
+          <div style={{
+            background: "#fff", borderRadius: "16px", width: "100%", maxWidth: "420px",
+            boxShadow: "0 24px 60px rgba(0,0,0,0.2)", overflow: "hidden", maxHeight: "90vh", display: "flex", flexDirection: "column"
+          }}>
+            {/* Cabecera del modal */}
+            <div style={{
+              background: "linear-gradient(135deg, #0077B6, #023E8A)",
+              padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0
+            }}>
+              <div>
+                <h5 style={{ color: "#fff", fontWeight: "800", margin: 0, fontSize: "16px" }}>
+                  {selectedProveedor ? "✏️ Editar Proveedor" : "➕ Nuevo Proveedor"}
+                </h5>
+                <p style={{ color: "rgba(255,255,255,0.75)", margin: 0, fontSize: "12px" }}>
+                  Gestiona la información del proveedor
+                </p>
+              </div>
+              <button onClick={hideModal}
+                style={{ background: "rgba(255,255,255,0.2)", border: "none", borderRadius: "50%",
+                  width: "28px", height: "28px", color: "#fff", fontSize: "14px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕
+              </button>
             </div>
-            <div className="modal-body">
-              {/* Renderiza el formulario de proveedor */}
+
+            {/* Cuerpo del modal (Formulario) */}
+            <div style={{ overflowY: "auto", padding: "0" }}>
               <ProveedorForm selectedProveedor={selectedProveedor} refreshData={cargarProveedor} hideModal={hideModal} />
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

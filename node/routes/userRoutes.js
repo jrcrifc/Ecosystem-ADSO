@@ -18,8 +18,32 @@ import { soloAdmin, adminOGestor } from '../middleware/roleMiddleware.js';
 // Importa el middleware de autenticación JWT
 import authMiddleware from '../middleware/authMiddleware.js';
 
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 // Configura multer en memoria para recibir el archivo Excel de importación masiva
-const upload = multer({ storage: multer.memoryStorage() });
+const uploadExcel = multer({ storage: multer.memoryStorage() });
+
+// Configura multer para avatars
+const avatarUploadDir = path.join(__dirname, '..', 'public', 'uploads', 'perfiles');
+if (!fs.existsSync(avatarUploadDir)) {
+  fs.mkdirSync(avatarUploadDir, { recursive: true });
+}
+
+const avatarStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, avatarUploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = `avatar_${req.user?.id || Date.now()}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
+  }
+});
+const uploadAvatar = multer({ storage: avatarStorage, limits: { fileSize: 2 * 1024 * 1024 } });
 // Crea una nueva instancia del Router
 const router = express.Router();
 
@@ -52,13 +76,13 @@ router.put("/usuarios/:id/rechazar", soloAdmin, RechazarUsuario);
 router.put("/usuarios/:id/toggle-activo", soloAdmin, ToggleActivoUsuario);
 
 // Define la ruta POST /api/auth/usuarios/importar-excel para importar usuarios desde Excel
-router.post("/usuarios/importar-excel", soloAdmin, upload.single("archivo"), ImportarExcel);
+router.post("/usuarios/importar-excel", soloAdmin, uploadExcel.single("archivo"), ImportarExcel);
 
 // Define la ruta GET /api/auth/profile/me para obtener el perfil del usuario autenticado
 router.get("/profile/me", authMiddleware, GetProfile);
 
 // Define la ruta PUT /api/auth/profile/update para actualizar el perfil del usuario autenticado
-router.put("/profile/update", authMiddleware, UpdateProfile);
+router.put("/profile/update", authMiddleware, uploadAvatar.single("avatar"), UpdateProfile);
 
 // Define la ruta PUT /api/auth/usuarios/:id/change-password para cambiar la contraseña de un usuario (solo admin)
 router.put("/usuarios/:id/change-password", soloAdmin, ChangePasswordByAdmin);

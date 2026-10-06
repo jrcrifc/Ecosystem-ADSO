@@ -13,6 +13,7 @@ import * as bootstrap from "bootstrap";
 const ProveedorForm = ({ selectedProveedor, refreshData, hideModal }) => {
     // Estado local del formulario con los campos del proveedor
     const [form, setForm] = useState({
+        nit_empresa: "",
         nom_proveedor: "",
         apel_proveedor: "",
         tel_proveedor: "",
@@ -25,6 +26,7 @@ const ProveedorForm = ({ selectedProveedor, refreshData, hideModal }) => {
         if (selectedProveedor) {
             // Asigna los valores del proveedor existente al formulario
             setForm({
+                nit_empresa: selectedProveedor.nit_empresa || "",
                 nom_proveedor: selectedProveedor.nom_proveedor || "",
                 apel_proveedor: selectedProveedor.apel_proveedor || "",
                 tel_proveedor: selectedProveedor.tel_proveedor || "",
@@ -33,6 +35,7 @@ const ProveedorForm = ({ selectedProveedor, refreshData, hideModal }) => {
         } else {
             // Resetea el formulario si es una creacion nueva
             setForm({
+                nit_empresa: "",
                 nom_proveedor: "",
                 apel_proveedor: "",
                 tel_proveedor: "",
@@ -41,9 +44,14 @@ const ProveedorForm = ({ selectedProveedor, refreshData, hideModal }) => {
         }
     }, [selectedProveedor]);
 
-    // Manejador de cambios en los campos del formulario
+    // Manejador de cambios en los campos del formulario con restricción numérica para NIT y Teléfono
     const handleChange = (e) => {
         const { name, value } = e.target;
+        if (name === "nit_empresa" || name === "tel_proveedor") {
+            const cleanVal = value.replace(/\D/g, "");
+            setForm(prev => ({ ...prev, [name]: cleanVal }));
+            return;
+        }
         // Actualiza solo el campo modificado manteniendo los demas
         setForm(prev => ({ ...prev, [name]: value }));
     };
@@ -74,7 +82,7 @@ const ProveedorForm = ({ selectedProveedor, refreshData, hideModal }) => {
             }
 
             // Limpia el formulario despues de guardar
-            setForm({ nom_proveedor: "", apel_proveedor: "", tel_proveedor: "", dir_proveedor: "" });
+            setForm({ nit_empresa: "", nom_proveedor: "", apel_proveedor: "", tel_proveedor: "", dir_proveedor: "" });
 
             // Refresca la tabla de datos y cierra el modal
             refreshData();
@@ -91,74 +99,68 @@ const ProveedorForm = ({ selectedProveedor, refreshData, hideModal }) => {
 
     // Renderiza el formulario
     return (
-        <form onSubmit={handleSubmit} noValidate>
-            <div className="row g-3">
+        <form onSubmit={handleSubmit} noValidate style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: "12px" }}>
 
-                {/* Campo de nombre del proveedor */}
-                <div className="col-md-6">
-                    <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Nombre</label>
-                    <input
-                        type="text"
-                        name="nom_proveedor"
-                        className="form-control form-control-sm"
-                        value={form.nom_proveedor}
-                        onChange={handleChange}
-                        placeholder="Ej: Carlos"
-                        required
-                    />
-                </div>
+              {/* Datos del proveedor */}
+              <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", padding: "8px 12px", marginBottom: "4px" }}>
+                <p style={{ margin: 0, fontSize: "11px", color: "#065f46" }}>
+                  📝 Datos del Proveedor
+                </p>
+              </div>
 
-                {/* Campo de apellido del proveedor */}
-                <div className="col-md-6">
-                    <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Apellido</label>
-                    <input
-                        type="text"
-                        name="apel_proveedor"
-                        className="form-control form-control-sm"
-                        value={form.apel_proveedor}
-                        onChange={handleChange}
-                        placeholder="Ej: Rodríguez"
-                        required
-                    />
-                </div>
+              {/* Campo NIT de empresa */}
+              <div>
+                <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>NIT de Empresa</label>
+                <input type="text" inputMode="numeric" name="nit_empresa" value={form.nit_empresa} onChange={handleChange} placeholder="Ej: 900123456" maxLength={15}
+                  style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b", outline: "none" }} />
+              </div>
 
-                {/* Campo de telefono del proveedor */}
-                <div className="col-md-6">
-                    <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Teléfono</label>
-                    <input
-                        type="tel"
-                        name="tel_proveedor"
-                        className="form-control form-control-sm"
-                        value={form.tel_proveedor}
-                        onChange={handleChange}
-                        placeholder="Ej: 3001234567"
-                        required
-                    />
-                </div>
+              {/* Campo de nombre del proveedor */}
+              <div>
+                <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>Nombre</label>
+                <input type="text" name="nom_proveedor" value={form.nom_proveedor} onChange={handleChange} placeholder="Ej: Carlos" required
+                  style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b", outline: "none" }} />
+              </div>
 
-                {/* Campo de direccion del proveedor */}
-                <div className="col-md-6">
-                    <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Dirección</label>
-                    <input
-                        type="text"
-                        name="dir_proveedor"
-                        className="form-control form-control-sm"
-                        value={form.dir_proveedor}
-                        onChange={handleChange}
-                        placeholder="Ej: Calle 10 # 5-20"
-                        required
-                    />
-                </div>
+              {/* Campo de apellido del proveedor */}
+              <div>
+                <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>Apellido</label>
+                <input type="text" name="apel_proveedor" value={form.apel_proveedor} onChange={handleChange} placeholder="Ej: Rodríguez" required
+                  style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b", outline: "none" }} />
+              </div>
 
-                {/* Boton de envio que cambia su texto segun sea crear o editar */}
-                <div className="col-12 mt-2">
-                    <button type="submit" className="btn w-100"
-                        style={{ background: "#023E8A", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }}>
-                        {selectedProveedor ? "Actualizar Proveedor" : "Registrar Proveedor"}
-                    </button>
-                </div>
+              {/* Contacto */}
+              <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", padding: "8px 12px", marginBottom: "4px", marginTop: "4px" }}>
+                <p style={{ margin: 0, fontSize: "11px", color: "#065f46" }}>
+                  📞 Contacto
+                </p>
+              </div>
 
-            </div>
+              {/* Campo de telefono del proveedor */}
+              <div>
+                <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>Teléfono</label>
+                <input type="tel" inputMode="numeric" name="tel_proveedor" value={form.tel_proveedor} onChange={handleChange} placeholder="Ej: 3001234567" maxLength={10} required
+                  style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b", outline: "none" }} />
+              </div>
+
+              {/* Campo de direccion del proveedor */}
+              <div>
+                <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>Dirección</label>
+                <input type="text" name="dir_proveedor" value={form.dir_proveedor} onChange={handleChange} placeholder="Ej: Calle 10 # 5-20" required
+                  style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b", outline: "none" }} />
+              </div>
+
+              {/* Botones */}
+              <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+                <button type="button" onClick={hideModal}
+                  style={{ flex: 1, padding: "8px", borderRadius: "8px", border: "1.5px solid #e2e8f0", background: "#f8fafc", color: "#64748b", fontWeight: "600", cursor: "pointer", fontSize: "13px" }}>
+                  Cancelar
+                </button>
+                <button type="submit"
+                  style={{ flex: 2, padding: "8px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, #0077B6, #023E8A)", color: "#fff", fontWeight: "700", cursor: "pointer", fontSize: "13px" }}>
+                  {selectedProveedor ? "✅ Actualizar Proveedor" : "✅ Registrar Proveedor"}
+                </button>
+              </div>
         </form>
     );
 };

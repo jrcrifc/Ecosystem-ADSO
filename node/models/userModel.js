@@ -74,6 +74,13 @@ const UserModel = sequelize.define('usuarios', {
     type: DataTypes.INTEGER,
     allowNull: true,
     defaultValue: null
+  },
+  
+  // Campo avatar - foto de perfil del usuario
+  avatar: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: null
   }
 }, {
   // Evita la pluralización automática del nombre de la tabla

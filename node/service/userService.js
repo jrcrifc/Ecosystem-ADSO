@@ -289,11 +289,30 @@ class UserService {
     // Busca el usuario por su ID
     const user = await UserModel.findByPk(id);
     if (!user) throw new Error("Usuario no encontrado");
-    // Actualiza los datos del perfil
-    await user.update({
+
+    // Validar contraseña antes de actualizar
+    if (!data.passwordConfirmacion) {
+      throw new Error("Se requiere la contraseña para actualizar el perfil");
+    }
+    const isValid = await bcrypt.compare(data.passwordConfirmacion, user.password);
+    if (!isValid) throw new Error("La contraseña ingresada es incorrecta");
+
+    const updateData = {
       nombres_apellidos: data.nombres_apellidos,
       email: data.email
-    });
+    };
+
+    if (data.avatar) {
+      updateData.avatar = data.avatar;
+    } else if (data.remove_avatar === "true") {
+      updateData.avatar = null;
+    }
+
+    if (data.numero_ficha) updateData.id_ficha = data.numero_ficha; // Simplificado, ideal buscar ID
+    // TODO: Ajustar id_ficha e id_programa según lógica si el frontend manda nombres
+
+    // Actualiza los datos del perfil
+    await user.update(updateData);
     // Retorna el usuario actualizado
     return user;
   }

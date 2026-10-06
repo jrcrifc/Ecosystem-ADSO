@@ -19,10 +19,11 @@ const estadoConfig = {
   mantenimiento:   { icon: "🔧", color: "#d97706", bg: "#fef3c7", border: "#fde68a", label: "Mantenimiento" },
   solicitado:      { icon: "⏳", color: "#6366f1", bg: "#eef2ff", border: "#c7d2fe", label: "Solicitado" },
   prestado:        { icon: "🤝", color: "#8b5cf6", bg: "#f5f3ff", border: "#ddd6fe", label: "Prestado" },
+  inactivo:        { icon: "🚫", color: "#dc2626", bg: "#fee2e2", border: "#fecaca", label: "Inactivo" },
 };
 
 // Mapa de nombres de estado a IDs numéricos
-const mapaEstados = { disponible: 1, mantenimiento: 3 };
+const mapaEstados = { disponible: 1, mantenimiento: 2 };
 
 // Componente principal de gestión de estado de equipos
 export default function GestionEstadoEquipo() {
@@ -119,11 +120,11 @@ export default function GestionEstadoEquipo() {
     },
     {
       name: "Estado Actual",
-      selector: row => row.ultimoEstado || "disponible",
+      selector: row => row.estado === 0 ? "inactivo" : (row.ultimoEstado || "disponible"),
       sortable: true,
       // Renderiza el badge del estado con icono y color
       cell: row => {
-        const estado = row.ultimoEstado || "disponible";
+        const estado = row.estado === 0 ? "inactivo" : (row.ultimoEstado || "disponible");
         const cfg = estadoConfig[estado] || estadoConfig.disponible;
         return (
           <span style={{
@@ -142,6 +143,17 @@ export default function GestionEstadoEquipo() {
       width: "180px",
       // Renderiza botón bloqueado o botones de cambiar estado según disponibilidad
       cell: row => {
+        if (row.estado === 0) {
+          return (
+            <button 
+              className="btn btn-sm" 
+              style={{ background: "#fef2f2", color: "#ef4444", border: "1px solid #fecaca", cursor: "not-allowed" }}
+              onClick={() => Swal.fire("Equipo inactivo", "No se puede cambiar el estado de un equipo que está inactivo.", "info")}
+            >
+              <i className="fas fa-ban me-1"></i> Inactivo
+            </button>
+          );
+        }
         if (row.estaOcupado) {
           return (
             <button 

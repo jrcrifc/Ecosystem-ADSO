@@ -144,22 +144,21 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
         }
 
         .login-trigger-btn {
-          background: linear-gradient(135deg, #0F4C30, #1a7a4c);
-          color: white;
-          border: none;
-          padding: 12px 28px;
+          background: #0077B6;
+          color: #ffffff;
+          border: 2px solid #0077B6;
+          padding: 10px 24px;
           border-radius: 30px;
           font-weight: 600;
-          font-size: 16px;
+          font-size: 15px;
           cursor: pointer;
-          transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
-          box-shadow: 0 4px 15px rgba(15, 76, 48, 0.4);
+          transition: all 0.2s;
+          box-shadow: 0 4px 14px rgba(0, 119, 182, 0.3);
         }
         
         .login-trigger-btn:hover {
           transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(15, 76, 48, 0.6);
-          background: linear-gradient(135deg, #1a7a4c, #0F4C30);
+          box-shadow: 0 6px 18px rgba(0,0,0,0.2);
         }
 
         /* Hero Section */
@@ -409,7 +408,7 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
         }
 
         .login-btn {
-          background: linear-gradient(135deg, #0F4C30, #1a7a4c);
+          background: linear-gradient(135deg, #0077B6, #023E8A);
           border-radius: 20px;
           padding: 12px;
           color: #fff;
@@ -417,16 +416,16 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
           width: 100%;
           font-weight: bold;
           margin-top: 10px;
-          box-shadow: 0 8px 20px rgba(15, 76, 48, 0.35);
+          box-shadow: 0 8px 20px rgba(0, 119, 182, 0.35);
           transition: transform 0.2s, box-shadow 0.2s;
         }
         .login-btn:hover:not(:disabled) {
           transform: translateY(-2px);
-          box-shadow: 0 12px 30px rgba(15, 76, 48, 0.45);
+          box-shadow: 0 12px 30px rgba(0, 119, 182, 0.45);
         }
         
         .input-icon {
-          position: absolute; top: 12px; left: 15px; color: #0F4C30;
+          position: absolute; top: 12px; left: 15px; color: #0077B6;
           transition: all 0.3s ease;
         }
         .position-relative:has(.form-control:focus) .input-icon {
@@ -508,7 +507,7 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
 
           <div className="mb-4">
             <img src={logo} alt="Logo" style={{ width: "70px", height: "70px", display: "block", margin: "0 auto", objectFit: "contain" }} />
-            <h2 className="mt-3" style={{ fontWeight: "800", color: "#0F4C30" }}>Bienvenido</h2>
+            <h2 className="mt-3" style={{ fontWeight: "800", color: "#0077B6" }}>Bienvenido</h2>
             <p style={{ color: "#64748b", fontSize: "14px", margin: 0 }}>Laboratorio Ambiental SENA</p>
           </div>
 
@@ -533,7 +532,7 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
             </button>
 
             <div className="mt-3">
-              <Link to="/forgotPassword" style={{ color: "#0F4C30", fontSize: "14px", textDecoration: "none", fontWeight: "600" }}>
+              <Link to="/forgotPassword" style={{ color: "#0077B6", fontSize: "14px", textDecoration: "none", fontWeight: "600" }}>
                 Olvidé la contraseña
               </Link>
             </div>

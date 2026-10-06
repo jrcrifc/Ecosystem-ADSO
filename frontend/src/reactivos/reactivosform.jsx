@@ -140,16 +140,22 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
 
   // Renderiza el formulario
   return (
-    <form onSubmit={handleSubmit} className="needs-validation" noValidate>
+    <form onSubmit={handleSubmit} className="needs-validation" noValidate style={{ padding: "16px 20px" }}>
       <div className="row g-3">
+
+        {/* Datos Básicos */}
+        <div className="col-12" style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", padding: "8px 12px", marginBottom: "4px" }}>
+          <p style={{ margin: 0, fontSize: "11px", color: "#065f46", fontWeight: "bold" }}>
+            📝 Datos Básicos del Reactivo
+          </p>
+        </div>
 
         {/* Campo de nombre del reactivo */}
         <div className="col-md-6">
-          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Nombre del reactivo <span className="text-danger">*</span></label>
+          <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>Nombre del reactivo <span className="text-danger">*</span></label>
           <input
             type="text"
-            className="form-control"
-            style={inputStyle}
+            style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b", outline: "none" }}
             value={nom_reactivo}
             onChange={(e) => setNom_reactivo(e.target.value)}
             required
@@ -157,14 +163,11 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
           />
         </div>
 
-
-
         {/* Campo de unidad de medida o presentacion */}
         <div className="col-md-6">
-          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Unidad de Medida / Presentación</label>
+          <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>Unidad de Medida / Presentación</label>
           <select
-            className="form-select"
-            style={inputStyle}
+            style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b", outline: "none" }}
             value={presentacion_reactivo}
             onChange={(e) => setPresentacion_reactivo(e.target.value)}
             required
@@ -177,13 +180,19 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
           </select>
         </div>
 
+        {/* Clasificación & Pictograma */}
+        <div className="col-12 mt-3" style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", padding: "8px 12px", marginBottom: "4px" }}>
+          <p style={{ margin: 0, fontSize: "11px", color: "#065f46", fontWeight: "bold" }}>
+            ⚠️ Clasificación y Almacenamiento
+          </p>
+        </div>
+
         {/* Campo de color de almacenamiento con indicador visual */}
         <div className="col-md-6">
-          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Color Almacenamiento (Pictograma)</label>
+          <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>Color Almacenamiento (Pictograma)</label>
           <div className="position-relative">
             <select
-              className="form-select"
-              style={inputStyle}
+              style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b", outline: "none" }}
               value={color_almacenamiento}
               onChange={(e) => setColor_almacenamiento(e.target.value)}
             >
@@ -193,19 +202,17 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
               ))}
               <option value="N/A">N/A</option>
             </select>
-            {/* Indicador visual del color seleccionado */}
             {color_almacenamiento && swatches[color_almacenamiento] && (
-               <div style={{ position: "absolute", right: "40px", top: "50%", transform: "translateY(-50%)", width: "16px", height: "16px", borderRadius: "50%", background: swatches[color_almacenamiento], border: "1px solid #ddd" }} />
+              <div style={{ position: "absolute", right: "40px", top: "50%", transform: "translateY(-50%)", width: "16px", height: "16px", borderRadius: "50%", background: swatches[color_almacenamiento], border: "1px solid #ddd" }} />
             )}
           </div>
         </div>
 
         {/* Campo de clasificacion del reactivo */}
         <div className="col-md-6">
-          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Clasificación</label>
+          <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>Clasificación</label>
           <select
-            className="form-select"
-            style={inputStyle}
+            style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b", outline: "none" }}
             value={clasificacion_reactivo}
             onChange={(e) => setClasificacion_reactivo(e.target.value)}
           >
@@ -218,78 +225,77 @@ const ReactivoForm = ({ selectedReactivo, refreshData, hideModal }) => {
           </select>
         </div>
 
+        {/* Ubicación Física */}
+        <div className="col-12 mt-3" style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", padding: "8px 12px", marginBottom: "4px" }}>
+          <p style={{ margin: 0, fontSize: "11px", color: "#065f46", fontWeight: "bold" }}>
+            📍 Ubicación Física
+          </p>
+        </div>
+
         {/* Campo de color del stand con indicador visual */}
-        <div className="col-md-6">
-          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Color del stand</label>
+        <div className="col-md-12">
+          <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>Color del stand</label>
           <div className="position-relative">
             <select
-              className="form-select"
-              style={inputStyle}
+              style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b", outline: "none" }}
               value={color_stand}
               onChange={(e) => setColor_stand(e.target.value)}
             >
               <option value="">Seleccione...</option>
-              {/* Muestra solo las primeras 11 opciones de colores */}
               {Object.keys(swatches).slice(0, 11).map(opt => (
                 <option key={opt} value={opt}>{opt}</option>
               ))}
             </select>
-            {/* Indicador visual del color seleccionado */}
             {color_stand && swatches[color_stand] && (
-               <div style={{ position: "absolute", right: "40px", top: "50%", transform: "translateY(-50%)", width: "16px", height: "16px", borderRadius: "50%", background: swatches[color_stand], border: "1px solid #ddd" }} />
+              <div style={{ position: "absolute", right: "40px", top: "50%", transform: "translateY(-50%)", width: "16px", height: "16px", borderRadius: "50%", background: swatches[color_stand], border: "1px solid #ddd" }} />
             )}
           </div>
         </div>
 
         {/* Campos de ubicacion: Stand, Columna y Fila */}
         <div className="col-md-4">
-          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Stand</label>
+          <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>Stand</label>
           <input
             type="text"
-            className="form-control"
-            style={inputStyle}
+            style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b", outline: "none" }}
             value={stand}
             onChange={(e) => setStand(e.target.value)}
             placeholder="Ej: A"
           />
         </div>
         <div className="col-md-4">
-          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Columna</label>
+          <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>Columna</label>
           <input
             type="text"
-            className="form-control"
-            style={inputStyle}
+            style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b", outline: "none" }}
             value={columna}
             onChange={(e) => setColumna(e.target.value)}
             placeholder="Ej: 2"
           />
         </div>
         <div className="col-md-4">
-          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Fila</label>
+          <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>Fila</label>
           <input
             type="text"
-            className="form-control"
-            style={inputStyle}
+            style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b", outline: "none" }}
             value={fila}
             onChange={(e) => setFila(e.target.value)}
             placeholder="Ej: 3"
           />
         </div>
 
-        {/* Boton de envio con estado de carga */}
-        <div className="col-12 mt-4">
-          <button 
-            type="submit" 
-            className="btn btn-primary w-100 py-3 shadow-sm" 
+        {/* Boton de envio */}
+        <div className="col-12 mt-4 d-flex gap-2">
+          <button type="button" onClick={hideModal}
+            style={{ flex: 1, padding: "8px", borderRadius: "8px", border: "1.5px solid #e2e8f0", background: "#f8fafc", color: "#64748b", fontWeight: "600", cursor: "pointer", fontSize: "13px" }}>
+            Cancelar
+          </button>
+          <button
+            type="submit"
             disabled={loading}
-            style={{ borderRadius: "12px", fontWeight: "700", background: "#023E8A", border: "none" }}
+            style={{ flex: 2, padding: "8px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, #0077B6, #023E8A)", color: "#fff", fontWeight: "700", cursor: loading ? "not-allowed" : "pointer", fontSize: "13px", opacity: loading ? 0.75 : 1 }}
           >
-            {/* Muestra spinner mientras carga o el texto segun sea crear o editar */}
-            {loading ? (
-              <><span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Guardando...</>
-            ) : (
-              selectedReactivo ? "Actualizar Datos del Reactivo" : "Registrar Nuevo Reactivo"
-            )}
+            {loading ? "Guardando..." : selectedReactivo ? "Actualizar Reactivo" : " Registrar Reactivo"}
           </button>
         </div>
 

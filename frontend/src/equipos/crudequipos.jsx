@@ -32,47 +32,17 @@ export default function CrudEquipo() {
   const [selectedEquipo, setSelectedEquipo] = useState(null);
   // Estado que almacena la ruta de la foto ampliada
   const [largePhoto, setLargePhoto] = useState(null);
-  // Efecto que carga los equipos al montar y configura listeners de socket y modales
+  // Estado para visibilidad de modales
+  const [showModal, setShowModal] = useState(false);
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
+  // Efecto que carga los equipos al montar y configura listeners de socket
   useEffect(() => {
     getAllEquipos();
     // Escucha cambios en tiempo real para refrescar la tabla
     socket.on('equipo_actualizado', getAllEquipos);
-    // Obtiene las referencias a los modales de Bootstrap
-    const modalEquipo = document.getElementById("modalEquipo");
-    const largePhotoModal = document.getElementById("largePhotoModal");
-    // Función que limpia los backdrops huérfanos del modal
-    const cleanupBackdrop = () => {
-      document.body.classList.remove("modal-open");
-      document.body.style.removeProperty("overflow");
-      document.body.style.removeProperty("padding-right");
-      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
-    };
-    // Función que se ejecuta al ocultar el modal de equipo
-    const handleEquipoHidden = () => {
-      setSelectedEquipo(null);
-      cleanupBackdrop();
-    };
-    // Función que se ejecuta al ocultar el modal de foto ampliada
-    const handlePhotoHidden = () => {
-      setLargePhoto(null);
-      cleanupBackdrop();
-    };
-    // Agrega listeners de ocultamiento a los modales
-    if (modalEquipo) {
-      modalEquipo.addEventListener("hidden.bs.modal", handleEquipoHidden);
-    }
-    if (largePhotoModal) {
-      largePhotoModal.addEventListener("hidden.bs.modal", handlePhotoHidden);
-    }
     // Limpieza de listeners al desmontar el componente
     return () => {
       socket.off('equipo_actualizado', getAllEquipos);
-      if (modalEquipo) {
-        modalEquipo.removeEventListener("hidden.bs.modal", handleEquipoHidden);
-      }
-      if (largePhotoModal) {
-        largePhotoModal.removeEventListener("hidden.bs.modal", handlePhotoHidden);
-      }
     };
   }, []);
   // Función asíncrona para obtener todos los equipos desde la API
@@ -213,30 +183,20 @@ export default function CrudEquipo() {
     }
   };
 
-  // Función para cerrar un modal con limpieza de backdrop
-  const hideModal = (modalId) => {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-      const closeBtn = modal.querySelector(".btn-close");
-      if (closeBtn) {
-        closeBtn.click();
-      } else {
-        const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
-        bsModal.hide();
-      }
-      // Limpieza inmediata para evitar backdrops huérfanos por re-renders rápidos
-      document.body.classList.remove("modal-open");
-      document.body.style.removeProperty("overflow");
-      document.body.style.removeProperty("padding-right");
-      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
-    }
+  // Función para cerrar los modales
+  const hideModal = () => {
+    setShowModal(false);
+    setShowPhotoModal(false);
+    setSelectedEquipo(null);
+    setLargePhoto(null);
   };
   // Configuración visual de los estados operativos
   const estadoConfig = {
     disponible:      { icon: "✅", color: "#0077B6", bg: "#e0f2fe", border: "#bae6fd", label: "Disponible" },
     mantenimiento:   { icon: "🔧", color: "#d97706", bg: "#fef3c7", border: "#fde68a", label: "Mantenimiento" },
     solicitado:      { icon: "⏳", color: "#6366f1", bg: "#eef2ff", border: "#c7d2fe", label: "Solicitado" },
-    prestado:        { icon: "🤝", color: "#8b5cf6", bg: "#f5f3ff", border: "#ddd6fe", label: "Prestado" },
+    prestado:        { icon: "🤝", color: "#ca8a04", bg: "#fef08a", border: "#fde047", label: "Prestado" },
+    inactivo:        { icon: "🚫", color: "#dc2626", bg: "#fee2e2", border: "#fecaca", label: "Inactivo" },
   };
   // Definición de las columnas de la tabla DataTable
   const columns = [
@@ -266,6 +226,13 @@ export default function CrudEquipo() {
       minWidth: "200px"
     },
     {
+      name: "Observaciones",
+      selector: (row) => row.observaciones || "-",
+      sortable: true,
+      minWidth: "180px",
+      wrap: true
+    },
+    {
       name: "Foto",
       width: "120px",
       center: true,
@@ -289,15 +256,8 @@ export default function CrudEquipo() {
               onMouseOut={(e) => (e.target.style.transform = "scale(1)")}
               onClick={() => {
                 const imgUrl = row.foto_equipo.startsWith("http") ? row.foto_equipo : `${import.meta.env.VITE_API_URL || "http://localhost:8000"}${row.foto_equipo}`;
-                Swal.fire({
-                  html: `<img src="${imgUrl}" alt="${row.nom_equipo || 'Foto del equipo'}" style="width: 100%; height: auto; max-height: 85vh; border-radius: 8px; object-fit: contain;" />`,
-                  showConfirmButton: false,
-                  showCloseButton: true,
-                  width: "80vw",
-                  padding: "1rem",
-                  background: "transparent",
-                  backdrop: "rgba(0,0,0,0.85)"
-                });
+                setLargePhoto(imgUrl);
+                setShowPhotoModal(true);
               }}
               onError={(e) => { e.target.src = "/img/no-image.png"; }}
             />
@@ -309,13 +269,13 @@ export default function CrudEquipo() {
     },
     {
       name: "Estado",
-      selector: (row) => row.estadoReal || "disponible",
+      selector: (row) => row.estado === 0 ? "inactivo" : (row.estadoReal || "disponible"),
       sortable: true,
       center: true,
       minWidth: "150px",
       // Renderiza el badge del estado operativo con icono y color
       cell: (row) => {
-        const estado = row.estadoReal || "disponible";
+        const estado = row.estado === 0 ? "inactivo" : (row.estadoReal || "disponible");
         const cfg = estadoConfig[estado] || estadoConfig.disponible;
         return (
           <span style={{
@@ -343,13 +303,12 @@ export default function CrudEquipo() {
               border: "none",
               cursor: row.estaOcupado ? "not-allowed" : "pointer"
             }}
-            data-bs-toggle={row.estaOcupado ? "" : "modal"}
-            data-bs-target={row.estaOcupado ? "" : "#modalEquipo"}
             onClick={() => {
               if (row.estaOcupado) {
                 Swal.fire("Equipo en uso", "No se puede editar un equipo que está solicitado o prestado.", "info");
               } else {
                 setSelectedEquipo(row);
+                setShowModal(true);
               }
             }}
             title={row.estaOcupado ? "Equipo en uso" : "Editar equipo"}
@@ -474,9 +433,7 @@ export default function CrudEquipo() {
           <button
             className="btn"
             style={{ background: "#0077B6", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }}
-            data-bs-toggle="modal"
-            data-bs-target="#modalEquipo"
-            onClick={() => setSelectedEquipo(null)}
+            onClick={() => { setSelectedEquipo(null); setShowModal(true); }}
           >
             + Nuevo Equipo
           </button>
@@ -505,65 +462,71 @@ export default function CrudEquipo() {
         />
       </div>
       {/* Modal editar/crear equipo */}
-      <div className="modal fade" id="modalEquipo" tabIndex="-1" aria-labelledby="modalEquipoLabel" aria-hidden="true">
-        <div className="modal-dialog modal-lg">
-          <div className="modal-content">
-            <div className="modal-header text-white" style={{ background: "#023E8A" }}>
-              <h5 className="modal-title" id="modalEquipoLabel" style={{ fontWeight: "700" }}>
-                {selectedEquipo ? "Editar Equipo" : "Registrar Nuevo Equipo"}
-              </h5>
-              <button
-                type="button"
-                className="btn-close btn-close-white"
-                data-bs-dismiss="modal"
-                onClick={() => hideModal("modalEquipo")}
-                aria-label="Close"
-              ></button>
+      {showModal && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 9999,
+          background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)",
+          display: "flex", alignItems: "center", justifyContent: "center", padding: "16px"
+        }}>
+          <div style={{
+            background: "#fff", borderRadius: "16px", width: "100%", maxWidth: "700px",
+            boxShadow: "0 24px 60px rgba(0,0,0,0.2)", overflow: "hidden", maxHeight: "90vh", display: "flex", flexDirection: "column"
+          }}>
+            <div style={{
+              background: "linear-gradient(135deg, #0077B6, #023E8A)",
+              padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0
+            }}>
+              <div>
+                <h5 style={{ color: "#fff", fontWeight: "800", margin: 0, fontSize: "16px" }}>
+                  {selectedEquipo ? "✏️ Editar Equipo" : "➕ Nuevo Equipo"}
+                </h5>
+                <p style={{ color: "rgba(255,255,255,0.75)", margin: 0, fontSize: "12px" }}>
+                  Gestiona la información del equipo
+                </p>
+              </div>
+              <button onClick={hideModal}
+                style={{ background: "rgba(255,255,255,0.2)", border: "none", borderRadius: "50%",
+                  width: "28px", height: "28px", color: "#fff", fontSize: "14px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕
+              </button>
             </div>
-            <div className="modal-body">
+            <div style={{ overflowY: "auto", padding: "0" }}>
               <EquipoForm
                 selectedEquipo={selectedEquipo}
                 refreshParent={getAllEquipos}
-                hideModal={() => hideModal("modalEquipo")}
+                hideModal={hideModal}
               />
             </div>
           </div>
         </div>
-      </div>
+      )}
+
       {/* Lightbox para foto ampliada */}
-      <div className="modal fade" id="largePhotoModal" tabIndex="-1" aria-hidden="true">
-        <div className="modal-dialog modal-xl modal-dialog-centered">
-          <div className="modal-content" style={{ background: "rgba(0,0,0,0.95)", border: "none", borderRadius: "16px" }}>
-            <div className="modal-header" style={{ border: "none", paddingBottom: 0 }}>
-              <h6 style={{ color: "#fff", fontWeight: "600", margin: 0 }}>📷 Vista ampliada</h6>
-              <button
-                type="button"
-                className="btn-close btn-close-white"
-                data-bs-dismiss="modal"
-                onClick={() => hideModal("largePhotoModal")}
-                aria-label="Close"
-              ></button>
-            </div>
-            <div className="modal-body text-center" style={{ padding: "20px 40px 40px" }}>
-              {largePhoto && (
-                <img
-                  src={largePhoto.startsWith("http") ? largePhoto : `${import.meta.env.VITE_API_URL || "http://localhost:8000"}${largePhoto}`}
-                  alt="Foto del equipo"
-                  style={{
-                    maxWidth: "100%",
-                    maxHeight: "75vh",
-                    objectFit: "contain",
-                    borderRadius: "12px",
-                    boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
-                    transition: "transform 0.3s ease",
-                  }}
-                  onError={(e) => { e.target.src = "/img/no-image.png"; }}
-                />
-              )}
-            </div>
+      {showPhotoModal && largePhoto && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 9999,
+          background: "rgba(0,0,0,0.85)", backdropFilter: "blur(4px)",
+          display: "flex", alignItems: "center", justifyContent: "center", padding: "16px"
+        }}>
+          <div style={{ position: "relative", maxWidth: "90%", maxHeight: "90%" }}>
+            <button onClick={hideModal}
+              style={{ position: "absolute", top: "-40px", right: "0", background: "rgba(255,255,255,0.2)", border: "none", borderRadius: "50%",
+                width: "36px", height: "36px", color: "#fff", fontSize: "18px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕
+            </button>
+            <img
+              src={largePhoto.startsWith("http") ? largePhoto : `${import.meta.env.VITE_API_URL || "http://localhost:8000"}${largePhoto}`}
+              alt="Foto del equipo"
+              style={{
+                maxWidth: "100%",
+                maxHeight: "85vh",
+                objectFit: "contain",
+                borderRadius: "12px",
+                boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
+              }}
+              onError={(e) => { e.target.src = "/img/no-image.png"; }}
+            />
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

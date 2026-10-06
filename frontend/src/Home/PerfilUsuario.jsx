@@ -58,7 +58,7 @@ const CSS = `
   }
   
   .perfil-btn-black {
-    background: #111;
+    background: #0077B6;
     color: #fff;
     border: none;
     padding: 10px 24px;
@@ -70,7 +70,7 @@ const CSS = `
     transition: background 0.2s;
   }
   
-  .perfil-btn-black:hover { background: #333; }
+  .perfil-btn-black:hover { background: #023E8A; }
   .perfil-btn-black:disabled { opacity: 0.5; cursor: not-allowed; }
   
   .perfil-avatar-hint {
@@ -137,6 +137,7 @@ const PerfilUsuario = () => {
   const [saving, setSaving] = useState(false);
   
   const [avatarUrl, setAvatarUrl] = useState(null);
+  const [avatarFile, setAvatarFile] = useState(null);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -146,11 +147,13 @@ const PerfilUsuario = () => {
         setAvatarUrl(reader.result);
       };
       reader.readAsDataURL(file);
+      setAvatarFile(file);
     }
   };
 
   const handleRemoveImage = () => {
     setAvatarUrl(null);
+    setAvatarFile(null);
   };
   
   const [formData, setFormData] = useState({ 
@@ -175,6 +178,9 @@ const PerfilUsuario = () => {
       const res = await apiAxios.get("/api/auth/profile/me");
       if (res.data) {
         setUser(res.data);
+        if (res.data.avatar) {
+          setAvatarUrl(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/uploads/perfiles/${res.data.avatar}`);
+        }
         setFormData({ 
           nombres_apellidos: res.data.nombres_apellidos, 
           email: res.data.email,
@@ -213,11 +219,28 @@ const PerfilUsuario = () => {
     setSaving(true);
 
     try {
-      await apiAxios.put("/api/auth/profile/update", formData);
+      const formDataToSend = new FormData();
+      formDataToSend.append("nombres_apellidos", formData.nombres_apellidos);
+      formDataToSend.append("email", formData.email);
+      formDataToSend.append("numero_ficha", formData.numero_ficha);
+      formDataToSend.append("nombre_ficha", formData.nombre_ficha);
+      formDataToSend.append("es_sena_empresa", formData.es_sena_empresa);
+      formDataToSend.append("passwordConfirmacion", password);
+      
+      if (avatarFile) {
+        formDataToSend.append("avatar", avatarFile);
+      } else if (avatarUrl === null) {
+        formDataToSend.append("remove_avatar", "true");
+      }
+
+      const res = await apiAxios.put("/api/auth/profile/update", formDataToSend, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
       Swal.fire({
         icon: "success",
         title: "Perfil actualizado",
-        confirmButtonColor: "#111",
+        confirmButtonColor: "#0077B6",
         timer: 2000,
         timerProgressBar: true,
       });
@@ -228,8 +251,11 @@ const PerfilUsuario = () => {
         email: formData.email,
         numero_ficha: formData.numero_ficha,
         nombre_ficha: formData.nombre_ficha,
-        es_sena_empresa: formData.es_sena_empresa
+        es_sena_empresa: formData.es_sena_empresa,
       };
+      if (res.data && res.data.user && res.data.user.avatar !== undefined) {
+        updated.avatar = res.data.user.avatar;
+      }
       sessionStorage.setItem("user", JSON.stringify(updated));
       window.location.reload();
     } catch (error) {

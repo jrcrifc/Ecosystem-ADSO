@@ -8,6 +8,9 @@ const proveedoresModel = db.define('proveedor', {
     // Campo ID - clave primaria autoincrementable
     id_proveedor: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
     
+    // Campo nit_empresa - NIT de la empresa proveedora
+    nit_empresa: {type: DataTypes.STRING, allowNull: true},
+    
     // Campo nom_proveedor - nombre de la empresa o proveedor
     nom_proveedor: {type: DataTypes.STRING},
     

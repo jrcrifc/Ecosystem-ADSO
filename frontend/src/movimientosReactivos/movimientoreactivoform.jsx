@@ -301,6 +301,9 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
             })()}
             style={inputStyle}
             placeholderText="dd/mm/aaaa"
+            showMonthDropdown
+            showYearDropdown
+            dropdownMode="select"
           />
         </div>
 
