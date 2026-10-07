@@ -131,3 +131,8 @@ table {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
+
+/* Asegura que las alertas de SweetAlert2 siempre se muestren por encima de los modales */
+.swal2-container {
+  z-index: 100000 !important;
+}

@@ -142,7 +142,7 @@ const Register = () => {
       await apiAxios.post("/api/auth", data);
 
       // Muestra mensaje de éxito y reinicia el formulario
-      setSuccess("✅ Registro exitoso. Tu cuenta está en revisión por el administrador.");
+      setSuccess("✅ Registro exitoso. Ya puedes iniciar sesión con tu número de documento.");
       setForm({
         tipo_documento: "CC",
         documento: "",
@@ -153,8 +153,8 @@ const Register = () => {
         id_ficha: ""
       });
 
-      // Redirige al login después de 4 segundos
-      setTimeout(() => navigate("/UserLogin"), 4000);
+      // Redirige al login después de 1.8 segundos
+      setTimeout(() => navigate("/UserLogin"), 1800);
     } catch (err) {
       // Muestra el error del servidor o un mensaje genérico
       setError(err.response?.data?.message || "Error al registrar el usuario. Revisa los datos.");

@@ -41,9 +41,9 @@ const UserModel = sequelize.define('usuarios', {
   
   // Campo rol - enum con los roles disponibles en el sistema
   rol: {
-    type: DataTypes.ENUM('Aprendiz', 'Pasante', 'Gestor', 'Instructor', 'Administrador'),
+    type: DataTypes.ENUM('Pasante', 'Gestor', 'Instructor', 'Administrador'),
     allowNull: false,
-    defaultValue: 'Aprendiz'
+    defaultValue: 'Pasante'
   },
   
   // Campo estado - estado de la cuenta (pendiente, aprobado, rechazado, inactivo)
@@ -58,22 +58,6 @@ const UserModel = sequelize.define('usuarios', {
     type: DataTypes.STRING(50),
     allowNull: true,
     defaultValue: 'CC'
-  },
-  
-
-  
-  // Campo id_ficha - relación con tabla fichas para pasantes/gestores si aplica
-  id_ficha: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-    defaultValue: null
-  },
-  
-  // Campo id_programa - relación con tabla programas para pasantes/gestores si aplica
-  id_programa: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-    defaultValue: null
   },
   
   // Campo avatar - foto de perfil del usuario

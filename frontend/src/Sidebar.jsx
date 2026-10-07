@@ -42,6 +42,12 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado, isCollapsed, setIsCol
 
   // Determina si el usuario tiene rol de administrador
   const esAdmin = userRolClean === 'administrador';
+  // Determina si el usuario es instructor
+  const esInstructor = userRolClean === 'instructor';
+  // Determina si el usuario es pasante
+  const esPasante = userRolClean === 'pasante';
+  // Determina si el usuario es gestor
+  const esGestor = userRolClean === 'gestor';
   // Determina si el usuario es pasante o gestor
   const esGestorPasante = ['pasante', 'gestor'].includes(userRolClean);
 
@@ -69,17 +75,17 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado, isCollapsed, setIsCol
       ]
     },
     {
-      key: "solicitudes", icon: "📋", text: (esAdmin || esGestorPasante) ? "Gestión" : "Solicitudes", show: true,
+      key: "solicitudes", icon: "📋", text: esAdmin ? "Gestión" : "Solicitudes", show: esAdmin || esInstructor,
       items: [
-        { icon: "📝", text: (esAdmin || esGestorPasante) ? "Gestión de Solicitudes" : "Solicitudes", path: "/solicitud", show: true },
+        { icon: "📝", text: esAdmin ? "Gestión de Solicitudes" : "Mis Solicitudes", path: "/solicitud", show: esAdmin || esInstructor },
       ]
     },
     {
       key: "laboratorio", icon: "🧪", text: "Laboratorio",
       show: esAdmin || esGestorPasante,
       items: [
-        { icon: "⚗️", text: "Reactivos", path: "/reactivos", show: true },
-        { icon: "🔄", text: "Movimiento Reactivos", path: "/movimientoreactivo", show: true },
+        { icon: "⚗️", text: "Reactivos", path: "/reactivos", show: esAdmin || esGestorPasante },
+        { icon: "🔄", text: "Movimiento Reactivos", path: "/movimientoreactivo", show: esAdmin || esPasante },
       ]
     },
     {

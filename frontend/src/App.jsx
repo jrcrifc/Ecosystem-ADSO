@@ -36,71 +36,16 @@ import SalidasReactivos from "./salidasReactivos/crudsalidareactivo.jsx";
 import TopBar from "./TopBar.jsx";
 import PerfilUsuario from "./Home/PerfilUsuario.jsx";
 import AcercaDe from "./Home/AcercaDe.jsx";
-// Importa los nuevos componentes de gestión de formación
 import Instructores from "./usuarios/Instructores.jsx";
-import Programas from "./usuarios/Programas.jsx";
-import Fichas from "./usuarios/Fichas.jsx";
 
-// Define el componente FormularioRoute que protege rutas para usuarios en revisión
-const FormularioRoute = ({ isAuth, userData, userRol, logOut, children }) => {
+// Define el componente FormularioRoute que protege rutas autenticadas
+const FormularioRoute = ({ isAuth, children }) => {
   // Redirige al login si el usuario no está autenticado
   if (!isAuth) return <Navigate to="/UserLogin" replace />;
-
-  // Obtiene el estado de aprobación del usuario
-  const estado = userData?.estado || userData?.user?.estado;
-  // Lista de roles que requieren aprobación del administrador
-  const rolesRevision = ['Aprendiz', 'Instructor', 'Pasante', 'Gestor'];
-
-  // Si el usuario está rechazado o inactivo, no renderiza nada
-  if (estado === 'inactivo' || estado === 'rechazado') {
-    return null;
-  }
-
-  // Si el rol requiere aprobación y no está aprobado, muestra pantalla de espera
-  if (rolesRevision.includes(userRol) && estado !== 'aprobado') {
-    return (
-      <div style={{
-        minHeight: "100vh", background: "#f0f9ff",
-        display: "flex", alignItems: "center", justifyContent: "center", padding: "20px"
-      }}>
-        {/* Tarjeta blanca con mensaje de cuenta en revisión */}
-        <div style={{
-          background: "#fff", borderRadius: "20px", padding: "48px 40px",
-          maxWidth: "480px", width: "100%", textAlign: "center",
-          boxShadow: "0 8px 30px rgba(0,0,0,0.08)", border: "1px solid #e0f2fe"
-        }}>
-          {/* Ícono de reloj de arena indicando espera */}
-          <div style={{ fontSize: "56px", marginBottom: "20px" }}>⏳</div>
-          {/* Título del mensaje de revisión */}
-          <h2 style={{ fontWeight: "700", color: "#0A1628", marginBottom: "10px" }}>Cuenta en revisión</h2>
-          {/* Texto explicativo con el rol del usuario */}
-          <p style={{ color: "#64748b", fontSize: "14px", lineHeight: "1.7", marginBottom: "24px" }}>
-            Tu cuenta como <strong>{userRol}</strong> está siendo revisada por el administrador.
-            Recibirás una notificación cuando sea aprobada.
-          </p>
-          {/* Banner amarillo indicando que revise las notificaciones */}
-          <div style={{
-            background: "#fff8e1", border: "1px solid #ffe082",
-            borderRadius: "10px", padding: "14px 18px", marginBottom: "24px"
-          }}>
-            <p style={{ margin: 0, fontSize: "13px", color: "#7c5e00" }}>
-              🔔 Revisa la campanita de notificaciones para saber cuando el admin te apruebe.
-            </p>
-          </div>
-          {/* Botón para cerrar sesión y regresar al login */}
-          <button onClick={logOut} style={{
-            background: "transparent", border: "1px solid #e5e7eb",
-            borderRadius: "10px", padding: "10px 28px",
-            color: "#64748b", cursor: "pointer", fontSize: "13px"
-          }}>Cerrar sesión</button>
-        </div>
-      </div>
-    );
-  }
-
-  // Renderiza el contenido hijo si pasó todas las verificaciones
+  // Renderiza el contenido hijo si está autenticado
   return children;
 };
+
 
 // Define el componente SoloAdminRoute que solo permite acceso a administradores
 const SoloAdminRoute = ({ isAuth, rol, children }) => {
@@ -112,28 +57,34 @@ const SoloAdminRoute = ({ isAuth, rol, children }) => {
   return children;
 };
 
-// Define el componente AdminRoute para admin, pasantes y gestores aprobados
-const AdminRoute = ({ isAuth, rol, userData, children }) => {
+// Define el componente AdminRoute para admin, pasantes y gestores
+const AdminRoute = ({ isAuth, rol, children }) => {
   // Redirige al login si no está autenticado
   if (!isAuth) return <Navigate to="/UserLogin" replace />;
   // Bloquea el acceso a aprendices e instructores
-  if (['Aprendiz', 'Instructor'].includes(rol)) return <Navigate to="/home" replace />;
-  // Obtiene el estado de aprobación del usuario
-  const estado = userData?.estado || userData?.user?.estado;
-  // Si es pasante o gestor no aprobado, redirige al home
-  if (['Pasante', 'Gestor'].includes(rol) && estado !== 'aprobado') {
-    return <Navigate to="/home" replace />;
-  }
+  if (['Instructor'].includes(rol)) return <Navigate to="/home" replace />;
   // Renderiza el contenido si pasó las verificaciones
   return children;
 };
 
-// Define el componente SolicitanteRoute para roles que pueden crear solicitudes
+// Define el componente AdminPasanteRoute para admin y pasantes (el gestor no maneja movimientos)
+const AdminPasanteRoute = ({ isAuth, rol, children }) => {
+  // Redirige al login si no está autenticado
+  if (!isAuth) return <Navigate to="/UserLogin" replace />;
+  // Bloquea el acceso a aprendices, instructores y gestores
+  if (['Instructor', 'Gestor'].includes(rol)) return <Navigate to="/home" replace />;
+  // Renderiza el contenido si pasó las verificaciones
+  return children;
+};
+
+
+
+// Define el componente SolicitanteRoute para roles que pueden acceder a solicitudes (solo Admin e Instructor)
 const SolicitanteRoute = ({ isAuth, rol, children }) => {
   // Redirige al login si no está autenticado
   if (!isAuth) return <Navigate to="/UserLogin" replace />;
-  // Lista de roles autorizados para acceder a solicitudes
-  const rolesPermitidos = ['Instructor', 'Administrador', 'Pasante', 'Gestor'];
+  // Lista de roles autorizados para acceder a solicitudes (solo Admin e Instructor)
+  const rolesPermitidos = ['Instructor', 'Administrador'];
   // Redirige al home si el rol no está en la lista permitida
   if (!rolesPermitidos.includes(rol)) return <Navigate to="/home" replace />;
   // Renderiza el contenido si tiene permiso
@@ -349,14 +300,14 @@ function App() {
 
             {/* Ruta protegida del dashboard principal con FormularioRoute */}
             <Route path="/home" element={
-              <FormularioRoute isAuth={isAuth} userData={userData} userRol={userRol} logOut={logOut}>
+              <FormularioRoute isAuth={isAuth}>
                 <Home />
               </FormularioRoute>
             } />
 
             {/* Ruta protegida del perfil del usuario */}
             <Route path="/perfil" element={
-              <FormularioRoute isAuth={isAuth} userData={userData} userRol={userRol} logOut={logOut}>
+              <FormularioRoute isAuth={isAuth}>
                 <PerfilUsuario />
               </FormularioRoute>
             } />
@@ -364,17 +315,19 @@ function App() {
             {/* Ruta de solicitudes protegida por SolicitanteRoute y FormularioRoute */}
             <Route path="/solicitud" element={
               <SolicitanteRoute isAuth={isAuth} rol={userRol}>
-                <FormularioRoute isAuth={isAuth} userData={userData} userRol={userRol} logOut={logOut}>
+                <FormularioRoute isAuth={isAuth}>
                   <Crudsolicitud />
                 </FormularioRoute>
               </SolicitanteRoute>
             } />
 
-            {/* Ruta protegida de estado por solicitud */}
+            {/* Ruta protegida de estado por solicitud — solo Admin e Instructor */}
             <Route path="/estadoxsolicitud" element={
-              <FormularioRoute isAuth={isAuth} userData={userData} userRol={userRol} logOut={logOut}>
-                <CrudEstadoxSolicitud />
-              </FormularioRoute>
+              <SolicitanteRoute isAuth={isAuth} rol={userRol}>
+                <FormularioRoute isAuth={isAuth}>
+                  <CrudEstadoxSolicitud />
+                </FormularioRoute>
+              </SolicitanteRoute>
             } />
 
             {/* Rutas exclusivas del administrador */}
@@ -385,19 +338,19 @@ function App() {
 
             {/* Rutas de gestión de formación — solo administrador */}
             <Route path="/instructores" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Instructores /></SoloAdminRoute>} />
-            <Route path="/programas" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Programas /></SoloAdminRoute>} />
-            <Route path="/fichas" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Fichas /></SoloAdminRoute>} />
 
-            {/* Rutas para admin, pasantes y gestores aprobados */}
-            <Route path="/reactivos" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><CrudReactivos /></AdminRoute>} />
-            <Route path="/equipos" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><CrudEquipo /></AdminRoute>} />
-            <Route path="/movimientoreactivo" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><CrudmovimientoReactivo /></AdminRoute>} />
+            {/* Rutas para reactivos y equipos */}
+            <Route path="/reactivos" element={<AdminRoute isAuth={isAuth} rol={userRol}><CrudReactivos /></AdminRoute>} />
+            <Route path="/equipos" element={<AdminRoute isAuth={isAuth} rol={userRol}><CrudEquipo /></AdminRoute>} />
+            <Route path="/movimientoreactivo" element={<AdminPasanteRoute isAuth={isAuth} rol={userRol}><CrudmovimientoReactivo /></AdminPasanteRoute>} />
             <Route path="/proveedor" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Crudproveedor /></SoloAdminRoute>} />
-            <Route path="/salidas" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><Crudsalidas /></AdminRoute>} />
-            <Route path="/estadoequipo" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><Crudestadoequipo /></AdminRoute>} />
-            <Route path="/historial-equipo" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><HistorialEstadoEquipo /></AdminRoute>} />
-            <Route path="/gestion-equipo" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><GestionEstadoEquipo /></AdminRoute>} />
-            <Route path="/control-reactivos" element={<AdminRoute isAuth={isAuth} rol={userRol} userData={userData}><ControlReactivos /></AdminRoute>} />
+            <Route path="/salidas" element={<AdminPasanteRoute isAuth={isAuth} rol={userRol}><Crudsalidas /></AdminPasanteRoute>} />
+            <Route path="/estadoequipo" element={<AdminRoute isAuth={isAuth} rol={userRol}><Crudestadoequipo /></AdminRoute>} />
+            <Route path="/historial-equipo" element={<AdminRoute isAuth={isAuth} rol={userRol}><HistorialEstadoEquipo /></AdminRoute>} />
+            <Route path="/gestion-equipo" element={<AdminRoute isAuth={isAuth} rol={userRol}><GestionEstadoEquipo /></AdminRoute>} />
+            <Route path="/control-reactivos" element={<AdminPasanteRoute isAuth={isAuth} rol={userRol}><ControlReactivos /></AdminPasanteRoute>} />
+
+
 
             {/* Ruta comodín que redirige al home o login según autenticación */}
             <Route path="*" element={<Navigate to={isAuth ? "/home" : "/UserLogin"} replace />} />

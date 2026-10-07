@@ -201,40 +201,9 @@ export default function CrudEquipo() {
   // Definición de las columnas de la tabla DataTable
   const columns = [
     { name: "ID", selector: (row) => row.id_equipo, sortable: true, width: "80px", center: true },
-    { name: "Grupo", selector: (row) => row.grupo_equipo, sortable: true, minWidth: "180px" },
-    { name: "Nombre", selector: (row) => row.nom_equipo, sortable: true, minWidth: "180px" },
-    { name: "Marca", selector: (row) => row.marca_equipo || "-", sortable: true, minWidth: "130px" },
-    {
-      name: "Placa",
-      selector: (row) => (row.no_placa && row.no_placa !== 0 && row.no_placa !== '0') ? row.no_placa : "Sin placa",
-      sortable: true,
-      minWidth: "130px",
-      // Renderiza la placa o un texto gris si no tiene
-      cell: (row) => {
-        const placa = (row.no_placa && row.no_placa !== 0 && row.no_placa !== '0') ? row.no_placa : null;
-        return placa
-          ? <span>{placa}</span>
-          : <span style={{ color: "#94a3b8", fontStyle: "italic", fontSize: "12px" }}>Sin placa</span>;
-      }
-    },
-    {
-      name: "Cuentadante",
-      selector: (row) => row.instructor
-        ? `${row.instructor.nombres_apellidos} (${row.instructor.documento})`
-        : "-",
-      sortable: true,
-      minWidth: "200px"
-    },
-    {
-      name: "Observaciones",
-      selector: (row) => row.observaciones || "-",
-      sortable: true,
-      minWidth: "180px",
-      wrap: true
-    },
     {
       name: "Foto",
-      width: "120px",
+      width: "100px",
       center: true,
       // Renderiza la foto del equipo con lightbox al hacer clic
       cell: (row) => (
@@ -266,6 +235,37 @@ export default function CrudEquipo() {
           )}
         </div>
       ),
+    },
+    { name: "Grupo", selector: (row) => row.grupo_equipo, sortable: true, minWidth: "180px" },
+    { name: "Nombre", selector: (row) => row.nom_equipo, sortable: true, minWidth: "180px" },
+    { name: "Marca", selector: (row) => row.marca_equipo || "-", sortable: true, minWidth: "130px" },
+    {
+      name: "Placa",
+      selector: (row) => (row.no_placa && row.no_placa !== 0 && row.no_placa !== '0') ? row.no_placa : "Sin placa",
+      sortable: true,
+      minWidth: "130px",
+      // Renderiza la placa o un texto gris si no tiene
+      cell: (row) => {
+        const placa = (row.no_placa && row.no_placa !== 0 && row.no_placa !== '0') ? row.no_placa : null;
+        return placa
+          ? <span>{placa}</span>
+          : <span style={{ color: "#94a3b8", fontStyle: "italic", fontSize: "12px" }}>Sin placa</span>;
+      }
+    },
+    {
+      name: "Cuentadante",
+      selector: (row) => row.instructor
+        ? `${row.instructor.nombres_apellidos} (${row.instructor.documento})`
+        : "-",
+      sortable: true,
+      minWidth: "200px"
+    },
+    {
+      name: "Observaciones",
+      selector: (row) => row.observaciones || "-",
+      sortable: true,
+      minWidth: "180px",
+      wrap: true
     },
     {
       name: "Estado",

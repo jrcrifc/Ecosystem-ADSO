@@ -47,11 +47,12 @@ const CrudSolicitudPrestamos = () => {
   const esAdmin = userRol === "administrador" || userRol === "admin";
   const esPasante = userRol === "pasante";
   const esGestor = userRol === "gestor";
-  // Los roles que pueden gestionar solicitudes (aceptar, prestar, entregar, cancelar)
-  const puedeGestionar = esAdmin || esPasante || esGestor;
+  // Solo el Administrador puede gestionar solicitudes (aceptar, prestar, entregar, cancelar)
+  const puedeGestionar = esAdmin;
 
-  // Título dinámico según el rol del usuario
-  const tituloVista = (esAdmin || esPasante) ? "Gestión de Solicitudes" : "Solicitudes";
+  // Título dinámico según el rol del usuario (Admin ve gestión general, Instructor ve sus solicitudes)
+  const tituloVista = esAdmin ? "Gestión de Solicitudes" : "Mis Solicitudes";
+
 
   // Mapa de transiciones permitidas entre estados (para botones de acción)
   const estadosSiguientes = {
@@ -271,8 +272,8 @@ const CrudSolicitudPrestamos = () => {
       const res = await apiAxios.get("/api/solicitud", {
         headers: { Authorization: `Bearer ${getToken()}` }
       });
-      // Admin y Pasante ven todas las solicitudes; Instructor solo las suyas
-      if (esAdmin || esPasante || esGestor) {
+      // Admin ve todas las solicitudes para gestionarlas; Pasante, Gestor e Instructor solo las suyas
+      if (esAdmin) {
         setSolicitudes(res.data);
       } else {
         const misSolicitudes = res.data.filter(s => s.usuario?.id_usuario === userId || s.id_usuario === userId);

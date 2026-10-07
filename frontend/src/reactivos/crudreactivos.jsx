@@ -35,37 +35,37 @@ const CrudReactivos = () => {
 
   // Define las columnas de la tabla con sus propiedades
   const columns = [
-    { name: "ID", selector: (row) => row.id_reactivo, sortable: true, width: "60px", center: true },
-    { name: "Nombre", selector: (row) => row.nom_reactivo, sortable: true, wrap: true, minWidth: "150px" },
-    { name: "Presentación", selector: (row) => row.presentacion_reactivo, sortable: true, wrap: true, minWidth: "130px" },
-    { name: "Cantidad", selector: (row) => row.cantidad_presentacion, sortable: true, width: "100px" },
-    { name: "Ubicación", selector: (row) => `${row.stand || "-"} / ${row.columna || "-"} / ${row.fila || "-"}`, sortable: false, minWidth: "110px" },
-    { name: "Color", selector: (row) => row.color_stand, sortable: true, minWidth: "90px" },
-    { name: "Clasificación", selector: (row) => row.clasificacion_reactivo, sortable: true, wrap: true, minWidth: "140px" },
+    { name: "ID", selector: (row) => row.id_reactivo, sortable: true, width: "75px", center: true },
+    { name: "Nombre", selector: (row) => row.nom_reactivo, sortable: true, wrap: true, minWidth: "180px" },
+    { name: "Presentación", selector: (row) => row.presentacion_reactivo, sortable: true, wrap: true, minWidth: "140px" },
+    { name: "Cantidad", selector: (row) => row.cantidad_presentacion, sortable: true, minWidth: "110px", center: true },
+    { name: "Ubicación", selector: (row) => `${row.stand || "-"} / ${row.columna || "-"} / ${row.fila || "-"}`, sortable: false, minWidth: "130px" },
+    { name: "Color Stand", selector: (row) => row.color_stand || "-", sortable: true, minWidth: "120px" },
+    { name: "Clasificación", selector: (row) => row.clasificacion_reactivo || "-", sortable: true, wrap: true, minWidth: "160px" },
     {
       name: "Estado",
       selector: (row) => row.estado,
       sortable: true,
       center: true,
-      width: "90px",
+      minWidth: "110px",
       // Renderizador personalizado para mostrar badge de estado
       cell: (row) => (
-        <span className={`px-2 py-1 rounded-pill text-white fw-semibold ${row.estado === 1 ? "bg-success" : "bg-danger"}`} style={{ fontSize: "0.65rem" }}>
+        <span className={`px-2 py-1 rounded-pill text-white fw-semibold ${row.estado === 1 ? "bg-success" : "bg-danger"}`} style={{ fontSize: "0.75rem", letterSpacing: "0.5px" }}>
           {row.estado === 1 ? "ACTIVO" : "INACTIVO"}
         </span>
       ),
     },
     {
-      name: "Acciones", center: true, width: "110px",
+      name: "Acciones", center: true, minWidth: "150px",
       // Renderizador de botones de accion por fila
       cell: (row) => (
-        <div className="d-flex gap-1 justify-content-center">
+        <div className="d-flex gap-2 justify-content-center">
           {/* Boton para ver detalle de stock */}
-          <button className="btn btn-sm" style={{ background: "#0077B6", color: "#fff", border: "none" }} onClick={() => handleVerStock(row)} title="Ver stock y historial">
+          <button className="btn btn-sm" style={{ background: "#0077B6", color: "#fff", border: "none", padding: "5px 9px", borderRadius: "6px" }} onClick={() => handleVerStock(row)} title="Ver stock e historial">
             <i className="fa-solid fa-eye"></i>
           </button>
           {/* Boton para editar el reactivo */}
-          <button className="btn btn-sm" style={{ background: "#dbeafe", color: "#0077B6", border: "none" }} onClick={() => { setSelectedReactivo(row); setShowModal(true); }}>
+          <button className="btn btn-sm" style={{ background: "#dbeafe", color: "#0077B6", border: "none", padding: "5px 9px", borderRadius: "6px" }} onClick={() => { setSelectedReactivo(row); setShowModal(true); }} title="Editar reactivo">
             <i className="fa-solid fa-pencil"></i>
           </button>
           {/* Boton para activar o inactivar el reactivo */}
@@ -74,7 +74,9 @@ const CrudReactivos = () => {
             style={{
               background: row.estado === 1 ? "#fee2e2" : "#dcfce7",
               color: row.estado === 1 ? "#dc2626" : "#16a34a",
-              border: "none"
+              border: "none",
+              padding: "5px 9px",
+              borderRadius: "6px"
             }}
             onClick={() => cambiarEstado(row)}
             title={row.estado === 1 ? "Inactivar" : "Activar"}
@@ -170,8 +172,8 @@ const CrudReactivos = () => {
           <ul style="padding-left: 20px; margin-bottom: 12px; font-size: 13px;">
             <li><strong>nombre</strong> (nombre del reactivo - obligatorio)</li>
             <li><strong>presentacion</strong> (kilogramos, gramos, litros, sobres)</li>
-            <li><strong>ingles</strong> (nombre en inglés - opcional)</li>
-            <li><strong>formula</strong> (fórmula química - opcional)</li>
+
+
             <li><strong>color_almacenamiento</strong> (opcional)</li>
             <li><strong>color_stand</strong> (opcional)</li>
             <li><strong>stand</strong>, <strong>columna</strong>, <strong>fila</strong> (ubicación - opcional)</li>
@@ -254,11 +256,10 @@ const CrudReactivos = () => {
   // Filtra los reactivos localmente segun el texto de busqueda
   const filtered = reactivos.filter((item) => {
     const search = filterText.toLowerCase().trim();
-    // Verifica si el ID, nombre o nombre en ingles coinciden con la busqueda
+    // Verifica si el ID o nombre coinciden con la busqueda
     return (
       String(item.id_reactivo || "").includes(search) ||
-      String(item.nom_reactivo || "").toLowerCase().includes(search) ||
-      String(item.nom_reactivo_ingles || "").toLowerCase().includes(search)
+      String(item.nom_reactivo || "").toLowerCase().includes(search)
     );
   });
 
@@ -270,8 +271,6 @@ const CrudReactivos = () => {
     return data.map(row => ({
       "ID": row.id_reactivo,
       "Nombre": row.nom_reactivo || "-",
-      "Nombre (Inglés)": row.nom_reactivo_ingles || "-",
-      "Fórmula": row.formula_reactivo || "-",
       "Presentación": row.presentacion_reactivo || "-",
       "Color Almacenamiento": row.color_almacenamiento || "-",
       "Color Stand": row.color_stand || "-",
@@ -306,8 +305,6 @@ const CrudReactivos = () => {
             const cols = [
               { header: "ID", dataKey: "ID" },
               { header: "Nombre", dataKey: "Nombre" },
-              { header: "Nombre (Inglés)", dataKey: "Nombre (Inglés)" },
-              { header: "Fórmula", dataKey: "Fórmula" },
               { header: "Presentación", dataKey: "Presentación" },
               { header: "Color Almacenamiento", dataKey: "Color Almacenamiento" },
               { header: "Color Stand", dataKey: "Color Stand" },

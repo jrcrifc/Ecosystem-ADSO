@@ -41,8 +41,7 @@ export default function GestionUsuarios() {
     documento: "",
     nombres_apellidos: "",
     email: "",
-    password: "",
-    es_sena_empresa: "no",
+    password: ""
   });
   // Controla el loading del formulario de registro
   const [registerLoading, setRegisterLoading] = useState(false);
@@ -97,7 +96,7 @@ export default function GestionUsuarios() {
       if (tab === "pendientes") {
         const resUsuarios = await apiAxios.get("/api/auth/usuarios", { headers });
         let pendientes = resUsuarios.data.filter(u =>
-          ['Pasante', 'Gestor', 'Aprendiz', 'Instructor'].includes(u.rol) &&
+          ['Pasante', 'Gestor', 'Instructor'].includes(u.rol) &&
           u.estado === 'pendiente'
         );
         pendientes = ordenarUsuarios(pendientes);
@@ -248,9 +247,7 @@ export default function GestionUsuarios() {
             <li><strong>documento</strong> (identificación, solo números)</li>
             <li><strong>nombres_apellidos</strong> (nombre completo)</li>
             <li><strong>email</strong> (correo único)</li>
-            <li><strong>rol</strong> (Aprendiz, Pasante, Gestor, Instructor)</li>
-            <li><strong>numero_ficha</strong> (opcional)</li>
-            <li><strong>nombre_ficha</strong> (opcional)</li>
+            <li><strong>rol</strong> (Pasante, Gestor, Instructor)</li>
             <li><strong>es_sena_empresa</strong> (opcional: si/no)</li>
           </ul>
           <p style="font-size: 12px; color: #dc3545; font-weight: 600;">
@@ -346,8 +343,7 @@ export default function GestionUsuarios() {
     documento: "",
     nombres_apellidos: "",
     email: "",
-    password: "",
-    es_sena_empresa: "no",
+    password: ""
   });
 
   // Maneja el envio del formulario de registro manual
@@ -356,14 +352,18 @@ export default function GestionUsuarios() {
     setRegisterLoading(true);
     try {
       await apiAxios.post("/api/auth", {
-        ...registerForm,
+        tipo_documento: registerForm.tipo_documento,
+        documento: registerForm.documento.trim(),
+        nombres_apellidos: registerForm.nombres_apellidos.trim(),
+        email: registerForm.email.trim().toLowerCase(),
+        password: registerForm.documento.trim(),
         rol: registerTab,
         estado: "aprobado",
       }, { headers });
       Swal.fire({
         icon: "success",
         title: `✅ ${registerTab} registrado`,
-        text: `El usuario fue creado correctamente y ya está aprobado.`,
+        text: `El usuario fue creado correctamente y ya puede iniciar sesión con su documento.`,
         confirmButtonColor: "#0077B6",
       });
       setShowRegisterModal(false);
@@ -441,27 +441,15 @@ export default function GestionUsuarios() {
         {estadoBadge(u.estado)}
       </div>
 
-      {/* Informacion adicional de ficha si existe */}
-      {(u.numero_ficha || u.nombre_ficha) && (
+      {/* Informacion adicional si es Gestor (Sena Empresa) */}
+      {u.rol === 'Gestor' && (
         <div style={{
           marginTop: "10px", background: "#f0fdf4", borderRadius: "10px",
           padding: "10px 14px", border: "1px solid #dcfce7", display: "flex", gap: "16px", flexWrap: "wrap"
         }}>
-          {u.numero_ficha && (
-            <span style={{ fontSize: "12px", color: "#166534" }}>
-              🆔 <strong>Ficha:</strong> {u.numero_ficha}
-            </span>
-          )}
-          {u.nombre_ficha && (
-            <span style={{ fontSize: "12px", color: "#166534" }}>
-              📋 <strong>Nombre Ficha:</strong> {u.nombre_ficha}
-            </span>
-          )}
-          {u.es_sena_empresa !== undefined && (
-            <span style={{ fontSize: "12px", color: "#166534" }}>
-              🏢 <strong>SENA Empresa:</strong> {u.es_sena_empresa ? "Sí" : "No"}
-            </span>
-          )}
+          <span style={{ fontSize: "12px", color: "#166534", fontWeight: "600" }}>
+             🏢 Integrante de SENA Empresa
+          </span>
         </div>
       )}
 
@@ -743,10 +731,10 @@ export default function GestionUsuarios() {
                   <div style={{ flex: 1, minWidth: "200px" }}>
                     <div style={{ fontWeight: "700", color: "#0f172a", fontSize: "14px" }}>{u.nombres_apellidos}</div>
                     <div style={{ fontSize: "12px", color: "#64748b" }}>{u.email} · {u.documento}</div>
-                    {/* Informacion de ficha si existe */}
-                    {(u.numero_ficha || u.nombre_ficha) && (
-                      <div style={{ fontSize: "11px", color: "#0077B6", marginTop: "4px", fontWeight: "600" }}>
-                        🆔 Ficha: {u.numero_ficha || "N/A"} · Ficha Nombre: {u.nombre_ficha || "N/A"} · SENA Empresa: {u.es_sena_empresa ? "Sí" : "No"}
+                    {/* Informacion Sena Empresa */}
+                    {u.rol === 'Gestor' && (
+                      <div style={{ fontSize: "11px", color: "#059669", marginTop: "4px", fontWeight: "600" }}>
+                        🏢 Integrante de SENA Empresa
                       </div>
                     )}
                   </div>
@@ -848,7 +836,7 @@ export default function GestionUsuarios() {
       {/* ===== MODAL: Registrar Pasante / Gestor ===== */}
       {showRegisterModal && (
         <div style={{
-          position: "fixed", inset: 0, zIndex: 9999,
+          position: "fixed", inset: 0, zIndex: 1050,
           background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)",
           display: "flex", alignItems: "center", justifyContent: "center", padding: "16px"
         }}>
@@ -876,8 +864,6 @@ export default function GestionUsuarios() {
                   width: "28px", height: "28px", color: "#fff", fontSize: "14px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕
               </button>
             </div>
-
-
 
             {/* Formulario */}
             <form onSubmit={handleRegistrarUsuario} style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -939,39 +925,26 @@ export default function GestionUsuarios() {
                 />
               </div>
 
-              {/* Contraseña */}
+              {/* Contraseña Inicial (asignada automáticamente como el documento) */}
               <div>
                 <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                   Contraseña Inicial
                 </label>
-                <input type="password" required placeholder="Mínimo 8 caracteres" minLength={8} autoComplete="new-password"
-                  value={registerForm.password}
-                  onChange={e => setRegisterForm(f => ({ ...f, password: e.target.value }))}
-                  style={{ width: "100%", padding: "8px 12px", borderRadius: "8px",
-                    border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b", outline: "none" }}
-                />
-              </div>
-
-              {/* Campo exclusivo de Pasante: es_sena_empresa, o un placeholder para mantener el mismo tamaño */}
-              <div style={{ visibility: registerTab === "Pasante" ? "visible" : "hidden", height: registerTab === "Pasante" ? "auto" : "55px" }}>
-                <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                  ¿Es SENA Empresa?
-                </label>
-                <select
-                  value={registerForm.es_sena_empresa}
-                  onChange={e => setRegisterForm(f => ({ ...f, es_sena_empresa: e.target.value }))}
-                  style={{ width: "100%", padding: "8px 12px", borderRadius: "8px",
-                    border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b", outline: "none" }}
-                >
-                  <option value="no">No</option>
-                  <option value="si">Sí</option>
-                </select>
+                <div style={{
+                  padding: "8px 12px", borderRadius: "8px", background: "#f8fafc",
+                  border: "1.5px dashed #cbd5e1", fontSize: "13px", color: "#475569",
+                  display: "flex", alignItems: "center", gap: "8px"
+                }}>
+                  <span style={{ fontSize: "14px" }}>🔑</span>
+                  <span>{registerForm.documento ? `Igual al documento: ${registerForm.documento}` : "Se asignará el número de documento"}</span>
+                </div>
               </div>
 
               {/* Nota informativa */}
               <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", padding: "8px 12px" }}>
                 <p style={{ margin: 0, fontSize: "11px", color: "#065f46" }}>
-                  ℹ️ El {registerTab} quedará en estado <strong>pendiente</strong> hasta que un administrador lo apruebe.
+                  ℹ️ El {registerTab} quedará registrado y su contraseña inicial será su <strong>número de documento</strong>.
+                  {registerTab === 'Gestor' && <span><br/>🏢 <strong>SENA Empresa:</strong> Este usuario pertenece a SENA Empresa.</span>}
                 </p>
               </div>
 

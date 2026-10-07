@@ -36,8 +36,8 @@ const Home = () => {
   const stored = sessionStorage.getItem("user");
   const userData = stored ? JSON.parse(stored) : null;
 
-  // Obtiene el rol del usuario con fallback a Aprendiz
-  const userRol = (userData?.user?.rol || userData?.rol || "Aprendiz");
+  // Obtiene el rol del usuario
+  const userRol = (userData?.user?.rol || userData?.rol || "Pasante");
   const userRolLower = userRol.toLowerCase();
   // Obtiene el nombre del usuario para el saludo del hero
   const userName = userData?.user?.nombres_apellidos || userData?.nombres_apellidos || "Usuario";
@@ -47,7 +47,6 @@ const Home = () => {
   const esGestor = userRolLower === "gestor";
   const esInstructor = userRolLower === "instructor";
   const esPasante = userRolLower === "pasante";
-  const esAprendiz = userRolLower === "aprendiz";
 
   // Activa las animaciones de entrada al montar el componente
   useEffect(() => {
@@ -95,19 +94,18 @@ const Home = () => {
     gestor: "Gestor de SENA Empresa",
     pasante: "Pasante",
     instructor: "Instructor",
-    aprendiz: "Aprendiz",
   };
 
   // Define las tarjetas de acceso rápido filtradas según el rol del usuario
   const cards = [
-    { id: "solicitudes", show: esAprendiz || esInstructor, icon: "📋", title: "Nueva Solicitud", desc: "Crea solicitudes de préstamo.", color: "#0077B6", href: "/solicitud" },
-    { id: "solicitudes", show: esAdmin, icon: "📋", title: "Nueva Solicitud", desc: "Registra solicitud por un solicitante.", color: "#0077B6", href: "/solicitud" },
-    { id: "solicitudes", show: esAdmin, icon: "📊", title: "Gestión Solicitudes", desc: "Revisa y aprueba solicitudes.", color: "#0096C7", href: "/gestion-solicitudes" },
-    { id: "reactivos", show: esAdmin || esGestor || esPasante, icon: "🧪", title: "Reactivos", desc: "Gestión de stock de reactivos.", color: "#00B4D8", href: "/reactivos" },
+    { id: "solicitudes", show: esInstructor, icon: "📋", title: "Mis Solicitudes", desc: "Crea y consulta tus solicitudes de préstamo.", color: "#0077B6", href: "/solicitud" },
+    { id: "solicitudes", show: esAdmin, icon: "📊", title: "Gestión Solicitudes", desc: "Revisa, aprueba y gestiona solicitudes generales.", color: "#0096C7", href: "/solicitud" },
+    { id: "reactivos", show: esAdmin || esGestor || esPasante, icon: "🧪", title: "Reactivos", desc: "Catálogo de reactivos químicos.", color: "#00B4D8", href: "/reactivos" },
+    { id: "movimientos", show: esAdmin || esPasante, icon: "🔄", title: "Movimiento Reactivos", desc: "Gestión de ingresos, salidas y lotes.", color: "#0077B6", href: "/movimientoreactivo" },
     { id: "equipos", show: esAdmin || esGestor || esPasante, icon: "🔬", title: "Equipos", desc: "Administración de equipos.", color: "#023E8A", href: "/equipos" },
     { id: "usuarios", show: esAdmin, icon: "👥", title: "Usuarios", desc: "Administra permisos y roles.", color: "#0353A4", href: "/gestion-usuarios" },
     { id: "proveedores", show: esAdmin, icon: "🏢", title: "Proveedores", desc: "Administra proveedores.", color: "#48CAE4", href: "/proveedor" },
-    { id: "solicitudes", show: esAprendiz || esInstructor, icon: "📁", title: "Mi Historial", desc: "Estado de tus solicitudes.", color: "#1d4ed8", href: "/estadoxsolicitud" },
+    { id: "solicitudes", show: esInstructor, icon: "📁", title: "Mi Historial", desc: "Historial de cambios de tus solicitudes.", color: "#1d4ed8", href: "/estadoxsolicitud" },
   ];
 
   return (

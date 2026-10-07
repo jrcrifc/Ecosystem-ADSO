@@ -52,7 +52,8 @@ export default function CrudEstadoxSolicitud() {
   const esAdmin = userRol === "administrador" || userRol === "admin";
   const esPasante = userRol === "pasante";
   const esGestor = userRol === "gestor";
-  const puedeVerTodos = esAdmin || esPasante || esGestor;
+  // Solo el administrador ve el historial global de todas las solicitudes; los demás solo el suyo
+  const puedeVerTodos = esAdmin;
 
   // Efecto que carga los registros al montar el componente
   useEffect(() => {

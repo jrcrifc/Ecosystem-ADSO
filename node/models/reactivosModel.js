@@ -22,12 +22,6 @@ const reactivosModel = db.define('reactivos', {
     // Campo nom_reactivo - nombre del reactivo en español
     nom_reactivo: { type: DataTypes.STRING },
     
-    // Campo nom_reactivo_ingles - nombre del reactivo en inglés
-    nom_reactivo_ingles: { type: DataTypes.STRING },
-    
-    // Campo formula_reactivo - fórmula química del reactivo
-    formula_reactivo: { type: DataTypes.STRING },
-    
     // Campo color_almacenamiento - color de seguridad según normativas
     color_almacenamiento: {
         type: DataTypes.ENUM("Peligro para la salud", "Inflamabilidad", "N/A", "Peligro de contacto", "Riesgo minimo", "Riesgo de reactividad")

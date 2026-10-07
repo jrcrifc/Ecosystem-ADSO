@@ -30,6 +30,8 @@ export default function Campanita({ userData, onAprobado, userRol }) {
   const noLeidas = notificaciones.filter(n => !n.leida).length;
   // Determina si el usuario es administrador
   const esAdmin = String(userRol || "").toLowerCase() === 'administrador';
+  // Determina si el usuario es instructor
+  const esInstructor = String(userRol || "").toLowerCase() === 'instructor';
 
   // ===== Conexion socket, carga inicial y notificaciones en tiempo real =====
 
@@ -282,40 +284,16 @@ export default function Campanita({ userData, onAprobado, userRol }) {
           </div>
 
           {/* Botones de acceso directo */}
-          <div style={{ padding: "10px 20px", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", display: "flex", gap: "8px" }}>
-            <button
-              onClick={() => {
-                setOpen(false);
-                navigate('/solicitud');
-              }}
-              style={{
-                flex: 1,
-                background: "#0077B6",
-                color: "#fff",
-                border: "none",
-                borderRadius: "10px",
-                padding: "8px 12px",
-                fontSize: "12px",
-                fontWeight: "700",
-                cursor: "pointer",
-                textAlign: "center",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "6px"
-              }}
-            >
-              📥 {esAdmin ? "Ver Solicitudes" : "Ver Mis Solicitudes"}
-            </button>
-            {esAdmin && (
+          {(esAdmin || esInstructor) && (
+            <div style={{ padding: "10px 20px", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", display: "flex", gap: "8px" }}>
               <button
                 onClick={() => {
                   setOpen(false);
-                  navigate('/gestion-usuarios');
+                  navigate('/solicitud');
                 }}
                 style={{
                   flex: 1,
-                  background: "#023E8A",
+                  background: "#0077B6",
                   color: "#fff",
                   border: "none",
                   borderRadius: "10px",
@@ -330,10 +308,36 @@ export default function Campanita({ userData, onAprobado, userRol }) {
                   gap: "6px"
                 }}
               >
-                👥 Gestión Usuarios
+                📥 {esAdmin ? "Ver Solicitudes" : "Ver Mis Solicitudes"}
               </button>
-            )}
-          </div>
+              {esAdmin && (
+                <button
+                  onClick={() => {
+                    setOpen(false);
+                    navigate('/gestion-usuarios');
+                  }}
+                  style={{
+                    flex: 1,
+                    background: "#023E8A",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "10px",
+                    padding: "8px 12px",
+                    fontSize: "12px",
+                    fontWeight: "700",
+                    cursor: "pointer",
+                    textAlign: "center",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "6px"
+                  }}
+                >
+                  👥 Gestión Usuarios
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Lista de notificaciones */}
           <div style={{ overflowY: "auto", display: "flex", flexDirection: "column", flex: 1 }}>

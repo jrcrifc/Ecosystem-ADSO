@@ -29,7 +29,7 @@ export const getDashboardStats = async (req, res) => {
     // Determina si el usuario tiene permisos administrativos
     const esAdminGestorPasante = ['administrador', 'admin', 'gestor', 'pasante'].includes(userRol);
 
-    // Lógica para usuarios con rol de Aprendiz o Instructor (sin permisos globales)
+    // Lógica para usuarios con rol de Instructor (sin permisos globales)
     if (!esAdminGestorPasante) {
       // Obtiene las solicitudes del usuario agrupadas por estado con su respectivo conteo
       const solicitudesStats = await solicitudModel.findAll({

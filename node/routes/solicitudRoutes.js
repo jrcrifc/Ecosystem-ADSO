@@ -19,31 +19,29 @@ import equipoModel from '../models/EquiposModel.js';
 import Estadoxequipo from '../models/estadoxequipoModel.js';
 // Importa la función para emitir eventos por Socket.io
 import { getIO } from '../socket.js';
-// Importa el middleware de autenticación JWT
-import authMiddleware from '../middleware/authMiddleware.js';
-// Importa el middleware que permite acceso a todos los roles
-import { todosLosRoles } from '../middleware/roleMiddleware.js';
+// Importa el middleware que permite acceso a Admin e Instructor y soloAdmin
+import { adminOInstructor, soloAdmin } from '../middleware/roleMiddleware.js';
 
 // Crea una nueva instancia del Router
 const router = express.Router();
 
-// Define la ruta GET /api/solicitud para obtener todas las solicitudes
-router.get('/', todosLosRoles, getAll);
+// Define la ruta GET /api/solicitud para obtener las solicitudes (Admin ve todas, Instructor las suyas)
+router.get('/', adminOInstructor, getAll);
 
 // Define la ruta GET /api/solicitud/:id para obtener una solicitud por ID
-router.get('/:id', todosLosRoles, getById);
+router.get('/:id', adminOInstructor, getById);
 
 // Define la ruta POST /api/solicitud para crear una nueva solicitud
-router.post('/', todosLosRoles, create);
+router.post('/', adminOInstructor, create);
 
-// Define la ruta PUT /api/solicitud/:id para actualizar una solicitud existente
-router.put('/:id', todosLosRoles, update);
+// Define la ruta PUT /api/solicitud/:id para actualizar una solicitud existente (solo admin)
+router.put('/:id', soloAdmin, update);
 
-// Define la ruta DELETE /api/solicitud/:id para eliminar una solicitud
-router.delete('/:id', todosLosRoles, remove);
+// Define la ruta DELETE /api/solicitud/:id para eliminar una solicitud (solo admin)
+router.delete('/:id', soloAdmin, remove);
 
-// Define la ruta PUT /api/solicitud/estado/:id para activar/inactivar una solicitud y liberar equipos
-router.put('/estado/:id', todosLosRoles, async (req, res) => {
+// Define la ruta PUT /api/solicitud/estado/:id para activar/inactivar una solicitud y liberar equipos (solo admin)
+router.put('/estado/:id', soloAdmin, async (req, res) => {
     try {
         // Obtiene el ID de la solicitud desde los parámetros de la ruta
         const { id } = req.params;
@@ -102,8 +100,9 @@ router.put('/estado/:id', todosLosRoles, async (req, res) => {
     }
 });
 
-// Define la ruta POST /api/solicitud/cambiarEstado/:id para cambiar el estado del ciclo de la solicitud
-router.post('/cambiarEstado/:id', todosLosRoles, cambiarEstado);
+// Define la ruta POST /api/solicitud/cambiarEstado/:id para cambiar el estado del ciclo de la solicitud (solo admin)
+router.post('/cambiarEstado/:id', soloAdmin, cambiarEstado);
 
 // Exporta el router para ser usado en la aplicación
-export default router;
+export default router;
+

@@ -14,14 +14,14 @@ import salidasModel from '../models/salidasModel.js';
 import salidasService from "../service/salidasService.js";
 // Importa la función para emitir eventos por Socket.io
 import { getIO } from '../socket.js';
-// Importa el middleware de autorización para administradores y gestores
-import { adminOGestor } from '../middleware/roleMiddleware.js';
+// Importa el middleware de autorización para administradores y pasantes
+import { adminOPasante } from '../middleware/roleMiddleware.js';
 
 // Crea una nueva instancia del Router
 const router = express.Router();
 
 // Define la ruta GET /api/salidas/lotes-fefo/:id_reactivo para obtener lotes ordenados por FEFO
-router.get('/lotes-fefo/:id_reactivo', adminOGestor, async (req, res) => {
+router.get('/lotes-fefo/:id_reactivo', adminOPasante, async (req, res) => {
   try {
     // Obtiene los lotes FEFO desde el servicio
     const lotes = await salidasService.getLotesFefo(req.params.id_reactivo);
@@ -33,22 +33,22 @@ router.get('/lotes-fefo/:id_reactivo', adminOGestor, async (req, res) => {
 });
 
 // Define la ruta GET /api/salidas para obtener todas las salidas
-router.get('/', adminOGestor, getAllsalidas);
+router.get('/', adminOPasante, getAllsalidas);
 
 // Define la ruta GET /api/salidas/:id para obtener una salida por ID
-router.get('/:id', adminOGestor, getsalidas);
+router.get('/:id', adminOPasante, getsalidas);
 
 // Define la ruta POST /api/salidas para crear una nueva salida
-router.post('/', adminOGestor, createsalidas);
+router.post('/', adminOPasante, createsalidas);
 
 // Define la ruta PUT /api/salidas/:id para actualizar una salida existente
-router.put('/:id', adminOGestor, updatesalidas);
+router.put('/:id', adminOPasante, updatesalidas);
 
 // Define la ruta DELETE /api/salidas/:id para eliminar una salida
-router.delete('/:id', adminOGestor, deletesalidas);
+router.delete('/:id', adminOPasante, deletesalidas);
 
 // Define la ruta PUT /api/salidas/estado/:id para activar/inactivar una salida y ajustar stock
-router.put('/estado/:id', adminOGestor, async (req, res) => {
+router.put('/estado/:id', adminOPasante, async (req, res) => {
     try {
         // Obtiene el ID de la salida desde los parámetros de la ruta
         const { id } = req.params;

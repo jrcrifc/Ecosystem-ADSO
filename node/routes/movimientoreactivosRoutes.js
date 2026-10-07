@@ -14,14 +14,14 @@ import movimientoreactivoModel from '../models/movimientoreactivosModel.js';
 import proveedorModel from '../models/proveedoresModel.js';
 // Importa el modelo de salidas para las relaciones
 import salidasModel from '../models/salidasModel.js';
-// Importa el middleware de autorización para administradores y gestores
-import { adminOGestor } from '../middleware/roleMiddleware.js';
+// Importa el middleware de autorización para administradores y pasantes
+import { adminOPasante } from '../middleware/roleMiddleware.js';
 
 // Crea una nueva instancia del Router
 const router = express.Router();
 
 // Define la ruta GET /api/movimientos/stock-lotes/:id_reactivo para calcular stock por lotes
-router.get('/stock-lotes/:id_reactivo', adminOGestor, async (req, res) => {
+router.get('/stock-lotes/:id_reactivo', adminOPasante, async (req, res) => {
   try {
     // Obtiene el ID del reactivo desde los parámetros de la ruta
     const { id_reactivo } = req.params;
@@ -131,22 +131,22 @@ router.get('/stock-lotes/:id_reactivo', adminOGestor, async (req, res) => {
 });
 
 // Define la ruta GET /api/movimientos para obtener todos los movimientos
-router.get('/', adminOGestor, getAllmovimientoreactivo);
+router.get('/', adminOPasante, getAllmovimientoreactivo);
 
 // Define la ruta GET /api/movimientos/:id para obtener un movimiento por ID
-router.get('/:id', adminOGestor, getmovimientoreactivo);
+router.get('/:id', adminOPasante, getmovimientoreactivo);
 
 // Define la ruta POST /api/movimientos para crear un nuevo movimiento
-router.post('/', adminOGestor, createmovimientoreactivo);
+router.post('/', adminOPasante, createmovimientoreactivo);
 
 // Define la ruta PUT /api/movimientos/:id para actualizar un movimiento existente
-router.put('/:id', adminOGestor, updatemovimientoreactivo);
+router.put('/:id', adminOPasante, updatemovimientoreactivo);
 
 // Define la ruta DELETE /api/movimientos/:id para eliminar un movimiento
-router.delete('/:id', adminOGestor, deletemovimientoreactivo);
+router.delete('/:id', adminOPasante, deletemovimientoreactivo);
 
 // Define la ruta PUT /api/movimientos/estado/:id para verificar la existencia de un movimiento
-router.put("/estado/:id", adminOGestor, async (req, res) => {
+router.put("/estado/:id", adminOPasante, async (req, res) => {
   try {
     // Busca el movimiento por ID
     const movimiento = await movimientoreactivoModel.findByPk(req.params.id);
@@ -161,4 +161,5 @@ router.put("/estado/:id", adminOGestor, async (req, res) => {
 });
 
 // Exporta el router para ser usado en la aplicación
-export default router;
+export default router;
+

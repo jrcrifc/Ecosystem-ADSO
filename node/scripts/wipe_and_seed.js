@@ -5,7 +5,7 @@
 // temporalmente las restricciones de clave foránea.
 // Posteriormente, siembra datos iniciales de prueba (10 equipos y 10 reactivos
 // químicos con sus respectivos lotes de stock) y asegura la existencia de un
-// cuentadante, un proveedor y un aprendiz de prueba.
+// cuentadante, un proveedor y un instructor de prueba.
 // Ejecución:
 //   node scripts/wipe_and_seed.js
 // ============================================================
@@ -82,11 +82,11 @@ async function run() {
     );
     let id_usuario = usuario[0]?.id_usuario || null;
     if (!id_usuario) {
-      console.log("📝 No se encontró usuario de prueba. Creando aprendiz de prueba...");
+      console.log("📝 No se encontró usuario de prueba. Creando instructor de prueba...");
       // Contraseña por defecto es encriptación de "123456"
       await db.query(
         `INSERT INTO usuarios (nombres_apellidos, email, password, documento, rol, estado, numero_ficha, nombre_ficha, es_sena_empresa, createdAt, updatedAt) 
-         VALUES ('Aprendiz SENA Prueba', 'aprendiz@sena.edu.co', '$2b$10$R7Msn0XyTqG0.KjBwM8Q2.9WzZ9w6pQxKj1.Yc3/R8uOa44n5aK0G', '1098765432', 'Aprendiz', 'aprobado', '2672134', 'ADSO - Ficha 2672134', 1, NOW(), NOW());`
+         VALUES ('Instructor SENA Prueba', 'instructor@sena.edu.co', '$2b$10$R7Msn0XyTqG0.KjBwM8Q2.9WzZ9w6pQxKj1.Yc3/R8uOa44n5aK0G', '1098765432', 'Instructor', 'aprobado', '2672134', 'ADSO - Ficha 2672134', null, NOW(), NOW());`
       );
       usuario = await db.query(
         "SELECT id_usuario FROM usuarios WHERE rol != 'Administrador' LIMIT 1;",

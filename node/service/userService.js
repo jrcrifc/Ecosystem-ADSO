@@ -69,7 +69,7 @@ class UserService {
   // Registra un nuevo usuario en el sistema con validaciones del lado del servidor
   async registerUser(data) {
     // Desestructura los datos del formulario de registro
-    let { tipo_documento, documento, nombres_apellidos, email, rol, id_ficha, id_programa, estado } = data;
+    let { tipo_documento, documento, nombres_apellidos, email, rol, estado } = data;
     // Limpia y normaliza espacios y minúsculas en los campos de texto
     documento = (documento || "").trim();
     nombres_apellidos = (nombres_apellidos || "").trim();
@@ -88,53 +88,50 @@ class UserService {
     if (!['Pasante', 'Gestor'].includes(rol)) {
       throw new Error("Solo los Pasantes y Gestores pueden registrarse manualmente.");
     }
-    // Verifica si el correo ya está registrado
-    const existUser = await UserModel.findOne({ where: { email } });
-    if (existUser) throw new Error("El correo electrónico ya está registrado");
-    // Verifica si el número de documento ya está registrado
-    const existDoc = await UserModel.findOne({ where: { documento } });
-    if (existDoc) throw new Error("Ya existe un usuario con ese número de documento");
-    // Encripta la contraseña con un factor de costo de 10
+    // Encripta la contraseña (que es el documento) con un factor de costo de 10
     const hashedPassword = await bcrypt.hash(password, 10);
-    // Crea el usuario en la base de datos con estado pendiente por defecto
-    const user = await UserModel.create({
-      uuid: uuidv4(),
-      tipo_documento: tipo_documento || 'CC',
-      documento,
-      nombres_apellidos,
-      email,
-      password: hashedPassword,
-      rol,
-      estado: estado || 'pendiente',
-      id_ficha: id_ficha || null,
-      id_programa: id_programa || null
-    });
-    // Registra la acción en la tabla de auditoría
-    await registrarLog(email, 'REGISTRO', 'AUTH', `Usuario registrado como ${rol}`);
-    // Notifica a los administradores si el nuevo usuario requiere aprobación
-    if (['Pasante', 'Gestor', 'Instructor'].includes(rol)) {
-      // Registra notificación en el sistema para el panel del administrador
-      await NotificacionService.notificarAdmins({
-        id_usuario_origen: user.id_usuario,
-        titulo: '👤 Nuevo usuario pendiente de aprobación',
-        mensaje: `${nombres_apellidos} se registró como ${rol} y está esperando aprobación para acceder al sistema.`,
-        tipo: 'solicitud_acceso'
-      });
-      // Envía correos electrónicos de aviso a los administradores activos
-      try {
-        const admins = await UserModel.findAll({ where: { rol: 'Administrador', estado: 'aprobado' } });
-        for (const admin of admins) {
-          await emailService.notifyAdminNewUser(admin.email, {
-            documento,
-            nombres_apellidos,
-            email,
-            rol
-          });
-        }
-      } catch (emailError) {
-        console.error("❌ Error al enviar email de notificación a los admins:", emailError);
+
+    // Verifica si el correo o documento ya están registrados
+    let existUser = await UserModel.findOne({
+      where: {
+        [Op.or]: [{ email }, { documento }]
       }
+    });
+
+    // Pasante no pertenece a sena empresa
+    const senaEmpresaVal = rol === 'Pasante' ? null : (data.es_sena_empresa || null);
+
+    let user;
+    if (existUser) {
+      // Si ya existe, actualiza sus datos, su rol y su contraseña
+      await existUser.update({
+        tipo_documento: tipo_documento || existUser.tipo_documento || 'CC',
+        documento,
+        nombres_apellidos: nombres_apellidos || existUser.nombres_apellidos,
+        email,
+        password: hashedPassword,
+        rol,
+        estado: 'aprobado',
+        es_sena_empresa: senaEmpresaVal
+      });
+      user = existUser;
+      await registrarLog(email, 'ACTUALIZACION', 'AUTH', `Usuario actualizado a rol ${rol} por administrador`);
+    } else {
+      // Crea el usuario en la base de datos con estado aprobado directamente
+      user = await UserModel.create({
+        uuid: uuidv4(),
+        tipo_documento: tipo_documento || 'CC',
+        documento,
+        nombres_apellidos,
+        email,
+        password: hashedPassword,
+        rol,
+        estado: 'aprobado',
+        es_sena_empresa: senaEmpresaVal
+      });
+      await registrarLog(email, 'REGISTRO', 'AUTH', `Usuario registrado como ${rol}`);
     }
+
     // Retorna datos del usuario omitiendo la contraseña por seguridad
     const { password: _, ...userSinPassword } = user.toJSON();
     return userSinPassword;
@@ -308,9 +305,6 @@ class UserService {
       updateData.avatar = null;
     }
 
-    if (data.numero_ficha) updateData.id_ficha = data.numero_ficha; // Simplificado, ideal buscar ID
-    // TODO: Ajustar id_ficha e id_programa según lógica si el frontend manda nombres
-
     // Actualiza los datos del perfil
     await user.update(updateData);
     // Retorna el usuario actualizado
@@ -363,15 +357,8 @@ class UserService {
       // Campos extra para Instructor
       let telefono = null;
       let tipo_vinculacion = null;
-      // Campos extra para Aprendiz
+      // Campos extra generales
       let tipo_documento = null;
-      let fecha_nacimiento = null;
-      let genero = null;
-      let direccion = null;
-      let tipo_direccion = null;
-      let estrato = null;
-      let estado_civil = null;
-      let tipo_aprendiz = null;
       // Mapea cada columna buscando variaciones ortográficas comunes
       for (const key of Object.keys(row)) {
         // Normaliza la clave eliminando tildes y espacios
@@ -412,23 +399,8 @@ class UserService {
             tipo_vinculacion = "Instructor por prestacion de servicios"; // Valor por defecto si hay algo pero no se reconoce bien
           }
 
-        // --- Campos extra para Aprendiz ---
         } else if (normalizedKey === "tipo_documento" || normalizedKey === "tipo de documento" || normalizedKey === "tipo documento") {
           tipo_documento = val;
-        } else if (normalizedKey === "fecha_nacimiento" || normalizedKey === "fecha de nacimiento" || normalizedKey === "nacimiento") {
-          fecha_nacimiento = val;
-        } else if (normalizedKey === "genero" || normalizedKey === "sexo") {
-          genero = val;
-        } else if (normalizedKey === "direccion" || normalizedKey === "direccion residencial") {
-          direccion = val;
-        } else if (normalizedKey === "tipo_direccion" || normalizedKey === "tipo de direccion" || normalizedKey === "zona") {
-          tipo_direccion = val;
-        } else if (normalizedKey === "estrato" || normalizedKey === "estrato socioeconomico") {
-          estrato = val;
-        } else if (normalizedKey === "estado_civil" || normalizedKey === "estado civil") {
-          estado_civil = val;
-        } else if (normalizedKey === "tipo_aprendiz" || normalizedKey === "tipo de aprendiz") {
-          tipo_aprendiz = val;
         }
       }
       
@@ -442,7 +414,7 @@ class UserService {
       if (isRowEmpty) continue;
 
       // Si no tiene documento O no tiene nombre, es una fila de separación/encabezado/subtotal — ignorar silenciosamente
-      // Un registro real de instructor/aprendiz SIEMPRE tiene ambos campos
+      // Un registro real de instructor SIEMPRE tiene ambos campos
       if (!documento || !nombres_apellidos) continue;
 
       // Limpia TODOS los caracteres que no sean dígitos del documento (puntos, guiones, espacios, letras como "CC", etc.)
@@ -493,28 +465,6 @@ class UserService {
         const password = documento;
         const hashedPassword = await bcrypt.hash(password, 10);
         
-        // Manejo de Programa y Ficha
-        let id_programa = null;
-        let id_ficha = null;
-
-        if (nombre_ficha) {
-          // Busca o crea el programa
-          const [programa] = await ProgramaModel.findOrCreate({
-            where: { nombre_programa: nombre_ficha },
-            defaults: { estado: true }
-          });
-          id_programa = programa.id_programa;
-        }
-
-        if (numero_ficha) {
-          // Busca o crea la ficha
-          const [ficha] = await FichaModel.findOrCreate({
-            where: { numero_ficha },
-            defaults: { id_programa, estado: true }
-          });
-          id_ficha = ficha.id_ficha;
-        }
-
         // Crea el usuario en la base de datos con estado aprobado automáticamente
         const nuevoUsuario = await UserModel.create({
           uuid: uuidv4(),
@@ -524,9 +474,7 @@ class UserService {
           email,
           password: hashedPassword,
           rol,
-          estado: 'aprobado',
-          id_ficha,
-          id_programa
+          estado: 'aprobado'
         });
 
 

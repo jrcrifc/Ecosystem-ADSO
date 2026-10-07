@@ -42,17 +42,6 @@ userModel.hasMany(equipoModel,   { foreignKey: 'id_usuario', as: 'equipos_asigna
 programaModel.hasMany(fichaModel, { foreignKey: 'id_programa', as: 'fichas' });
 fichaModel.belongsTo(programaModel, { foreignKey: 'id_programa', as: 'programa' });
 
-
-
-// Relaciones Ficha - Usuario (Pasantes/Gestores)
-fichaModel.hasMany(userModel, { foreignKey: 'id_ficha', as: 'usuarios' });
-userModel.belongsTo(fichaModel, { foreignKey: 'id_ficha', as: 'ficha' });
-
-// Relaciones Programa - Usuario (Pasantes/Gestores)
-programaModel.hasMany(userModel, { foreignKey: 'id_programa', as: 'usuarios' });
-userModel.belongsTo(programaModel, { foreignKey: 'id_programa', as: 'programa' });
-
-
 // Relación Instructor - Usuario
 instructorModel.belongsTo(userModel, { foreignKey: 'id_usuario', as: 'usuario' });
 userModel.hasOne(instructorModel, { foreignKey: 'id_usuario', as: 'instructor_info' });

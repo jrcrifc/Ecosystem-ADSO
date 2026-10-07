@@ -151,8 +151,8 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
   const esGestor = userRol === "gestor";
   // Verifica si el usuario es pasante
   const esPasante = userRol === "pasante";
-  // Determina si el usuario puede seleccionar un solicitante distinto
-  const puedeSeleccionarSolicitante = esAdmin || esGestor || esPasante;
+  // Solo el administrador puede seleccionar un solicitante distinto
+  const puedeSeleccionarSolicitante = esAdmin;
   // Busca el usuario seleccionado en la lista de usuarios cargados
   const selectedUser = usuarios.find(u => u.id_usuario === parseInt(idUsuarioSolicitante));
 
@@ -168,13 +168,13 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
     // Escucha en tiempo real cambios de equipos y solicitudes para actualizar disponibilidad
     socket.on('equipo_actualizado', cargarEquipos);
     socket.on('solicitud_actualizada', cargarEquipos);
-    // Si puede seleccionar solicitante, carga la lista de usuarios aprobados
+    // Si puede seleccionar solicitante (Admin), carga únicamente los Instructores
     if (puedeSeleccionarSolicitante) {
       apiAxios
         .get("/api/auth/usuarios", { headers })
         .then(res => {
-          const aprobados = res.data.filter(u => u.estado === 'aprobado' && u.rol !== 'Administrador');
-          setUsuarios(aprobados);
+          const instructores = res.data.filter(u => u.rol === 'Instructor');
+          setUsuarios(instructores);
         })
         .catch(() => {});
     }

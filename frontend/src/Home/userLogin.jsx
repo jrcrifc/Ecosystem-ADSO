@@ -64,9 +64,6 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
         case "Pasante":
           navigate("/dashboardPasante");
           break;
-        case "Aprendiz":
-          navigate("/dashboardAprendiz");
-          break;
         default:
           navigate("/home");
       }

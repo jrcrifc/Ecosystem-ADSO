@@ -67,8 +67,12 @@ export const soloAdmin = autorizar("Administrador");
 // Middleware preconfigurado que permite acceso a Admin, Gestor y Pasante
 export const adminOGestor = autorizar("Administrador", "Gestor", "Pasante");
 
+// Middleware preconfigurado que permite acceso a Admin y Pasante
+export const adminOPasante = autorizar("Administrador", "Pasante");
+
 // Middleware preconfigurado que permite acceso a cualquier rol válido del sistema
-export const todosLosRoles = autorizar("Administrador", "Gestor", "Pasante", "Instructor", "Aprendiz");
+export const todosLosRoles = autorizar("Administrador", "Gestor", "Pasante", "Instructor");
 
 // Middleware preconfigurado que permite acceso a Administrador e Instructor
 export const adminOInstructor = autorizar("Administrador", "Instructor");
+

@@ -44,7 +44,7 @@ El backend está organizado de la siguiente manera:
 * **`models/`**: Definición de esquemas de tablas con Sequelize. Contiene `associations.js` que centraliza la relación de cardinalidad entre las 15+ tablas del sistema.
 * **`middleware/`**:
   * `authMiddleware.js`: Filtro de seguridad que intercepta peticiones HTTP para verificar la validez del token JWT.
-  * `roleMiddleware.js`: Comprobación de roles específicos (Administrador, Gestor, Pasante, Instructor, Aprendiz) para autorización de accesos.
+  * `roleMiddleware.js`: Comprobación de roles específicos (Administrador, Gestor, Pasante, Instructor) para autorización de accesos.
 * **`controller/`**: Controladores que reciben los requests HTTP, aplican validaciones de datos y responden con los estados correspondientes.
 * **`service/`**: Capa lógica de negocio del sistema. Aquí se implementan algoritmos críticos como el método **FEFO** (First Expired, First Out) para la distribución inteligente de salidas de reactivos por lotes.
 * **`routes/`**: Definición de los 20 routers Express que exponen los endpoints de la API organizados por módulos.
