@@ -132,8 +132,6 @@ export default function LogActividades() {
             else if (r.includes('/salidas')) modulo = 'salida de reactivo';
             else if (r.includes('/solicitud')) modulo = 'solicitud';
             else if (r.includes('/proveedores')) modulo = 'proveedor';
-            else if (r.includes('/fichas')) modulo = 'ficha de formación';
-            else if (r.includes('/programas')) modulo = 'programa de formación';
             else if (r.includes('/instructores')) modulo = 'instructor';
 
             if (metodo === 'GET') {

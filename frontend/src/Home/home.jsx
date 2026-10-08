@@ -20,7 +20,6 @@ const Home = () => {
   // Estado con los datos del resumen de novedades para el administrador
   const [resumenData, setResumenData] = useState({
     reactivosPorVencer: 0,
-    usuariosPendientes: 0,
     solicitudesPendientes: 0
   });
   // Estado con los totales de registros para mostrar en las tarjetas
@@ -70,13 +69,8 @@ const Home = () => {
           const usersRes = await apiAxios.get("/api/auth/usuarios");
           const users = usersRes.data;
           
-          const reactivosPorVencer = stats.vencimientos?.length || 0;
-          const usuariosPendientes = users.filter(u => u.estado === "pendiente").length;
-          const solicitudesPendientes = stats.solicitudes?.find(s => s.estado === 1)?.count || 0;
-
           setResumenData({
             reactivosPorVencer,
-            usuariosPendientes,
             solicitudesPendientes
           });
         }
@@ -362,7 +356,7 @@ const Home = () => {
         <div style={{
           background: "#fff", borderRadius: "18px", padding: "24px",
           border: "1px solid #e2e8f0",
-          borderLeft: (resumenData.reactivosPorVencer > 0 || resumenData.usuariosPendientes > 0 || resumenData.solicitudesPendientes > 0) ? "5px solid #0077B6" : "5px solid #10b981",
+          borderLeft: (resumenData.reactivosPorVencer > 0 || resumenData.solicitudesPendientes > 0) ? "5px solid #0077B6" : "5px solid #10b981",
           marginBottom: "30px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)",
           opacity: sectionsVisible ? 1 : 0, transform: sectionsVisible ? "translateY(0)" : "translateY(20px)",
           transition: "all 0.7s ease 0.1s"
@@ -374,16 +368,12 @@ const Home = () => {
           {/* Indicadores de novedades */}
           <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "14px", color: "#334155" }}>
             {/* Si todo está al día, muestra mensaje positivo */}
-            {(resumenData.reactivosPorVencer === 0 && resumenData.usuariosPendientes === 0 && resumenData.solicitudesPendientes === 0) ? (
+            {(resumenData.reactivosPorVencer === 0 && resumenData.solicitudesPendientes === 0) ? (
               <div style={{ color: "#047857", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}>
                 <span>✅</span> Todo está al día. No hay pendientes por revisar.
               </div>
             ) : (
               <>
-                {/* Muestra usuarios pendientes si existen */}
-                {resumenData.usuariosPendientes > 0 && (
-                  <div>👤 <b>{resumenData.usuariosPendientes}</b> usuarios pendientes de aprobación.</div>
-                )}
                 {/* Muestra solicitudes activas si existen */}
                 {resumenData.solicitudesPendientes > 0 && (
                   <div>📋 <b>{resumenData.solicitudesPendientes}</b> solicitudes activas en el sistema.</div>

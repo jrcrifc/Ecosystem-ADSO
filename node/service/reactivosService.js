@@ -126,8 +126,6 @@ class reactivosService {
             const filaNum = i + 2;
 
             let nom_reactivo = "";
-            let nom_reactivo_ingles = "";
-            let formula_reactivo = "";
             let presentacion_reactivo = "litros";
             let color_almacenamiento = "Riesgo minimo";
             let color_stand = "Morado";
@@ -142,10 +140,6 @@ class reactivosService {
 
                 if (normalizedKey === "nombre" || normalizedKey === "nom_reactivo" || normalizedKey === "reactivo" || normalizedKey === "nombre reactivo" || normalizedKey === "nombre del reactivo") {
                     nom_reactivo = val;
-                } else if (normalizedKey === "ingles" || normalizedKey === "nom_reactivo_ingles" || normalizedKey === "nombre en ingles" || normalizedKey.includes("ingles")) {
-                    nom_reactivo_ingles = val;
-                } else if (normalizedKey === "formula" || normalizedKey === "formula_reactivo" || normalizedKey === "formula quimica" || normalizedKey.includes("formula")) {
-                    formula_reactivo = val;
                 } else if (normalizedKey === "presentacion" || normalizedKey === "presentacion_reactivo" || normalizedKey === "unidad" || normalizedKey.includes("presentacion")) {
                     const presLow = val.toLowerCase();
                     if (presentacionesValidas.includes(presLow)) {
@@ -193,8 +187,6 @@ class reactivosService {
             try {
                 await reactivosModel.create({
                     nom_reactivo,
-                    nom_reactivo_ingles: nom_reactivo_ingles || null,
-                    formula_reactivo: formula_reactivo || null,
                     presentacion_reactivo,
                     color_almacenamiento: color_almacenamiento || "Riesgo minimo",
                     color_stand: color_stand || "Morado",

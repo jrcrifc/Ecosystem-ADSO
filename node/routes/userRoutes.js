@@ -8,8 +8,8 @@ import { check } from "express-validator";
 import multer from "multer";
 // Importa los controladores de autenticación y gestión de usuarios
 import {
-  RegisterUser, LoginUser, GetPendientes, 
-  GetTodos, AprobarUsuario, RechazarUsuario, ToggleActivoUsuario,
+  RegisterUser, LoginUser, 
+  GetTodos, ToggleActivoUsuario,
   GetProfile, UpdateProfile, ChangePasswordByAdmin, ImportarExcel,
   getResetPassword, setNewPassword
 } from "../controller/userController.js";
@@ -63,14 +63,6 @@ router.post('/reset-password', setNewPassword);
 // Define la ruta GET /api/auth/usuarios para listar todos los usuarios
 router.get("/usuarios", adminOGestor, GetTodos);
 
-// Define la ruta GET /api/auth/usuarios/pendientes para listar usuarios pendientes de aprobación
-router.get("/usuarios/pendientes", soloAdmin, GetPendientes);
-
-// Define la ruta PUT /api/auth/usuarios/:id/aprobar para aprobar un usuario
-router.put("/usuarios/:id/aprobar", soloAdmin, AprobarUsuario);
-
-// Define la ruta PUT /api/auth/usuarios/:id/rechazar para rechazar un usuario
-router.put("/usuarios/:id/rechazar", soloAdmin, RechazarUsuario);
 
 // Define la ruta PUT /api/auth/usuarios/:id/toggle-activo para activar/inactivar un usuario
 router.put("/usuarios/:id/toggle-activo", soloAdmin, ToggleActivoUsuario);

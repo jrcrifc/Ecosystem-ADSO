@@ -154,7 +154,7 @@ export default function Instructores() {
 
       <div className="row mb-4 align-items-center">
         <div className="col-md-5">
-          <input type="text" className="form-control" placeholder="Buscar por documento, nombre, email, programa..."
+          <input type="text" className="form-control" placeholder="Buscar por documento, nombre, email..."
             value={filterText} onChange={(e) => setFilterText(e.target.value)}
             style={{ borderColor: "#dbeafe", borderRadius: "10px", padding: "10px 15px" }} />
         </div>

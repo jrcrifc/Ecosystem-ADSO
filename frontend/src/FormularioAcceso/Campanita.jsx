@@ -184,11 +184,7 @@ export default function Campanita({ userData, onAprobado, userRol }) {
       } catch (e) { console.error("Error al marcar como leída", e); }
     }
 
-    // Redirige segun el tipo de notificacion
-    if (esAdmin && n.tipo === 'solicitud_acceso') {
-      setOpen(false);
-      navigate('/gestion-usuarios');
-    } else if (n.tipo === 'nueva_solicitud') {
+    if (n.tipo === 'nueva_solicitud') {
       setOpen(false);
       navigate('/solicitud');
     } else if (n.tipo === 'cambio_estado_solicitud') {
@@ -211,7 +207,7 @@ export default function Campanita({ userData, onAprobado, userRol }) {
   const colorTipo = (tipo) => {
     if (tipo === 'aprobado') return '#f0fdf4';
     if (tipo === 'rechazado') return '#fef2f2';
-    if (tipo === 'solicitud_acceso') return '#eff6ff';
+
     if (tipo === 'nueva_solicitud') return '#fffbeb';
     if (tipo === 'cambio_estado_solicitud') return '#f5f3ff';
     if (tipo === 'vencimiento_reactivo') return '#fff1f2';
@@ -224,7 +220,7 @@ export default function Campanita({ userData, onAprobado, userRol }) {
   const iconTipo = (tipo) => {
     if (tipo === 'aprobado') return '✅';
     if (tipo === 'rechazado') return '❌';
-    if (tipo === 'solicitud_acceso') return '📋';
+
     if (tipo === 'nueva_solicitud') return '📦';
     if (tipo === 'cambio_estado_solicitud') return '🔄';
     if (tipo === 'vencimiento_reactivo') return '⚠️';
@@ -371,14 +367,7 @@ export default function Campanita({ userData, onAprobado, userRol }) {
                       <p style={{ margin: 0, fontSize: "11px", color: "#94a3b8" }}>
                         {new Date(n.createdAt).toLocaleString('es-CO')}
                       </p>
-                      {/* Indicador de accion clickeable segun el tipo */}
-                      {esAdmin && n.tipo === 'solicitud_acceso' && (
-                        <span style={{
-                          fontSize: "10px", fontWeight: "700", color: "#0077B6",
-                          background: "rgba(0,119,182,0.1)", padding: "2px 8px",
-                          borderRadius: "99px", whiteSpace: "nowrap"
-                        }}>Ver solicitud →</span>
-                      )}
+
                       {(n.tipo === 'nueva_solicitud' || n.tipo === 'cambio_estado_solicitud') && (
                         <span style={{
                           fontSize: "10px", fontWeight: "700", color: "#0077B6",

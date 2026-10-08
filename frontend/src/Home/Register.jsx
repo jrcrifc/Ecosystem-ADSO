@@ -20,32 +20,13 @@ const Register = () => {
     documento: "",
     nombres_apellidos: "",
     email: "",
-    rol: "Pasante",
-    id_programa: "",
-    id_ficha: ""
+    rol: "Pasante"
   });
 
-  // Estados para programas y fichas
-  const [programas, setProgramas] = useState([]);
-  const [fichas, setFichas] = useState([]);
+
   const [fichasFiltradas, setFichasFiltradas] = useState([]);
 
-  // Cargar programas y fichas al montar el componente de manera paralela para mayor velocidad
-  useEffect(() => {
-    const fetchDatos = async () => {
-      try {
-        const [resProg, resFich] = await Promise.all([
-          apiAxios.get('/api/programas'),
-          apiAxios.get('/api/fichas')
-        ]);
-        setProgramas(resProg.data);
-        setFichas(resFich.data);
-      } catch (error) {
-        console.error("Error cargando programas o fichas", error);
-      }
-    };
-    fetchDatos();
-  }, []);
+
 
   // Estado para mensajes de error generales
   const [error, setError] = useState("");
@@ -78,11 +59,7 @@ const Register = () => {
     // Actualiza el estado del formulario con el nuevo valor
     setForm({ ...form, [name]: val });
 
-    // Filtrar fichas si se selecciona un programa
-    if (name === "id_programa") {
-      setFichasFiltradas(fichas.filter(f => String(f.id_programa) === String(val)));
-      setForm(prev => ({ ...prev, id_programa: val, id_ficha: "" }));
-    }
+
 
     // Actualiza los errores de validación en tiempo real
     const errors = { ...fieldErrors };
@@ -120,8 +97,7 @@ const Register = () => {
     // Validaciones finales antes de enviar al servidor
     if (docTrim.length < 5) return setError("El documento es demasiado corto.");
     if (nombreTrim.length < 3) return setError("Por favor, ingresa un nombre válido.");
-    if (!form.id_programa) return setError("El programa es obligatorio.");
-    if (!form.id_ficha) return setError("La ficha es obligatoria.");
+
 
     // Activa el indicador de carga
     setLoading(true);
@@ -133,10 +109,7 @@ const Register = () => {
         documento: docTrim,
         nombres_apellidos: nombreTrim,
         email: emailTrim,
-        rol: form.rol,
-        id_programa: form.id_programa,
-        id_ficha: form.id_ficha
-      };
+        rol: form.rol
 
       // Envía la petición POST al backend para crear el nuevo usuario
       await apiAxios.post("/api/auth", data);
@@ -148,9 +121,7 @@ const Register = () => {
         documento: "",
         nombres_apellidos: "",
         email: "",
-        rol: "Pasante",
-        id_programa: "",
-        id_ficha: ""
+        rol: "Pasante"
       });
 
       // Redirige al login después de 1.8 segundos
@@ -358,27 +329,7 @@ const Register = () => {
             {fieldErrors.email && <div style={errorStyle}>{fieldErrors.email}</div>}
           </div>
 
-          {/* Selectores de Programa y Ficha */}
-          <div className="row g-2 mb-4 mt-2">
-            <div className="col-6">
-              <label className="mb-1" style={{ fontSize: "12px", fontWeight: "700", color: "#1f2937" }}>Programa</label>
-              <select className="form-control" name="id_programa" value={form.id_programa} onChange={handleChange} required style={inputStyle}>
-                <option value="">Selecciona un Programa</option>
-                {programas.map(p => (
-                  <option key={p.id_programa} value={p.id_programa}>{p.nombre_programa}</option>
-                ))}
-              </select>
-            </div>
-            <div className="col-6">
-              <label className="mb-1" style={{ fontSize: "12px", fontWeight: "700", color: "#1f2937" }}>Ficha</label>
-              <select className="form-control" name="id_ficha" value={form.id_ficha} onChange={handleChange} required style={inputStyle} disabled={!form.id_programa}>
-                <option value="">Selecciona una Ficha</option>
-                {fichasFiltradas.map(f => (
-                  <option key={f.id_ficha} value={f.id_ficha}>{f.numero_ficha}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+
 
           {/* Botón de envío del formulario */}
           <button type="submit" className="btn w-100 py-3" disabled={loading}

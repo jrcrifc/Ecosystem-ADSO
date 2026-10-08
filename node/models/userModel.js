@@ -46,11 +46,11 @@ const UserModel = sequelize.define('usuarios', {
     defaultValue: 'Pasante'
   },
   
-  // Campo estado - estado de la cuenta (pendiente, aprobado, rechazado, inactivo)
+  // Campo estado - estado de la cuenta (activo, inactivo)
   estado: {
-    type: DataTypes.ENUM('pendiente', 'aprobado', 'rechazado', 'inactivo'),
+    type: DataTypes.ENUM('activo', 'inactivo'),
     allowNull: false,
-    defaultValue: 'pendiente'
+    defaultValue: 'activo'
   },
   
   // Campo tipo_documento - tipo de documento de identidad

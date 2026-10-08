@@ -27,8 +27,7 @@ import { getIO } from "../socket.js";
 // Importa la librería XLSX para procesar archivos de Excel
 import XLSX from "xlsx";
 // Importa modelos adicionales para la lógica de importación
-import ProgramaModel from "../models/programaModel.js";
-import FichaModel from "../models/fichaModel.js";
+
 
 import InstructorModel from "../models/instructorModel.js";
 
@@ -111,7 +110,7 @@ class UserService {
         email,
         password: hashedPassword,
         rol,
-        estado: 'aprobado',
+        estado: 'activo',
         es_sena_empresa: senaEmpresaVal
       });
       user = existUser;
@@ -126,7 +125,7 @@ class UserService {
         email,
         password: hashedPassword,
         rol,
-        estado: 'aprobado',
+        estado: 'activo',
         es_sena_empresa: senaEmpresaVal
       });
       await registrarLog(email, 'REGISTRO', 'AUTH', `Usuario registrado como ${rol}`);
@@ -158,10 +157,6 @@ class UserService {
     // Verifica la contraseña encriptada comparándola con la ingresada
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) throw new Error("Documento o contraseña incorrectos");
-    // Verifica restricciones de estado de cuenta
-    if (user.estado === 'rechazado') {
-      throw new Error("Tu cuenta fue rechazada. Contacta al administrador del Laboratorio Ambiental.");
-    }
     if (user.estado === 'inactivo') {
       throw new Error("Tu cuenta está inactiva. Contacta al administrador del Laboratorio Ambiental.");
     }
@@ -187,58 +182,7 @@ class UserService {
     });
   }
 
-  // Obtiene únicamente los usuarios pendientes de aprobación
-  async getPendientes() {
-    return await UserModel.findAll({
-      where: { estado: 'pendiente' },
-      attributes: { exclude: ['password', 'token'] }
-    });
-  }
 
-  // Aprueba la cuenta de un usuario pendiente y le envía notificaciones
-  async aprobarUsuario(id) {
-    // Busca el usuario por su ID
-    const user = await UserModel.findByPk(id);
-    if (!user) throw new Error("Usuario no encontrado");
-    // Cambia el estado del usuario a aprobado
-    await user.update({ estado: 'aprobado' });
-    // Crea notificación interna para mostrar en la campana del usuario
-    await NotificacionService.crearNotificacion({
-      id_usuario_origen: null,
-      id_usuario_destino: user.id_usuario,
-      titulo: '¡Cuenta Aprobada!',
-      mensaje: 'El administrador ha aprobado tu cuenta. Ya puedes acceder a todas las funcionalidades.',
-      tipo: 'aprobado'
-    });
-    // Envía correo de aprobación al usuario
-    await emailService.sendAprovalEmail(user.email, user.nombres_apellidos);
-    // Guarda log de auditoría
-    await registrarLog('ADMIN', 'APROBAR_USUARIO', 'GESTION_USUARIOS', `Aprobado usuario: ${user.email}`);
-    // Retorna el usuario actualizado
-    return user;
-  }
-
-  // Rechaza la cuenta de un usuario y fuerza cierre de sesión por WebSocket
-  async rechazarUsuario(id) {
-    // Busca el usuario por su ID
-    const user = await UserModel.findByPk(id);
-    if (!user) throw new Error("Usuario no encontrado");
-    // Cambia el estado del usuario a rechazado
-    await user.update({ estado: 'rechazado' });
-    try {
-      // Fuerza cierre de sesión inmediato en el cliente mediante WebSockets
-      const io = getIO();
-      io.to(`user_${id}`).emit("force_logout", {
-        mensaje: "Tu cuenta ha sido rechazada por el administrador. Contacta al soporte si crees que es un error."
-      });
-    } catch (err) {
-      console.error("No se pudo emitir force_logout:", err);
-    }
-    // Guarda log de auditoría
-    await registrarLog('ADMIN', 'RECHAZAR_USUARIO', 'GESTION_USUARIOS', `Rechazado usuario: ${user.email}`);
-    // Retorna el usuario actualizado
-    return user;
-  }
 
   // Activa o inactiva a un usuario y notifica o expulsa según corresponda
   async toggleActivoUsuario(id) {
@@ -246,7 +190,7 @@ class UserService {
     const user = await UserModel.findByPk(id);
     if (!user) throw new Error("Usuario no encontrado");
     // Determina el nuevo estado invirtiendo el actual
-    const nuevoEstado = user.estado === 'inactivo' ? 'aprobado' : 'inactivo';
+    const nuevoEstado = user.estado === 'inactivo' ? 'activo' : 'inactivo';
     await user.update({ estado: nuevoEstado });
     // Si el nuevo estado es inactivo, fuerza cierre de sesión
     if (nuevoEstado === 'inactivo') {
@@ -351,8 +295,7 @@ class UserService {
       let nombres_apellidos = "";
       let email = "";
       let rol = "Pasante";
-      let numero_ficha = null;
-      let nombre_ficha = null;
+
       let es_sena_empresa = false;
       // Campos extra para Instructor
       let telefono = null;
@@ -376,12 +319,7 @@ class UserService {
         // Mapea la columna de rol
         } else if (normalizedKey === "rol") {
           rol = val;
-        // Mapea la columna de número de ficha con distintas variantes
-        } else if (normalizedKey === "numero_ficha" || normalizedKey === "ficha" || normalizedKey === "numero de ficha") {
-          numero_ficha = val;
-        // Mapea la columna de nombre de ficha con distintas variantes
-        } else if (normalizedKey === "nombre_ficha" || normalizedKey === "nombre de ficha" || normalizedKey === "programa" || normalizedKey === "programa de formacion") {
-          nombre_ficha = val;
+
         // Mapea la columna de es_sena_empresa con distintas variantes
         } else if (normalizedKey === "es_sena_empresa" || normalizedKey === "sena empresa" || normalizedKey === "sena-empresa") {
           es_sena_empresa = val.toLowerCase() === "si" || val.toLowerCase() === "sí" || val.toLowerCase() === "true" || val === "1";
@@ -474,7 +412,7 @@ class UserService {
           email,
           password: hashedPassword,
           rol,
-          estado: 'aprobado'
+          estado: 'activo'
         });
 
 

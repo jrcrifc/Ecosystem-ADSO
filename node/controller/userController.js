@@ -73,47 +73,7 @@ export const GetTodos = async (req, res) => {
   }
 };
 
-// Controlador para obtener la lista de usuarios pendientes de aprobación
-export const GetPendientes = async (req, res) => {
-  // Ejecuta el bloque en try-catch para manejar errores
-  try {
-    // Llama al servicio para obtener los usuarios pendientes
-    const usuarios = await UserService.getPendientes();
-    // Responde con la lista de usuarios pendientes
-    res.json(usuarios);
-  } catch (error) {
-    // Si ocurre un error, responde con estado 500 y el mensaje de error
-    res.status(500).json({ message: error.message });
-  }
-};
 
-// Controlador para aprobar el registro de un usuario pendiente
-export const AprobarUsuario = async (req, res) => {
-  // Ejecuta el bloque en try-catch para manejar errores
-  try {
-    // Llama al servicio para aprobar al usuario por su ID
-    await UserService.aprobarUsuario(req.params.id);
-    // Responde con mensaje de éxito
-    res.json({ message: "Usuario aprobado correctamente" });
-  } catch (error) {
-    // Si ocurre un error, responde con estado 400 y el mensaje de error
-    res.status(400).json({ message: error.message });
-  }
-};
-
-// Controlador para rechazar el registro de un usuario
-export const RechazarUsuario = async (req, res) => {
-  // Ejecuta el bloque en try-catch para manejar errores
-  try {
-    // Llama al servicio para rechazar al usuario por su ID
-    await UserService.rechazarUsuario(req.params.id);
-    // Responde con mensaje de éxito
-    res.json({ message: "Usuario rechazado" });
-  } catch (error) {
-    // Si ocurre un error, responde con estado 400 y el mensaje de error
-    res.status(400).json({ message: error.message });
-  }
-};
 
 // Controlador para activar o inactivar un usuario (toggle)
 export const ToggleActivoUsuario = async (req, res) => {

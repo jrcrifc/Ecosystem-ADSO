@@ -29,8 +29,7 @@ import NotificacionModel from "./notificacionModel.js";
 import LogModel from "./logModel.js";
 
 // Importa nuevos modelos
-import programaModel from "./programaModel.js";
-import fichaModel from "./fichaModel.js";
+
 import instructorModel from "./instructorModel.js";
 
 // Define la relación: un equipo pertenece a un usuario (instructor)
@@ -38,9 +37,6 @@ equipoModel.belongsTo(userModel, { foreignKey: 'id_usuario', as: 'instructor' })
 // Define la relación: un usuario tiene muchos equipos (como instructor)
 userModel.hasMany(equipoModel,   { foreignKey: 'id_usuario', as: 'equipos_asignados' });
 
-// Relaciones Programa - Ficha
-programaModel.hasMany(fichaModel, { foreignKey: 'id_programa', as: 'fichas' });
-fichaModel.belongsTo(programaModel, { foreignKey: 'id_programa', as: 'programa' });
 
 // Relación Instructor - Usuario
 instructorModel.belongsTo(userModel, { foreignKey: 'id_usuario', as: 'usuario' });

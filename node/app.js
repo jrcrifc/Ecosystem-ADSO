@@ -69,8 +69,7 @@ import auditoriaRoutes from './routes/auditoriaRoutes.js';
 import auditoriaMiddleware from './middleware/auditoriaMiddleware.js';
 
 // Nuevas rutas
-import programaRoutes from './routes/programaRoutes.js';
-import fichaRoutes from './routes/fichaRoutes.js';
+
 import instructorRoutes from './routes/instructorRoutes.js';
 // Importa fs para verificar la existencia de archivos
 import fs from 'fs';
@@ -162,8 +161,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/auditoria', auditoriaRoutes);
 
 // Monta las nuevas rutas
-app.use('/api/programas', programaRoutes);
-app.use('/api/fichas', fichaRoutes);
+
 app.use('/api/instructores', instructorRoutes);
 
 // Define la ruta base que retorna un mensaje de bienvenida

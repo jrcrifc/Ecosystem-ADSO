@@ -14,8 +14,6 @@ import Instructores from "./Instructores.jsx";
 
 // Define el componente principal de gestion de usuarios
 export default function GestionUsuarios() {
-  // Estado que almacena los usuarios pendientes de aprobacion
-  const [usuariosPendientes, setUsuariosPendientes] = useState([]);
   // Estado que almacena todos los usuarios para la pestana de gestion
   const [todosUsuarios, setTodosUsuarios] = useState([]);
   // Estado que almacena el texto de busqueda para filtrar usuarios
@@ -51,35 +49,14 @@ export default function GestionUsuarios() {
   // Resetear pagina cuando cambia el filtro de busqueda
   useEffect(() => { setPage(1); }, [filterText]);
 
-  // Actualizacion en tiempo real al recibir notificaciones por socket
-  useEffect(() => {
-    // Manejador de notificaciones entrantes
-    const handleNotification = (nueva) => {
-      // Si la notificacion es sobre un nuevo acceso, recarga la lista
-      if (nueva.tipo === "solicitud_acceso") {
-        cargar();
-      }
-    };
-
-    // Escucha el evento de notificacion del socket
-    socket.on("notification", handleNotification);
-
-    // Limpieza al desmontar el componente
-    return () => {
-      socket.off("notification", handleNotification);
-    };
-  }, [tab]);
-
   // ===== Ordenar usuarios por estado =====
 
   // Funcion que ordena los usuarios segun la prioridad de su estado
   const ordenarUsuarios = (lista) => {
     // Define pesos para cada estado (menor = mas prioritario)
     const pesos = {
-      aprobado: 1,
-      pendiente: 2,
-      inactivo: 3,
-      rechazado: 4
+      activo: 1,
+      inactivo: 2
     };
     // Retorna una copia ordenada de la lista
     return [...lista].sort((a, b) => {
@@ -92,16 +69,7 @@ export default function GestionUsuarios() {
   // Funcion asincrona para cargar los usuarios segun la pestana activa
   const cargar = async () => {
     try {
-      // Si la pestana activa es pendientes, carga solo los usuarios pendientes
-      if (tab === "pendientes") {
-        const resUsuarios = await apiAxios.get("/api/auth/usuarios", { headers });
-        let pendientes = resUsuarios.data.filter(u =>
-          ['Pasante', 'Gestor', 'Instructor'].includes(u.rol) &&
-          u.estado === 'pendiente'
-        );
-        pendientes = ordenarUsuarios(pendientes);
-        setUsuariosPendientes(pendientes);
-      }
+    try {
 
       // Si la pestana activa es alguna de las de rol, carga todos los usuarios excepto Administrador
       if (["instructores", "gestores", "pasantes"].includes(tab)) {
@@ -116,53 +84,7 @@ export default function GestionUsuarios() {
     }
   };
 
-  // ===== Aprobar solicitud de acceso de un usuario =====
 
-  // Funcion asincrona para aprobar la solicitud de acceso de un usuario
-  const aprobarUsuario = async (id_usuario) => {
-    // Muestra dialogo de confirmacion al usuario
-    const result = await Swal.fire({
-      title: "¿Aprobar usuario?", icon: "question",
-      showCancelButton: true, confirmButtonColor: "#0077B6",
-      confirmButtonText: "Sí, aprobar", cancelButtonText: "Cancelar"
-    });
-    // Sale si el usuario cancelo la confirmacion
-    if (!result.isConfirmed) return;
-    try {
-      // Envia peticion PUT para aprobar al usuario
-      await apiAxios.put(`/api/auth/usuarios/${id_usuario}/aprobar`, {}, { headers });
-      Swal.fire("✅ Aprobado", "El usuario ya puede acceder al sistema", "success");
-      // Recarga la lista de usuarios
-      cargar();
-    } catch (err) {
-      // Muestra alerta de error al usuario
-      Swal.fire("Error", err.response?.data?.message, "error");
-    }
-  };
-
-  // ===== Rechazar solicitud de acceso de un usuario =====
-
-  // Funcion asincrona para rechazar la solicitud de acceso de un usuario
-  const rechazarUsuario = async (id_usuario) => {
-    // Muestra dialogo de confirmacion al usuario
-    const result = await Swal.fire({
-      title: "¿Rechazar usuario?", icon: "warning",
-      showCancelButton: true, confirmButtonColor: "#ef4444",
-      confirmButtonText: "Sí, rechazar", cancelButtonText: "Cancelar"
-    });
-    // Sale si el usuario cancelo la confirmacion
-    if (!result.isConfirmed) return;
-    try {
-      // Envia peticion PUT para rechazar al usuario
-      await apiAxios.put(`/api/auth/usuarios/${id_usuario}/rechazar`, {}, { headers });
-      Swal.fire("Rechazado", "El usuario fue rechazado", "info");
-      // Recarga la lista de usuarios
-      cargar();
-    } catch (err) {
-      // Muestra alerta de error al usuario
-      Swal.fire("Error", err.response?.data?.message, "error");
-    }
-  };
 
   // Funcion asincrona para alternar activo/inactivo de un usuario
   const toggleActivo = async (id_usuario, estadoActual) => {
@@ -358,7 +280,7 @@ export default function GestionUsuarios() {
         email: registerForm.email.trim().toLowerCase(),
         password: registerForm.documento.trim(),
         rol: registerTab,
-        estado: "aprobado",
+        estado: "activo",
       }, { headers });
       Swal.fire({
         icon: "success",
@@ -382,9 +304,7 @@ export default function GestionUsuarios() {
   const estadoBadge = (estado) => {
     // Mapa de estilos para cada estado posible
     const map = {
-      pendiente: ["#fffbeb", "#d97706", "⏳ Pendiente"],
-      aprobado: ["#ecfdf5", "#059669", "✅ Activo"],
-      rechazado: ["#fef2f2", "#dc2626", "❌ Rechazado"],
+      activo: ["#ecfdf5", "#059669", "✅ Activo"],
       inactivo: ["#f1f5f9", "#64748b", "⏸️ Inactivo"]
     };
     const [bg, color, label] = map[estado] || ["#f5f5f5", "#666", estado];
@@ -455,23 +375,9 @@ export default function GestionUsuarios() {
 
       {/* Botones de accion segun el estado del usuario */}
       <div style={{ display: "flex", gap: "10px", marginTop: "14px", flexWrap: "wrap" }}>
-        {/* Botones de aprobar y rechazar para usuarios pendientes */}
-        {u.estado === 'pendiente' && (
-          <>
-            <button onClick={() => aprobarUsuario(u.id_usuario)} style={{
-              background: "#0077B6",
-              border: "none", borderRadius: "10px", padding: "10px 24px",
-              color: "#fff", fontWeight: "700", cursor: "pointer", fontSize: "13px"
-            }}>✅ Aprobar</button>
-            <button onClick={() => rechazarUsuario(u.id_usuario)} style={{
-              background: "#fff", border: "1px solid #ef4444",
-              borderRadius: "10px", padding: "10px 24px",
-              color: "#ef4444", fontWeight: "700", cursor: "pointer", fontSize: "13px"
-            }}>❌ Rechazar</button>
-          </>
-        )}
-        {/* Boton de activar/inactivar para usuarios aprobados o inactivos */}
-        {(u.estado === 'aprobado' || u.estado === 'inactivo') && (
+
+        {/* Boton de activar/inactivar para usuarios activos o inactivos */}
+        {(u.estado === 'activo' || u.estado === 'inactivo') && (
           <button onClick={() => toggleActivo(u.id_usuario, u.estado)} style={{
             background: u.estado === 'inactivo' ? "#dcfce7" : "#fee2e2",
             border: "none",
@@ -483,8 +389,8 @@ export default function GestionUsuarios() {
             {u.estado === 'inactivo' ? "Activar" : "Inactivar"}
           </button>
         )}
-        {/* Boton para cambiar contraseña (solo en gestión o si está aprobado/inactivo) */}
-        {(u.estado === 'aprobado' || u.estado === 'inactivo') && (
+        {/* Boton para cambiar contraseña (solo en gestión o si está activo/inactivo) */}
+        {(u.estado === 'activo' || u.estado === 'inactivo') && (
           <button onClick={() => cambiarPasswordAdmin(u.id_usuario)} style={{
             background: "#f1f5f9",
             border: "1px solid #cbd5e1",
@@ -509,8 +415,8 @@ export default function GestionUsuarios() {
       </div>
       <p style={{ color: "#64748b", marginBottom: "24px" }}>Aprueba, rechaza, activa o inactiva usuarios del sistema</p>
 
-      {/* Barra de búsqueda — visible en pendientes, gestores y pasantes */}
-      {["pendientes", "gestores", "pasantes"].includes(tab) && (
+      {/* Barra de búsqueda — visible en gestores y pasantes */}
+      {["gestores", "pasantes"].includes(tab) && (
         <div className="row mb-4 align-items-center">
           <div className="col-md-7">
             <div style={{ position: "relative" }}>
@@ -590,8 +496,8 @@ export default function GestionUsuarios() {
               </button>
             )}
 
-            {/* Botón Importar Excel — solo en pestaña Solicitudes (pendientes) */}
-            {tab === "pendientes" && (
+            {/* Botón Importar Excel — visible en Gestores */}
+            {tab === "gestores" && (
               <button
                 onClick={handleImportarExcel}
                 className="btn text-white"
@@ -630,33 +536,7 @@ export default function GestionUsuarios() {
         ))}
       </div>
 
-      {/* Pestaña de Solicitudes de Acceso (pendientes) */}
-      {tab === "pendientes" && (
-        <div style={{ marginBottom: "24px" }}>
-          <p style={{
-            fontSize: "11px", fontWeight: "700", color: "#0077B6",
-            letterSpacing: "1px", textTransform: "uppercase", marginBottom: "12px"
-          }}>⚙️ Usuarios Pendientes de Aprobación</p>
-          {usuariosPendientes.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>
-              <div style={{ fontSize: "48px", marginBottom: "12px" }}>📭</div>
-              <p style={{ fontSize: "16px" }}>No hay usuarios pendientes</p>
-            </div>
-          ) : (
-            usuariosPendientes
-              .filter(u => {
-                const search = filterText.toLowerCase().trim();
-                return (
-                  String(u.id_usuario || "").includes(search) ||
-                  String(u.nombres_apellidos || "").toLowerCase().includes(search) ||
-                  String(u.documento || "").includes(search) ||
-                  String(u.email || "").toLowerCase().includes(search)
-                );
-              })
-              .map(u => cardUsuario(u))
-          )}
-        </div>
-      )}
+
 
       {tab === "instructores" && <Instructores />}
 
@@ -741,7 +621,7 @@ export default function GestionUsuarios() {
                   {/* Badge de estado */}
                   {estadoBadge(u.estado)}
                   {/* Boton de activar/inactivar */}
-                  {(u.estado === 'aprobado' || u.estado === 'inactivo') && (
+                  {(u.estado === 'activo' || u.estado === 'inactivo') && (
                     <button onClick={() => toggleActivo(u.id_usuario, u.estado)} style={{
                       background: u.estado === 'inactivo' ? "linear-gradient(135deg, #0077B6, #023E8A)" : "transparent",
                       border: u.estado === 'inactivo' ? "none" : "1px solid #f59e0b",
@@ -763,21 +643,7 @@ export default function GestionUsuarios() {
                       🔑 Cambiar Clave
                     </button>
                   )}
-                  {/* Botones de aprobar/rechazar para pendientes */}
-                  {u.estado === 'pendiente' && (
-                    <div style={{ display: "flex", gap: "6px" }}>
-                      <button onClick={() => aprobarUsuario(u.id_usuario)} style={{
-                        background: "linear-gradient(135deg, #0077B6, #023E8A)", border: "none",
-                        borderRadius: "8px", padding: "7px 16px", color: "#fff",
-                        fontWeight: "700", cursor: "pointer", fontSize: "12px"
-                      }}>✅</button>
-                      <button onClick={() => rechazarUsuario(u.id_usuario)} style={{
-                        background: "#fff", border: "1px solid #ef4444",
-                        borderRadius: "8px", padding: "7px 16px", color: "#ef4444",
-                        fontWeight: "700", cursor: "pointer", fontSize: "12px"
-                      }}>❌</button>
-                    </div>
-                  )}
+
                 </div>
               ))}
 
