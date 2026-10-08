@@ -496,13 +496,6 @@ export default function CrudEquipo() {
         </div>
         <div className="col-md-6 text-end d-flex gap-2 justify-content-end flex-wrap">
           <button 
-            className="btn btn-outline-primary" 
-            style={{ fontWeight: "600", borderRadius: "10px" }}
-            onClick={() => navigate("/gestion-equipo")}
-          >
-            <i className="fas fa-exchange-alt me-2"></i>Estados
-          </button>
-          <button 
             className="btn btn-outline-danger" 
             style={{ fontWeight: "600", borderRadius: "10px" }}
             onClick={() => {
