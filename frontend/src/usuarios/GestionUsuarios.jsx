@@ -69,8 +69,6 @@ export default function GestionUsuarios() {
   // Funcion asincrona para cargar los usuarios segun la pestana activa
   const cargar = async () => {
     try {
-    try {
-
       // Si la pestana activa es alguna de las de rol, carga todos los usuarios excepto Administrador
       if (["instructores", "gestores", "pasantes"].includes(tab)) {
         const resUsuarios = await apiAxios.get("/api/auth/usuarios", { headers });

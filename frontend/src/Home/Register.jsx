@@ -110,6 +110,7 @@ const Register = () => {
         nombres_apellidos: nombreTrim,
         email: emailTrim,
         rol: form.rol
+      };
 
       // Envía la petición POST al backend para crear el nuevo usuario
       await apiAxios.post("/api/auth", data);
