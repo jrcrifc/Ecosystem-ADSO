@@ -243,16 +243,11 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
     inactivo:        "#dc3545",
   }[estado] || "#6c757d");
 
-  // Filtra los equipos por texto de búsqueda y oculta los en mantenimiento si es nueva solicitud
+  // Filtra los equipos por texto de búsqueda
   const equiposFiltrados = equipos.filter(e => {
     const search = busquedaEquipo.toLowerCase().trim();
-    const matchesSearch = [e.nom_equipo, e.marca_equipo, e.no_placa]
+    return [e.nom_equipo, e.marca_equipo, e.no_placa]
       .some(f => String(f || "").toLowerCase().includes(search));
-    // En nueva solicitud oculta equipos en mantenimiento
-    if (!selectedSolicitud) {
-        return matchesSearch && e.ultimoEstado !== 'mantenimiento';
-    }
-    return matchesSearch;
   });
 
   // Filtra los usuarios por nombre, documento o email
@@ -479,6 +474,12 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
                       {!estaActivo && (
                         <div style={{ color: "#dc3545", fontSize: "0.7rem", fontWeight: "700", marginTop: "2px" }}>
                           🚫 Equipo inactivo — No disponible para solicitudes
+                        </div>
+                      )}
+                      {/* Mensaje de equipo en mantenimiento */}
+                      {estaActivo && equipo.ultimoEstado === "mantenimiento" && (
+                        <div style={{ color: "#d97706", fontSize: "0.7rem", fontWeight: "700", marginTop: "2px" }}>
+                          🔧 En mantenimiento — No disponible
                         </div>
                       )}
                       {/* Mensaje de equipo ocupado con fecha de disponibilidad */}

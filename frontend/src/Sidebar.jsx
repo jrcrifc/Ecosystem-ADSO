@@ -89,12 +89,10 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado, isCollapsed, setIsCol
       ]
     },
     {
-      key: "equipos", icon: "🔬", text: "Equipos",
+      key: "equipos", icon: "🔬", text: "Gestión de Equipos",
       show: esAdmin || esGestorPasante,
       items: [
-        { icon: "💻", text: "Lista de Equipos", path: "/equipos", show: true },
-
-        { icon: "⚙️", text: "Gestión Equipos", path: "/gestion-equipo", show: true },
+        { icon: "💻", text: "Gestión de Equipos", path: "/equipos", show: true },
       ]
     },
     {
@@ -121,7 +119,7 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado, isCollapsed, setIsCol
   // Obtiene el estado de aprobación del usuario
   const userEstado = userData?.estado || userData?.user?.estado;
   // Determina si el usuario está aprobado (los administradores siempre lo están)
-  const esAprobado = userEstado === 'aprobado' || esAdmin;
+  const esAprobado = userEstado === 'activo' || esAdmin;
 
   return (
     <>

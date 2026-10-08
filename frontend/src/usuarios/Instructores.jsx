@@ -41,7 +41,7 @@ export default function Instructores() {
           <p><strong>📧 Email institucional:</strong> ${inst.email || inst.usuario?.email || 'N/A'}</p>
           <p><strong>📞 Teléfono:</strong> ${inst.telefono || 'N/A'}</p>
           <p><strong>🏷️ Vinculación:</strong> ${inst.tipo_vinculacion || 'N/A'}</p>
-          <p><strong>🟢 Estado:</strong> ${inst.usuario?.estado === 'aprobado' ? 'Activo' : inst.usuario?.estado || 'N/A'}</p>
+          <p><strong>🟢 Estado:</strong> ${inst.usuario?.estado === 'activo' ? 'Activo' : 'Inactivo'}</p>
         </div>
       `,
       confirmButtonColor: '#0077B6',
@@ -56,13 +56,13 @@ export default function Instructores() {
       return;
     }
     const estadoActual = inst.usuario.estado;
-    const nuevoEstado = estadoActual === "aprobado" ? "INACTIVO" : "ACTIVO";
+    const nuevoEstado = estadoActual === "activo" ? "INACTIVO" : "ACTIVO";
     const result = await Swal.fire({
       title: "¿Cambiar estado?",
       text: `El instructor pasará a estar ${nuevoEstado}`,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: estadoActual === "aprobado" ? "#dc3545" : "#0077B6",
+      confirmButtonColor: estadoActual === "activo" ? "#dc3545" : "#0077B6",
       cancelButtonColor: "#6c757d",
       confirmButtonText: "Sí, cambiar",
       cancelButtonText: "Cancelar"
@@ -202,8 +202,8 @@ export default function Instructores() {
                     </span>
                   </td>
                   <td style={{ padding: '14px 16px' }}>
-                    <span className={`px-2 py-1 rounded-pill text-white fw-semibold ${i.usuario?.estado === 'aprobado' ? "bg-success" : "bg-danger"}`} style={{ fontSize: "0.7rem" }}>
-                      {i.usuario?.estado === 'aprobado' ? "ACTIVO" : (i.usuario?.estado ? i.usuario.estado.toUpperCase() : "INACTIVO")}
+                    <span className={`px-2 py-1 rounded-pill text-white fw-semibold ${i.usuario?.estado === 'inactivo' ? "bg-danger" : "bg-success"}`} style={{ fontSize: "0.7rem" }}>
+                      {i.usuario?.estado === 'inactivo' ? "INACTIVO" : "ACTIVO"}
                     </span>
                   </td>
                   <td style={{ padding: '14px 16px' }}>
@@ -221,15 +221,15 @@ export default function Instructores() {
                       </button>
                       <button 
                         onClick={() => toggleEstado(i)} 
-                        title={i.usuario?.estado === 'aprobado' ? "Inactivar" : "Activar"} 
+                        title={i.usuario?.estado === 'inactivo' ? "Activar" : "Inactivar"} 
                         className="btn btn-sm" 
                         style={{ 
-                          background: i.usuario?.estado === 'aprobado' ? "#fee2e2" : "#dcfce7", 
-                          color: i.usuario?.estado === 'aprobado' ? "#dc2626" : "#16a34a", 
+                          background: i.usuario?.estado === 'inactivo' ? "#dcfce7" : "#fee2e2", 
+                          color: i.usuario?.estado === 'inactivo' ? "#16a34a" : "#dc2626", 
                           border: "none" 
                         }}
                       >
-                        <i className={`fas ${i.usuario?.estado === 'aprobado' ? "fa-ban" : "fa-check"}`}></i>
+                        <i className={`fas ${i.usuario?.estado === 'inactivo' ? "fa-check" : "fa-ban"}`}></i>
                       </button>
                     </div>
                   </td>

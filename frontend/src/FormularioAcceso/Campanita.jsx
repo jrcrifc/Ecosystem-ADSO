@@ -195,7 +195,7 @@ export default function Campanita({ userData, onAprobado, userRol }) {
       navigate('/perfil');
     } else if (n.tipo === 'vencimiento_reactivo') {
       setOpen(false);
-      navigate('/control-reactivos');
+      navigate('/reactivos');
     } else {
       setOpen(false);
     }
@@ -306,32 +306,7 @@ export default function Campanita({ userData, onAprobado, userRol }) {
               >
                 📥 {esAdmin ? "Ver Solicitudes" : "Ver Mis Solicitudes"}
               </button>
-              {esAdmin && (
-                <button
-                  onClick={() => {
-                    setOpen(false);
-                    navigate('/gestion-usuarios');
-                  }}
-                  style={{
-                    flex: 1,
-                    background: "#023E8A",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "10px",
-                    padding: "8px 12px",
-                    fontSize: "12px",
-                    fontWeight: "700",
-                    cursor: "pointer",
-                    textAlign: "center",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "6px"
-                  }}
-                >
-                  👥 Gestión Usuarios
-                </button>
-              )}
+
             </div>
           )}
 
@@ -380,7 +355,7 @@ export default function Campanita({ userData, onAprobado, userRol }) {
                           fontSize: "10px", fontWeight: "700", color: "#dc2626",
                           background: "rgba(220,38,38,0.1)", padding: "2px 8px",
                           borderRadius: "99px", whiteSpace: "nowrap"
-                        }}>Ir al control →</span>
+                        }}>Ir a Reactivos →</span>
                       )}
                     </div>
                   </div>

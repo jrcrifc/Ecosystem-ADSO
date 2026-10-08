@@ -448,6 +448,10 @@ const AcercaDe = ({ isPublic = false }) => {
           SENA - Centro Agropecuario "La Granja"
           <br />
           <span style={{ opacity: "0.85", fontWeight: "500", fontSize: "13px" }}>Ficha 3140221 ADSO - Regional Tolima</span>
+          <br />
+          <span style={{ opacity: "0.85", fontWeight: "500", fontSize: "13px", display: "block", marginTop: "5px" }}>
+            Contacto: +57 317 401 0529 | +57 304 524 5798 | +57 313 223 5285
+          </span>
         </p>
       </footer>
     </div>

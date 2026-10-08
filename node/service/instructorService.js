@@ -42,7 +42,7 @@ class InstructorService {
       email,
       password: hashedPassword,
       rol: 'Instructor',
-      estado: 'aprobado'
+      estado: 'activo'
     });
 
     const instructor = await InstructorModel.create({

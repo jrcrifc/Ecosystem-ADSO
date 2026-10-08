@@ -31,6 +31,7 @@ export default function GestionUsuarios() {
   // ===== Modal de registro manual de Pasante/Gestor =====
   // Controla la visibilidad del modal de registro
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [selectedUsuario, setSelectedUsuario] = useState(null);
   // Pestaña activa dentro del modal (Pasante | Gestor)
   const [registerTab, setRegisterTab] = useState("Pasante");
   // Estado del formulario de registro
@@ -90,7 +91,7 @@ export default function GestionUsuarios() {
       Swal.fire("Error en cliente", "El ID del usuario es inválido o no está definido.", "error");
       return;
     }
-    // Determina si se va a activar o inactivar
+    // Determina si se va a activar o inactivar (aprobado cuenta como activo)
     const activar = estadoActual === 'inactivo';
     // Muestra dialogo de confirmacion al usuario
     const result = await Swal.fire({
@@ -100,7 +101,7 @@ export default function GestionUsuarios() {
         : "El usuario no podrá iniciar sesión hasta que lo reactives",
       icon: "question",
       showCancelButton: true,
-      confirmButtonColor: activar ? "#0077B6" : "#f59e0b",
+      confirmButtonColor: activar ? "#0077B6" : "#dc2626",
       confirmButtonText: activar ? "Sí, activar" : "Sí, inactivar",
       cancelButtonText: "Cancelar"
     });
@@ -258,34 +259,53 @@ export default function GestionUsuarios() {
   // ===== Registrar manualmente un Pasante o Gestor =====
 
   // Resetea el formulario de registro al cerrar o cambiar de pestaña
-  const resetRegisterForm = () => setRegisterForm({
-    tipo_documento: "CC",
-    documento: "",
-    nombres_apellidos: "",
-    email: "",
-    password: ""
-  });
+  const resetRegisterForm = () => {
+    setSelectedUsuario(null);
+    setRegisterForm({
+      tipo_documento: "CC",
+      documento: "",
+      nombres_apellidos: "",
+      email: "",
+      password: ""
+    });
+  };
 
   // Maneja el envio del formulario de registro manual
   const handleRegistrarUsuario = async (e) => {
     e.preventDefault();
     setRegisterLoading(true);
     try {
-      await apiAxios.post("/api/auth", {
-        tipo_documento: registerForm.tipo_documento,
-        documento: registerForm.documento.trim(),
-        nombres_apellidos: registerForm.nombres_apellidos.trim(),
-        email: registerForm.email.trim().toLowerCase(),
-        password: registerForm.documento.trim(),
-        rol: registerTab,
-        estado: "activo",
-      }, { headers });
-      Swal.fire({
-        icon: "success",
-        title: `✅ ${registerTab} registrado`,
-        text: `El usuario fue creado correctamente y ya puede iniciar sesión con su documento.`,
-        confirmButtonColor: "#0077B6",
-      });
+      if (selectedUsuario) {
+        await apiAxios.put(`/api/auth/usuarios/${selectedUsuario.id_usuario}`, {
+          tipo_documento: registerForm.tipo_documento,
+          documento: registerForm.documento.trim(),
+          nombres_apellidos: registerForm.nombres_apellidos.trim(),
+          email: registerForm.email.trim().toLowerCase(),
+          rol: registerTab
+        }, { headers });
+        Swal.fire({
+          icon: "success",
+          title: `✅ ${registerTab} actualizado`,
+          text: `La información se guardó correctamente.`,
+          confirmButtonColor: "#0077B6",
+        });
+      } else {
+        await apiAxios.post("/api/auth", {
+          tipo_documento: registerForm.tipo_documento,
+          documento: registerForm.documento.trim(),
+          nombres_apellidos: registerForm.nombres_apellidos.trim(),
+          email: registerForm.email.trim().toLowerCase(),
+          password: registerForm.documento.trim(),
+          rol: registerTab,
+          estado: "activo",
+        }, { headers });
+        Swal.fire({
+          icon: "success",
+          title: `✅ ${registerTab} registrado`,
+          text: `El usuario fue creado correctamente y ya puede iniciar sesión con su documento.`,
+          confirmButtonColor: "#0077B6",
+        });
+      }
       setShowRegisterModal(false);
       resetRegisterForm();
       cargar();
@@ -302,8 +322,9 @@ export default function GestionUsuarios() {
   const estadoBadge = (estado) => {
     // Mapa de estilos para cada estado posible
     const map = {
-      activo: ["#ecfdf5", "#059669", "✅ Activo"],
-      inactivo: ["#f1f5f9", "#64748b", "⏸️ Inactivo"]
+      activo:   ["#ecfdf5", "#059669", "✅ Activo"],
+      inactivo: ["#fee2e2", "#dc2626", "🚫 Inactivo"],
+      aprobado: ["#ecfdf5", "#059669", "✅ Activo"],  // legacy
     };
     const [bg, color, label] = map[estado] || ["#f5f5f5", "#666", estado];
     return <span style={{ background: bg, color, fontSize: "11px", fontWeight: "700", padding: "4px 12px", borderRadius: "99px" }}>{label}</span>;
@@ -374,31 +395,47 @@ export default function GestionUsuarios() {
       {/* Botones de accion segun el estado del usuario */}
       <div style={{ display: "flex", gap: "10px", marginTop: "14px", flexWrap: "wrap" }}>
 
-        {/* Boton de activar/inactivar para usuarios activos o inactivos */}
-        {(u.estado === 'activo' || u.estado === 'inactivo') && (
-          <button onClick={() => toggleActivo(u.id_usuario, u.estado)} style={{
-            background: u.estado === 'inactivo' ? "#dcfce7" : "#fee2e2",
-            border: "none",
-            borderRadius: "10px", padding: "10px 24px",
-            color: u.estado === 'inactivo' ? "#16a34a" : "#dc2626",
-            fontWeight: "700", cursor: "pointer", fontSize: "13px"
-          }}>
-            <i className={`fas ${u.estado === 'inactivo' ? "fa-check" : "fa-ban"} me-2`}></i>
-            {u.estado === 'inactivo' ? "Activar" : "Inactivar"}
-          </button>
-        )}
+        {/* Boton de activar/inactivar */}
+        <button onClick={() => toggleActivo(u.id_usuario, (u.estado === 'inactivo') ? 'inactivo' : 'activo')} style={{
+          background: u.estado === 'inactivo' ? "#dcfce7" : "#fee2e2",
+          border: u.estado === 'inactivo' ? "1px solid #bbf7d0" : "1px solid #fecaca",
+          borderRadius: "10px", padding: "10px 20px",
+          color: u.estado === 'inactivo' ? "#16a34a" : "#dc2626",
+          fontWeight: "700", cursor: "pointer", fontSize: "13px"
+        }}>
+          <i className={`fas ${u.estado === 'inactivo' ? "fa-check" : "fa-ban"} me-2`}></i>
+          {u.estado === 'inactivo' ? "Activar" : "Inactivar"}
+        </button>
+        {/* Boton de editar */}
+        <button onClick={() => {
+          setSelectedUsuario(u);
+          setRegisterTab(u.rol);
+          setRegisterForm({
+            tipo_documento: u.tipo_documento || "CC",
+            documento: u.documento || "",
+            nombres_apellidos: u.nombres_apellidos || "",
+            email: u.email || "",
+            password: ""
+          });
+          setShowRegisterModal(true);
+        }} style={{
+          background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "10px", padding: "10px 24px",
+          color: "#0284c7", fontWeight: "700", cursor: "pointer", fontSize: "13px"
+        }}>
+          ✏️ Editar
+        </button>
+
         {/* Boton para cambiar contraseña (solo en gestión o si está activo/inactivo) */}
-        {(u.estado === 'activo' || u.estado === 'inactivo') && (
-          <button onClick={() => cambiarPasswordAdmin(u.id_usuario)} style={{
-            background: "#f1f5f9",
-            border: "1px solid #cbd5e1",
-            borderRadius: "10px", padding: "10px 24px",
-            color: "#475569",
-            fontWeight: "700", cursor: "pointer", fontSize: "13px"
-          }}>
-            🔑 Cambiar Clave
-          </button>
-        )}
+        {/* Boton para cambiar contraseña */}
+        <button onClick={() => cambiarPasswordAdmin(u.id_usuario)} style={{
+          background: "#f1f5f9",
+          border: "1px solid #cbd5e1",
+          borderRadius: "10px", padding: "10px 24px",
+          color: "#475569",
+          fontWeight: "700", cursor: "pointer", fontSize: "13px"
+        }}>
+          🔑 Cambiar Clave
+        </button>
       </div>
     </div>
   );
@@ -494,44 +531,44 @@ export default function GestionUsuarios() {
               </button>
             )}
 
-            {/* Botón Importar Excel — visible en Gestores */}
-            {tab === "gestores" && (
-              <button
-                onClick={handleImportarExcel}
-                className="btn text-white"
-                style={{
-                  background: "linear-gradient(135deg, #0077B6, #023E8A)",
-                  borderRadius: "10px", fontWeight: "600", padding: "10px 20px",
-                  border: "none", boxShadow: "0 2px 4px rgba(0,119,182,0.2)",
-                  transition: "transform 0.15s ease, opacity 0.15s ease"
-                }}
-                onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.02)"; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
-              >
-                📥 Importar Excel
-              </button>
-            )}
+            {/* Botón Importar Excel — eliminado de Pasantes, solo va en Instructores */}
 
           </div>
         </div>
       )}
 
 
-      {/* Pestañas de navegacion */}
-      <div style={{ display: "flex", gap: "8px", marginBottom: "24px", flexWrap: "wrap" }}>
+      {/* Pestañas de navegacion con diseño mejorado */}
+      <div style={{ display: "flex", gap: "0", marginBottom: "28px", background: "#f1f5f9", borderRadius: "14px", padding: "6px" }}>
         {[
-          ["instructores", "👨‍🏫 Instructores"],
-          ["gestores", "🔑 Gestores"],
-          ["pasantes", "🔬 Pasantes"]
-        ].map(([key, label]) => (
-          <button key={key} onClick={() => setTab(key)} style={{
-            padding: "8px 20px", borderRadius: "10px", border: "none", cursor: "pointer",
-            fontWeight: "600", fontSize: "13px",
-            background: tab === key ? "#0f172a" : "#f1f5f9",
-            color: tab === key ? "#818cf8" : "#64748b",
-            transition: "all 0.2s ease"
-          }}>{label}</button>
-        ))}
+          ["instructores", "👨‍🏫", "Instructores"],
+          ["gestores",     "🔑",        "Gestores"],
+          ["pasantes",     "🔬",        "Pasantes"]
+        ].map(([key, icon, label]) => {
+          const count = key === "instructores" ? null : todosUsuarios.filter(u => u.rol === (key === "gestores" ? "Gestor" : "Pasante")).length;
+          return (
+            <button key={key} onClick={() => setTab(key)} style={{
+              flex: 1,
+              padding: "10px 16px", borderRadius: "10px", border: "none", cursor: "pointer",
+              fontWeight: "700", fontSize: "13px",
+              background: tab === key ? "#fff" : "transparent",
+              color: tab === key ? "#0077B6" : "#64748b",
+              boxShadow: tab === key ? "0 2px 8px rgba(0,0,0,0.08)" : "none",
+              transition: "all 0.25s ease",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: "8px"
+            }}>
+              <span style={{ fontSize: "15px" }}>{icon}</span>
+              <span>{label}</span>
+              {count !== null && count > 0 && (
+                <span style={{
+                  background: tab === key ? "#0077B6" : "#cbd5e1",
+                  color: "#fff", fontSize: "10px", fontWeight: "800",
+                  padding: "1px 7px", borderRadius: "99px", minWidth: "20px", textAlign: "center"
+                }}>{count}</span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
 
@@ -616,31 +653,59 @@ export default function GestionUsuarios() {
                       </div>
                     )}
                   </div>
-                  {/* Badge de estado */}
-                  {estadoBadge(u.estado)}
-                  {/* Boton de activar/inactivar */}
-                  {(u.estado === 'activo' || u.estado === 'inactivo') && (
-                    <button onClick={() => toggleActivo(u.id_usuario, u.estado)} style={{
-                      background: u.estado === 'inactivo' ? "linear-gradient(135deg, #0077B6, #023E8A)" : "transparent",
-                      border: u.estado === 'inactivo' ? "none" : "1px solid #f59e0b",
-                      borderRadius: "8px", padding: "7px 18px",
-                      color: u.estado === 'inactivo' ? "#fff" : "#d97706",
-                      fontWeight: "700", cursor: "pointer", fontSize: "12px",
-                      transition: "all 0.2s"
-                    }}>
-                      {u.estado === 'inactivo' ? "🔓 Activar" : "🔒 Inactivar"}
+                  {/* Estado ordenado */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+                    <span style={{ fontSize: "12px", color: "#64748b", fontWeight: "600" }}>Estado:</span>
+                    {estadoBadge(u.estado)}
+                  </div>
+
+                  {/* Acciones */}
+                  <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
+                    {/* Boton Editar */}
+                    <button 
+                      onClick={() => {
+                        setSelectedUsuario(u);
+                        setRegisterTab(u.rol);
+                        setRegisterForm({
+                          tipo_documento: u.tipo_documento || "CC",
+                          documento: u.documento || "",
+                          nombres_apellidos: u.nombres_apellidos || "",
+                          email: u.email || "",
+                          password: ""
+                        });
+                        setShowRegisterModal(true);
+                      }} 
+                      title="Editar"
+                      className="btn btn-sm"
+                      style={{ background: "#dbeafe", color: "#0077B6", border: "none" }}
+                    >
+                      <i className="fas fa-edit"></i>
                     </button>
-                  )}
-                  {(u.estado === 'aprobado' || u.estado === 'inactivo') && (
-                    <button onClick={() => cambiarPasswordAdmin(u.id_usuario)} style={{
-                      background: "#f1f5f9", border: "1px solid #cbd5e1",
-                      borderRadius: "8px", padding: "7px 18px",
-                      color: "#475569", fontWeight: "700", cursor: "pointer", fontSize: "12px",
-                      transition: "all 0.2s"
-                    }}>
-                      🔑 Cambiar Clave
+
+                    {/* Boton Activar/Inactivar */}
+                    <button 
+                      onClick={() => toggleActivo(u.id_usuario, u.estado === 'inactivo' ? 'inactivo' : 'activo')} 
+                      title={u.estado === 'inactivo' ? "Activar" : "Inactivar"} 
+                      className="btn btn-sm" 
+                      style={{ 
+                        background: u.estado === 'inactivo' ? "#dcfce7" : "#fee2e2", 
+                        color: u.estado === 'inactivo' ? "#16a34a" : "#dc2626", 
+                        border: "none" 
+                      }}
+                    >
+                      <i className={`fas ${u.estado === 'inactivo' ? "fa-check" : "fa-ban"}`}></i>
                     </button>
-                  )}
+
+                    {/* Boton Cambiar Clave */}
+                    <button 
+                      onClick={() => cambiarPasswordAdmin(u.id_usuario)} 
+                      title="Cambiar Clave"
+                      className="btn btn-sm"
+                      style={{ background: "#f1f5f9", color: "#475569", border: "none" }}
+                    >
+                      <i className="fas fa-key"></i>
+                    </button>
+                  </div>
 
                 </div>
               ))}
