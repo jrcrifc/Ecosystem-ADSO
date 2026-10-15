@@ -67,8 +67,8 @@ class NotificacionService {
           rol: {
             [Op.or]: ['Administrador', 'administrador', 'admin', 'Admin']
           },
-          // Solo notifica a administradores aprobados
-          estado: 'aprobado'
+          // Solo notifica a administradores activos
+          estado: 'activo'
         }
       });
       // Muestra en consola la cantidad de administradores a notificar

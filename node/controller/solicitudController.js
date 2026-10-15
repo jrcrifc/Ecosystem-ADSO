@@ -51,24 +51,37 @@ export const create = async (req, res) => {
     try {
         // Determina el ID del usuario solicitante desde el cuerpo o desde el token
         const userId = req.body.id_usuario_solicitante || req.user.id;
+        // Obtiene el rol del usuario desde el token JWT decodificado
+        const userRol = req.user.rol || '';
         // Llama al servicio para crear la solicitud con los datos proporcionados
         const nuevaSolicitud = await solicitudService.create(req.body, userId);
 
-        // Intenta notificar a los administradores y emitir evento WebSocket
-        try {
-            // Envía una notificación a todos los administradores
-            await NotificacionService.notificarAdmins({
-                id_usuario_origen: userId,
-                titulo: '📋 Nueva solicitud de préstamo',
-                mensaje: `Se ha creado una nueva solicitud de préstamo (ID: ${nuevaSolicitud.id_solicitud}). Revísala en Gestión de Solicitudes.`,
-                tipo: 'nueva_solicitud'
-            });
+        // Solo notifica a los administradores si el creador es un Instructor.
+        // Si es Administrador, él mismo gestiona las solicitudes y no necesita recibir la notificación.
+        const esInstructor = ['Instructor', 'instructor'].includes(userRol);
 
-            // Emite un evento global para refrescar las tablas en los clientes conectados
+        if (esInstructor) {
+            // Intenta notificar a los administradores en tiempo real por WebSocket
+            try {
+                // Envía una notificación en tiempo real a todos los administradores aprobados
+                await NotificacionService.notificarAdmins({
+                    id_usuario_origen: userId,
+                    titulo: '📋 Nueva solicitud de un Instructor',
+                    mensaje: `El instructor ha creado una nueva solicitud de préstamo (ID: ${nuevaSolicitud.id_solicitud}). Revísala en Gestión de Solicitudes.`,
+                    tipo: 'nueva_solicitud'
+                });
+                console.log(`🔔 Admins notificados en tiempo real por solicitud del instructor ID ${userId}`);
+            } catch (notifError) {
+                // Registra el error de notificación en consola sin interrumpir el flujo
+                console.error('Error al notificar a admins:', notifError);
+            }
+        }
+
+        // Emite un evento global para refrescar las tablas en los clientes conectados (siempre)
+        try {
             getIO().emit('solicitud_actualizada');
-        } catch (notifError) {
-            // Registra el error de notificación en consola sin interrumpir el flujo
-            console.error('Error al notificar:', notifError);
+        } catch (socketError) {
+            console.error('Error al emitir evento de socket:', socketError);
         }
 
         // Responde con estado 201 y los datos de la solicitud creada
