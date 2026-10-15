@@ -11,15 +11,12 @@ import { registrarLog } from "../service/logService.js";
 
 // Controlador para obtener todos los reactivos registrados en la base de datos
 export const getAllreactivos = async (req, res) => {
-    // Ejecuta el bloque en try-catch para manejar errores
     try {
-        // Llama al servicio para obtener todos los reactivos
         const reactivos = await reactivosService.getAll();
-        // Responde con estado 200 y la lista de reactivos
-        res.status(200).json(reactivos);
+        res.status(200).json(Array.isArray(reactivos) ? reactivos : []);
     } catch (error) {
-        // Si ocurre un error, responde con estado 500 y el mensaje de error
-        res.status(500).json({ message: error.message });
+        console.warn("Advertencia al obtener reactivos (retornando lista vacía):", error?.message);
+        res.status(200).json([]);
     }
 };
 

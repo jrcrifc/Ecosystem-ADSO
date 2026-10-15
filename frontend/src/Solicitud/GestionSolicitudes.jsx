@@ -186,10 +186,10 @@ const GestionSolicitudes = () => {
       const res = await apiAxios.get("/api/solicitud", {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setSolicitudes(res.data);
+      setSolicitudes(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
-      console.error("Error al cargar solicitudes:", error);
-      Swal.fire("Error", "No se pudieron cargar las solicitudes", "error");
+      console.warn("No se pudieron cargar las solicitudes, mostrando tabla vacía:", error?.message);
+      setSolicitudes([]);
     }
   };
   // Función para avanzar al siguiente estado en el flujo de la solicitud

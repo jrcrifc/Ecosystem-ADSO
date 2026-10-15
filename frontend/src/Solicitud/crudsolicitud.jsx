@@ -277,10 +277,9 @@ const CrudSolicitudPrestamos = () => {
         setSolicitudes(res.data);
       } else {
         const misSolicitudes = res.data.filter(s => s.usuario?.id_usuario === userId || s.id_usuario === userId);
-        setSolicitudes(misSolicitudes);
-      }
-    } catch {
-      Swal.fire("Error", "No se pudieron cargar las solicitudes", "error");
+    } catch (error) {
+      console.warn("No se pudieron cargar solicitudes:", error?.message);
+      setSolicitudes([]);
     }
   };
 

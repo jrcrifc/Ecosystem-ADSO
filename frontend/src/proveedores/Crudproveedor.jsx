@@ -34,15 +34,11 @@ const Crudproveedor = () => {
   // Funcion asincrona para obtener los proveedores desde la API
   const cargarProveedor = async () => {
     try {
-      // Realiza la peticion GET al endpoint de proveedores
       const { data } = await apiAxios.get("/api/proveedor");
-      // Actualiza el estado con los datos obtenidos
-      setProveedor(data);
+      setProveedor(Array.isArray(data) ? data : []);
     } catch (error) {
-      // Muestra error en consola si falla la carga
-      console.error("Error cargando proveedor", error);
-      // Muestra alerta de error al usuario
-      Swal.fire("Error", "No se pudo cargar los proveedores", "error");
+      console.warn("No se pudo cargar los proveedores, mostrando lista vacía:", error?.message);
+      setProveedor([]);
     }
   };
 

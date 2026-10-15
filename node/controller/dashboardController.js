@@ -55,49 +55,54 @@ export const getDashboardStats = async (req, res) => {
       });
     }
 
-    // Lógica de panel administrativo global
+    // Lógica de panel administrativo global con protección ante tablas vacías o en migración
+    const safeCount = async (model) => {
+      try { return await model.count(); } catch { return 0; }
+    };
 
-    // Obtiene el conteo total de reactivos registrados
-    const totalReactivos = await reactivoModel.count();
-    // Obtiene el conteo total de equipos registrados
-    const totalEquipos = await equipoModel.count();
-    // Obtiene el conteo total de usuarios registrados
-    const totalUsuarios = await userModel.count();
-    // Obtiene el conteo total de proveedores
-    const totalProveedores = await proveedoresModel.count();
-    // Obtiene el conteo total de solicitudes
-    const totalSolicitudes = await solicitudModel.count();
+    const totalReactivos = await safeCount(reactivoModel);
+    const totalEquipos = await safeCount(equipoModel);
+    const totalUsuarios = await safeCount(userModel);
+    const totalProveedores = await safeCount(proveedoresModel);
+    const totalSolicitudes = await safeCount(solicitudModel);
 
-    // Calcula la fecha actual y la fecha dentro de 30 días para filtrar vencimientos
-    const hoy = new Date();
-    const proximaFecha = new Date();
-    proximaFecha.setDate(hoy.getDate() + 30);
-
-    // Consulta los movimientos de reactivos que vencen en los próximos 30 días
-    const reactivosVencimiento = await movimientoreactivoModel.findAll({
-      where: {
-        fecha_vencimiento: {
-          [Op.between]: [hoy, proximaFecha]
+    let reactivosVencimiento = [];
+    try {
+      const hoy = new Date();
+      const proximaFecha = new Date();
+      proximaFecha.setDate(hoy.getDate() + 30);
+      reactivosVencimiento = await movimientoreactivoModel.findAll({
+        where: {
+          fecha_vencimiento: { [Op.between]: [hoy, proximaFecha] },
+          cantidad_salida: 0
         },
-        cantidad_salida: 0
-      },
-      include: [{ model: reactivoModel, as: 'reactivo', attributes: ['nom_reactivo'] }],
-      limit: 5
-    });
+        include: [{ model: reactivoModel, as: 'reactivo', attributes: ['nom_reactivo'] }],
+        limit: 5
+      });
+    } catch {
+      reactivosVencimiento = [];
+    }
 
-    // Obtiene el conteo de solicitudes agrupadas por estado
-    const solicitudesStats = await solicitudModel.findAll({
-      attributes: ['estado', [solicitudModel.sequelize.fn('COUNT', solicitudModel.sequelize.col('id_solicitud')), 'count']],
-      group: ['estado']
-    });
+    let solicitudesStats = [];
+    try {
+      solicitudesStats = await solicitudModel.findAll({
+        attributes: ['estado', [solicitudModel.sequelize.fn('COUNT', solicitudModel.sequelize.col('id_solicitud')), 'count']],
+        group: ['estado']
+      });
+    } catch {
+      solicitudesStats = [];
+    }
 
-    // Obtiene el conteo de equipos agrupados por su estado físico
-    const equiposStats = await equipoModel.findAll({
-      attributes: ['estado', [equipoModel.sequelize.fn('COUNT', equipoModel.sequelize.col('id_equipo')), 'count']],
-      group: ['estado']
-    });
+    let equiposStats = [];
+    try {
+      equiposStats = await equipoModel.findAll({
+        attributes: ['estado', [equipoModel.sequelize.fn('COUNT', equipoModel.sequelize.col('id_equipo')), 'count']],
+        group: ['estado']
+      });
+    } catch {
+      equiposStats = [];
+    }
 
-    // Responde con todas las estadísticas globales del dashboard
     res.json({
       totals: {
         reactivos: totalReactivos,
@@ -112,9 +117,13 @@ export const getDashboardStats = async (req, res) => {
       soloPersonal: false
     });
   } catch (error) {
-    // Registra el error en consola para depuración
-    console.error("Error en dashboard stats:", error);
-    // Responde con estado 500 y un mensaje genérico
-    res.status(500).json({ message: "Error al obtener estadísticas" });
+    console.error("Error en dashboard stats:", error?.message);
+    res.json({
+      totals: { reactivos: 0, equipos: 0, usuarios: 0, proveedores: 0, solicitudes: 0 },
+      vencimientos: [],
+      solicitudes: [],
+      equiposDistribucion: [],
+      soloPersonal: false
+    });
   }
 };

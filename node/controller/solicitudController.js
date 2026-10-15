@@ -23,11 +23,10 @@ export const getAll = async (req, res) => {
     try {
         // Llama al servicio para obtener todas las solicitudes
         const solicitudes = await solicitudService.getAll();
-        // Responde con la lista de solicitudes en formato JSON
-        res.json(solicitudes);
+        res.json(Array.isArray(solicitudes) ? solicitudes : []);
     } catch (error) {
-        // Si ocurre un error, responde con estado 500 y el mensaje de error
-        res.status(500).json({ success: false, message: error.message });
+        console.warn("Advertencia al obtener solicitudes (retornando lista vacía):", error?.message);
+        res.json([]);
     }
 };
 

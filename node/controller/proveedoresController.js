@@ -27,11 +27,10 @@ export const getAllProveedores = async (req, res) => {
     try {
         // Llama al servicio para obtener todos los proveedores
         const proveedores = await proveedoresService.getAll();
-        // Responde con estado 200 y la lista de proveedores
-        res.status(200).json(proveedores);
+        res.status(200).json(Array.isArray(proveedores) ? proveedores : []);
     } catch (error) {
-        // Si ocurre un error, responde con estado 500 y el mensaje de error
-        res.status(500).json({ message: error.message });
+        console.warn("Advertencia al obtener proveedores (retornando lista vacía):", error?.message);
+        res.status(200).json([]);
     }
 };
 

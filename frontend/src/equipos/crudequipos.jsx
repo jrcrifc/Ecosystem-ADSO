@@ -58,10 +58,10 @@ export default function CrudEquipo() {
       const res = await apiAxios.get("/api/equipos", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setEquipos(res.data);
+      setEquipos(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
-      console.error("Error al cargar equipos:", error);
-      Swal.fire("Error", "No se pudieron cargar los equipos", "error");
+      console.warn("No se pudieron cargar los equipos, mostrando lista vacía:", error?.message);
+      setEquipos([]);
     }
   };
   // Función para alternar el estado (Inactivo <-> Disponible | Mantenimiento <-> Disponible)

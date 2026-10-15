@@ -96,13 +96,11 @@ const CrudReactivos = () => {
   // Funcion asincrona para obtener los reactivos desde la API
   const cargarReactivos = async () => {
     try {
-      // Realiza la peticion GET al endpoint de reactivos
       const res = await apiAxios.get("/api/reactivos");
-      // Actualiza el estado con los datos obtenidos
-      setReactivos(res.data);
+      setReactivos(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
-      // Muestra alerta de error al usuario
-      Swal.fire("Error", "No se pudieron cargar los reactivos", "error");
+      console.warn("No se pudieron cargar los reactivos, mostrando lista vacía:", error?.message);
+      setReactivos([]);
     }
   };
 

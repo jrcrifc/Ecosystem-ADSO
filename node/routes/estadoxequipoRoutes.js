@@ -19,12 +19,11 @@ const router = express.Router();
 // Define la ruta GET /api/estadoxequipo/ultimos/estados para obtener el último estado de cada equipo
 router.get('/ultimos/estados', todosLosRoles, async (req, res) => {
   try {
-    // Obtiene los últimos estados desde el servicio
     const data = await estadoxequipoService.getUltimosEstados();
-    // Responde con los datos obtenidos
-    res.json(data);
+    res.json(Array.isArray(data) ? data : []);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.warn("Advertencia al obtener últimos estados de equipo:", error?.message);
+    res.json([]);
   }
 });
 
