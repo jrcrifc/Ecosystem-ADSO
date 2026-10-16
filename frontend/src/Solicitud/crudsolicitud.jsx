@@ -251,17 +251,24 @@ const CrudSolicitudPrestamos = () => {
       document.body.style.removeProperty("padding-right");
       document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
     };
+    const handleSolicitudHide = () => {
+      if (document.activeElement && typeof document.activeElement.blur === "function") {
+        document.activeElement.blur();
+      }
+    };
     const handleSolicitudHidden = () => {
       setSelectedSolicitud(null);
       cleanupBackdrop();
     };
     if (modalSolicitud) {
+      modalSolicitud.addEventListener("hide.bs.modal", handleSolicitudHide);
       modalSolicitud.addEventListener("hidden.bs.modal", handleSolicitudHidden);
     }
     return () => {
       socket.off('solicitud_actualizada', cargarSolicitudes);
       socket.off('equipo_actualizado', cargarSolicitudes);
       if (modalSolicitud) {
+        modalSolicitud.removeEventListener("hide.bs.modal", handleSolicitudHide);
         modalSolicitud.removeEventListener("hidden.bs.modal", handleSolicitudHidden);
       }
     };
@@ -313,14 +320,19 @@ const CrudSolicitudPrestamos = () => {
   };
 
   const hideModal = () => {
+    if (document.activeElement && typeof document.activeElement.blur === "function") {
+      document.activeElement.blur();
+    }
     const modal = document.getElementById("modalSolicitud");
     if (modal) {
-      const closeBtn = modal.querySelector(".btn-close");
-      if (closeBtn) {
-        closeBtn.click();
-      } else {
-        const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
+      const bsModal = window.bootstrap?.Modal?.getInstance(modal);
+      if (bsModal) {
         bsModal.hide();
+      } else {
+        const closeBtn = modal.querySelector(".btn-close");
+        if (closeBtn && document.activeElement !== closeBtn) {
+          closeBtn.click();
+        }
       }
       document.body.classList.remove("modal-open");
       document.body.style.removeProperty("overflow");

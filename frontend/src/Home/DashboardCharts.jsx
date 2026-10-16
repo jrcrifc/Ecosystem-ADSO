@@ -72,11 +72,8 @@ const DashboardCharts = () => {
           */}
           <div style={{ background: "#fff", padding: "24px", borderRadius: "18px", border: "1px solid #dbeafe", boxShadow: "0 1px 4px rgba(0,0,0,0.03)" }}>
             <h4 style={{ fontSize: "14px", fontWeight: "800", color: "#0A1628", marginBottom: "20px", textAlign: "center" }}>Mis Solicitudes de Préstamo</h4>
-            <div style={{ height: "250px" }}>
-              {/*
-                Gráfico de barras responsive con datos de solicitudes del personal
-              */}
-              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+            <div style={{ height: "250px", width: "100%", position: "relative" }}>
+              <ResponsiveContainer width="100%" height={250} minWidth={100} minHeight={250}>
                 <BarChart data={dataSolicitudes}>
                   {/*
                     Grid con líneas punteadas solo horizontales
@@ -138,8 +135,8 @@ const DashboardCharts = () => {
         */}
         <div style={{ background: "#fff", padding: "24px", borderRadius: "18px", border: "1px solid #dbeafe", boxShadow: "0 1px 4px rgba(0,0,0,0.03)" }}>
           <h4 style={{ fontSize: "14px", fontWeight: "800", color: "#0A1628", marginBottom: "20px" }}>Estado de Equipos</h4>
-          <div style={{ height: "250px" }}>
-            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+          <div style={{ height: "250px", width: "100%", position: "relative" }}>
+            <ResponsiveContainer width="100%" height={250} minWidth={100} minHeight={250}>
               <PieChart>
                 {/*
                   Gráfico de dona con radio interno y externo
@@ -172,8 +169,8 @@ const DashboardCharts = () => {
         */}
         <div style={{ background: "#fff", padding: "24px", borderRadius: "18px", border: "1px solid #dbeafe", boxShadow: "0 1px 4px rgba(0,0,0,0.03)" }}>
           <h4 style={{ fontSize: "14px", fontWeight: "800", color: "#0A1628", marginBottom: "20px" }}>Solicitudes del Sistema</h4>
-          <div style={{ height: "250px" }}>
-            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+          <div style={{ height: "250px", width: "100%", position: "relative" }}>
+            <ResponsiveContainer width="100%" height={250} minWidth={100} minHeight={250}>
               <BarChart data={dataSolicitudes}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} />

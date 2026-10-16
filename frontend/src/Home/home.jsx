@@ -64,10 +64,12 @@ const Home = () => {
           setTotals(stats.totals);
         }
 
-        // Si es admin, también calculamos las alertas y usuarios pendientes
+        // Si es admin, también calculamos las alertas y novedades
         if (esAdmin) {
-          const usersRes = await apiAxios.get("/api/auth/usuarios");
-          const users = usersRes.data;
+          const reactivosPorVencer = stats?.vencimientos?.length || 0;
+          const solicitudesPendientes = Array.isArray(stats?.solicitudes)
+            ? stats.solicitudes.reduce((acc, curr) => acc + (parseInt(curr.count || curr.total || 0, 10) || 0), 0)
+            : 0;
           
           setResumenData({
             reactivosPorVencer,
