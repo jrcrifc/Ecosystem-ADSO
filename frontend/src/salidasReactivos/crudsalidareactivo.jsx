@@ -144,14 +144,22 @@ const CrudSalidasReactivos = () => {
       document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
     };
 
+    // Manejador para desenfocar botones antes de ocultar y evitar advertencia de aria-hidden
+    const handleHide = () => {
+      if (document.activeElement && typeof document.activeElement.blur === "function") {
+        document.activeElement.blur();
+      }
+    };
+
     // Manejador que limpia seleccion y backdrop al cerrar modal
     const handleSalidaHidden = () => {
       setSelectedSalida(null);
       cleanupBackdrop();
     };
 
-    // Agrega listener para el evento hidden.bs.modal en el modal
+    // Agrega listener para los eventos hide y hidden en el modal
     if (modalSalida) {
+      modalSalida.addEventListener("hide.bs.modal", handleHide);
       modalSalida.addEventListener("hidden.bs.modal", handleSalidaHidden);
     }
 
@@ -160,6 +168,7 @@ const CrudSalidasReactivos = () => {
       socket.off("salida_actualizada", cargarSalidas);
       socket.off("movimiento_actualizado", cargarSalidas);
       if (modalSalida) {
+        modalSalida.removeEventListener("hide.bs.modal", handleHide);
         modalSalida.removeEventListener("hidden.bs.modal", handleSalidaHidden);
       }
     };
@@ -256,6 +265,9 @@ const CrudSalidasReactivos = () => {
 
   // Funcion para cerrar el modal de salida y limpiar backdrops residuales
   const hideModal = () => {
+    if (document.activeElement && typeof document.activeElement.blur === "function") {
+      document.activeElement.blur();
+    }
     // Obtiene la referencia al elemento del modal
     const modal = document.getElementById("modalSalida");
     if (modal) {

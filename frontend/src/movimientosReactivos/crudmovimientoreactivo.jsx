@@ -130,6 +130,13 @@ const CrudmovimientoReactivo = () => {
       document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
     };
 
+    // Manejador para desenfocar botones antes de ocultar y evitar advertencia de aria-hidden
+    const handleHide = () => {
+      if (document.activeElement && typeof document.activeElement.blur === "function") {
+        document.activeElement.blur();
+      }
+    };
+
     // Manejador que limpia seleccion y backdrop al cerrar modal de ingreso
     const handleIngresoHidden = () => {
       setSelectedMovimiento(null);
@@ -142,11 +149,13 @@ const CrudmovimientoReactivo = () => {
       cleanupBackdrop();
     };
 
-    // Agrega listeners para el evento hidden.bs.modal en ambos modales
+    // Agrega listeners para el evento hide y hidden en ambos modales
     if (modalIngreso) {
+      modalIngreso.addEventListener("hide.bs.modal", handleHide);
       modalIngreso.addEventListener("hidden.bs.modal", handleIngresoHidden);
     }
     if (modalSalida) {
+      modalSalida.addEventListener("hide.bs.modal", handleHide);
       modalSalida.addEventListener("hidden.bs.modal", handleSalidaHidden);
     }
 
@@ -155,9 +164,11 @@ const CrudmovimientoReactivo = () => {
       socket.off("movimiento_actualizado", cargarMovimientos);
       socket.off("salida_actualizada", cargarMovimientos);
       if (modalIngreso) {
+        modalIngreso.removeEventListener("hide.bs.modal", handleHide);
         modalIngreso.removeEventListener("hidden.bs.modal", handleIngresoHidden);
       }
       if (modalSalida) {
+        modalSalida.removeEventListener("hide.bs.modal", handleHide);
         modalSalida.removeEventListener("hidden.bs.modal", handleSalidaHidden);
       }
     };
@@ -246,6 +257,9 @@ const CrudmovimientoReactivo = () => {
 
   // Funcion para cerrar el modal de ingreso y limpiar backdrops residuales
   const hideModal = () => {
+    if (document.activeElement && typeof document.activeElement.blur === "function") {
+      document.activeElement.blur();
+    }
     // Obtiene la referencia al elemento del modal de ingreso
     const modal = document.getElementById("modalIngreso");
     if (modal) {
