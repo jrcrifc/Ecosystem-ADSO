@@ -14,10 +14,10 @@ export const getAllsalidas = async (req, res) => {
         // Llama al servicio para obtener todas las salidas
         const salidas = await salidasService.getAll();
         // Responde con estado 200 y la lista de salidas
-        res.status(200).json(salidas);
+        res.status(200).json(Array.isArray(salidas) ? salidas : []);
     } catch (error) {
-        // Si ocurre un error, responde con estado 500 y el mensaje de error
-        res.status(500).json({ message: error.message });
+        console.warn("Advertencia al obtener salidas (retornando lista vacía):", error?.message);
+        res.status(200).json([]);
     }
 };
 

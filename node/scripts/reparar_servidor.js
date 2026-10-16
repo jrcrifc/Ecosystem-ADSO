@@ -71,10 +71,12 @@ async function repararServidor() {
       CREATE TABLE \`salidas_reactivos\` (
         \`id_salida\` int(11) NOT NULL AUTO_INCREMENT,
         \`id_movimiento_reactivo\` int(11) NOT NULL,
-        \`fecha_salida\` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        \`cantidad\` decimal(10,3) NOT NULL,
-        \`createdat\` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        \`updatedat\` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        \`cantidad_salida\` decimal(10,3) NOT NULL DEFAULT 0.000,
+        \`fecha_salida\` datetime DEFAULT CURRENT_TIMESTAMP,
+        \`observaciones\` varchar(500) DEFAULT NULL,
+        \`estado\` tinyint(4) NOT NULL DEFAULT 1,
+        \`createdAt\` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        \`updatedAt\` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         PRIMARY KEY (\`id_salida\`),
         KEY \`id_movimiento_reactivo\` (\`id_movimiento_reactivo\`)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
