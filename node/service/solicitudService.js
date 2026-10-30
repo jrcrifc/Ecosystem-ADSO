@@ -98,8 +98,62 @@ class solicitudService {
         return solicitud;
     }
 
+    // Valida que los equipos seleccionados no se crucen con solicitudes activas existentes
+    async validarDisponibilidadEquipos(equipos_ids, fecha_inicio, fecha_fin, idSolicitudExcluida = null) {
+        if (!equipos_ids || !equipos_ids.length || !fecha_inicio || !fecha_fin) return;
+        const inicioNuevo = new Date(fecha_inicio);
+        const finNuevo = new Date(fecha_fin);
+
+        for (const id_equipo of equipos_ids) {
+            const equipo = await equipoModel.findByPk(id_equipo, {
+                include: [{
+                    model: solicitudModel,
+                    as: 'solicitudes',
+                    where: { estado: 1 },
+                    required: false,
+                    include: [{
+                        model: Estadoxsolicitud,
+                        as: 'estados',
+                        include: [{ model: estadoSolicitudModel, as: 'estadoSolicitud', attributes: ['estado'] }],
+                    }],
+                    through: { attributes: [] }
+                }]
+            });
+
+            if (!equipo) continue;
+
+            const ahora = new Date();
+            const conflicto = (equipo.solicitudes || []).find(s => {
+                if (idSolicitudExcluida && s.id_solicitud === idSolicitudExcluida) return false;
+                const estadosSol = (s.estados || []).sort((a, b) => b.id_estadoxsolicitud - a.id_estadoxsolicitud);
+                const ultimoEstadoSol = estadosSol[0]?.estadoSolicitud?.estado;
+                const tieneEstadoBloqueante = ['generado', 'aceptado', 'prestado'].includes(ultimoEstadoSol);
+                const noHaExpirado = s.fecha_fin && new Date(s.fecha_fin) >= ahora;
+
+                if (!tieneEstadoBloqueante || !noHaExpirado) return false;
+
+                // Verificación de solapamiento de intervalos de fechas:
+                // Hay conflicto si: (inicioExistente < finNuevo) && (finExistente > inicioNuevo)
+                const sInicio = new Date(s.fecha_inicio);
+                const sFin = new Date(s.fecha_fin);
+                return (sInicio < finNuevo && sFin > inicioNuevo);
+            });
+
+            if (conflicto) {
+                const fInicio = new Date(conflicto.fecha_inicio).toLocaleDateString('es-CO');
+                const fFin = new Date(conflicto.fecha_fin).toLocaleDateString('es-CO');
+                throw new Error(`El equipo "${equipo.nom_equipo}" ya tiene una reserva activa entre el ${fInicio} y el ${fFin}`);
+            }
+        }
+    }
+
     // Crea una nueva solicitud de préstamo con estado inicial y equipos asociados
     async create(data, userId) {
+        // Valida que ningún equipo tenga solapamiento con solicitudes activas
+        if (data.equipos_ids && data.fecha_inicio && data.fecha_fin) {
+            await this.validarDisponibilidadEquipos(data.equipos_ids, data.fecha_inicio, data.fecha_fin);
+        }
+
         // Crea el registro de cabecera de la solicitud
         const solicitud = await solicitudModel.create({
             ...data,
@@ -151,6 +205,15 @@ class solicitudService {
         if (!['generado', 'aceptado'].includes(ultimoEstado)) {
             throw new Error(`No se puede modificar una solicitud en estado ${ultimoEstado.toUpperCase()}`);
         }
+
+        const fechaIni = data.fecha_inicio || solicitud.fecha_inicio;
+        const fechaFin = data.fecha_fin || solicitud.fecha_fin;
+        const equiposAValidar = data.equipos_ids || [];
+
+        if (equiposAValidar.length && fechaIni && fechaFin) {
+            await this.validarDisponibilidadEquipos(equiposAValidar, fechaIni, fechaFin, parseInt(id));
+        }
+
         // Actualiza los campos generales de la solicitud
         await solicitud.update(data);
         // Actualiza la lista de equipos destruyendo los vínculos antiguos y creando los nuevos

@@ -424,21 +424,49 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
               <p className="text-muted text-center small mt-2">No se encontraron equipos</p>
             ) : (
               equiposFiltrados.map(equipo => {
-                // Determina si el equipo está disponible considerando la fecha de inicio deseada
-                let libreParaFecha = false;
-                if (equipo.fecha_disponible && fecha_inicio) {
-                  // Si la fecha que quiero recogerlo es posterior o igual a cuando se desocupa
-                  if (new Date(fecha_inicio + "T00:00:00") > new Date(equipo.fecha_disponible + "T00:00:00")) {
-                    libreParaFecha = true;
+                // Determina si el equipo está disponible considerando el rango seleccionado
+                const estaActivo = equipo.estado !== 0;
+                const estaEnMantenimiento = equipo.ultimoEstado === "mantenimiento";
+
+                // Verificamos si hay conflicto con alguna reserva activa del equipo
+                let hayConflictoFecha = false;
+                let proximaReserva = null;
+                const reservas = equipo.reservas_activas || [];
+
+                if (fecha_inicio && reservas.length > 0) {
+                  // Si no hay fecha_fin seleccionada aún, tomamos una ventana tentativa o el mismo día inicio
+                  const inicioDeseado = new Date(fecha_inicio + "T00:00:00");
+                  const finDeseado = fecha_fin 
+                    ? new Date(fecha_fin + "T23:59:59")
+                    : new Date(fecha_inicio + "T23:59:59");
+
+                  hayConflictoFecha = reservas.some(r => {
+                    // Si estamos editando y la reserva pertenece a la solicitud actual, la ignoramos
+                    if (selectedSolicitud && r.id_solicitud === selectedSolicitud.id_solicitud) return false;
+                    const rInicio = new Date(r.fecha_inicio);
+                    const rFin = new Date(r.fecha_fin);
+                    return (rInicio <= finDeseado && rFin >= inicioDeseado);
+                  });
+
+                  // Obtenemos la próxima reserva futura si existe
+                  const futuras = reservas
+                    .filter(r => new Date(r.fecha_inicio) > new Date())
+                    .sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio));
+                  if (futuras.length > 0) {
+                    proximaReserva = futuras[0];
                   }
                 }
-                const estaDisponibleFisicamente = (equipo.ultimoEstado === "disponible") || libreParaFecha;
-                // Verifica si el equipo está activo
-                const estaActivo = equipo.estado !== 0;
-                // Determina si se puede seleccionar: disponible y activo
-                const puedeSeleccionarse = estaDisponibleFisicamente && estaActivo;
+
+                // Un equipo está físicamente disponible si no está en mantenimiento y no está ocupado hoy
+                // Y para la fecha solicitada, no debe tener solapamiento
+                const disponibleParaFechas = !hayConflictoFecha;
+                const estaDisponibleFisicamente = !estaEnMantenimiento && (!equipo.estaOcupado || disponibleParaFechas);
+
+                // Determina si se puede seleccionar: activo, no mantenimiento y disponible en las fechas
+                const puedeSeleccionarse = estaActivo && !estaEnMantenimiento && disponibleParaFechas;
                 // Verifica si el equipo ya está seleccionado
                 const seleccionado = equiposSeleccionados.includes(equipo.id_equipo);
+
                 return (
                   // Tarjeta de cada equipo en la lista
                   <div
@@ -477,21 +505,27 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
                         </div>
                       )}
                       {/* Mensaje de equipo en mantenimiento */}
-                      {estaActivo && equipo.ultimoEstado === "mantenimiento" && (
+                      {estaActivo && estaEnMantenimiento && (
                         <div style={{ color: "#d97706", fontSize: "0.7rem", fontWeight: "700", marginTop: "2px" }}>
                           🔧 En mantenimiento — No disponible
                         </div>
                       )}
-                      {/* Mensaje de equipo ocupado con fecha de disponibilidad */}
-                      {estaActivo && equipo.fecha_disponible && !libreParaFecha && (
-                        <div style={{ color: "#d97706", fontSize: "0.7rem", fontWeight: "700", marginTop: "2px" }}>
-                          📅 Ocupado (Disponible el: {new Date(equipo.fecha_disponible + "T00:00:00").toLocaleDateString('es-CO')})
+                      {/* Mensaje de conflicto con reserva en las fechas seleccionadas */}
+                      {estaActivo && !estaEnMantenimiento && hayConflictoFecha && (
+                        <div style={{ color: "#dc3545", fontSize: "0.7rem", fontWeight: "700", marginTop: "2px" }}>
+                          📅 Ocupado en las fechas seleccionadas
                         </div>
                       )}
-                      {/* Mensaje de equipo que se liberará a tiempo */}
-                      {estaActivo && equipo.fecha_disponible && libreParaFecha && (
+                      {/* Mensaje de disponibilidad para las fechas seleccionadas con aviso de reserva futura */}
+                      {estaActivo && !estaEnMantenimiento && !hayConflictoFecha && proximaReserva && (
                         <div style={{ color: "#16a34a", fontSize: "0.7rem", fontWeight: "700", marginTop: "2px" }}>
-                          ✅ Estará libre para esta fecha
+                          ✅ Disponible (Próxima reserva: {new Date(proximaReserva.fecha_inicio).toLocaleDateString('es-CO')})
+                        </div>
+                      )}
+                      {/* Mensaje de disponible libre sin reservas próximas */}
+                      {estaActivo && !estaEnMantenimiento && !hayConflictoFecha && !proximaReserva && (
+                        <div style={{ color: "#16a34a", fontSize: "0.7rem", fontWeight: "700", marginTop: "2px" }}>
+                          ✅ Disponible para préstamo
                         </div>
                       )}
                     </div>
@@ -504,13 +538,29 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
                       }}>
                         Inactivo
                       </span>
+                    ) : estaEnMantenimiento ? (
+                      <span style={{
+                        padding: "2px 10px", borderRadius: 20, fontSize: "0.7rem",
+                        fontWeight: 600, color: "#fff", flexShrink: 0,
+                        backgroundColor: "#d97706"
+                      }}>
+                        Mantenimiento
+                      </span>
+                    ) : hayConflictoFecha ? (
+                      <span style={{
+                        padding: "2px 10px", borderRadius: 20, fontSize: "0.7rem",
+                        fontWeight: 600, color: "#fff", flexShrink: 0,
+                        backgroundColor: "#dc3545"
+                      }}>
+                        Ocupado
+                      </span>
                     ) : (
                       <span style={{
                         padding: "2px 10px", borderRadius: 20, fontSize: "0.7rem",
                         fontWeight: 600, color: "#fff", flexShrink: 0,
-                        backgroundColor: getBadgeColor(equipo.ultimoEstado)
+                        backgroundColor: "#2D8A4E"
                       }}>
-                        {equipo.ultimoEstado || "Sin estado"}
+                        Disponible
                       </span>
                     )}
                   </div>

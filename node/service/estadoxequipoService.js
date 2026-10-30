@@ -89,41 +89,58 @@ class EstadoxequipoService {
       const ordenados = (eq.estadosEquipo || []).sort(
         (a, b) => b.id_estadoxequipo - a.id_estadoxequipo
       );
-      // Obtiene el último estado o asume disponible por defecto
+      // Obtiene el último estado físico base o asume disponible por defecto
       let ultimoEstado = ordenados[0]?.estadoEquipo?.estado || 'disponible';
       // Inicializa banderas de ocupado y fecha disponible
       let estaOcupado = false;
       let fecha_disponible = null;
+
+      const ahora = new Date();
+      // Extrae todas las reservas activas (generado, aceptado o prestado) que no hayan expirado
+      const reservasActivas = (eq.solicitudes || [])
+        .filter(s => {
+          const estadosSol = (s.estados || []).sort((a, b) => b.id_estadoxsolicitud - a.id_estadoxsolicitud);
+          const ultimoEstadoSol = estadosSol[0]?.estadoSolicitud?.estado;
+          const tieneEstadoBloqueante = ['generado', 'aceptado', 'prestado'].includes(ultimoEstadoSol);
+          const tiempoExpirado = s.fecha_fin && new Date(s.fecha_fin) < ahora;
+          return tieneEstadoBloqueante && !tiempoExpirado;
+        })
+        .map(s => {
+          const estadosSol = (s.estados || []).sort((a, b) => b.id_estadoxsolicitud - a.id_estadoxsolicitud);
+          return {
+            id_solicitud: s.id_solicitud,
+            fecha_inicio: s.fecha_inicio,
+            fecha_fin: s.fecha_fin,
+            estado: estadosSol[0]?.estadoSolicitud?.estado
+          };
+        });
+
       // Solo verifica solicitudes activas si el equipo está disponible físicamente
       if (ultimoEstado === 'disponible') {
-        const ahora = new Date();
-        // Busca si existe alguna solicitud que actualmente bloquee al equipo
-        const solicitudActiva = (eq.solicitudes || []).find(s => {
-          // Ordena los estados de la solicitud del más reciente al más antiguo
-          const estadosSol = (s.estados || []).sort((a, b) => b.id_estadoxsolicitud - a.id_estadoxsolicitud);
-          // Obtiene el último estado de la solicitud
-          const ultimoEstadoSol = estadosSol[0]?.estadoSolicitud?.estado;
-          // Solo bloquea si el último estado es generado, aceptado o prestado
-          const tieneEstadoBloqueante = ['generado', 'aceptado', 'prestado'].includes(ultimoEstadoSol);
-          // Verifica si el tiempo de la solicitud no ha expirado
-          const tiempoExpirado = s.fecha_fin && new Date(s.fecha_fin) < ahora;
-          // Retorna true si el estado es bloqueante y no ha expirado
-          return tieneEstadoBloqueante && !tiempoExpirado;
+        // Busca si existe alguna solicitud que ACTUALMENTE (en este momento) esté en curso
+        const solicitudEnCurso = reservasActivas.find(s => {
+          const inicio = new Date(s.fecha_inicio);
+          const fin = new Date(s.fecha_fin);
+          return ahora >= inicio && ahora <= fin;
         });
-        // Si encontró una solicitud activa bloqueante
-        if (solicitudActiva) {
-          // Marca el equipo como ocupado
+
+        if (solicitudEnCurso) {
           estaOcupado = true;
-          // Obtiene el estado de esa solicitud específica para la etiqueta
-          const ultimoEstadoSol = (solicitudActiva.estados || []).sort((a, b) => b.id_estadoxsolicitud - a.id_estadoxsolicitud)[0]?.estadoSolicitud?.estado;
-          // Asigna el estado visual según el tipo de solicitud
-          ultimoEstado = ['generado', 'aceptado'].includes(ultimoEstadoSol) ? 'solicitado' : 'prestado';
-          // Obtiene la fecha de fin de la solicitud como fecha estimada de disponibilidad
-          fecha_disponible = solicitudActiva.fecha_fin ? new Date(solicitudActiva.fecha_fin).toISOString().slice(0, 10) : null;
+          ultimoEstado = ['generado', 'aceptado'].includes(solicitudEnCurso.estado) ? 'solicitado' : 'prestado';
+          fecha_disponible = solicitudEnCurso.fecha_fin ? new Date(solicitudEnCurso.fecha_fin).toISOString().slice(0, 10) : null;
+        } else if (reservasActivas.length > 0) {
+          // Si tiene reservas futuras, buscamos la más cercana
+          const reservasFuturas = reservasActivas
+            .filter(s => new Date(s.fecha_inicio) > ahora)
+            .sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio));
+
+          if (reservasFuturas.length > 0) {
+            fecha_disponible = new Date(reservasFuturas[0].fecha_fin).toISOString().slice(0, 10);
+          }
         }
       }
-      // Retorna el equipo con los campos calculados
-      return { ...eq, ultimoEstado, estaOcupado, fecha_disponible };
+      // Retorna el equipo con los campos calculados y las reservas activas
+      return { ...eq, ultimoEstado, estaOcupado, fecha_disponible, reservas_activas: reservasActivas };
     });
   }
 
