@@ -34,8 +34,8 @@ router.get('/:id', adminOInstructor, getById);
 // Define la ruta POST /api/solicitud para crear una nueva solicitud
 router.post('/', adminOInstructor, create);
 
-// Define la ruta PUT /api/solicitud/:id para actualizar una solicitud existente (solo admin)
-router.put('/:id', soloAdmin, update);
+// Define la ruta PUT /api/solicitud/:id para actualizar una solicitud existente (Admin o Instructor solicitante)
+router.put('/:id', adminOInstructor, update);
 
 // Define la ruta DELETE /api/solicitud/:id para eliminar una solicitud (solo admin)
 router.delete('/:id', soloAdmin, remove);

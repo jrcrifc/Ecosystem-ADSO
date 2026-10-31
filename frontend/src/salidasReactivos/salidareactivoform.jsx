@@ -279,25 +279,48 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
     }
   };
 
-  // Estilos base reutilizables para los campos del formulario
+  // Estilos base reutilizables para etiquetas y campos del formulario
+  const labelStyle = {
+    fontSize: "11px",
+    fontWeight: "bold",
+    color: "#000",
+    marginBottom: "4px",
+    display: "block",
+    textTransform: "uppercase",
+    letterSpacing: "0.5px"
+  };
+
   const inputStyle = {
-    borderRadius: "10px",
-    borderColor: "#e2e8f0",
-    padding: "10px",
-    transition: "all 0.2s ease"
+    width: "100%",
+    padding: "8px 12px",
+    borderRadius: "8px",
+    border: "1.5px solid #fecaca",
+    fontSize: "13px",
+    color: "#1e293b",
+    outline: "none",
+    backgroundColor: "#fff"
   };
 
   // Renderiza el formulario
   return (
-    <form onSubmit={handleSubmit} className="needs-validation" noValidate>
+    <form onSubmit={handleSubmit} className="needs-validation" noValidate style={{ padding: "16px 20px" }}>
       <div className="row g-3">
+
+        {/* Seccion: Selección de Reactivo */}
+        <div className="col-12" style={{ background: "#fff1f2", border: "1px solid #fecdd3", borderRadius: "8px", padding: "8px 12px", marginBottom: "4px" }}>
+          <p style={{ margin: 0, fontSize: "11px", color: "#9f1239", fontWeight: "bold" }}>
+            🧪 Selección de Reactivo para Salida
+          </p>
+        </div>
 
         {/* Campo de seleccion de reactivo */}
         <div className="col-md-12">
-          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Reactivo <span className="text-danger">*</span></label>
+          <label style={labelStyle}>Reactivo <span className="text-danger">*</span></label>
           <select
-            className="form-select"
-            style={inputStyle}
+            style={{
+              ...inputStyle,
+              backgroundColor: selectedSalida?.id_salida ? "#f8fafc" : "#fff"
+            }}
             value={id_reactivo}
             onChange={handleReactivoChange}
             required
@@ -309,7 +332,7 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
             {[...reactivos].sort((a, b) => {
               if (!a._inactivo && b._inactivo) return -1;
               if (a._inactivo && !b._inactivo) return 1;
-              return a.id_reactivo - b.id_reactivo;
+              return (b.id_reactivo || 0) - (a.id_reactivo || 0);
             }).map(r => (
               <option key={r.id_reactivo} value={r.id_reactivo} disabled={r._inactivo === true}>
                 {r.nom_reactivo} — Total: {parseFloat(parseFloat(r.cantidad_inventario || 0).toFixed(3)).toString()} {r.presentacion_reactivo}{r._inactivo ? " — 🚫 Inactivo" : ""}
@@ -320,8 +343,8 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
 
         {/* Indicador de carga mientras se buscan lotes */}
         {loadingLotes && (
-          <div className="col-12 text-center text-muted my-2">
-            <div className="spinner-border spinner-border-sm me-2 text-primary" />
+          <div className="col-12 text-center text-muted my-2" style={{ fontSize: "12px" }}>
+            <div className="spinner-border spinner-border-sm me-2 text-danger" />
             Buscando lotes disponibles...
           </div>
         )}
@@ -331,33 +354,33 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
           <div className="col-12">
             <div style={{
               background: "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)",
-              borderRadius: "15px",
-              padding: "18px",
+              borderRadius: "12px",
+              padding: "14px",
               border: "1px solid #bbf7d0",
               boxShadow: "0 4px 12px rgba(34, 197, 94, 0.05)"
             }}>
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <span className="badge" style={{ background: "#22c55e", color: "#fff", padding: "6px 12px", borderRadius: "8px" }}>📦 ROTACIÓN DE LOTES ACTIVADA</span>
-                <strong style={{ fontSize: "14px", color: "#065f46" }}>Lotes: {lotesFefo.length}</strong>
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <span className="badge" style={{ background: "#16a34a", color: "#fff", padding: "5px 10px", borderRadius: "6px", fontSize: "10px" }}>📦 ROTACIÓN DE LOTES ACTIVADA (FEFO)</span>
+                <strong style={{ fontSize: "12px", color: "#065f46" }}>Lotes activos: {lotesFefo.length}</strong>
               </div>
               
               {/* Informacion resumida del primer lote, total y proximo vencimiento */}
-              <div className="row g-3 text-center">
+              <div className="row g-2 text-center">
                 <div className="col-4">
                   <small className="text-muted d-block" style={{ fontSize: "10px", textTransform: "uppercase", fontWeight: "700" }}>Primer Lote (#{loteFefo.lote})</small>
-                  <strong style={{ fontSize: "16px", color: "#059669" }}>
+                  <strong style={{ fontSize: "15px", color: "#059669" }}>
                     {parseFloat(parseFloat(loteFefo.cantidad_disponible || 0).toFixed(3)).toString()}
                   </strong>
                 </div>
                 <div className="col-4" style={{ borderLeft: "1px solid #dcfce7", borderRight: "1px solid #dcfce7" }}>
                   <small className="text-muted d-block" style={{ fontSize: "10px", textTransform: "uppercase", fontWeight: "700" }}>Total Sistema</small>
-                  <strong style={{ fontSize: "18px", color: "#0077B6" }}>
+                  <strong style={{ fontSize: "16px", color: "#0077B6" }}>
                     {parseFloat(parseFloat(stockTotalDisponible || 0).toFixed(3)).toString()}
                   </strong>
                 </div>
                 <div className="col-4">
                   <small className="text-muted d-block" style={{ fontSize: "10px", textTransform: "uppercase", fontWeight: "700" }}>Próx. Venc.</small>
-                  <strong style={{ fontSize: "13px", color: "#0A1628" }}>
+                  <strong style={{ fontSize: "12px", color: "#0A1628" }}>
                     {loteFefo.fecha_vencimiento ? new Date(loteFefo.fecha_vencimiento).toLocaleDateString('es-CO') : 'Sin fecha'}
                   </strong>
                 </div>
@@ -365,7 +388,7 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
 
               {/* Aviso si hay multiples lotes y se requiere distribucion */}
               {lotesFefoProcesados.length > 1 && (
-                <div className="mt-3 pt-2 text-center" style={{ borderTop: "1px dashed #86efac", fontSize: "11px", color: "#047857", fontWeight: "600" }}>
+                <div className="mt-2 pt-2 text-center" style={{ borderTop: "1px dashed #86efac", fontSize: "11px", color: "#047857", fontWeight: "600" }}>
                   💡 Si tu salida supera las {parseFloat(loteFefo.cantidad_disponible.toFixed(3))} unidades, el sistema usará los demás lotes automáticamente.
                 </div>
               )}
@@ -373,14 +396,25 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
           </div>
         )}
 
+        {/* Seccion: Detalles de Cantidad y Horario */}
+        <div className="col-12 mt-2" style={{ background: "#fff1f2", border: "1px solid #fecdd3", borderRadius: "8px", padding: "8px 12px", marginBottom: "4px" }}>
+          <p style={{ margin: 0, fontSize: "11px", color: "#9f1239", fontWeight: "bold" }}>
+            📋 Cantidad, Fecha y Observaciones de Salida
+          </p>
+        </div>
+
         {/* Campo de cantidad de salida */}
-        <div className="col-md-6">
-          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Cantidad de salida</label>
+        <div className="col-md-4">
+          <label style={labelStyle}>Cantidad de salida <span className="text-danger">*</span></label>
           <div className="input-group">
             <input
               type="number"
               className="form-control"
-              style={{ ...inputStyle, borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
+              style={{
+                ...inputStyle,
+                borderTopRightRadius: id_reactivo ? 0 : "8px",
+                borderBottomRightRadius: id_reactivo ? 0 : "8px"
+              }}
               value={cantidad_salida}
               onChange={(e) => setCantidadSalida(e.target.value)}
               required min="0.001" step="0.001"
@@ -388,27 +422,27 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
             />
             {/* Muestra la unidad de presentacion del reactivo seleccionado */}
             {id_reactivo && (
-              <span className="input-group-text fw-bold" style={{ background: "#f1f5f9", borderTopRightRadius: "10px", borderBottomRightRadius: "10px", fontSize: "12px", color: "#0077B6" }}>
+              <span className="input-group-text fw-bold" style={{ background: "#fff1f2", border: "1.5px solid #fecaca", borderLeft: "none", borderTopRightRadius: "8px", borderBottomRightRadius: "8px", fontSize: "11px", color: "#DC2626" }}>
                 {reactivos.find(x => x.id_reactivo === parseInt(id_reactivo))?.presentacion_reactivo}
               </span>
             )}
           </div>
           {/* Indicador de estado de la cantidad ingresada respecto al stock */}
           {loteFefo && (
-            <div className={`form-text fw-bold mt-1 ${parseFloat(cantidad_salida) > stockTotalDisponible ? 'text-danger' : 'text-success'}`} style={{ fontSize: "11px" }}>
+            <div className={`form-text fw-bold mt-1 ${parseFloat(cantidad_salida) > stockTotalDisponible ? 'text-danger' : 'text-success'}`} style={{ fontSize: "10.5px" }}>
               {parseFloat(cantidad_salida) > stockTotalDisponible 
-                ? `❌ Insuficiente (Máx Total: ${parseFloat(stockTotalDisponible.toFixed(3))})`
+                ? `❌ Insuficiente (Máx: ${parseFloat(stockTotalDisponible.toFixed(3))})`
                 : parseFloat(cantidad_salida) > loteFefo.cantidad_disponible 
-                  ? `🔀 Se distribuirá entre ${lotesFefoProcesados.length} lotes`
-                  : `✅ Se tomará del lote #${loteFefo.lote}`
+                  ? `🔀 Se distribuirá en ${lotesFefoProcesados.length} lotes`
+                  : `✅ Del lote #${loteFefo.lote}`
               }
             </div>
           )}
         </div>
 
         {/* Campo de fecha de salida */}
-        <div className="col-md-6">
-          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>📅 Fecha de salida</label>
+        <div className="col-md-4">
+          <label style={labelStyle}>Fecha de salida <span className="text-danger">*</span></label>
           <DatePicker
             selected={parseDateStr(fecha_salida)}
             onChange={(date) => setFechaSalida(formatDateStr(date))}
@@ -419,7 +453,7 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
             locale="es"
             dateFormat="dd/MM/yyyy"
             className="form-control"
-            style={inputStyle}
+            customInput={<input style={inputStyle} />}
             minDate={new Date()}
             placeholderText="dd/mm/aaaa"
             required
@@ -427,23 +461,28 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
         </div>
 
         {/* Campo de hora de salida */}
-        <div className="col-md-6">
-          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>⏰ Hora</label>
-          <input type="time" className="form-control" style={inputStyle}
-            value={hora_salida} onChange={(e) => setHoraSalida(e.target.value)}
-            min="07:00" max="16:00" required />
+        <div className="col-md-4">
+          <label style={labelStyle}>Hora <span className="text-danger">*</span></label>
+          <input
+            type="time"
+            style={inputStyle}
+            value={hora_salida}
+            onChange={(e) => setHoraSalida(e.target.value)}
+            min="07:00"
+            max="16:00"
+            required
+          />
         </div>
 
         {/* Campo de observaciones */}
         <div className="col-md-12">
-          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>📝 Observaciones</label>
+          <label style={labelStyle}>Observaciones</label>
           <textarea
-            className="form-control"
-            style={inputStyle}
+            style={{ ...inputStyle, resize: "vertical" }}
             value={observaciones}
             onChange={(e) => setObservaciones(e.target.value)}
             rows={2}
-            placeholder="¿Para qué se usará? (opcional)"
+            placeholder="¿Para qué se usará este reactivo? (opcional)"
             maxLength={500}
           />
           {/* Contador de caracteres */}
@@ -454,27 +493,31 @@ const SalidaReactivoForm = ({ selectedSalida, refreshData, hideModal }) => {
           </div>
         </div>
 
-        {/* Boton de envio con estado de carga */}
-        <div className="col-12 mt-3">
-          <button 
-            type="submit" 
-            className="btn btn-primary w-100 py-3 shadow-sm" 
-            disabled={loading || (loteFefo && parseFloat(cantidad_salida) > stockTotalDisponible)}
-            style={{ 
-              borderRadius: "12px", 
-              fontWeight: "700", 
-              background: selectedSalida?.id_salida
-                ? "linear-gradient(135deg, #0077B6, #023E8A)" 
-                : "linear-gradient(135deg, #DC3545, #A4161A)", 
-              border: "none" 
+        {/* Botones de Cancelar y Registrar con estilo metalizado rojo */}
+        <div className="col-12 mt-4 d-flex gap-2">
+          <button
+            type="button"
+            onClick={hideModal}
+            style={{
+              flex: 1, padding: "8px", borderRadius: "8px", border: "1.5px solid #e2e8f0",
+              background: "#f8fafc", color: "#64748b", fontWeight: "600", cursor: "pointer", fontSize: "13px"
             }}
           >
-            {/* Muestra spinner mientras carga o el texto segun sea crear o editar */}
-            {loading ? (
-              <><span className="spinner-border spinner-border-sm me-2" /> Procesando...</>
-            ) : (
-              selectedSalida?.id_salida ? "Actualizar Salida" : "Registrar Salida de Inventario"
-            )}
+            Cancelar
+          </button>
+          <button 
+            type="submit" 
+            disabled={loading || (loteFefo && parseFloat(cantidad_salida) > stockTotalDisponible)}
+            style={{ 
+              flex: 2, padding: "8px", borderRadius: "8px", border: "none",
+              background: "linear-gradient(135deg, #DC2626, #991B1B)", 
+              color: "#fff", fontWeight: "700",
+              cursor: (loading || (loteFefo && parseFloat(cantidad_salida) > stockTotalDisponible)) ? "not-allowed" : "pointer",
+              fontSize: "13px",
+              opacity: (loading || (loteFefo && parseFloat(cantidad_salida) > stockTotalDisponible)) ? 0.75 : 1
+            }}
+          >
+            {loading ? "Guardando..." : selectedSalida?.id_salida ? "Actualizar Salida" : "Registrar Salida"}
           </button>
         </div>
 

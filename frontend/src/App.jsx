@@ -339,18 +339,16 @@ function App() {
             {/* Rutas de gestión de formación — solo administrador */}
             <Route path="/instructores" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Instructores /></SoloAdminRoute>} />
 
-            {/* Rutas para reactivos y equipos */}
+            {/* Rutas para reactivos, equipos y proveedores */}
             <Route path="/reactivos" element={<AdminRoute isAuth={isAuth} rol={userRol}><CrudReactivos /></AdminRoute>} />
             <Route path="/equipos" element={<AdminRoute isAuth={isAuth} rol={userRol}><CrudEquipo /></AdminRoute>} />
             <Route path="/movimientoreactivo" element={<AdminPasanteRoute isAuth={isAuth} rol={userRol}><CrudmovimientoReactivo /></AdminPasanteRoute>} />
-            <Route path="/proveedor" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Crudproveedor /></SoloAdminRoute>} />
+            <Route path="/proveedor" element={<AdminRoute isAuth={isAuth} rol={userRol}><Crudproveedor /></AdminRoute>} />
             <Route path="/salidas" element={<AdminPasanteRoute isAuth={isAuth} rol={userRol}><Crudsalidas /></AdminPasanteRoute>} />
             <Route path="/estadoequipo" element={<AdminRoute isAuth={isAuth} rol={userRol}><Crudestadoequipo /></AdminRoute>} />
             <Route path="/historial-equipo" element={<AdminRoute isAuth={isAuth} rol={userRol}><HistorialEstadoEquipo /></AdminRoute>} />
             <Route path="/gestion-equipo" element={<AdminRoute isAuth={isAuth} rol={userRol}><GestionEstadoEquipo /></AdminRoute>} />
             <Route path="/control-reactivos" element={<AdminPasanteRoute isAuth={isAuth} rol={userRol}><ControlReactivos /></AdminPasanteRoute>} />
-
-
 
             {/* Ruta comodín que redirige al home o login según autenticación */}
             <Route path="*" element={<Navigate to={isAuth ? "/home" : "/UserLogin"} replace />} />

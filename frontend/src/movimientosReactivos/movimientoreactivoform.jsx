@@ -203,23 +203,45 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
   // Obtiene el reactivo seleccionado para mostrar su presentacion
   const selectedReactivo = reactivos.find(x => x.id_reactivo === parseInt(form.id_reactivo));
 
-  // Estilos base reutilizables para los campos del formulario
+  // Estilos base reutilizables para etiquetas y campos del formulario
+  const labelStyle = {
+    fontSize: "11px",
+    fontWeight: "bold",
+    color: "#000",
+    marginBottom: "4px",
+    display: "block",
+    textTransform: "uppercase",
+    letterSpacing: "0.5px"
+  };
+
   const inputStyle = {
-    borderRadius: "10px",
-    borderColor: "#dbeafe",
-    transition: "all 0.2s ease"
+    width: "100%",
+    padding: "8px 12px",
+    borderRadius: "8px",
+    border: "1.5px solid #dbeafe",
+    fontSize: "13px",
+    color: "#1e293b",
+    outline: "none",
+    backgroundColor: "#fff"
   };
 
   // Renderiza el formulario
   return (
-    <form onSubmit={handleSubmit} className="needs-validation" noValidate>
+    <form onSubmit={handleSubmit} className="needs-validation" noValidate style={{ padding: "16px 20px" }}>
       <div className="row g-3">
+
+        {/* Seccion: Datos del Reactivo y Cantidad */}
+        <div className="col-12" style={{ background: "#f0f7ff", border: "1px solid #bae6fd", borderRadius: "8px", padding: "8px 12px", marginBottom: "4px" }}>
+          <p style={{ margin: 0, fontSize: "11px", color: "#0369a1", fontWeight: "bold" }}>
+            🧪 Selección de Reactivo y Cantidad Recibida
+          </p>
+        </div>
+
         {/* Campo de seleccion de reactivo */}
         <div className="col-12">
-          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Reactivo <span className="text-danger">*</span></label>
+          <label style={labelStyle}>Reactivo <span className="text-danger">*</span></label>
           <select
             name="id_reactivo"
-            className="form-select py-2"
             value={form.id_reactivo}
             onChange={handleChange}
             required
@@ -230,7 +252,7 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
             {[...reactivos].sort((a, b) => {
               if (a.estado === 1 && b.estado !== 1) return -1;
               if (a.estado !== 1 && b.estado === 1) return 1;
-              return a.id_reactivo - b.id_reactivo;
+              return (b.id_reactivo || 0) - (a.id_reactivo || 0);
             }).map((r) => (
               <option key={r.id_reactivo} value={r.id_reactivo} disabled={r.estado !== 1}>
                 {r.nom_reactivo} — ({r.presentacion_reactivo}){r.estado !== 1 ? " — 🚫 Inactivo" : ""}
@@ -241,7 +263,7 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
 
         {/* Campo de cantidad inicial con unidad */}
         <div className="col-md-6">
-          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Cantidad de Ingreso</label>
+          <label style={labelStyle}>Cantidad de Ingreso <span className="text-danger">*</span></label>
           <div className="input-group">
             <input
               type="number"
@@ -253,11 +275,15 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
               onChange={handleChange}
               required
               placeholder="0.00"
-              style={{ ...inputStyle, borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
+              style={{
+                ...inputStyle,
+                borderTopRightRadius: selectedReactivo ? 0 : "8px",
+                borderBottomRightRadius: selectedReactivo ? 0 : "8px"
+              }}
             />
             {/* Muestra la unidad de presentacion del reactivo seleccionado */}
             {selectedReactivo && (
-              <span className="input-group-text fw-bold" style={{ background: "#f1f5f9", borderColor: "#dbeafe", borderTopRightRadius: "10px", borderBottomRightRadius: "10px", color: "#0077B6", fontSize: "12px" }}>
+              <span className="input-group-text fw-bold" style={{ background: "#f0f7ff", border: "1.5px solid #dbeafe", borderLeft: "none", borderTopRightRadius: "8px", borderBottomRightRadius: "8px", color: "#0077B6", fontSize: "12px" }}>
                 {selectedReactivo.presentacion_reactivo}
               </span>
             )}
@@ -269,11 +295,10 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
 
         {/* Campo de numero de lote */}
         <div className="col-md-6">
-          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Lote</label>
+          <label style={labelStyle}>Lote</label>
           <input
             type="text"
             name="lote"
-            className="form-control"
             value={form.lote}
             onChange={handleChange}
             placeholder="N° de Lote / Batch"
@@ -281,9 +306,16 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
           />
         </div>
 
+        {/* Seccion: Trazabilidad y Vencimiento */}
+        <div className="col-12 mt-3" style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", padding: "8px 12px", marginBottom: "4px" }}>
+          <p style={{ margin: 0, fontSize: "11px", color: "#065f46", fontWeight: "bold" }}>
+            📅 Trazabilidad, Vencimiento y Proveedor
+          </p>
+        </div>
+
         {/* Campo de fecha de vencimiento */}
         <div className="col-md-6">
-          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Fecha de Vencimiento</label>
+          <label style={labelStyle}>Fecha de Vencimiento</label>
           <DatePicker
             selected={parseDateStr(form.fecha_vencimiento)}
             onChange={(date) => handleChange({ target: { name: 'fecha_vencimiento', value: formatDateStr(date) } })}
@@ -299,7 +331,7 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
               d.setDate(d.getDate() + 1);
               return d;
             })()}
-            style={inputStyle}
+            customInput={<input style={inputStyle} />}
             placeholderText="dd/mm/aaaa"
             showMonthDropdown
             showYearDropdown
@@ -309,10 +341,9 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
 
         {/* Campo de seleccion de proveedor */}
         <div className="col-md-6">
-          <label className="form-label fw-bold" style={{ color: "#0A1628" }}>Proveedor</label>
+          <label style={labelStyle}>Proveedor</label>
           <select
             name="id_proveedor"
-            className="form-select"
             value={form.id_proveedor}
             onChange={handleChange}
             style={inputStyle}
@@ -327,20 +358,29 @@ const MovimientoReactivoForm = ({ selectedMovimiento, refreshData, hideModal }) 
           </select>
         </div>
 
-        {/* Boton de envio con estado de carga */}
-        <div className="col-12 mt-4">
+        {/* Botones de Cancelar y Guardar con estilo unificado */}
+        <div className="col-12 mt-4 d-flex gap-2">
+          <button
+            type="button"
+            onClick={hideModal}
+            style={{
+              flex: 1, padding: "8px", borderRadius: "8px", border: "1.5px solid #e2e8f0",
+              background: "#f8fafc", color: "#64748b", fontWeight: "600", cursor: "pointer", fontSize: "13px"
+            }}
+          >
+            Cancelar
+          </button>
           <button 
             type="submit" 
-            className="btn btn-primary w-100 py-3 shadow-sm" 
             disabled={loading}
-            style={{ borderRadius: "12px", fontWeight: "700", background: "linear-gradient(135deg, #0077B6, #023E8A)", border: "none" }}
+            style={{
+              flex: 2, padding: "8px", borderRadius: "8px", border: "none",
+              background: "linear-gradient(135deg, #0077B6, #023E8A)", color: "#fff",
+              fontWeight: "700", cursor: loading ? "not-allowed" : "pointer", fontSize: "13px",
+              opacity: loading ? 0.75 : 1
+            }}
           >
-            {/* Muestra spinner mientras carga o el texto segun sea crear o editar */}
-            {loading ? (
-              <><span className="spinner-border spinner-border-sm me-2"></span> Procesando...</>
-            ) : (
-              <><i className="fa-solid fa-plus-circle me-2"></i> {selectedMovimiento ? "Actualizar Registro" : "Completar Ingreso de Reactivo"}</>
-            )}
+            {loading ? "Guardando..." : selectedMovimiento ? "Actualizar Ingreso" : "Registrar Ingreso"}
           </button>
         </div>
       </div>

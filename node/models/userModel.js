@@ -41,7 +41,7 @@ const UserModel = sequelize.define('usuarios', {
   
   // Campo rol - enum con los roles disponibles en el sistema
   rol: {
-    type: DataTypes.ENUM('Pasante', 'Gestor', 'Instructor', 'Administrador'),
+    type: DataTypes.ENUM('Administrador', 'Gestor', 'Pasante'),
     allowNull: false,
     defaultValue: 'Pasante'
   },

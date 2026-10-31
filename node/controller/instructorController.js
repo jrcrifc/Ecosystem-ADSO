@@ -29,6 +29,18 @@ export const updateInstructor = async (req, res) => {
   }
 };
 
+export const toggleActivoInstructor = async (req, res) => {
+  try {
+    const result = await InstructorService.toggleActivo(req.params.id);
+    res.json({
+      message: `Instructor ${result.estado === 'inactivo' ? 'inactivado' : 'activado'} correctamente`,
+      estado: result.estado
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
 export const deleteInstructor = async (req, res) => {
   try {
     await InstructorService.delete(req.params.id);

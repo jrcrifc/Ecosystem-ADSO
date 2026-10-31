@@ -5,183 +5,142 @@
 // actualización de datos, cambio de contraseña e importación por Excel.
 // ============================================================
 
-// Importa el servicio de usuarios para la lógica de negocio
 import UserService from "../service/userService.js";
-// Importa el modelo de Usuarios para consultas directas a la base de datos
 import UserModel from "../models/userModel.js";
-// Importa el modelo de Logs para registrar el inicio de sesión
-import LogModel from '../models/logModel.js';
 
 // Controlador para registrar un nuevo usuario en la plataforma
 export const RegisterUser = async (req, res) => {
-  // Ejecuta el bloque en try-catch para manejar errores
   try {
-    // Extrae los campos del cuerpo de la petición
     const { tipo_documento, documento, nombres_apellidos, email, rol, es_sena_empresa, estado } = req.body;
-    // Valida que los campos obligatorios estén presentes (la contraseña se genera a partir del documento)
     if (!documento || !nombres_apellidos || !email || !rol) {
-      // Responde con error 400 si faltan campos obligatorios
       return res.status(400).json({ message: "Todos los campos son obligatorios" });
     }
-    // Llama al servicio para registrar el usuario con los datos proporcionados
     const user = await UserService.registerUser({ 
       tipo_documento,
       documento, 
       nombres_apellidos, 
       email, 
-      password: "", // El userService la sobrescribe con el documento
+      password: "",
       rol, 
       es_sena_empresa,
       estado
     });
-    // Responde con estado 201 y los datos del usuario creado
     res.status(201).json({ message: "Usuario registrado correctamente", user });
   } catch (error) {
-    // Si ocurre un error, responde con estado 500 y el mensaje de error
     res.status(500).json({ message: error.message });
+  }
+};
+
+// Controlador para actualizar un usuario desde el panel de administración
+export const UpdateUserByAdmin = async (req, res) => {
+  try {
+    const user = await UserService.updateUserByAdmin(req.params.id, req.body);
+    res.json({ message: "Usuario actualizado correctamente", user });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
 };
 
 // Controlador para iniciar sesión y obtener un token JWT
 export const LoginUser = async (req, res) => {
-  // Ejecuta el bloque en try-catch para manejar errores
   try {
-    // Llama al servicio para autenticar al usuario con las credenciales proporcionadas
     const result = await UserService.loginUser(req.body);
-    
-    // El inicio de sesión ya se registra de manera limpia dentro de UserService.loginUser
-
-    // Responde con el resultado de la autenticación (token y datos del usuario)
     res.json(result);
   } catch (error) {
-    // Si ocurre un error, responde con estado 400 y el mensaje de error
     res.status(400).json({ message: error.message });
   }
 };
 
 // Controlador para obtener la lista de todos los usuarios registrados
 export const GetTodos = async (req, res) => {
-  // Ejecuta el bloque en try-catch para manejar errores
   try {
-    // Llama al servicio para obtener todos los usuarios
     const usuarios = await UserService.getTodos();
-    // Responde con la lista de usuarios en formato JSON
     res.json(usuarios);
   } catch (error) {
-    // Si ocurre un error, responde con estado 500 y el mensaje de error
     res.status(500).json({ message: error.message });
   }
 };
 
-
-
 // Controlador para activar o inactivar un usuario (toggle)
 export const ToggleActivoUsuario = async (req, res) => {
-  // Ejecuta el bloque en try-catch para manejar errores
   try {
-    // Llama al servicio para cambiar el estado activo/inactivo del usuario
     const result = await UserService.toggleActivoUsuario(req.params.id);
-    // Responde con mensaje dinámico según el nuevo estado
     res.json({ message: `Usuario ${result.estado === 'inactivo' ? 'inactivado' : 'activado'} correctamente`, estado: result.estado });
   } catch (error) {
-    // Si ocurre un error, responde con estado 400 y el mensaje de error
     res.status(400).json({ message: error.message });
   }
 };
 
-// Controlador para obtener el perfil del usuario autenticado
+// Controlador para obtener el perfil del usuario o instructor autenticado
 export const GetProfile = async (req, res) => {
-  // Ejecuta el bloque en try-catch para manejar errores
   try {
-    // Obtiene los datos del usuario por su ID (extraído del token JWT)
-    const user = await UserService.getById(req.user.id);
-    // Responde con los datos del perfil del usuario
+    const user = await UserService.getById(req.user.id, req.user.rol);
     res.json(user);
   } catch (error) {
-    // Si ocurre un error, responde con estado 404 y el mensaje de error
     res.status(404).json({ message: error.message });
   }
 };
 
-// Controlador para actualizar la información del perfil del usuario actual
+// Controlador para actualizar la información del perfil del usuario o instructor actual
 export const UpdateProfile = async (req, res) => {
   try {
-    // Si se subió un archivo, lo agregamos al body
     const data = { ...req.body };
     if (req.file) {
       data.avatar = req.file.filename;
     }
-    // Llama al servicio para actualizar el perfil con los datos del cuerpo
-    const user = await UserService.updateProfile(req.user.id, data);
-    // Responde con mensaje de éxito y los datos actualizados
+    const user = await UserService.updateProfile(req.user.id, data, req.user.rol);
     res.json({ message: "Perfil actualizado correctamente", user });
   } catch (error) {
-    // Si ocurre un error, responde con estado 400 y el mensaje de error
     res.status(400).json({ message: error.message });
   }
 };
 
 // Controlador para cambiar la contraseña de un usuario por parte del administrador
 export const ChangePasswordByAdmin = async (req, res) => {
-  // Ejecuta el bloque en try-catch para manejar errores
   try {
-    // Llama al servicio para cambiar la contraseña con los datos proporcionados por el admin
     await UserService.changePasswordByAdmin(req.params.id, req.body);
-    // Responde con mensaje de éxito
     res.json({ message: "Contraseña cambiada correctamente" });
   } catch (error) {
-    // Si ocurre un error, responde con estado 400 y el mensaje de error
     res.status(400).json({ message: error.message });
   }
 };
 
 // Controlador para importar usuarios masivamente desde un archivo Excel
 export const ImportarExcel = async (req, res) => {
-  // Ejecuta el bloque en try-catch para manejar errores
   try {
-    // Verifica si se proporcionó un archivo en la petición
     if (!req.file) {
-      // Responde con error 400 si no hay archivo
       return res.status(400).json({ message: "No se proporcionó ningún archivo Excel" });
     }
-    // Obtiene los datos del usuario administrador para el registro de auditoría
     const adminUser = await UserModel.findByPk(req.user.id);
-    // Define el email del usuario administrador o un valor por defecto
     const userEmailLog = adminUser ? adminUser.email : 'admin@laboratorio.com';
-    
-    // Obtiene el rol forzado del body si existe
     const { rolForzado } = req.body;
-    
-    // Llama al servicio para importar el archivo Excel con su contenido en buffer
     const result = await UserService.importarExcel(req.file.buffer, userEmailLog, rolForzado);
-    // Responde con mensaje de éxito y los datos del resultado de la importación
     res.json({
       message: "Proceso de importación finalizado",
       data: result
     });
   } catch (error) {
-    // Si ocurre un error, responde con estado 500 y el mensaje de error
     res.status(500).json({ message: error.message });
   }
 };
 
 // Solicitar restablecer contraseña
 export const getResetPassword = async (req, res) => {
-    const { email } = req.body
-    try {
-        await UserService.resetPassword(email)
-        res.status(200).json({ message: 'El mensaje para restablecer contraseña fue enviado correctamente.' })
-    } catch (error) {
-        res.status(400).json({ message: error.message })
-    }
-}
+  const { email } = req.body;
+  try {
+    await UserService.resetPassword(email);
+    res.status(200).json({ message: 'El mensaje para restablecer contraseña fue enviado correctamente.' });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
 
 // Recibir la nueva contraseña
 export const setNewPassword = async (req, res) => {
-    try {
-        await UserService.setNewPassword(req.body)
-        res.status(200).json({ message: "Contraseña actualizada correctamente." })
-    } catch (error) {
-        res.status(400).json({ message: "Información inválida o el tiempo ha expirado." })
-    }
-}
+  try {
+    await UserService.setNewPassword(req.body);
+    res.status(200).json({ message: "Contraseña actualizada correctamente." });
+  } catch (error) {
+    res.status(400).json({ message: "Información inválida o el tiempo ha expirado." });
+  }
+};

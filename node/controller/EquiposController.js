@@ -6,6 +6,33 @@
 
 // Importa el servicio de equipos para la lógica de negocio
 import EquiposService from '../service/EquiposService.js';
+import { getIO } from '../socket.js';
+import EquiposModel from '../models/EquiposModel.js';
+import Estadoxequipo from '../models/estadoxequipoModel.js';
+import estadoEquipoModel from '../models/Estado_equipoModel.js';
+import EstadoxequipoService from '../service/estadoxequipoService.js';
+
+const notificarInactivacionSiEnRevision = async (id_equipo) => {
+  try {
+    const eq = await EquiposModel.findByPk(id_equipo, {
+      include: [
+        {
+          model: Estadoxequipo,
+          as: 'estadosEquipo',
+          include: [{ model: estadoEquipoModel, as: 'estadoEquipo', attributes: ['estado'] }]
+        }
+      ]
+    });
+    if (!eq || Number(eq.estado) === 0) return;
+    const ordenados = (eq.estadosEquipo || []).sort((a, b) => b.id_estadoxequipo - a.id_estadoxequipo);
+    const ultimoEstado = ordenados[0]?.estadoEquipo?.estado;
+    if (ultimoEstado === 'revision') {
+      await EstadoxequipoService.notificarResultadoRevisionEquipo(id_equipo, 'inactivo');
+    }
+  } catch (err) {
+    console.error('[EquiposController] Error en notificarInactivacionSiEnRevision:', err);
+  }
+};
 
 // Controlador para obtener todos los equipos activos en la base de datos
 export const getAllEquipos = async (req, res) => {
@@ -77,6 +104,12 @@ export const createEquipos = async (req, res) => {
 
     // Imprime confirmación de creación
     console.log('Equipo creado:', equipo);
+
+    try {
+      const io = getIO();
+      if (io) io.emit('equipo_actualizado', { id_equipo: equipo.id_equipo });
+    } catch {}
+
     // Responde con estado 201 y los datos del equipo creado
     res.status(201).json({ mensaje: 'Equipo creado', equipo });
   } catch (error) {
@@ -111,6 +144,11 @@ export const updateEquipos = async (req, res) => {
       console.log('Manteniendo foto anterior');
     }
 
+    // Si se inactiva el equipo (estado === 0), verificar si estaba en revisión para alertar al instructor y al administrador
+    if (data.estado !== undefined && (data.estado === 0 || data.estado === '0')) {
+      await notificarInactivacionSiEnRevision(req.params.id);
+    }
+
     // Imprime los datos finales para la actualización
     console.log('Datos FINALES para update:', data);
     // Llama al servicio para actualizar el equipo con los nuevos datos
@@ -118,6 +156,14 @@ export const updateEquipos = async (req, res) => {
 
     // Si no se encontró el equipo, responde con error 404
     if (!updated) return res.status(404).json({ message: 'Equipo no encontrado' });
+
+    try {
+      const io = getIO();
+      if (io) {
+        io.emit('equipo_actualizado', { id_equipo: req.params.id });
+        io.emit('solicitud_actualizada');
+      }
+    } catch {}
 
     // Responde con estado 200 y confirmación de actualización
     res.status(200).json({ mensaje: 'Actualizado OK', id: req.params.id });
@@ -132,7 +178,15 @@ export const updateEquipos = async (req, res) => {
 // Controlador para eliminar o desactivar lógicamente un equipo del sistema
 export const deleteEquipos = async (req, res) => {
   try {
+    await notificarInactivacionSiEnRevision(req.params.id);
     await EquiposService.delete(req.params.id);
+    try {
+      const io = getIO();
+      if (io) {
+        io.emit('equipo_actualizado', { id_equipo: req.params.id });
+        io.emit('solicitud_actualizada');
+      }
+    } catch {}
     res.status(200).json({ mensaje: 'Equipo eliminado' });
   } catch (error) {
     console.error('Error eliminando:', error);
@@ -157,4 +211,3 @@ export const ImportarExcelEquipos = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-

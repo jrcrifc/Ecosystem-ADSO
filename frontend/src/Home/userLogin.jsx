@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import apiAxios from "../api/axiosConfig.js";
-import Swal from "sweetalert2";
-import { FaIdCard, FaUser, FaLock, FaTimes } from "react-icons/fa";
+import { FaUser, FaLock, FaTimes } from "react-icons/fa";
 import logo from "../Home/nuevologoecosystem.png";
-import labEquipos from "../Home/lab_equipos.png";
 import fondoLaboratorio from "../Home/laboratorio.webp";
 
 const UserLogin = ({ setIsAuth, setUserData }) => {
@@ -68,7 +66,7 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
           navigate("/home");
       }
 
-      setForm({ email: "", password: "" });
+      setForm({ tipo_documento: "CC", documento: "", password: "" });
     } catch (err) {
       const errorMsg = err.response?.data?.message || err.message || "Documento/Correo o contraseña incorrectos";
       setError(errorMsg);
@@ -85,16 +83,6 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
     border: "1px solid #ccc",
     outline: "none",
   };
-
-  // Date format for the widget
-  const today = new Date();
-  const dateOptions = { weekday: 'long', day: 'numeric', month: 'long' };
-  const formattedDate = today.toLocaleDateString('es-ES', dateOptions);
-  const formattedDateCapitalized = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
-
-  // Current time
-  const timeOptions = { hour: 'numeric', minute: '2-digit', hour12: true };
-  const formattedTime = today.toLocaleTimeString('es-ES', timeOptions);
 
   return (
     <div className="landing-container">
@@ -119,6 +107,8 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
           align-items: center;
           padding: 20px 50px;
           background: transparent;
+          flex-wrap: wrap;
+          gap: 12px;
         }
         
         .landing-nav .brand {
@@ -162,12 +152,13 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
         .hero-section {
           display: flex;
           flex: 1;
-          padding: 0 50px;
+          padding: 20px 50px;
           align-items: center;
           justify-content: space-between;
           max-width: 1400px;
           margin: 0 auto;
           width: 100%;
+          gap: 30px;
         }
 
         .hero-left {
@@ -191,7 +182,7 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
         }
 
         .hero-title {
-          font-size: 4rem;
+          font-size: clamp(2.2rem, 5vw, 4rem);
           font-weight: 800;
           line-height: 1.1;
           color: #ffffff;
@@ -203,38 +194,16 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
           display: block;
           color: #000000;
           text-shadow: 0px 0px 10px rgba(255,255,255,0.8);
-        }
-
-        @keyframes textFlow {
-          0%   { background-position: 0% 50%; }
-          50%  { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
+          font-size: clamp(1.5rem, 3.8vw, 2.8rem);
+          margin-top: 6px;
         }
 
         .hero-desc {
           font-size: 1.1rem;
-          color: #555;
+          color: #eee;
           line-height: 1.6;
           margin-bottom: 40px;
           max-width: 500px;
-        }
-
-        .explore-btn {
-          background: #e9598b;
-          color: white;
-          border: none;
-          padding: 16px 40px;
-          border-radius: 30px;
-          font-weight: 600;
-          font-size: 18px;
-          cursor: pointer;
-          transition: transform 0.2s, box-shadow 0.2s;
-          box-shadow: 0 8px 25px rgba(233, 89, 139, 0.4);
-        }
-        
-        .explore-btn:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 12px 30px rgba(233, 89, 139, 0.6);
         }
 
         /* Hero Right */
@@ -264,85 +233,6 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
           100% { transform: translateY(0px) translateZ(0); }
         }
 
-        /* Widget */
-        .status-widget {
-          position: absolute;
-          bottom: 20px;
-          right: 20px;
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(20px);
-          padding: 20px;
-          border-radius: 20px;
-          box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-          width: 320px;
-          border: 1px solid rgba(255,255,255,0.8);
-        }
-
-        .widget-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 15px;
-          border-bottom: 1px solid #eee;
-          padding-bottom: 15px;
-        }
-        
-        .widget-icon {
-          background: #ffeb3b;
-          width: 40px; height: 40px;
-          border-radius: 50%;
-          display: flex; justify-content: center; align-items: center;
-          font-size: 20px;
-          box-shadow: 0 4px 10px rgba(255, 235, 59, 0.4);
-        }
-
-        .widget-time h4 {
-          margin: 0;
-          font-size: 16px;
-          color: #333;
-          font-weight: 700;
-        }
-        .widget-time p {
-          margin: 0;
-          font-size: 12px;
-          color: #888;
-        }
-        
-        .widget-date {
-          font-size: 12px;
-          color: #d15c7e;
-          font-weight: 600;
-        }
-
-        .widget-body h5 {
-          font-size: 10px;
-          text-transform: uppercase;
-          color: #e9598b;
-          margin-bottom: 8px;
-          letter-spacing: 1px;
-          font-weight: 700;
-        }
-        .widget-body p {
-          margin: 0;
-          font-size: 14px;
-          color: #444;
-          font-weight: 600;
-        }
-        
-        .dots {
-          display: flex;
-          gap: 4px;
-          margin-top: 15px;
-        }
-        .dot {
-          width: 6px; height: 6px;
-          border-radius: 50%;
-          background: #eee;
-        }
-        .dot.active {
-          background: #e9598b;
-        }
-
         /* Modal Background */
         .modal-overlay {
           position: fixed;
@@ -356,6 +246,7 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
           opacity: 0;
           visibility: hidden;
           transition: all 0.3s ease;
+          padding: 16px;
         }
         
         .modal-overlay.show {
@@ -430,11 +321,35 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
         }
         
         @media (max-width: 900px) {
-          .hero-section { flex-direction: column; text-align: center; padding: 20px; }
-          .hero-left { margin-bottom: 40px; }
-          .hero-desc { margin: 0 auto 30px auto; }
-          .status-widget { position: relative; bottom: auto; right: auto; margin-top: 30px; }
-          .landing-nav { padding: 20px; }
+          .hero-section { flex-direction: column; text-align: center; padding: 20px; justify-content: center; }
+          .hero-left { margin-bottom: 20px; }
+          .hero-desc { margin: 0 auto 24px auto; font-size: 1rem; }
+          .hero-right { justify-content: center; }
+          .floating-element { max-width: 190px; max-height: 220px; }
+          .landing-nav { padding: 16px 20px; }
+        }
+
+        @media (max-width: 640px) {
+          .landing-nav {
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 16px;
+            gap: 14px;
+          }
+          .landing-nav .brand {
+            justify-content: center;
+          }
+          .landing-nav-actions {
+            justify-content: center !important;
+            width: 100%;
+          }
+          .landing-nav .brand img { height: 46px; }
+          .landing-nav .brand-name { font-size: 21px; }
+          .login-trigger-btn { padding: 9px 20px; font-size: 14px; }
+          .acerca-btn { padding: 9px 20px !important; font-size: 14px !important; }
+          .login-card { padding: 28px 20px; }
         }
       `}</style>
 
@@ -444,8 +359,9 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
           <img src={logo} alt="Ecosystem Logo" />
           <span className="brand-name">Ecosystem</span>
         </div>
-        <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+        <div className="landing-nav-actions" style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
           <button
+            className="acerca-btn"
             onClick={() => navigate('/acerca-de')}
             style={{
               background: 'rgba(255,255,255,0.15)',
@@ -472,7 +388,6 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
 
       {/* Hero Section */}
       <main className="hero-section">
-        {/* Left Content */}
         <div className="hero-left">
           <div className="platform-badge">
             Laboratorio Ambiental
@@ -481,13 +396,12 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
             Ecosystem
             <span>Gestión de Laboratorio Ambiental</span>
           </h1>
-          <p className="hero-desc" style={{ color: "#eee" }}>
+          <p className="hero-desc">
             Control eficiente y avanzado del proceso en el laboratorio. Gestionar equipos,
-            Inventario de reactivos, Gestionar  solicitudes  desde una sola plataforma profesional.
+            Inventario de reactivos, Gestionar solicitudes desde una sola plataforma profesional.
           </p>
         </div>
 
-        {/* Right Content */}
         <div className="hero-right">
           <img src={logo} alt="Laboratorio 3D" className="floating-element" />
         </div>
@@ -511,7 +425,6 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
           {error && <div className="alert alert-danger py-2" style={{ fontSize: "14px" }}>{error}</div>}
 
           <form onSubmit={gestionarLogin}>
-
             <div className="mb-3 position-relative">
               <FaUser className="input-icon" />
               <input type="text" name="documento" value={form.documento} onChange={handleChange}
@@ -533,8 +446,6 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
                 Olvidé la contraseña
               </Link>
             </div>
-
-
           </form>
         </div>
       </div>

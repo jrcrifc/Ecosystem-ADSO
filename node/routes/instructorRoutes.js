@@ -1,6 +1,6 @@
 // Rutas para instructores
 import express from "express";
-import { getInstructores, createInstructor, updateInstructor, deleteInstructor } from "../controller/instructorController.js";
+import { getInstructores, createInstructor, updateInstructor, toggleActivoInstructor, deleteInstructor } from "../controller/instructorController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 import { soloAdmin } from "../middleware/roleMiddleware.js";
 
@@ -11,6 +11,7 @@ router.get("/", authMiddleware, getInstructores);
 // Solo admin puede gestionar instructores
 router.post("/", authMiddleware, soloAdmin, createInstructor);
 router.put("/:id", authMiddleware, soloAdmin, updateInstructor);
+router.put("/:id/toggle-activo", authMiddleware, soloAdmin, toggleActivoInstructor);
 router.delete("/:id", authMiddleware, soloAdmin, deleteInstructor);
 
 export default router;

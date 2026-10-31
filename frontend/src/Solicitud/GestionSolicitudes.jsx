@@ -42,9 +42,10 @@ const GestionSolicitudes = () => {
   const getBadgeStyle = (estado) => {
     const map = {
       generado: { bg: "#f1f5f9", color: "#475569", label: "Generado" },
-      aceptado: { bg: "#dbeafe", color: "#0077B6", label: "Solicitado" },
+      aceptado: { bg: "#dbeafe", color: "#0077B6", label: "Aceptado" },
       prestado: { bg: "#fffbeb", color: "#d97706", label: "Prestado" },
-      entregado: { bg: "#ecfdf5", color: "#059669", label: "Disponible" },
+      entregado: { bg: "#ecfdf5", color: "#059669", label: "Entregado" },
+      revision: { bg: "#f3e8ff", color: "#7c3aed", label: "En Revisión" },
       cancelado: { bg: "#fef2f2", color: "#dc2626", label: "Cancelado" },
       rechazado: { bg: "#fef2f2", color: "#dc2626", label: "Rechazado" },
     };
@@ -97,7 +98,7 @@ const GestionSolicitudes = () => {
       width: "150px",
       // Renderiza el badge del estado con colores personalizados
       cell: (row) => {
-        const style = getBadgeStyle(row.ultimoEstado);
+        const style = getBadgeStyle(row.estadoVisual || row.ultimoEstado);
         return (
           <span style={{
             background: style.bg, color: style.color,

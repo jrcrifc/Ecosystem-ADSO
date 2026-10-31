@@ -12,6 +12,7 @@ import {
 import estadoxequipoService from '../service/estadoxequipoService.js';
 // Importa los middlewares de autorización por roles
 import { adminOGestor, todosLosRoles } from '../middleware/roleMiddleware.js';
+import { getIO } from '../socket.js';
 
 // Crea una nueva instancia del Router
 const router = express.Router();
@@ -27,6 +28,22 @@ router.get('/ultimos/estados', todosLosRoles, async (req, res) => {
   }
 });
 
+// Define la ruta POST /api/estadoxequipo/suscribir-revision para programar aviso por correo y campanita
+router.post('/suscribir-revision', todosLosRoles, async (req, res) => {
+  try {
+    const { id_equipo, id_usuario_solicitante } = req.body;
+    const id_usuario = id_usuario_solicitante || req.user?.id;
+    const rol = id_usuario_solicitante ? 'Instructor' : (req.user?.rol || 'Instructor');
+    if (!id_equipo || !id_usuario) {
+      return res.status(400).json({ message: "Faltan datos del equipo o usuario" });
+    }
+    const result = await estadoxequipoService.suscribirRevision(id_equipo, id_usuario, rol);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
 // Define la ruta POST /api/estadoxequipo/cambiarEstado para registrar un cambio de estado manual
 router.post('/cambiarEstado', adminOGestor, async (req, res) => {
   try {
@@ -34,6 +51,10 @@ router.post('/cambiarEstado', adminOGestor, async (req, res) => {
     const { id_equipo, id_estado_equipo } = req.body;
     // Ejecuta el cambio de estado a través del servicio
     const data = await estadoxequipoService.cambiarEstado(id_equipo, id_estado_equipo);
+    try {
+      const io = getIO();
+      if (io) io.emit('equipo_actualizado', { id_equipo });
+    } catch {}
     // Responde con el estado creado
     res.status(201).json({ message: "Estado cambiado exitosamente", data });
   } catch (error) {
@@ -57,4 +78,4 @@ router.put('/:id', adminOGestor, updateEstadoxequipo);
 router.delete('/:id', adminOGestor, deleteEstadoxequipo);
 
 // Exporta el router para ser usado en la aplicación
-export default router;
+export default router;

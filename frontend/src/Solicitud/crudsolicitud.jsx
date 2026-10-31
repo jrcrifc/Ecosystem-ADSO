@@ -10,8 +10,6 @@ import { useNavigate } from "react-router-dom";
 import DataTable from "react-data-table-component";
 // Importa SweetAlert2 para mostrar alertas interactivas al usuario
 import Swal from "sweetalert2";
-// Importa la librería Bootstrap para manipular modales
-import * as bootstrap from "bootstrap";
 // Importa el formulario de solicitud para usarlo dentro del modal
 import SolicitudPrestamoForm from "./solicitudform.jsx";
 // Importa configuraciones predefinidas de paginación y estilos para la tabla
@@ -37,6 +35,7 @@ const CrudSolicitudPrestamos = () => {
   const [solicitudes, setSolicitudes] = useState([]);
   const [filterText, setFilterText] = useState("");
   const [selectedSolicitud, setSelectedSolicitud] = useState(null);
+  const [showModal, setShowModal] = useState(false);
   const [verDetalle, setVerDetalle] = useState(null);
 
   const getToken = () => sessionStorage.getItem("token");
@@ -45,14 +44,11 @@ const CrudSolicitudPrestamos = () => {
   const userRol = (userData?.user?.rol || userData?.rol || "").toLowerCase();
   const userId = userData?.id_usuario || userData?.user?.id_usuario;
   const esAdmin = userRol === "administrador" || userRol === "admin";
-  const esPasante = userRol === "pasante";
-  const esGestor = userRol === "gestor";
   // Solo el Administrador puede gestionar solicitudes (aceptar, prestar, entregar, cancelar)
   const puedeGestionar = esAdmin;
 
   // Título dinámico según el rol del usuario (Admin ve gestión general, Instructor ve sus solicitudes)
   const tituloVista = esAdmin ? "Gestión de Solicitudes" : "Mis Solicitudes";
-
 
   // Mapa de transiciones permitidas entre estados (para botones de acción)
   const estadosSiguientes = {
@@ -71,15 +67,16 @@ const CrudSolicitudPrestamos = () => {
   // Función para obtener estilo de badge según el estado
   const getBadgeStyle = (estado) => {
     const map = {
-      generado: { bg: "#f1f5f9", color: "#475569" },
-      aceptado: { bg: "#dbeafe", color: "#0077B6" },
-      prestado: { bg: "#fffbeb", color: "#d97706" },
-      entregado: { bg: "#ecfdf5", color: "#059669" },
-      devuelto: { bg: "#ecfdf5", color: "#059669" },
-      cancelado: { bg: "#fef2f2", color: "#dc2626" },
-      rechazado: { bg: "#fef2f2", color: "#dc2626" },
+      generado:  { bg: "#f1f5f9", color: "#475569", label: "Generado" },
+      aceptado:  { bg: "#dbeafe", color: "#0077B6", label: "Aceptado" },
+      prestado:  { bg: "#fffbeb", color: "#d97706", label: "Prestado" },
+      entregado: { bg: "#ecfdf5", color: "#059669", label: "Entregado" },
+      devuelto:  { bg: "#ecfdf5", color: "#059669", label: "Entregado" },
+      revision:  { bg: "#f3e8ff", color: "#7c3aed", label: "Entregado (En Revisión)" },
+      cancelado: { bg: "#fef2f2", color: "#dc2626", label: "Cancelado" },
+      rechazado: { bg: "#fef2f2", color: "#dc2626", label: "Rechazado" },
     };
-    return map[estado] || { bg: "#f3f4f6", color: "#374151" };
+    return map[estado] || { bg: "#f3f4f6", color: "#374151", label: capitalizeText(estado) };
   };
 
   // Función para capitalizar correctamente los textos en mayúsculas
@@ -150,7 +147,7 @@ const CrudSolicitudPrestamos = () => {
     {
       name: "Estado Actual", minWidth: puedeGestionar ? "260px" : "130px", center: true,
       cell: r => {
-        const estadoActual = r.ultimoEstado || "generado";
+        const estadoActual = r.estadoVisual || r.ultimoEstado || "generado";
         const c = getBadgeStyle(estadoActual);
 
         // Si el usuario puede gestionar, mostramos botones de acción
@@ -164,7 +161,7 @@ const CrudSolicitudPrestamos = () => {
                   fontSize: "11px", fontWeight: "700",
                   padding: "4px 12px", borderRadius: "99px"
                 }}>
-                  {estadoActual}
+                  {c.label || estadoActual}
                 </span>
               )}
               {siguientes.includes("aceptado") && (
@@ -194,9 +191,9 @@ const CrudSolicitudPrestamos = () => {
               {siguientes.includes("entregado") && (
                 <button className="btn btn-sm"
                   onClick={() => cambiarEstadoAdmin(r.id_solicitud, "entregado")}
-                  title="Recibir Equipo (Liberar)"
-                  style={{ background: "#dcfce7", color: "#16a34a", border: "none", borderRadius: "20px", padding: "5px 10px", fontWeight: "700", fontSize: "11px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                  <i className="fas fa-undo"></i> Entregar
+                  title="Recibir Equipo (Pasa automáticamente a Revisión técnica)"
+                  style={{ background: "#f3e8ff", color: "#7c3aed", border: "none", borderRadius: "20px", padding: "5px 10px", fontWeight: "700", fontSize: "11px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                  <i className="fas fa-undo"></i> Entregar (A Revisión)
                 </button>
               )}
             </div>
@@ -210,30 +207,44 @@ const CrudSolicitudPrestamos = () => {
             fontWeight: 700, backgroundColor: c.bg, color: c.color,
             display: "inline-block"
           }}>
-            {estadoActual}
+            {c.label || estadoActual}
           </span>
         );
       }
     },
     {
-      name: "Acciones", center: true, width: "100px",
-      cell: r => (
-        <div className="d-flex gap-1 justify-content-center">
-          {/* Botón Ver Detalle (ojito) */}
-          <button className="btn btn-sm"
-            style={{ background: "#dbeafe", color: "#0077B6", border: "none" }}
-            onClick={() => setVerDetalle(r)} title="Ver detalle">
-            <i className="fas fa-eye"></i>
-          </button>
-          {/* Botón Historial (recargar) */}
-          <button className="btn btn-sm"
-            style={{ background: "#f1f5f9", color: "#64748b", border: "none" }}
-            onClick={() => navigate("/estadoxsolicitud", { state: { id_solicitud: r.id_solicitud } })}
-            title="Ver historial">
-            <i className="fas fa-history"></i>
-          </button>
-        </div>
-      ),
+      name: "Acciones", center: true, width: "130px",
+      cell: r => {
+        const estadoActual = (r.ultimoEstado || "").toLowerCase();
+        const esGenerado = estadoActual === "generado" || r.id_estado_solicitud === 1;
+
+        return (
+          <div className="d-flex gap-1 justify-content-center">
+            {/* Botón Editar (lápiz) - SOLO permitido si está en estado generado */}
+            {esGenerado && (
+              <button className="btn btn-sm"
+                style={{ background: "#dbeafe", color: "#0077B6", border: "none", padding: "5px 9px", borderRadius: "6px" }}
+                onClick={() => abrirEditarSolicitud(r)}
+                title="Editar Solicitud (Solo en estado generado)">
+                <i className="fas fa-pencil-alt"></i>
+              </button>
+            )}
+            {/* Botón Ver Detalle (ojito) */}
+            <button className="btn btn-sm"
+              style={{ background: "#0077B6", color: "#fff", border: "none", padding: "5px 9px", borderRadius: "6px" }}
+              onClick={() => setVerDetalle(r)} title="Ver detalle">
+              <i className="fas fa-eye"></i>
+            </button>
+            {/* Botón Historial */}
+            <button className="btn btn-sm"
+              style={{ background: "#f1f5f9", color: "#64748b", border: "none", padding: "5px 9px", borderRadius: "6px" }}
+              onClick={() => navigate("/estadoxsolicitud", { state: { id_solicitud: r.id_solicitud } })}
+              title="Ver historial">
+              <i className="fas fa-history"></i>
+            </button>
+          </div>
+        );
+      },
     },
   ];
 
@@ -244,33 +255,9 @@ const CrudSolicitudPrestamos = () => {
     // Escucha cambios en tiempo real para refrescar la tabla automáticamente
     socket.on('solicitud_actualizada', cargarSolicitudes);
     socket.on('equipo_actualizado', cargarSolicitudes);
-    const modalSolicitud = document.getElementById("modalSolicitud");
-    const cleanupBackdrop = () => {
-      document.body.classList.remove("modal-open");
-      document.body.style.removeProperty("overflow");
-      document.body.style.removeProperty("padding-right");
-      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
-    };
-    const handleSolicitudHide = () => {
-      if (document.activeElement && typeof document.activeElement.blur === "function") {
-        document.activeElement.blur();
-      }
-    };
-    const handleSolicitudHidden = () => {
-      setSelectedSolicitud(null);
-      cleanupBackdrop();
-    };
-    if (modalSolicitud) {
-      modalSolicitud.addEventListener("hide.bs.modal", handleSolicitudHide);
-      modalSolicitud.addEventListener("hidden.bs.modal", handleSolicitudHidden);
-    }
     return () => {
       socket.off('solicitud_actualizada', cargarSolicitudes);
       socket.off('equipo_actualizado', cargarSolicitudes);
-      if (modalSolicitud) {
-        modalSolicitud.removeEventListener("hide.bs.modal", handleSolicitudHide);
-        modalSolicitud.removeEventListener("hidden.bs.modal", handleSolicitudHidden);
-      }
     };
   }, []);
 
@@ -279,11 +266,14 @@ const CrudSolicitudPrestamos = () => {
       const res = await apiAxios.get("/api/solicitud", {
         headers: { Authorization: `Bearer ${getToken()}` }
       });
-      // Admin ve todas las solicitudes para gestionarlas; Pasante, Gestor e Instructor solo las suyas
+      const dataOrdenada = [...(Array.isArray(res.data) ? res.data : [])].sort(
+        (a, b) => (b.id_solicitud || 0) - (a.id_solicitud || 0)
+      );
+      // Admin ve todas las solicitudes para gestionarlas; Instructor solo las suyas
       if (esAdmin) {
-        setSolicitudes(res.data);
+        setSolicitudes(dataOrdenada);
       } else {
-        const misSolicitudes = res.data.filter(s => s.usuario?.id_usuario === userId || s.id_usuario === userId);
+        const misSolicitudes = dataOrdenada.filter(s => s.usuario?.id_usuario === userId || s.id_usuario === userId);
         setSolicitudes(misSolicitudes);
       }
     } catch (error) {
@@ -294,12 +284,16 @@ const CrudSolicitudPrestamos = () => {
 
   // Cambiar estado de solicitud (aceptar, prestar, entregar, cancelar)
   const cambiarEstadoAdmin = async (id_solicitud, nuevoEstado) => {
+    const esEntregar = nuevoEstado === "entregado";
     const result = await Swal.fire({
-      title: "¿Cambiar estado?",
-      text: `La solicitud pasará a "${nuevoEstado.toUpperCase()}"`,
+      title: esEntregar ? "¿Recibir equipo(s) en Revisión?" : "¿Cambiar estado?",
+      text: esEntregar
+        ? "El estado de la solicitud cambiará a 'Entregado (En Revisión)' ya que el(los) equipo(s) ingresarán a revisión técnica en el laboratorio. Se notificará automáticamente al instructor por correo y en la campanita."
+        : `La solicitud pasará a "${nuevoEstado.toUpperCase()}"`,
       icon: "question", showCancelButton: true,
-      confirmButtonColor: "#0d6efd",
-      confirmButtonText: "Sí, cambiar", cancelButtonText: "Cancelar"
+      confirmButtonColor: "#0077B6",
+      confirmButtonText: esEntregar ? "Sí, recibir y pasar a Revisión" : "Sí, cambiar",
+      cancelButtonText: "Cancelar"
     });
     if (!result.isConfirmed) return;
     try {
@@ -309,9 +303,13 @@ const CrudSolicitudPrestamos = () => {
         { headers: { Authorization: `Bearer ${getToken()}` } }
       );
       Swal.fire({
-        icon: "success", title: "¡Estado actualizado!",
-        text: `Solicitud ahora está en "${nuevoEstado}"`,
-        timer: 1800, showConfirmButton: false
+        icon: "success",
+        title: esEntregar ? "¡Solicitud en Entregado (En Revisión)!" : "¡Estado actualizado!",
+        text: esEntregar
+          ? "El estado de la solicitud cambió a 'Entregado (En Revisión)' mientras se verifica el estado físico de los equipos. Una vez aprobados como disponibles, la solicitud pasará automáticamente a 'Entregado'."
+          : `La solicitud ahora se encuentra en estado "${nuevoEstado}".`,
+        timer: 2600,
+        showConfirmButton: false
       });
       cargarSolicitudes();
     } catch {
@@ -319,26 +317,19 @@ const CrudSolicitudPrestamos = () => {
     }
   };
 
+  const abrirNuevaSolicitud = () => {
+    setSelectedSolicitud(null);
+    setShowModal(true);
+  };
+
+  const abrirEditarSolicitud = (solicitud) => {
+    setSelectedSolicitud(solicitud);
+    setShowModal(true);
+  };
+
   const hideModal = () => {
-    if (document.activeElement && typeof document.activeElement.blur === "function") {
-      document.activeElement.blur();
-    }
-    const modal = document.getElementById("modalSolicitud");
-    if (modal) {
-      const bsModal = window.bootstrap?.Modal?.getInstance(modal);
-      if (bsModal) {
-        bsModal.hide();
-      } else {
-        const closeBtn = modal.querySelector(".btn-close");
-        if (closeBtn && document.activeElement !== closeBtn) {
-          closeBtn.click();
-        }
-      }
-      document.body.classList.remove("modal-open");
-      document.body.style.removeProperty("overflow");
-      document.body.style.removeProperty("padding-right");
-      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
-    }
+    setShowModal(false);
+    setSelectedSolicitud(null);
   };
 
   // Filtrar solicitudes por texto
@@ -357,25 +348,30 @@ const CrudSolicitudPrestamos = () => {
   });
 
   return (
-    <div className="mt-4" style={{ padding: "0 16px" }}>
+    <div className="container mt-4" style={{ maxWidth: "1200px" }}>
       {/* Encabezado con título dinámico */}
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
-        <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
-        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>{tituloVista}</h2>
+      <div style={{ textAlign: "center", marginBottom: "32px" }}>
+        <div style={{ height: "3px", width: "40px", background: "#0077B6", borderRadius: "99px", margin: "0 auto 12px" }} />
+        <h2 style={{ fontSize: "28px", fontWeight: "800", color: "#0077B6", margin: 0 }}>{tituloVista}</h2>
+        <p style={{ color: "#64748b", marginTop: "8px", fontSize: "14px" }}>
+          {esAdmin
+            ? "Administra, aprueba y realiza el seguimiento de las solicitudes de préstamo de equipos."
+            : "Gestiona y consulta el estado de tus solicitudes de préstamo en el laboratorio."}
+        </p>
       </div>
 
       {/* Barra de búsqueda y botón nueva solicitud */}
-      <div className="row mb-3 align-items-center">
-        <div className="col-md-5">
+      <div className="row mb-3 align-items-center g-2">
+        <div className="col-12 col-md-5">
           <input type="text" className="form-control"
             placeholder="Buscar por ID, solicitante, equipo o estado..."
-            value={filterText} onChange={e => setFilterText(e.target.value)} />
+            value={filterText} onChange={e => setFilterText(e.target.value)}
+            style={{ borderColor: "#dbeafe", borderRadius: "10px" }} />
         </div>
-        <div className="col-md-7 text-end d-flex gap-2 justify-content-end">
+        <div className="col-12 col-md-7 text-end d-flex gap-2 justify-content-end">
           <button className="btn"
-            style={{ background: "#0077B6", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }}
-            data-bs-toggle="modal" data-bs-target="#modalSolicitud"
-            onClick={() => setSelectedSolicitud(null)}>
+            style={{ background: "linear-gradient(135deg, #0077B6, #023E8A)", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none", padding: "8px 18px" }}
+            onClick={abrirNuevaSolicitud}>
             + Nueva Solicitud
           </button>
         </div>
@@ -390,7 +386,6 @@ const CrudSolicitudPrestamos = () => {
           paginationComponentOptions={paginationComponentOptions}
           customStyles={tableCustomStyles}
           highlightOnHover striped responsive
-          defaultSortFieldId={1} defaultSortAsc={false}
           noDataComponent={
             <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
               <div style={{ fontSize: "36px", marginBottom: "8px" }}>📭</div>
@@ -401,18 +396,35 @@ const CrudSolicitudPrestamos = () => {
         />
       </div>
 
-      {/* Modal editar/crear solicitud */}
-      <div className="modal fade" id="modalSolicitud" tabIndex="-1">
-        <div className="modal-dialog modal-lg">
-          <div className="modal-content" style={{ borderRadius: "16px", overflow: "hidden" }}>
-            <div className="modal-header" style={{ background: "#023E8A", color: "#fff" }}>
-              <h5 className="modal-title">
-                {selectedSolicitud ? "Editar" : "Nueva"} Solicitud de Préstamo
-              </h5>
-              <button type="button" className="btn-close btn-close-white"
-                data-bs-dismiss="modal" onClick={hideModal}></button>
+      {/* Modal editar/crear solicitud con diseño azul metalizado unificado */}
+      {showModal && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 9999,
+          background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)",
+          display: "flex", alignItems: "center", justifyContent: "center", padding: "16px"
+        }}>
+          <div style={{
+            background: "#fff", borderRadius: "16px", width: "100%", maxWidth: "680px",
+            boxShadow: "0 24px 60px rgba(0,0,0,0.2)", overflow: "hidden", maxHeight: "90vh", display: "flex", flexDirection: "column"
+          }}>
+            <div style={{
+              background: "linear-gradient(135deg, #0077B6, #023E8A)",
+              padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0
+            }}>
+              <div>
+                <h5 style={{ color: "#fff", fontWeight: "800", margin: 0, fontSize: "16px" }}>
+                  {selectedSolicitud ? "✏️ Editar Solicitud de Préstamo" : "➕ Nueva Solicitud de Préstamo"}
+                </h5>
+                <p style={{ color: "rgba(255,255,255,0.75)", margin: 0, fontSize: "12px" }}>
+                  Selecciona los equipos y programa las fechas de recogida y devolución
+                </p>
+              </div>
+              <button onClick={hideModal}
+                style={{ background: "rgba(255,255,255,0.2)", border: "none", borderRadius: "50%",
+                  width: "28px", height: "28px", color: "#fff", fontSize: "14px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕
+              </button>
             </div>
-            <div className="modal-body">
+            <div style={{ overflowY: "auto", padding: "0" }}>
               <SolicitudPrestamoForm
                 selectedSolicitud={selectedSolicitud}
                 refreshData={cargarSolicitudes}
@@ -421,93 +433,117 @@ const CrudSolicitudPrestamos = () => {
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Modal detalle de equipos de la solicitud */}
       {verDetalle && (
-        <div className="modal show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-          <div className="modal-dialog modal-md modal-dialog-centered">
-            <div className="modal-content" style={{ borderRadius: "16px", overflow: "hidden", border: "none" }}>
-              <div className="modal-header text-white" style={{ background: "#023E8A" }}>
-                <h5 className="modal-title" style={{ fontWeight: "700" }}>
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 9999,
+          background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)",
+          display: "flex", alignItems: "center", justifyContent: "center", padding: "16px"
+        }}>
+          <div style={{
+            background: "#fff", borderRadius: "16px", width: "100%", maxWidth: "540px",
+            boxShadow: "0 24px 60px rgba(0,0,0,0.2)", overflow: "hidden", maxHeight: "90vh", display: "flex", flexDirection: "column"
+          }}>
+            <div style={{
+              background: "linear-gradient(135deg, #0077B6, #023E8A)",
+              padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0
+            }}>
+              <div>
+                <h5 style={{ color: "#fff", fontWeight: "800", margin: 0, fontSize: "16px" }}>
                   🔍 Detalle — Solicitud #{verDetalle.id_solicitud}
                 </h5>
-                <button className="btn-close btn-close-white" onClick={() => setVerDetalle(null)}></button>
+                <p style={{ color: "rgba(255,255,255,0.75)", margin: 0, fontSize: "12px" }}>
+                  Información del solicitante y equipos asociados
+                </p>
               </div>
-              <div className="modal-body" style={{ padding: "20px" }}>
-                {/* Datos generales */}
-                <div className="mb-3 p-3 rounded" style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0" }}>
-                  <div className="row g-2 small">
-                    <div className="col-6">
-                      <span className="text-muted d-block" style={{ fontSize: "11px", fontWeight: "600" }}>SOLICITANTE</span>
-                      <div className="fw-bold" style={{ color: "#0f172a", fontSize: "13px" }}>{verDetalle.usuario?.nombres_apellidos || "-"}</div>
+              <button onClick={() => setVerDetalle(null)}
+                style={{ background: "rgba(255,255,255,0.2)", border: "none", borderRadius: "50%",
+                  width: "28px", height: "28px", color: "#fff", fontSize: "14px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕
+              </button>
+            </div>
+            <div style={{ padding: "20px", overflowY: "auto" }}>
+              {/* Datos generales */}
+              <div className="mb-3 p-3 rounded" style={{ backgroundColor: "#f0f7ff", border: "1px solid #dbeafe", borderRadius: "10px" }}>
+                <div className="row g-2 small">
+                  <div className="col-6">
+                    <span className="text-muted d-block" style={{ fontSize: "10px", fontWeight: "700", letterSpacing: "0.5px" }}>SOLICITANTE</span>
+                    <div className="fw-bold" style={{ color: "#0f172a", fontSize: "13px" }}>{verDetalle.usuario?.nombres_apellidos || "-"}</div>
+                  </div>
+                  <div className="col-6">
+                    <span className="text-muted d-block" style={{ fontSize: "10px", fontWeight: "700", letterSpacing: "0.5px" }}>ESTADO</span>
+                    <div className="fw-bold text-capitalize" style={{ color: "#0077B6", fontSize: "13px" }}>{verDetalle.ultimoEstado || "generado"}</div>
+                  </div>
+                  <div className="col-6 mt-2">
+                    <span className="text-muted d-block" style={{ fontSize: "10px", fontWeight: "700", letterSpacing: "0.5px" }}>FECHA RECOGIDA</span>
+                    <div className="fw-bold" style={{ color: "#0f172a", fontSize: "13px" }}>
+                      {(() => { const f = formatDateCompact(verDetalle.fecha_inicio); return f === "-" ? "-" : `${f.fecha} ${f.hora}`; })()}
                     </div>
-                    <div className="col-6">
-                      <span className="text-muted d-block" style={{ fontSize: "11px", fontWeight: "600" }}>ESTADO</span>
-                      <div className="fw-bold text-capitalize" style={{ color: "#0f172a", fontSize: "13px" }}>{verDetalle.ultimoEstado || "generado"}</div>
-                    </div>
-                    <div className="col-6 mt-2">
-                      <span className="text-muted d-block" style={{ fontSize: "11px", fontWeight: "600" }}>FECHA RECOGIDA</span>
-                      <div className="fw-bold" style={{ color: "#0f172a", fontSize: "13px" }}>
-                        {(() => { const f = formatDateCompact(verDetalle.fecha_inicio); return f === "-" ? "-" : `${f.fecha} ${f.hora}`; })()}
-                      </div>
-                    </div>
-                    <div className="col-6 mt-2">
-                      <span className="text-muted d-block" style={{ fontSize: "11px", fontWeight: "600" }}>FECHA DEVOLUCIÓN</span>
-                      <div className="fw-bold" style={{ color: "#0f172a", fontSize: "13px" }}>
-                        {(() => { const f = formatDateCompact(verDetalle.fecha_fin); return f === "-" ? "-" : `${f.fecha} ${f.hora}`; })()}
-                      </div>
+                  </div>
+                  <div className="col-6 mt-2">
+                    <span className="text-muted d-block" style={{ fontSize: "10px", fontWeight: "700", letterSpacing: "0.5px" }}>FECHA DEVOLUCIÓN</span>
+                    <div className="fw-bold" style={{ color: "#0f172a", fontSize: "13px" }}>
+                      {(() => { const f = formatDateCompact(verDetalle.fecha_fin); return f === "-" ? "-" : `${f.fecha} ${f.hora}`; })()}
                     </div>
                   </div>
                 </div>
-                {/* Equipos solicitados */}
-                <h6 className="fw-bold mb-3" style={{ color: "#023E8A", fontSize: "14px", display: "flex", alignItems: "center" }}>
-                  📦 Equipos solicitados
-                  <span className="badge ms-2" style={{ background: "#e0f2fe", color: "#0369a1", fontSize: "11px" }}>{verDetalle.equipos?.length || 0}</span>
-                </h6>
-                {(!verDetalle.equipos || verDetalle.equipos.length === 0) ? (
-                  <p className="text-muted small text-center my-3">No hay equipos asignados</p>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                    {verDetalle.equipos.map(eq => {
-                      const placa = (eq.no_placa && eq.no_placa !== 0 && eq.no_placa !== '0') ? eq.no_placa : null;
-                      return (
-                        <div key={eq.id_equipo} style={{
-                          display: "flex", alignItems: "center", gap: "14px",
-                          padding: "12px 16px", borderRadius: "12px",
-                          border: "1px solid #e2e8f0", backgroundColor: "#fff",
-                          boxShadow: "0 2px 6px rgba(0,0,0,0.03)"
-                        }}>
-                          <img
-                            src={eq.foto_equipo ? (eq.foto_equipo.startsWith("http") ? eq.foto_equipo : `${import.meta.env.VITE_API_URL || "http://localhost:8000"}${eq.foto_equipo}`) : "/img/no-image.png"}
-                            alt={eq.nom_equipo || "Foto del equipo"}
-                            style={{
-                              width: "60px", height: "60px", objectFit: "cover",
-                              borderRadius: "8px", border: "1px solid #dbeafe"
-                            }}
-                            onError={(e) => { e.target.src = "/img/no-image.png"; }}
-                          />
-                          <div style={{ flex: 1 }}>
-                            <div className="fw-bold" style={{ fontSize: "0.95rem", color: "#023E8A" }}>{eq.nom_equipo}</div>
-                            <div style={{ fontSize: "0.8rem", color: "#475569", marginTop: "2px" }}>
-                              <span className="fw-semibold">Marca:</span> {eq.marca_equipo || "Sin marca"}
-                            </div>
-                            <div style={{ fontSize: "0.8rem", color: "#475569" }}>
-                              <span className="fw-semibold">Placa:</span> {placa ? (
-                                <span className="badge bg-secondary ms-1" style={{ fontSize: "10px" }}>{placa}</span>
-                              ) : (
-                                <span className="text-muted italic ms-1" style={{ fontSize: "11px" }}>Sin placa</span>
-                              )}
-                            </div>
+              </div>
+              {/* Equipos solicitados */}
+              <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", padding: "8px 12px", marginBottom: "12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontSize: "11px", color: "#065f46", fontWeight: "700", textTransform: "uppercase" }}>
+                  📦 Equipos Solicitados
+                </span>
+                <span className="badge" style={{ background: "#059669", color: "#fff", fontSize: "11px" }}>{verDetalle.equipos?.length || 0}</span>
+              </div>
+              {(!verDetalle.equipos || verDetalle.equipos.length === 0) ? (
+                <p className="text-muted small text-center my-3">No hay equipos asignados</p>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  {verDetalle.equipos.map(eq => {
+                    const placa = (eq.no_placa && eq.no_placa !== 0 && eq.no_placa !== '0') ? eq.no_placa : null;
+                    return (
+                      <div key={eq.id_equipo} style={{
+                        display: "flex", alignItems: "center", gap: "14px",
+                        padding: "12px 16px", borderRadius: "10px",
+                        border: "1.5px solid #dbeafe", backgroundColor: "#fff",
+                        boxShadow: "0 2px 6px rgba(0,0,0,0.03)"
+                      }}>
+                        <img
+                          src={eq.foto_equipo ? (eq.foto_equipo.startsWith("http") ? eq.foto_equipo : `${import.meta.env.VITE_API_URL || "http://localhost:8000"}${eq.foto_equipo}`) : "/img/no-image.png"}
+                          alt={eq.nom_equipo || "Foto del equipo"}
+                          style={{
+                            width: "56px", height: "56px", objectFit: "cover",
+                            borderRadius: "8px", border: "1.5px solid #0077B6"
+                          }}
+                          onError={(e) => { e.target.src = "/img/no-image.png"; }}
+                        />
+                        <div style={{ flex: 1 }}>
+                          <div className="fw-bold" style={{ fontSize: "0.9rem", color: "#023E8A" }}>{eq.nom_equipo}</div>
+                          <div style={{ fontSize: "0.78rem", color: "#475569", marginTop: "3px" }}>
+                            <span className="fw-semibold">Placa:</span> {placa ? (
+                              <span className="badge bg-secondary ms-1" style={{ fontSize: "10px" }}>{placa}</span>
+                            ) : (
+                              <span className="text-muted italic ms-1" style={{ fontSize: "11px" }}>Sin placa</span>
+                            )}
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-              <div className="modal-footer" style={{ borderTop: "1px solid #e2e8f0" }}>
-                <button className="btn text-white" style={{ background: "#023E8A", fontWeight: "600", borderRadius: "8px" }} onClick={() => setVerDetalle(null)}>Cerrar</button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "18px", paddingTop: "12px", borderTop: "1px solid #f1f5f9" }}>
+                <button
+                  onClick={() => setVerDetalle(null)}
+                  style={{
+                    padding: "9px 24px", borderRadius: "8px", border: "none",
+                    background: "linear-gradient(135deg, #0077B6, #023E8A)",
+                    color: "#fff", fontWeight: "700", fontSize: "13px", cursor: "pointer"
+                  }}
+                >
+                  Cerrar
+                </button>
               </div>
             </div>
           </div>

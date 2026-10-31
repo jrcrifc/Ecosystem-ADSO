@@ -64,69 +64,158 @@ export default function CrudEquipo() {
       setEquipos([]);
     }
   };
-  // Función para alternar el estado (Inactivo <-> Disponible | Mantenimiento <-> Disponible)
-  const cambiarEstado = async (equipo) => {
+  // Función para aprobar un equipo en revisión y pasarlo a disponible
+  const finalizarRevisionADisponible = async (equipo) => {
     try {
       const token = sessionStorage.getItem("token");
       if (!token) return Swal.fire("Error", "No se encontró token", "warning");
 
-      const estaInactivo = equipo.estado === 0;
-      const esMantenimiento = equipo.estadoReal === 'mantenimiento';
-      const esDisponible = equipo.estado === 1 && (equipo.estadoReal === 'disponible' || !equipo.estadoReal);
+      const result = await Swal.fire({
+        title: "¿Aprobar y pasar a Disponible?",
+        text: `El equipo "${equipo.nom_equipo}" finalizó la revisión técnica y volverá a estar disponible para préstamos.`,
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#16a34a",
+        confirmButtonText: "Sí, aprobar a Disponible",
+        cancelButtonText: "Cancelar"
+      });
+      if (!result.isConfirmed) return;
 
-      // Si está inactivo -> Pasa a activo (disponible)
-      if (estaInactivo) {
-        const result = await Swal.fire({
-          title: "¿Activar Equipo?", text: "El equipo pasará a estado DISPONIBLE",
-          icon: "question", showCancelButton: true, confirmButtonColor: "#0077B6"
-        });
-        if (!result.isConfirmed) return;
-        
-        await apiAxios.put(`/api/equipos/${equipo.id_equipo}`, { estado: 1 }, { headers: { Authorization: `Bearer ${token}` } });
-        Swal.fire({ icon: "success", title: "Activado", timer: 1500, showConfirmButton: false });
-        getAllEquipos();
-      }
-      // Si está en mantenimiento -> Pasa a disponible
-      else if (esMantenimiento) {
-        const result = await Swal.fire({
-          title: "¿Finalizar Mantenimiento?", text: "El equipo pasará a estado DISPONIBLE",
-          icon: "question", showCancelButton: true, confirmButtonColor: "#0077B6",
-          confirmButtonText: "Sí, finalizar", cancelButtonText: "Cancelar"
-        });
-        if (!result.isConfirmed) return;
-
-        await apiAxios.post("/api/estadoxequipo/cambiarEstado", 
-          { id_equipo: equipo.id_equipo, id_estado_equipo: 1, observaciones: "Mantenimiento finalizado desde Gestión de Equipos" }, 
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        Swal.fire({ icon: "success", title: "Ahora está Disponible", timer: 1500, showConfirmButton: false });
-        getAllEquipos();
-      }
-      // Si está disponible -> Solo pasa a mantenimiento
-      else if (esDisponible) {
-        const result = await Swal.fire({
-          title: "¿Pasar a Mantenimiento?",
-          text: "El equipo pasará al estado de mantenimiento y no estará disponible para solicitudes.",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonText: "Sí, pasar",
-          cancelButtonText: "Cancelar",
-          confirmButtonColor: "#d97706"
-        });
-
-        if (result.isConfirmed) {
-          await apiAxios.post("/api/estadoxequipo/cambiarEstado", 
-            { id_equipo: equipo.id_equipo, id_estado_equipo: 2, observaciones: "Enviado a mantenimiento desde Gestión de Equipos" }, 
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          Swal.fire({ icon: "success", title: "En Mantenimiento", timer: 1500, showConfirmButton: false });
-          getAllEquipos();
-        }
-      }
-
+      await apiAxios.post(
+        "/api/estadoxequipo/cambiarEstado",
+        { id_equipo: equipo.id_equipo, id_estado_equipo: 1, observaciones: "Revisión técnica finalizada y aprobada por el Administrador" },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      Swal.fire({ icon: "success", title: "¡Equipo Disponible!", text: "Ahora puede ser solicitado por los instructores.", timer: 1800, showConfirmButton: false });
+      getAllEquipos();
     } catch (error) {
-      console.error("Error al cambiar estado:", error);
+      console.error("Error al aprobar equipo:", error);
       Swal.fire("Error", "No se pudo cambiar el estado", "error");
+    }
+  };
+
+  // Función para enviar equipo a mantenimiento (desde disponible o revisión)
+  const enviarAMantenimiento = async (equipo) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) return Swal.fire("Error", "No se encontró token", "warning");
+
+      const result = await Swal.fire({
+        title: "¿Enviar a Mantenimiento?",
+        text: `El equipo "${equipo.nom_equipo}" pasará a mantenimiento técnico y no estará disponible para préstamos.`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d97706",
+        confirmButtonText: "Sí, enviar a Mantenimiento",
+        cancelButtonText: "Cancelar"
+      });
+      if (!result.isConfirmed) return;
+
+      await apiAxios.post(
+        "/api/estadoxequipo/cambiarEstado",
+        { id_equipo: equipo.id_equipo, id_estado_equipo: 2, observaciones: "Enviado a mantenimiento desde Gestión de Equipos" },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      Swal.fire({ icon: "success", title: "En Mantenimiento", timer: 1500, showConfirmButton: false });
+      getAllEquipos();
+    } catch (error) {
+      console.error("Error al enviar a mantenimiento:", error);
+      Swal.fire("Error", "No se pudo enviar a mantenimiento", "error");
+    }
+  };
+
+  // Función para finalizar mantenimiento y devolver equipo a disponible
+  const finalizarMantenimientoADisponible = async (equipo) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) return Swal.fire("Error", "No se encontró token", "warning");
+
+      const result = await Swal.fire({
+        title: "¿Finalizar Mantenimiento?",
+        text: `El equipo "${equipo.nom_equipo}" pasará a estado DISPONIBLE.`,
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#16a34a",
+        confirmButtonText: "Sí, finalizar",
+        cancelButtonText: "Cancelar"
+      });
+      if (!result.isConfirmed) return;
+
+      await apiAxios.post(
+        "/api/estadoxequipo/cambiarEstado",
+        { id_equipo: equipo.id_equipo, id_estado_equipo: 1, observaciones: "Mantenimiento finalizado por el Administrador" },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      Swal.fire({ icon: "success", title: "Ahora está Disponible", timer: 1500, showConfirmButton: false });
+      getAllEquipos();
+    } catch (error) {
+      console.error("Error al finalizar mantenimiento:", error);
+      Swal.fire("Error", "No se pudo finalizar el mantenimiento", "error");
+    }
+  };
+
+  // Función para inactivar un equipo (poner estado = 0)
+  const inactivarEquipo = async (equipo) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) return Swal.fire("Error", "No se encontró token", "warning");
+
+      const result = await Swal.fire({
+        title: "¿Inactivar Equipo?",
+        text: `El equipo "${equipo.nom_equipo}" quedará inactivo y fuera de servicio.`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#dc2626",
+        confirmButtonText: "Sí, inactivar",
+        cancelButtonText: "Cancelar"
+      });
+      if (!result.isConfirmed) return;
+
+      await apiAxios.put(
+        `/api/equipos/${equipo.id_equipo}`,
+        { estado: 0 },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      Swal.fire({ icon: "success", title: "Equipo Inactivado", timer: 1500, showConfirmButton: false });
+      getAllEquipos();
+    } catch (error) {
+      console.error("Error al inactivar equipo:", error);
+      Swal.fire("Error", "No se pudo inactivar el equipo", "error");
+    }
+  };
+
+  // Función para reactivar un equipo inactivo (poner estado = 1 y estado físico disponible)
+  const activarEquipo = async (equipo) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) return Swal.fire("Error", "No se encontró token", "warning");
+
+      const result = await Swal.fire({
+        title: "¿Activar Equipo?",
+        text: `El equipo "${equipo.nom_equipo}" pasará a estado DISPONIBLE.`,
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#0077B6",
+        confirmButtonText: "Sí, activar",
+        cancelButtonText: "Cancelar"
+      });
+      if (!result.isConfirmed) return;
+
+      await apiAxios.put(
+        `/api/equipos/${equipo.id_equipo}`,
+        { estado: 1 },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      await apiAxios.post(
+        "/api/estadoxequipo/cambiarEstado",
+        { id_equipo: equipo.id_equipo, id_estado_equipo: 1, observaciones: "Equipo reactivado a disponible" },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      Swal.fire({ icon: "success", title: "Activado y Disponible", timer: 1500, showConfirmButton: false });
+      getAllEquipos();
+    } catch (error) {
+      console.error("Error al activar equipo:", error);
+      Swal.fire("Error", "No se pudo activar el equipo", "error");
     }
   };
 
@@ -138,14 +227,14 @@ export default function CrudEquipo() {
         <div style="text-align: left; font-size: 14px; color: #475569; line-height: 1.5;">
           <p>Sube un archivo de Excel (<strong>.xlsx</strong> o <strong>.xls</strong>) con las columnas:</p>
           <ul style="padding-left: 20px; margin-bottom: 12px; font-size: 13px;">
-            <li><strong>nombre</strong> (nombre del equipo - obligatorio)</li>
-            <li><strong>marca</strong> (opcional)</li>
+            <li><strong>equipo / nombre</strong> (nombre del equipo - obligatorio)</li>
             <li><strong>placa</strong> (N° placa o serial - opcional)</li>
-            <li><strong>cuentadante</strong> (documento del instructor - opcional)</li>
-            <li><strong>observaciones</strong> (opcional)</li>
+            <li><strong>cuentadante</strong> (nombre o documento del instructor - opcional)</li>
+            <li><strong>estado</strong> (los marcados <em>por verificar</em> o <em>sin verificar</em> quedarán inactivos)</li>
+            <li><strong>observaciones / ubicación / función</strong> (opcional)</li>
           </ul>
           <p style="font-size: 12px; color: #0284c7; margin-bottom: 0;">
-            * El grupo se asignará automáticamente a <strong>Equipo de Laboratorio</strong> y su estado a <strong>Disponible</strong>.
+            * El grupo se asignará automáticamente a <strong>Equipo de Laboratorio</strong>.
           </p>
         </div>
       `,
@@ -224,12 +313,13 @@ export default function CrudEquipo() {
   // Configuración visual de los estados operativos
   const estadoConfig = {
     disponible:      { icon: "✅", color: "#0077B6", bg: "#e0f2fe", border: "#bae6fd", label: "Disponible" },
+    revision:        { icon: "🔬", color: "#7c3aed", bg: "#f3e8ff", border: "#d8b4fe", label: "En Revisión" },
     mantenimiento:   { icon: "🔧", color: "#d97706", bg: "#fef3c7", border: "#fde68a", label: "Mantenimiento" },
     solicitado:      { icon: "⏳", color: "#6366f1", bg: "#eef2ff", border: "#c7d2fe", label: "Solicitado" },
     prestado:        { icon: "🤝", color: "#ca8a04", bg: "#fef08a", border: "#fde047", label: "Prestado" },
     inactivo:        { icon: "🚫", color: "#dc2626", bg: "#fee2e2", border: "#fecaca", label: "Inactivo" },
   };
-  // Definición de las columnas de la tabla DataTable
+  // Definición de las columnas de la tabla DataTable (sin columna Marca)
   const columns = [
     { name: "ID", selector: (row) => row.id_equipo, sortable: true, width: "80px", center: true },
     {
@@ -268,13 +358,12 @@ export default function CrudEquipo() {
       ),
     },
     { name: "Grupo", selector: (row) => row.grupo_equipo, sortable: true, minWidth: "180px" },
-    { name: "Nombre", selector: (row) => row.nom_equipo, sortable: true, minWidth: "180px" },
-    { name: "Marca", selector: (row) => row.marca_equipo || "-", sortable: true, minWidth: "130px" },
+    { name: "Nombre", selector: (row) => row.nom_equipo, sortable: true, minWidth: "200px", wrap: true },
     {
       name: "Placa",
       selector: (row) => (row.no_placa && row.no_placa !== 0 && row.no_placa !== '0') ? row.no_placa : "Sin placa",
       sortable: true,
-      minWidth: "130px",
+      minWidth: "140px",
       // Renderiza la placa o un texto gris si no tiene
       cell: (row) => {
         const placa = (row.no_placa && row.no_placa !== 0 && row.no_placa !== '0') ? row.no_placa : null;
@@ -289,13 +378,14 @@ export default function CrudEquipo() {
         ? `${row.instructor.nombres_apellidos} (${row.instructor.documento})`
         : "-",
       sortable: true,
-      minWidth: "200px"
+      minWidth: "200px",
+      wrap: true
     },
     {
       name: "Observaciones",
       selector: (row) => row.observaciones || "-",
       sortable: true,
-      minWidth: "180px",
+      minWidth: "200px",
       wrap: true
     },
     {
@@ -322,42 +412,77 @@ export default function CrudEquipo() {
     {
       name: "Acciones",
       center: true,
-      width: "140px",
+      minWidth: "170px",
       cell: (row) => {
         const estadoActual = row.estado === 0 ? "inactivo" : (row.estadoReal || "disponible");
-        const estaOcupado = row.estaOcupado;
+        const esRevision = estadoActual === 'revision';
         const esMantenimiento = estadoActual === 'mantenimiento';
         const esDisponible = estadoActual === 'disponible';
         const esInactivo = estadoActual === 'inactivo';
+        const esEnUso = (estadoActual === 'solicitado' || estadoActual === 'prestado');
 
-        if (estaOcupado) {
+        if (esEnUso) {
           return (
-            <span style={{ fontSize: "11px", color: "#94a3b8", fontStyle: "italic" }}>
-              <i className="fa-solid fa-lock me-1"></i> En uso
+            <span style={{
+              fontSize: "11px",
+              color: estadoActual === 'prestado' ? "#ca8a04" : "#6366f1",
+              background: estadoActual === 'prestado' ? "#fef08a" : "#eef2ff",
+              border: `1px solid ${estadoActual === 'prestado' ? "#fde047" : "#c7d2fe"}`,
+              padding: "4px 10px", borderRadius: "99px", fontWeight: "700"
+            }}>
+              <i className="fa-solid fa-lock me-1"></i> {estadoActual === 'prestado' ? 'Prestado' : 'Solicitado'}
             </span>
           );
         }
 
         return (
-          <div style={{ display: 'flex', gap: '5px', justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '5px', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
 
-            {/* Editar: siempre visible */}
-            <button
-              className="btn btn-sm"
-              style={{ background: "#dbeafe", color: "#0077B6", border: "none", padding: "6px 9px", borderRadius: "7px" }}
-              onClick={() => { setSelectedEquipo(row); setShowModal(true); }}
-              title="Editar equipo"
-            >
-              <i className="fa-solid fa-pencil" style={{ fontSize: "12px" }}></i>
-            </button>
+            {/* En Revisión: El administrador decide si pasa a Disponible, Mantenimiento o Inactivo */}
+            {esRevision && (
+              <>
+                <button
+                  className="btn btn-sm"
+                  style={{ background: "#dcfce7", color: "#16a34a", border: "none", padding: "6px 9px", borderRadius: "7px" }}
+                  onClick={() => finalizarRevisionADisponible(row)}
+                  title="Aprobar revisión (Pasar a Disponible)"
+                >
+                  <i className="fa-solid fa-check" style={{ fontSize: "12px" }}></i>
+                </button>
+                <button
+                  className="btn btn-sm"
+                  style={{ background: "#fef3c7", color: "#d97706", border: "none", padding: "6px 9px", borderRadius: "7px" }}
+                  onClick={() => enviarAMantenimiento(row)}
+                  title="Enviar a Mantenimiento"
+                >
+                  <i className="fa-solid fa-wrench" style={{ fontSize: "12px" }}></i>
+                </button>
+                <button
+                  className="btn btn-sm"
+                  style={{ background: "#fee2e2", color: "#dc2626", border: "none", padding: "6px 9px", borderRadius: "7px" }}
+                  onClick={() => inactivarEquipo(row)}
+                  title="Inactivar equipo"
+                >
+                  <i className="fa-solid fa-ban" style={{ fontSize: "12px" }}></i>
+                </button>
+              </>
+            )}
 
-            {/* Disponible: 🔧 Mantenimiento + 🚫 Inactivar */}
+            {/* Disponible: ✏️ Editar + 🔧 Mantenimiento + 🚫 Inactivar */}
             {esDisponible && (
               <>
                 <button
                   className="btn btn-sm"
+                  style={{ background: "#dbeafe", color: "#0077B6", border: "none", padding: "6px 9px", borderRadius: "7px" }}
+                  onClick={() => { setSelectedEquipo(row); setShowModal(true); }}
+                  title="Editar equipo"
+                >
+                  <i className="fa-solid fa-pencil" style={{ fontSize: "12px" }}></i>
+                </button>
+                <button
+                  className="btn btn-sm"
                   style={{ background: "#fef3c7", color: "#d97706", border: "none", padding: "6px 9px", borderRadius: "7px" }}
-                  onClick={() => cambiarEstado(row)}
+                  onClick={() => enviarAMantenimiento(row)}
                   title="Pasar a mantenimiento"
                 >
                   <i className="fa-solid fa-wrench" style={{ fontSize: "12px" }}></i>
@@ -365,14 +490,7 @@ export default function CrudEquipo() {
                 <button
                   className="btn btn-sm"
                   style={{ background: "#fee2e2", color: "#dc2626", border: "none", padding: "6px 9px", borderRadius: "7px" }}
-                  onClick={async () => {
-                    const token = sessionStorage.getItem("token");
-                    const r = await Swal.fire({ title: "¿Inactivar equipo?", text: "El equipo pasará a inactivo.", icon: "warning", showCancelButton: true, confirmButtonColor: "#dc2626", confirmButtonText: "Inactivar", cancelButtonText: "Cancelar" });
-                    if (!r.isConfirmed) return;
-                    await apiAxios.put(`/api/equipos/${row.id_equipo}`, { estado: 0 }, { headers: { Authorization: `Bearer ${token}` } });
-                    Swal.fire({ icon: "success", title: "Inactivado", timer: 1500, showConfirmButton: false });
-                    getAllEquipos();
-                  }}
+                  onClick={() => inactivarEquipo(row)}
                   title="Inactivar equipo"
                 >
                   <i className="fa-solid fa-ban" style={{ fontSize: "12px" }}></i>
@@ -386,7 +504,7 @@ export default function CrudEquipo() {
                 <button
                   className="btn btn-sm"
                   style={{ background: "#dcfce7", color: "#16a34a", border: "none", padding: "6px 9px", borderRadius: "7px" }}
-                  onClick={() => cambiarEstado(row)}
+                  onClick={() => finalizarMantenimientoADisponible(row)}
                   title="Finalizar mantenimiento (pasar a Disponible)"
                 >
                   <i className="fa-solid fa-check" style={{ fontSize: "12px" }}></i>
@@ -394,14 +512,7 @@ export default function CrudEquipo() {
                 <button
                   className="btn btn-sm"
                   style={{ background: "#fee2e2", color: "#dc2626", border: "none", padding: "6px 9px", borderRadius: "7px" }}
-                  onClick={async () => {
-                    const token = sessionStorage.getItem("token");
-                    const r = await Swal.fire({ title: "¿Inactivar equipo?", text: "El equipo pasará a inactivo.", icon: "warning", showCancelButton: true, confirmButtonColor: "#dc2626", confirmButtonText: "Inactivar", cancelButtonText: "Cancelar" });
-                    if (!r.isConfirmed) return;
-                    await apiAxios.put(`/api/equipos/${row.id_equipo}`, { estado: 0 }, { headers: { Authorization: `Bearer ${token}` } });
-                    Swal.fire({ icon: "success", title: "Inactivado", timer: 1500, showConfirmButton: false });
-                    getAllEquipos();
-                  }}
+                  onClick={() => inactivarEquipo(row)}
                   title="Inactivar equipo"
                 >
                   <i className="fa-solid fa-ban" style={{ fontSize: "12px" }}></i>
@@ -409,23 +520,26 @@ export default function CrudEquipo() {
               </>
             )}
 
-            {/* Inactivo: solo ✅ Activar */}
+            {/* Inactivo: ✏️ Editar + ✅ Activar */}
             {esInactivo && (
-              <button
-                className="btn btn-sm"
-                style={{ background: "#dcfce7", color: "#16a34a", border: "none", padding: "6px 9px", borderRadius: "7px" }}
-                onClick={async () => {
-                  const token = sessionStorage.getItem("token");
-                  const r = await Swal.fire({ title: "¿Activar equipo?", text: "El equipo pasará a disponible.", icon: "question", showCancelButton: true, confirmButtonColor: "#0077B6", confirmButtonText: "Activar", cancelButtonText: "Cancelar" });
-                  if (!r.isConfirmed) return;
-                  await apiAxios.put(`/api/equipos/${row.id_equipo}`, { estado: 1 }, { headers: { Authorization: `Bearer ${token}` } });
-                  Swal.fire({ icon: "success", title: "Activado", timer: 1500, showConfirmButton: false });
-                  getAllEquipos();
-                }}
-                title="Activar equipo"
-              >
-                <i className="fa-solid fa-check" style={{ fontSize: "12px" }}></i>
-              </button>
+              <>
+                <button
+                  className="btn btn-sm"
+                  style={{ background: "#dbeafe", color: "#0077B6", border: "none", padding: "6px 9px", borderRadius: "7px" }}
+                  onClick={() => { setSelectedEquipo(row); setShowModal(true); }}
+                  title="Editar equipo"
+                >
+                  <i className="fa-solid fa-pencil" style={{ fontSize: "12px" }}></i>
+                </button>
+                <button
+                  className="btn btn-sm"
+                  style={{ background: "#dcfce7", color: "#16a34a", border: "none", padding: "6px 9px", borderRadius: "7px" }}
+                  onClick={() => activarEquipo(row)}
+                  title="Activar equipo (pasar a Disponible)"
+                >
+                  <i className="fa-solid fa-check" style={{ fontSize: "12px" }}></i>
+                </button>
+              </>
             )}
 
           </div>
@@ -435,17 +549,20 @@ export default function CrudEquipo() {
   ];
   // Función que formatea los datos de equipos para exportación PDF/Excel
   const formatEquiposForExport = (data) => {
-    return data.map(row => ({
-      "ID": row.id_equipo,
-      "Grupo": row.grupo_equipo || "-",
-      "Nombre": row.nom_equipo || "-",
-      "Marca": row.marca_equipo || "-",
-      "Placa": (row.no_placa && row.no_placa !== 0 && row.no_placa !== '0') ? row.no_placa : "Sin placa",
-      "Cuentadante": row.instructor ? `${row.instructor.nombres_apellidos}` : "-",
-      "Observaciones": row.observaciones || "-",
-      "Estado Equipo": row.estado === 1 ? "Activo" : "Inactivo",
-      "Estado Operativo": (row.estadoReal || "disponible").charAt(0).toUpperCase() + (row.estadoReal || "disponible").slice(1),
-    }));
+    return data.map(row => {
+      const estado = row.estado === 0 ? "inactivo" : (row.estadoReal || "disponible");
+      const cfg = estadoConfig[estado] || estadoConfig.disponible;
+      return {
+        "ID": row.id_equipo,
+        "Grupo": row.grupo_equipo || "-",
+        "Nombre": row.nom_equipo || "-",
+        "Placa": (row.no_placa && row.no_placa !== 0 && row.no_placa !== '0') ? row.no_placa : "Sin placa",
+        "Cuentadante": row.instructor ? `${row.instructor.nombres_apellidos}` : "-",
+        "Observaciones": row.observaciones || "-",
+        "Estado Equipo": row.estado === 1 ? "Activo" : "Inactivo",
+        "Estado Operativo": cfg.label,
+      };
+    });
   };
   // Filtra los equipos localmente según la pestaña y el texto de búsqueda
   const filteredEquipos = equipos.filter((row) => {
@@ -454,6 +571,7 @@ export default function CrudEquipo() {
     let matchTab = false;
     if (tabActiva === 'Todos') matchTab = true;
     else if (tabActiva === 'Disponibles') matchTab = estado === 'disponible';
+    else if (tabActiva === 'En revisión') matchTab = estado === 'revision';
     else if (tabActiva === 'En mantenimiento') matchTab = estado === 'mantenimiento';
     else if (tabActiva === 'Inactivos') matchTab = estado === 'inactivo';
     else if (tabActiva === 'Solicitados/Prestados') matchTab = estado === 'solicitado' || estado === 'prestado';
@@ -467,7 +585,6 @@ export default function CrudEquipo() {
       String(row.id_equipo || "").includes(search) ||
       String(row.nom_equipo || "").toLowerCase().includes(search) ||
       String(row.grupo_equipo || "").toLowerCase().includes(search) ||
-      String(row.marca_equipo || "").toLowerCase().includes(search) ||
       String(row.no_placa || "").toLowerCase().includes(search) ||
       nombreCuentadante.toLowerCase().includes(search)
     );
@@ -488,7 +605,7 @@ export default function CrudEquipo() {
           <input
             type="text"
             className="form-control"
-            placeholder="Buscar por ID, nombre, grupo, marca, placa o cuentadante..."
+            placeholder="Buscar por ID, nombre, grupo, placa o cuentadante..."
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
             style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
@@ -503,7 +620,6 @@ export default function CrudEquipo() {
               { header: "ID", dataKey: "ID" },
               { header: "Grupo", dataKey: "Grupo" },
               { header: "Nombre", dataKey: "Nombre" },
-              { header: "Marca", dataKey: "Marca" },
               { header: "Placa", dataKey: "Placa" },
               { header: "Cuentadante", dataKey: "Cuentadante" },
               { header: "Observaciones", dataKey: "Observaciones" },
@@ -543,8 +659,9 @@ export default function CrudEquipo() {
         {[
           { key: 'Todos',                icon: '📊', count: equipos.length },
           { key: 'Disponibles',          icon: '✅', count: equipos.filter(r => r.estado !== 0 && (r.estadoReal || 'disponible') === 'disponible').length },
-          { key: 'En mantenimiento',     icon: '🔧', count: equipos.filter(r => r.estadoReal === 'mantenimiento').length },
-          { key: 'Solicitados/Prestados',icon: '⏳', count: equipos.filter(r => ['solicitado','prestado'].includes(r.estadoReal)).length },
+          { key: 'En revisión',          icon: '🔬', count: equipos.filter(r => r.estado !== 0 && r.estadoReal === 'revision').length },
+          { key: 'En mantenimiento',     icon: '🔧', count: equipos.filter(r => r.estado !== 0 && r.estadoReal === 'mantenimiento').length },
+          { key: 'Solicitados/Prestados',icon: '⏳', count: equipos.filter(r => r.estado !== 0 && ['solicitado','prestado'].includes(r.estadoReal)).length },
           { key: 'Inactivos',            icon: '🚫', count: equipos.filter(r => r.estado === 0).length },
         ].map(({ key, icon, count }) => (
           <button

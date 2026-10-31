@@ -8,8 +8,6 @@ import { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
 // Importa SweetAlert2 para mostrar alertas interactivas al usuario
 import Swal from "sweetalert2";
-// Importa Bootstrap para manejar modales de forma programatica
-import * as bootstrap from "bootstrap";
 // Importa configuraciones personalizadas de paginacion y estilos de tabla
 import { paginationComponentOptions, tableCustomStyles } from "../config/dataTableConfig";
 // Importa el formulario de ingreso de reactivos
@@ -32,6 +30,8 @@ const CrudmovimientoReactivo = () => {
   const [filterText, setFilterText] = useState("");
   // Estado que almacena el movimiento seleccionado para editar en el modal de ingreso
   const [selectedMovimiento, setSelectedMovimiento] = useState(null);
+  // Estado para controlar la visibilidad del modal de ingreso
+  const [showModal, setShowModal] = useState(false);
   // Estado para manejar la pestaña activa (ingresos o salidas)
   const [activeTab, setActiveTab] = useState("ingresos");
 
@@ -39,7 +39,7 @@ const CrudmovimientoReactivo = () => {
 
   // Define las columnas de la tabla con sus propiedades
   const columns = [
-    { name: "ID", selector: (row) => row.id_movimiento_reactivo, sortable: true, width: "70px", center: true },
+    { name: "ID", selector: (row) => row.id_movimiento_reactivo, sortable: true, width: "75px", center: true },
     { name: "Reactivo", selector: (row) => row.reactivo?.nom_reactivo || "-", sortable: true, wrap: true, minWidth: "180px" },
     {
       name: "Cant. Inicial",
@@ -63,10 +63,10 @@ const CrudmovimientoReactivo = () => {
       selector: (row) => row.estado,
       sortable: true,
       center: true,
-      width: "90px",
+      minWidth: "110px",
       // Renderizador personalizado para mostrar badge de estado
       cell: (row) => (
-        <span className={`px-2 py-1 rounded-pill text-white fw-semibold ${row.estado === 1 ? "bg-success" : "bg-danger"}`} style={{ fontSize: "0.65rem" }}>
+        <span className={`px-2 py-1 rounded-pill text-white fw-semibold ${row.estado === 1 ? "bg-success" : "bg-danger"}`} style={{ fontSize: "0.75rem", letterSpacing: "0.5px" }}>
           {row.estado === 1 ? "ACTIVO" : "INACTIVO"}
         </span>
       ),
@@ -74,17 +74,15 @@ const CrudmovimientoReactivo = () => {
     {
       name: "Acciones",
       center: true,
-      width: "90px",
+      minWidth: "120px",
       // Renderizador de botones de accion por fila
       cell: (row) => (
         <div className="d-flex gap-2 justify-content-center">
           {/* Boton para editar el movimiento en el modal de ingreso */}
           <button
             className="btn btn-sm"
-            style={{ background: "#dbeafe", color: "#0077B6", border: "none" }}
-            data-bs-toggle="modal"
-            data-bs-target="#modalIngreso"
-            onClick={() => setSelectedMovimiento(row)}
+            style={{ background: "#dbeafe", color: "#0077B6", border: "none", padding: "5px 9px", borderRadius: "6px" }}
+            onClick={() => { setSelectedMovimiento(row); setShowModal(true); }}
             title="Editar"
           >
             <i className="fa-solid fa-pencil"></i>
@@ -95,7 +93,9 @@ const CrudmovimientoReactivo = () => {
             style={{
               background: row.estado === 1 ? "#fee2e2" : "#dcfce7",
               color: row.estado === 1 ? "#dc2626" : "#16a34a",
-              border: "none"
+              border: "none",
+              padding: "5px 9px",
+              borderRadius: "6px"
             }}
             onClick={() => toggleEstadoMovimiento(row)}
             title={row.estado === 1 ? "Inactivar" : "Activar"}
@@ -107,9 +107,9 @@ const CrudmovimientoReactivo = () => {
     },
   ];
 
-  // ===== Carga inicial con socket y limpieza de modales =====
+  // ===== Carga inicial con socket =====
 
-  // Efecto que carga los movimientos al montar y configura eventos de socket y modales
+  // Efecto que carga los movimientos al montar y configura eventos de socket
   useEffect(() => {
     // Carga inicial de movimientos desde la API
     cargarMovimientos();
@@ -118,59 +118,10 @@ const CrudmovimientoReactivo = () => {
     socket.on("movimiento_actualizado", cargarMovimientos);
     socket.on("salida_actualizada", cargarMovimientos);
 
-    // Obtiene referencias a los elementos del DOM de los modales
-    const modalIngreso = document.getElementById("modalIngreso");
-    const modalSalida = document.getElementById("modalSalida");
-
-    // Funcion que limpia las clases y estilos residuales de los modales
-    const cleanupBackdrop = () => {
-      document.body.classList.remove("modal-open");
-      document.body.style.removeProperty("overflow");
-      document.body.style.removeProperty("padding-right");
-      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
-    };
-
-    // Manejador para desenfocar botones antes de ocultar y evitar advertencia de aria-hidden
-    const handleHide = () => {
-      if (document.activeElement && typeof document.activeElement.blur === "function") {
-        document.activeElement.blur();
-      }
-    };
-
-    // Manejador que limpia seleccion y backdrop al cerrar modal de ingreso
-    const handleIngresoHidden = () => {
-      setSelectedMovimiento(null);
-      cleanupBackdrop();
-    };
-
-    // Manejador que limpia seleccion y backdrop al cerrar modal de salida
-    const handleSalidaHidden = () => {
-      setSelectedSalida(null);
-      cleanupBackdrop();
-    };
-
-    // Agrega listeners para el evento hide y hidden en ambos modales
-    if (modalIngreso) {
-      modalIngreso.addEventListener("hide.bs.modal", handleHide);
-      modalIngreso.addEventListener("hidden.bs.modal", handleIngresoHidden);
-    }
-    if (modalSalida) {
-      modalSalida.addEventListener("hide.bs.modal", handleHide);
-      modalSalida.addEventListener("hidden.bs.modal", handleSalidaHidden);
-    }
-
     // Funcion de limpieza al desmontar el componente
     return () => {
       socket.off("movimiento_actualizado", cargarMovimientos);
       socket.off("salida_actualizada", cargarMovimientos);
-      if (modalIngreso) {
-        modalIngreso.removeEventListener("hide.bs.modal", handleHide);
-        modalIngreso.removeEventListener("hidden.bs.modal", handleIngresoHidden);
-      }
-      if (modalSalida) {
-        modalSalida.removeEventListener("hide.bs.modal", handleHide);
-        modalSalida.removeEventListener("hidden.bs.modal", handleSalidaHidden);
-      }
     };
   }, []);
 
@@ -181,8 +132,12 @@ const CrudmovimientoReactivo = () => {
     try {
       // Realiza la peticion GET al endpoint de movimientos
       const res = await apiAxios.get("/api/movimientos");
+      // Ordena del ultimo registrado al primero (DESC por ID)
+      const lista = Array.isArray(res.data)
+        ? [...res.data].sort((a, b) => (b.id_movimiento_reactivo || 0) - (a.id_movimiento_reactivo || 0))
+        : [];
       // Actualiza el estado con los datos obtenidos
-      setMovimientos(res.data);
+      setMovimientos(lista);
     } catch (error) {
       // Muestra error en consola si falla la carga
       console.error("Error al cargar movimientos:", error);
@@ -253,32 +208,12 @@ const CrudmovimientoReactivo = () => {
     }
   };
 
-  // ===== Cerrar modal de ingreso con limpieza de backdrop =====
+  // ===== Cerrar modal de ingreso =====
 
-  // Funcion para cerrar el modal de ingreso y limpiar backdrops residuales
+  // Funcion para cerrar el modal de ingreso
   const hideModal = () => {
-    if (document.activeElement && typeof document.activeElement.blur === "function") {
-      document.activeElement.blur();
-    }
-    // Obtiene la referencia al elemento del modal de ingreso
-    const modal = document.getElementById("modalIngreso");
-    if (modal) {
-      // Intenta cerrar con el boton de cerrar del modal
-      const closeBtn = modal.querySelector(".btn-close");
-      if (closeBtn) {
-        closeBtn.click();
-      } else {
-        // Usa Bootstrap API si no encuentra el boton de cerrar
-        const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
-        bsModal.hide();
-      }
-      
-      // Limpieza inmediata para evitar backdrops huerfanos por re-renders rapidos de React
-      document.body.classList.remove("modal-open");
-      document.body.style.removeProperty("overflow");
-      document.body.style.removeProperty("padding-right");
-      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
-    }
+    setShowModal(false);
+    setSelectedMovimiento(null);
   };
 
   // ===== Filtro local por ID, reactivo o lote =====
@@ -296,50 +231,57 @@ const CrudmovimientoReactivo = () => {
 
   // Renderiza la interfaz del componente
   return (
-    <div className="mt-4" style={{ padding: "0 16px" }}>
-      {/* Encabezado con barra decorativa y titulo principal */}
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
-        <div style={{ height: "3px", width: "24px", background: "#0077B6", borderRadius: "99px" }} />
-        <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#0077B6", margin: 0 }}>Gestión de Inventario (Ingresos y Salidas)</h2>
+    <div className="container mt-4" style={{ maxWidth: "1200px" }}>
+      {/* Encabezado centrado con titulo */}
+      <div style={{ textAlign: "center", marginBottom: "28px" }}>
+        <div style={{ height: "3px", width: "40px", background: activeTab === "salidas" ? "#DC2626" : "#0077B6", borderRadius: "99px", margin: "0 auto 12px", transition: "background 0.25s ease" }} />
+        <h2 style={{ fontSize: "28px", fontWeight: "800", color: activeTab === "salidas" ? "#DC2626" : "#0077B6", margin: 0, transition: "color 0.25s ease" }}>
+          Gestión de Inventario (Ingresos y Salidas)
+        </h2>
+        <p style={{ color: "#64748b", marginTop: "8px", fontSize: "14px" }}>
+          Administra las entradas de lotes y el control de salidas de reactivos químicos.
+        </p>
       </div>
 
-      {/* Pestañas de navegacion */}
-      <ul className="nav nav-tabs mb-4" style={{ borderBottom: "2px solid #e2e8f0" }}>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === "ingresos" ? "active" : ""}`}
-            style={{
-              fontWeight: "600",
-              color: activeTab === "ingresos" ? "#0077B6" : "#64748b",
-              border: activeTab === "ingresos" ? "2px solid #e2e8f0" : "none",
-              borderBottom: activeTab === "ingresos" ? "2px solid #fff" : "none",
-              backgroundColor: activeTab === "ingresos" ? "#fff" : "transparent",
-              marginBottom: "-2px",
-              padding: "12px 24px"
-            }}
-            onClick={() => setActiveTab("ingresos")}
-          >
-            📥 Ingresos de Reactivos
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === "salidas" ? "active" : ""}`}
-            style={{
-              fontWeight: "600",
-              color: activeTab === "salidas" ? "#ef4444" : "#64748b",
-              border: activeTab === "salidas" ? "2px solid #e2e8f0" : "none",
-              borderBottom: activeTab === "salidas" ? "2px solid #fff" : "none",
-              backgroundColor: activeTab === "salidas" ? "#fff" : "transparent",
-              marginBottom: "-2px",
-              padding: "12px 24px"
-            }}
-            onClick={() => setActiveTab("salidas")}
-          >
-            📤 Salidas de Reactivos
-          </button>
-        </li>
-      </ul>
+      {/* Pestañas de navegacion modernas */}
+      <div className="d-flex justify-content-center gap-3 mb-4 flex-wrap">
+        <button
+          type="button"
+          onClick={() => setActiveTab("ingresos")}
+          style={{
+            padding: "10px 24px",
+            borderRadius: "12px",
+            fontWeight: "700",
+            fontSize: "14px",
+            border: activeTab === "ingresos" ? "none" : "1.5px solid #dbeafe",
+            background: activeTab === "ingresos" ? "linear-gradient(135deg, #0077B6, #023E8A)" : "#fff",
+            color: activeTab === "ingresos" ? "#fff" : "#0077B6",
+            boxShadow: activeTab === "ingresos" ? "0 6px 18px rgba(0, 119, 182, 0.25)" : "none",
+            cursor: "pointer",
+            transition: "all 0.2s ease"
+          }}
+        >
+          📥 Ingresos de Reactivos
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("salidas")}
+          style={{
+            padding: "10px 24px",
+            borderRadius: "12px",
+            fontWeight: "700",
+            fontSize: "14px",
+            border: activeTab === "salidas" ? "none" : "1.5px solid #fecaca",
+            background: activeTab === "salidas" ? "linear-gradient(135deg, #DC2626, #991B1B)" : "#fff",
+            color: activeTab === "salidas" ? "#fff" : "#DC2626",
+            boxShadow: activeTab === "salidas" ? "0 6px 18px rgba(220, 38, 38, 0.25)" : "none",
+            cursor: "pointer",
+            transition: "all 0.2s ease"
+          }}
+        >
+          📤 Salidas de Reactivos
+        </button>
+      </div>
 
       {/* Contenido de la Pestaña Activa */}
       {activeTab === "ingresos" && (
@@ -356,14 +298,12 @@ const CrudmovimientoReactivo = () => {
                 style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
               />
             </div>
-            <div className="col-md-7 text-end d-flex gap-2 justify-content-end">
+            <div className="col-md-7 text-end d-flex gap-2 justify-content-end mt-2 mt-md-0">
               {/* Boton para abrir el modal de nuevo ingreso */}
               <button
                 className="btn"
-                style={{ background: "#0077B6", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }}
-                data-bs-toggle="modal"
-                data-bs-target="#modalIngreso"
-                onClick={() => setSelectedMovimiento(null)}
+                style={{ background: "linear-gradient(135deg, #0077B6, #023E8A)", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none", padding: "8px 18px" }}
+                onClick={() => { setSelectedMovimiento(null); setShowModal(true); }}
               >
                 + Nuevo Ingreso
               </button>
@@ -400,23 +340,42 @@ const CrudmovimientoReactivo = () => {
         <CrudSalidasReactivos />
       )}
 
-      {/* Modal Ingreso */}
-      <div className="modal fade" id="modalIngreso" tabIndex="-1">
-        <div className="modal-dialog modal-lg">
-          <div className="modal-content" style={{ borderRadius: "16px", overflow: "hidden" }}>
-            {/* Encabezado del modal con gradiente azul */}
-            <div className="modal-header text-white" style={{ background: "#023E8A", border: "none" }}>
-              <h5 className="modal-title">
-                {selectedMovimiento ? "Editar" : "Nuevo"} Movimiento de Reactivo
-              </h5>
+      {/* Modal Ingreso con estilo metalizado unificado */}
+      {showModal && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 9999,
+          background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)",
+          display: "flex", alignItems: "center", justifyContent: "center", padding: "16px"
+        }}>
+          <div style={{
+            background: "#fff", borderRadius: "16px", width: "100%", maxWidth: "600px",
+            boxShadow: "0 24px 60px rgba(0,0,0,0.2)", overflow: "hidden", maxHeight: "90vh", display: "flex", flexDirection: "column"
+          }}>
+            <div style={{
+              background: "linear-gradient(135deg, #0077B6, #023E8A)",
+              padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0
+            }}>
+              <div>
+                <h5 style={{ color: "#fff", fontWeight: "800", margin: 0, fontSize: "16px" }}>
+                  {selectedMovimiento ? "✏️ Editar Ingreso de Reactivo" : "➕ Nuevo Ingreso de Reactivo"}
+                </h5>
+                <p style={{ color: "rgba(255,255,255,0.75)", margin: 0, fontSize: "12px" }}>
+                  Gestiona la entrada de lotes, cantidades y fechas de vencimiento
+                </p>
+              </div>
               <button
                 type="button"
-                className="btn-close btn-close-white"
-                data-bs-dismiss="modal"
                 onClick={hideModal}
-              ></button>
+                style={{
+                  background: "rgba(255,255,255,0.2)", border: "none", borderRadius: "50%",
+                  width: "28px", height: "28px", color: "#fff", fontSize: "14px", cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}
+              >
+                ✕
+              </button>
             </div>
-            <div className="modal-body">
+            <div style={{ overflowY: "auto", padding: "0" }}>
               {/* Renderiza el formulario de ingreso de reactivos */}
               <IngresoReactivoForm
                 selectedMovimiento={selectedMovimiento}
@@ -426,7 +385,7 @@ const CrudmovimientoReactivo = () => {
             </div>
           </div>
         </div>
-      </div>
+      )}
 
     </div>
   );

@@ -11,11 +11,10 @@ import * as bootstrap from 'bootstrap';
 
 // Componente del formulario de equipo
 export default function EquipoForm({ selectedEquipo, refreshParent, hideModal }) {
-  // Estado local del formulario con todos los campos del equipo
+  // Estado local del formulario con todos los campos del equipo (sin campo marca)
   const [form, setForm] = useState({
     grupo_equipo: "Equipo de Laboratorio",
     nom_equipo: "",
-    marca_equipo: "",
     no_placa: "",
     id_usuario: "",
     observaciones: "",
@@ -80,9 +79,8 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
   useEffect(() => {
     if (selectedEquipo) {
       setForm({
-        grupo_equipo: selectedEquipo.grupo_equipo || "",
+        grupo_equipo: selectedEquipo.grupo_equipo || "Equipo de Laboratorio",
         nom_equipo: selectedEquipo.nom_equipo || "",
-        marca_equipo: selectedEquipo.marca_equipo || "",
         no_placa: (selectedEquipo.no_placa && selectedEquipo.no_placa !== 0 && selectedEquipo.no_placa !== '0') ? selectedEquipo.no_placa : "",
         id_usuario: selectedEquipo.id_usuario || "",
         observaciones: selectedEquipo.observaciones || "",
@@ -117,7 +115,6 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
       setForm({
         grupo_equipo: "Equipo de Laboratorio",
         nom_equipo: "",
-        marca_equipo: "",
         no_placa: "",
         id_usuario: "",
         observaciones: "",
@@ -140,10 +137,6 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
         foto_equipo: file,
         previewFoto: URL.createObjectURL(file)
       }));
-    } else if (name === "marca_equipo") {
-      // Permite solo letras y espacios
-      const soloLetras = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
-      setForm(prev => ({ ...prev, [name]: soloLetras }));
     } else {
       setForm(prev => ({ ...prev, [name]: value }));
     }
@@ -193,9 +186,8 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
       });
       // Limpia el formulario después de guardar
       setForm({
-        grupo_equipo: "", 
+        grupo_equipo: "Equipo de Laboratorio", 
         nom_equipo: "", 
-        marca_equipo: "", 
         no_placa: "",
         id_usuario: "", 
         observaciones: "", 
@@ -261,49 +253,6 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
           </select>
         </div>
 
-        {/* Nombre del equipo */}
-        <div className="col-md-6">
-          <label style={{ fontSize: "11.5px", fontWeight: "700", color: "#1e293b", marginBottom: "6px", display: "flex", alignItems: "center", gap: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-            <span>🏷️</span> Nombre del Equipo <span style={{ color: "#dc2626" }}>*</span>
-          </label>
-          <input
-            type="text"
-            name="nom_equipo"
-            value={form.nom_equipo}
-            onChange={handleChange}
-            placeholder="Ej: Microscopio Binocular"
-            required
-            style={{
-              width: "100%", padding: "10px 14px", borderRadius: "10px",
-              border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b",
-              outline: "none", transition: "border-color 0.2s, box-shadow 0.2s"
-            }}
-            onFocus={(e) => { e.target.style.borderColor = "#0077B6"; e.target.style.boxShadow = "0 0 0 3px rgba(0, 119, 182, 0.12)"; }}
-            onBlur={(e) => { e.target.style.borderColor = "#dbeafe"; e.target.style.boxShadow = "none"; }}
-          />
-        </div>
-
-        {/* Marca del equipo */}
-        <div className="col-md-6">
-          <label style={{ fontSize: "11.5px", fontWeight: "700", color: "#1e293b", marginBottom: "6px", display: "flex", alignItems: "center", gap: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-            <span>🔖</span> Marca
-          </label>
-          <input
-            type="text"
-            name="marca_equipo"
-            value={form.marca_equipo}
-            onChange={handleChange}
-            placeholder="Ej: Olympus (solo letras)"
-            style={{
-              width: "100%", padding: "10px 14px", borderRadius: "10px",
-              border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b",
-              outline: "none", transition: "border-color 0.2s, box-shadow 0.2s"
-            }}
-            onFocus={(e) => { e.target.style.borderColor = "#0077B6"; e.target.style.boxShadow = "0 0 0 3px rgba(0, 119, 182, 0.12)"; }}
-            onBlur={(e) => { e.target.style.borderColor = "#dbeafe"; e.target.style.boxShadow = "none"; }}
-          />
-        </div>
-
         {/* Número de placa o serial */}
         <div className="col-md-6">
           <label style={{ fontSize: "11.5px", fontWeight: "700", color: "#1e293b", marginBottom: "6px", display: "flex", alignItems: "center", gap: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
@@ -314,7 +263,29 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
             name="no_placa"
             value={form.no_placa}
             onChange={handleChange}
-            placeholder="Ej: LAB-2026-004"
+            placeholder="Ej: 912310109707"
+            style={{
+              width: "100%", padding: "10px 14px", borderRadius: "10px",
+              border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b",
+              outline: "none", transition: "border-color 0.2s, box-shadow 0.2s"
+            }}
+            onFocus={(e) => { e.target.style.borderColor = "#0077B6"; e.target.style.boxShadow = "0 0 0 3px rgba(0, 119, 182, 0.12)"; }}
+            onBlur={(e) => { e.target.style.borderColor = "#dbeafe"; e.target.style.boxShadow = "none"; }}
+          />
+        </div>
+
+        {/* Nombre del equipo */}
+        <div className="col-md-12">
+          <label style={{ fontSize: "11.5px", fontWeight: "700", color: "#1e293b", marginBottom: "6px", display: "flex", alignItems: "center", gap: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+            <span>🏷️</span> Nombre del Equipo <span style={{ color: "#dc2626" }}>*</span>
+          </label>
+          <input
+            type="text"
+            name="nom_equipo"
+            value={form.nom_equipo}
+            onChange={handleChange}
+            placeholder="Ej: Microscopio Binocular"
+            required
             style={{
               width: "100%", padding: "10px 14px", borderRadius: "10px",
               border: "1.5px solid #dbeafe", fontSize: "13px", color: "#1e293b",

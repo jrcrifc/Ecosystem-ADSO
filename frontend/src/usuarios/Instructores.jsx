@@ -1,9 +1,9 @@
 // Vista de gestión de Instructores con CRUD e importación desde Excel
 import { useState, useEffect } from "react";
-import * as bootstrap from "bootstrap";
 import apiAxios from "../api/axiosConfig";
 import Swal from "sweetalert2";
 import InstructorForm from "./InstructorForm.jsx";
+import { exportToExcel } from "../api/ExportUtils.js";
 
 export default function Instructores() {
   const [instructores, setInstructores] = useState([]);
@@ -25,7 +25,6 @@ export default function Instructores() {
     } catch { Swal.fire("Error", "No se pudieron cargar los instructores", "error"); }
   };
 
-  // Funciones de SweetAlert eliminadas, se usa InstructorForm
   const hideModal = () => {
     setShowInstructorModal(false);
     setSelectedInstructor(null);
@@ -33,6 +32,7 @@ export default function Instructores() {
 
   // Ver detalles del instructor
   const handleVerDetalle = (inst) => {
+    const estadoInst = inst.estado || inst.usuario?.estado || 'activo';
     Swal.fire({
       title: `📋 ${inst.nombres_apellidos}`,
       html: `
@@ -41,7 +41,7 @@ export default function Instructores() {
           <p><strong>📧 Email institucional:</strong> ${inst.email || inst.usuario?.email || 'N/A'}</p>
           <p><strong>📞 Teléfono:</strong> ${inst.telefono || 'N/A'}</p>
           <p><strong>🏷️ Vinculación:</strong> ${inst.tipo_vinculacion || 'N/A'}</p>
-          <p><strong>🟢 Estado:</strong> ${inst.usuario?.estado === 'activo' ? 'Activo' : 'Inactivo'}</p>
+          <p><strong>🟢 Estado:</strong> ${estadoInst === 'activo' ? 'Activo' : 'Inactivo'}</p>
         </div>
       `,
       confirmButtonColor: '#0077B6',
@@ -49,13 +49,9 @@ export default function Instructores() {
     });
   };
 
-  // Alternar estado activo/inactivo del instructor
+  // Alternar estado activo/inactivo del instructor directamente en la tabla instructores
   const toggleEstado = async (inst) => {
-    if (!inst.usuario) {
-      Swal.fire("Error", "Este instructor no tiene un usuario asociado para cambiar su estado", "warning");
-      return;
-    }
-    const estadoActual = inst.usuario.estado;
+    const estadoActual = inst.estado || inst.usuario?.estado || "activo";
     const nuevoEstado = estadoActual === "activo" ? "INACTIVO" : "ACTIVO";
     const result = await Swal.fire({
       title: "¿Cambiar estado?",
@@ -69,7 +65,7 @@ export default function Instructores() {
     });
     if (!result.isConfirmed) return;
     try {
-      await apiAxios.put(`/api/auth/usuarios/${inst.usuario.id_usuario}/toggle-activo`);
+      await apiAxios.put(`/api/instructores/${inst.id_instructor}/toggle-activo`);
       Swal.fire({ icon: "success", title: "Actualizado", text: "El estado fue modificado correctamente", timer: 1500, showConfirmButton: false });
       cargar();
     } catch (err) {
@@ -136,13 +132,25 @@ export default function Instructores() {
       (i.telefono || '').toLowerCase().includes(s);
   });
 
+  // Exportar instructores a Excel
+  const handleExportarExcel = () => {
+    if (!instructores || instructores.length === 0) {
+      Swal.fire("Aviso", "No hay instructores para exportar", "info");
+      return;
+    }
+    const dataToExport = instructores.map(i => ({
+      "Documento": i.documento || "",
+      "Nombres y Apellidos": i.nombres_apellidos || "",
+      "Email": i.email || i.usuario?.email || "",
+      "Teléfono": i.telefono || "",
+      "Tipo de Vinculación": i.tipo_vinculacion || "",
+      "Estado": (i.estado || i.usuario?.estado) === 'inactivo' ? 'Inactivo' : 'Activo'
+    }));
+    exportToExcel(dataToExport, "Instructores_Ecosystem");
+  };
+
   const totalPages = Math.ceil(filtrados.length / itemsPerPage);
   const paginados = filtrados.slice((page - 1) * itemsPerPage, page * itemsPerPage);
-
-  const btnStyle = (bg, color, border) => ({
-    background: bg, color, border: border || 'none', borderRadius: '8px',
-    padding: '7px 16px', fontWeight: '700', cursor: 'pointer', fontSize: '12px', transition: 'all 0.2s'
-  });
 
   return (
     <div className="container mt-4">
@@ -152,23 +160,27 @@ export default function Instructores() {
       </div>
       <p style={{ color: "#64748b", marginBottom: "24px" }}>Gestiona los instructores del sistema. Crea, edita, elimina o importa desde Excel.</p>
 
-      <div className="row mb-4 align-items-center">
-        <div className="col-md-5">
+      <div className="row mb-4 align-items-center g-2">
+        <div className="col-12 col-md-4">
           <input type="text" className="form-control" placeholder="Buscar por documento, nombre, email..."
             value={filterText} onChange={(e) => setFilterText(e.target.value)}
             style={{ borderColor: "#dbeafe", borderRadius: "10px", padding: "10px 15px" }} />
         </div>
-        <div className="col-md-7 text-end" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', flexWrap: 'wrap' }}>
+        <div className="col-12 col-md-8 text-end" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', flexWrap: 'wrap' }}>
           <button 
             className="btn text-white"
-            style={{ background: "#0077B6", borderRadius: "10px", fontWeight: "600", padding: "10px 20px", border: "none" }}
+            style={{ background: "#0077B6", borderRadius: "10px", fontWeight: "600", padding: "10px 18px", border: "none" }}
             onClick={() => { setSelectedInstructor(null); setShowInstructorModal(true); }}
           >
             ➕ Nuevo Instructor
           </button>
           <button onClick={handleImportar} className="btn text-white"
-            style={{ background: "linear-gradient(135deg, #0077B6, #023E8A)", borderRadius: "10px", fontWeight: "600", padding: "10px 20px", border: "none" }}>
+            style={{ background: "linear-gradient(135deg, #0077B6, #023E8A)", borderRadius: "10px", fontWeight: "600", padding: "10px 18px", border: "none" }}>
             📥 Importar Excel
+          </button>
+          <button onClick={handleExportarExcel} className="btn text-white"
+            style={{ background: "#10b981", borderRadius: "10px", fontWeight: "600", padding: "10px 18px", border: "none" }}>
+            📊 Exportar a Excel
           </button>
         </div>
       </div>
@@ -179,8 +191,8 @@ export default function Instructores() {
           <p>No hay instructores registrados</p>
         </div>
       ) : (
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
+        <div className="table-responsive" style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', minWidth: '750px', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
             <thead>
               <tr style={{ background: '#f8fafc' }}>
                 {['Documento', 'Nombres y Apellidos', 'Email', 'Teléfono', 'Vinculación', 'Estado', 'Acciones'].map(h => (
@@ -189,52 +201,55 @@ export default function Instructores() {
               </tr>
             </thead>
             <tbody>
-              {paginados.map(i => (
-                <tr key={i.id_instructor} style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                  <td style={{ padding: '14px 16px', color: '#0f172a', fontSize: '13px' }}>{i.documento}</td>
-                  <td style={{ padding: '14px 16px', color: '#334155', fontSize: '13px' }}>{i.nombres_apellidos}</td>
-                  <td style={{ padding: '14px 16px', color: '#64748b', fontSize: '13px' }}>{i.email || i.usuario?.email}</td>
-                  <td style={{ padding: '14px 16px', color: '#334155', fontSize: '13px' }}>{i.telefono || '—'}</td>
+              {paginados.map(i => {
+                const estadoActual = i.estado || i.usuario?.estado || 'activo';
+                return (
+                  <tr key={i.id_instructor} style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                    <td style={{ padding: '14px 16px', color: '#0f172a', fontSize: '13px' }}>{i.documento}</td>
+                    <td style={{ padding: '14px 16px', color: '#334155', fontSize: '13px' }}>{i.nombres_apellidos}</td>
+                    <td style={{ padding: '14px 16px', color: '#64748b', fontSize: '13px' }}>{i.email || i.usuario?.email}</td>
+                    <td style={{ padding: '14px 16px', color: '#334155', fontSize: '13px' }}>{i.telefono || '—'}</td>
 
-                  <td style={{ padding: '14px 16px' }}>
-                    <span style={{ background: '#f0f9ff', color: '#0077B6', fontSize: '11px', fontWeight: '700', padding: '4px 12px', borderRadius: '99px' }}>
-                      {i.tipo_vinculacion || 'N/A'}
-                    </span>
-                  </td>
-                  <td style={{ padding: '14px 16px' }}>
-                    <span className={`px-2 py-1 rounded-pill text-white fw-semibold ${i.usuario?.estado === 'inactivo' ? "bg-danger" : "bg-success"}`} style={{ fontSize: "0.7rem" }}>
-                      {i.usuario?.estado === 'inactivo' ? "INACTIVO" : "ACTIVO"}
-                    </span>
-                  </td>
-                  <td style={{ padding: '14px 16px' }}>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={() => handleVerDetalle(i)} title="Ver Detalle" className="btn btn-sm" style={{ background: "#dbeafe", color: "#0077B6", border: "none" }}>
-                        <i className="fa-solid fa-eye"></i>
-                      </button>
-                      <button 
-                        onClick={() => { setSelectedInstructor(i); setShowInstructorModal(true); }} 
-                        title="Editar"
-                        className="btn btn-sm"
-                        style={{ background: "#dbeafe", color: "#0077B6", border: "none" }}
-                      >
-                        <i className="fas fa-edit"></i>
-                      </button>
-                      <button 
-                        onClick={() => toggleEstado(i)} 
-                        title={i.usuario?.estado === 'inactivo' ? "Activar" : "Inactivar"} 
-                        className="btn btn-sm" 
-                        style={{ 
-                          background: i.usuario?.estado === 'inactivo' ? "#dcfce7" : "#fee2e2", 
-                          color: i.usuario?.estado === 'inactivo' ? "#16a34a" : "#dc2626", 
-                          border: "none" 
-                        }}
-                      >
-                        <i className={`fas ${i.usuario?.estado === 'inactivo' ? "fa-check" : "fa-ban"}`}></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    <td style={{ padding: '14px 16px' }}>
+                      <span style={{ background: '#f0f9ff', color: '#0077B6', fontSize: '11px', fontWeight: '700', padding: '4px 12px', borderRadius: '99px', whiteSpace: 'nowrap' }}>
+                        {i.tipo_vinculacion || 'N/A'}
+                      </span>
+                    </td>
+                    <td style={{ padding: '14px 16px' }}>
+                      <span className={`px-2 py-1 rounded-pill text-white fw-semibold ${estadoActual === 'inactivo' ? "bg-danger" : "bg-success"}`} style={{ fontSize: "0.7rem" }}>
+                        {estadoActual === 'inactivo' ? "INACTIVO" : "ACTIVO"}
+                      </span>
+                    </td>
+                    <td style={{ padding: '14px 16px' }}>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button onClick={() => handleVerDetalle(i)} title="Ver Detalle" className="btn btn-sm" style={{ background: "#dbeafe", color: "#0077B6", border: "none" }}>
+                          <i className="fa-solid fa-eye"></i>
+                        </button>
+                        <button 
+                          onClick={() => { setSelectedInstructor(i); setShowInstructorModal(true); }} 
+                          title="Editar"
+                          className="btn btn-sm"
+                          style={{ background: "#dbeafe", color: "#0077B6", border: "none" }}
+                        >
+                          <i className="fas fa-edit"></i>
+                        </button>
+                        <button 
+                          onClick={() => toggleEstado(i)} 
+                          title={estadoActual === 'inactivo' ? "Activar" : "Inactivar"} 
+                          className="btn btn-sm" 
+                          style={{ 
+                            background: estadoActual === 'inactivo' ? "#dcfce7" : "#fee2e2", 
+                            color: estadoActual === 'inactivo' ? "#16a34a" : "#dc2626", 
+                            border: "none" 
+                          }}
+                        >
+                          <i className={`fas ${estadoActual === 'inactivo' ? "fa-check" : "fa-ban"}`}></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
           

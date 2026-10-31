@@ -55,21 +55,20 @@ export const create = async (req, res) => {
         // Llama al servicio para crear la solicitud con los datos proporcionados
         const nuevaSolicitud = await solicitudService.create(req.body, userId);
 
-        // Solo notifica a los administradores si el creador es un Instructor.
-        // Si es Administrador, él mismo gestiona las solicitudes y no necesita recibir la notificación.
-        const esInstructor = ['Instructor', 'instructor'].includes(userRol);
+        // Solo notifica a los administradores si quien crea NO es un Administrador
+        const esAdmin = ['administrador', 'admin'].includes(String(userRol).toLowerCase());
 
-        if (esInstructor) {
+        if (!esAdmin) {
             // Intenta notificar a los administradores en tiempo real por WebSocket
             try {
                 // Envía una notificación en tiempo real a todos los administradores aprobados
                 await NotificacionService.notificarAdmins({
                     id_usuario_origen: userId,
                     titulo: '📋 Nueva solicitud de un Instructor',
-                    mensaje: `El instructor ha creado una nueva solicitud de préstamo (ID: ${nuevaSolicitud.id_solicitud}). Revísala en Gestión de Solicitudes.`,
+                    mensaje: `Un instructor ha creado una nueva solicitud de préstamo (#${nuevaSolicitud.id_solicitud}). Revísala en Gestión de Solicitudes.`,
                     tipo: 'nueva_solicitud'
                 });
-                console.log(`🔔 Admins notificados en tiempo real por solicitud del instructor ID ${userId}`);
+                console.log(`🔔 Admins notificados en tiempo real por solicitud del usuario ID ${userId}`);
             } catch (notifError) {
                 // Registra el error de notificación en consola sin interrumpir el flujo
                 console.error('Error al notificar a admins:', notifError);
@@ -79,6 +78,7 @@ export const create = async (req, res) => {
         // Emite un evento global para refrescar las tablas en los clientes conectados (siempre)
         try {
             getIO().emit('solicitud_actualizada');
+            getIO().emit('equipo_actualizado');
         } catch (socketError) {
             console.error('Error al emitir evento de socket:', socketError);
         }
@@ -95,21 +95,33 @@ export const create = async (req, res) => {
 export const update = async (req, res) => {
     // Ejecuta el bloque en try-catch para manejar errores
     try {
-        // Llama al servicio para actualizar la solicitud con los nuevos datos
-        const result = await solicitudService.update(req.params.id, req.body);
-        
-        // Verifica si la solicitud fue demotada (regresada a estado anterior)
-        if (result && result.demotado) {
-            // Intenta notificar a los administradores sobre la modificación
+        // Llama al servicio para actualizar la solicitud con los nuevos datos y validar permisos
+        const result = await solicitudService.update(req.params.id, req.body, req.user);
+        const userRol = req.user?.rol || '';
+        const esAdmin = ['administrador', 'admin'].includes(String(userRol).toLowerCase());
+
+        // Si no es admin (ej. instructor actualizando), notificar al administrador
+        if (!esAdmin) {
+            try {
+                await NotificacionService.notificarAdmins({
+                    id_usuario_origen: req.user?.id,
+                    titulo: '🔄 Solicitud modificada',
+                    mensaje: `Un instructor modificó los datos de la solicitud #${req.params.id}. Revísala en Gestión de Solicitudes.`,
+                    tipo: 'nueva_solicitud'
+                });
+            } catch (notifError) {
+                console.error('Error al notificar modificación de solicitud:', notifError);
+            }
+        } else if (result && result.demotado) {
+            // Verifica si la solicitud fue demotada
             try {
                 await NotificacionService.notificarAdmins({
                     id_usuario_origen: result.id_usuario,
                     titulo: '⚠️ Solicitud de préstamo modificada',
-                    mensaje: `La solicitud #${req.params.id} fue modificada por el usuario después de haber sido aceptada. Se requiere una nueva aprobación.`,
+                    mensaje: `La solicitud #${req.params.id} fue modificada y requiere una nueva aprobación en Gestión de Solicitudes.`,
                     tipo: 'nueva_solicitud'
                 });
             } catch (notifError) {
-                // Registra el error de notificación en consola
                 console.error('Error al notificar modificación de solicitud:', notifError);
             }
         }
@@ -154,17 +166,25 @@ export const cambiarEstado = async (req, res) => {
                 // Mapa de emojis según el nombre del estado
                 const emojiMap = {
                     'generado': '📝', 'aceptado': '✅', 'prestado': '📦',
-                    'entregado': '🎉', 'cancelado': '❌', 'rechazado': '🚫'
+                    'entregado': '🔬', 'cancelado': '❌', 'rechazado': '🚫'
                 };
                 // Selecciona el emoji correspondiente o uno por defecto
                 const emoji = emojiMap[estadoNombre] || '🔔';
+
+                const esRevisionEntrega = Number(id_estado_solicitud) === 5 || estadoNombre === 'entregado';
+                const tituloNotif = esRevisionEntrega
+                    ? `🔬 Solicitud #${req.params.id}: Entregado (En Revisión)`
+                    : `${emoji} Tu solicitud #${req.params.id} fue ${estadoNombre}`;
+                const mensajeNotif = esRevisionEntrega
+                    ? `El estado de tu solicitud #${req.params.id} cambió a Entregado (En Revisión) porque el(los) equipo(s) ingresaron a revisión técnica. Te notificaremos cualquier novedad. Revisa Gestión de Solicitudes.`
+                    : `La solicitud #${req.params.id} cambió su estado a "${estadoNombre}". Revisa Gestión de Solicitudes para más detalles.`;
 
                 // Crea una notificación para el usuario solicitante
                 await NotificacionService.crearNotificacion({
                     id_usuario_destino: solicitud.id_usuario,
                     id_usuario_origen: req.user?.id || null,
-                    titulo: `${emoji} Tu solicitud fue ${estadoNombre}`,
-                    mensaje: `La solicitud #${req.params.id} cambió su estado a "${estadoNombre}". Revisa tu historial para más detalles.`,
+                    titulo: tituloNotif,
+                    mensaje: mensajeNotif,
                     tipo: 'cambio_estado_solicitud'
                 });
 
@@ -189,8 +209,30 @@ export const cambiarEstado = async (req, res) => {
 export const remove = async (req, res) => {
     // Ejecuta el bloque en try-catch para manejar errores
     try {
+        const id_solicitud = req.params.id;
         // Llama al servicio para eliminar la solicitud por su ID
-        await solicitudService.delete(req.params.id);
+        await solicitudService.delete(id_solicitud);
+
+        const userRol = req.user?.rol || '';
+        const esAdmin = ['administrador', 'admin'].includes(String(userRol).toLowerCase());
+        if (!esAdmin) {
+            try {
+                await NotificacionService.notificarAdmins({
+                    id_usuario_origen: req.user?.id || null,
+                    titulo: '🗑️ Solicitud eliminada',
+                    mensaje: `La solicitud de préstamo #${id_solicitud} fue eliminada/cancelada por el solicitante. Revisa Gestión de Solicitudes.`,
+                    tipo: 'nueva_solicitud'
+                });
+            } catch (e) {
+                console.error("Error notificando eliminación a admin:", e);
+            }
+        }
+
+        try {
+            getIO().emit('solicitud_actualizada');
+            getIO().emit('equipo_actualizado');
+        } catch (e) {}
+
         // Responde con mensaje de éxito
         res.json({ success: true, message: 'Solicitud eliminada correctamente' });
     } catch (error) {

@@ -1,4 +1,4 @@
-/* Define las variables CSS globales del tema claro de Ecosystem */
+/* Variables CSS globales del tema claro de Ecosystem */
 :root {
   --bg-color: #f0f7ff;
   --card-bg: #ffffff;
@@ -10,47 +10,49 @@
   --primary-color: #0077B6;
 }
 
-/* Aplica el fondo azul claro y el texto principal al body de la página */
-body {
-  background-color: var(--bg-color) !important;
-  color: var(--text-main);
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
-/* Personaliza las tarjetas de Bootstrap con los colores del tema */
+html, body {
+  background-color: var(--bg-color) !important;
+  color: var(--text-main);
+  overflow-x: hidden;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 .card {
   background-color: var(--card-bg) !important;
   border-color: var(--border-color) !important;
   color: var(--text-main) !important;
 }
 
-/* Personaliza la barra superior con fondo blanco y borde inferior azul claro */
 .topbar {
   background-color: var(--topbar-bg) !important;
   border-bottom-color: var(--border-color) !important;
 }
 
-/* Aplica el color gris azulado al texto atenuado de Bootstrap */
 .text-muted {
   color: var(--text-muted) !important;
 }
 
-/* Estilos base para inputs y selects con bordes redondeados y transición */
 .form-control, .form-select {
   border-radius: 10px;
   border: 1px solid #e2e8f0;
   padding: 10px 14px;
   font-size: 14px;
   transition: all 0.2s ease-in-out;
+  max-width: 100%;
 }
 
-/* Cambia el borde a azul Ecosystem y agrega sombra cuando el input está enfocado */
 .form-control:focus, .form-select:focus {
   border-color: var(--primary-color) !important;
   box-shadow: 0 0 0 4px rgba(0, 119, 182, 0.1) !important;
   background-color: #fff !important;
 }
 
-/* Botón premium con degradado azul y sombra para apariencia destacada */
 .btn-premium {
   background: linear-gradient(135deg, #0077B6, #00B4D8);
   border: none;
@@ -62,19 +64,16 @@ body {
   box-shadow: 0 4px 12px rgba(0, 119, 182, 0.2);
 }
 
-/* Eleva el botón y acentúa la sombra al pasar el mouse */
 .btn-premium:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 15px rgba(0, 119, 182, 0.3);
   filter: brightness(1.1);
 }
 
-/* Restaura la posición al hacer clic en el botón */
 .btn-premium:active {
   transform: translateY(0);
 }
 
-/* Animación de entrada con fade y escala ascendente */
 @keyframes fadeInScale {
   from {
     opacity: 0;
@@ -86,20 +85,15 @@ body {
   }
 }
 
-/* Ajustes responsivos para el contenedor principal de contenido */
+/* Contenedor principal de contenido */
 .content-container {
   padding: 24px 32px;
-  max-width: 1200px;
+  max-width: 1280px;
+  width: 100%;
   margin: 0 auto;
 }
 
-@media (max-width: 768px) {
-  .content-container {
-    padding: 16px 12px;
-  }
-}
-
-/* Ajustes responsivos para la barra superior (TopBar) */
+/* Barra superior (TopBar) */
 .topbar-container {
   display: flex;
   align-items: center;
@@ -112,24 +106,128 @@ body {
   top: 0;
   z-index: 50;
   margin-bottom: 8px;
+  min-height: 60px;
 }
 
-@media (max-width: 768px) {
+/* Dropdown de la campanita de notificaciones */
+.campanita-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 12px);
+  width: 380px;
+  max-width: calc(100vw - 24px);
+  max-height: 480px;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+  border: 1px solid #f1f5f9;
+  z-index: 9999;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: fadeInScale 0.2s ease-out;
+}
+
+/* Tablas y DataTables responsivas */
+.table-responsive,
+.rdt_TableWrapper,
+div:has(> .rdt_Table) {
+  width: 100%;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.rdt_Pagination {
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  height: auto !important;
+  min-height: 52px !important;
+  padding: 8px 12px !important;
+}
+
+/* Breakpoint Tablet y Móvil (<= 992px, donde el Sidebar pasa a modo hamburguesa) */
+@media (max-width: 992px) {
   .topbar-container {
-    padding: 10px 12px 10px 60px !important;
+    padding: 10px 16px 10px 64px !important;
     gap: 12px;
   }
+
+  .content-container {
+    padding: 18px 16px;
+  }
+}
+
+/* Breakpoint Móvil Estándar (<= 768px) */
+@media (max-width: 768px) {
+  .content-container {
+    padding: 14px 10px;
+  }
+
+  .container {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
   .topbar-user-text {
     display: none !important;
   }
+
+  /* Barras de herramientas de búsqueda + botones en vistas CRUD */
+  .row .text-end,
+  .row .d-flex.justify-content-end {
+    justify-content: flex-start !important;
+    text-align: left !important;
+    flex-wrap: wrap !important;
+    margin-top: 8px;
+    gap: 8px !important;
+  }
+
+  /* Títulos principales de módulos */
+  h2 {
+    font-size: 21px !important;
+  }
+
+  /* Dropdown de notificaciones centrado en pantallas móviles */
+  .campanita-dropdown {
+    position: fixed !important;
+    top: 64px !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: 75vh !important;
+  }
+
+  /* Modales de Bootstrap y modales personalizados */
+  .modal-dialog {
+    margin: 10px !important;
+    max-width: calc(100vw - 20px) !important;
+  }
+
+  .modal-body {
+    padding: 16px !important;
+  }
 }
 
-/* Ajustes responsivos globales para tablas */
-table {
-  display: block;
-  width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+/* Breakpoint Móvil Pequeño (<= 480px) */
+@media (max-width: 480px) {
+  .content-container {
+    padding: 10px 8px;
+  }
+
+  .row .text-end .btn,
+  .row .d-flex.justify-content-end .btn {
+    flex: 1 1 auto;
+    font-size: 12px !important;
+    padding: 8px 12px !important;
+    text-align: center;
+  }
+
+  .swal2-popup {
+    width: 94vw !important;
+    padding: 16px !important;
+  }
 }
 
 /* Asegura que las alertas de SweetAlert2 siempre se muestren por encima de los modales */

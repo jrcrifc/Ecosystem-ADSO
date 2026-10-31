@@ -14,7 +14,7 @@ const estadoEquipoModel = db.define('estado_equipo', {
 
     // Campo estado - enum con los estados disponibles para equipos
     estado: { 
-        type: DataTypes.ENUM("disponible", "mantenimiento", "solicitado", "prestado"),
+        type: DataTypes.ENUM("disponible", "mantenimiento", "solicitado", "prestado", "revision"),
         allowNull: false
     },
     

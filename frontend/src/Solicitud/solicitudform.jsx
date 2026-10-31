@@ -14,97 +14,24 @@ import "react-datepicker/dist/react-datepicker.css";
 import { es } from 'date-fns/locale';
 registerLocale('es', es);
 
-// ===================== UTILIDADES DE VALIDACIÓN DE FECHAS =====================
+// Importa utilidades para cálculo de días hábiles en Colombia (excluyendo fines de semana y festivos)
+import {
+  esFechaReal,
+  esFestivoOFinDeSemana,
+  esDiaHabil,
+  sumarDiasHabiles,
+  diffDiasHabiles,
+  hoyStr,
+  formatDateStr,
+  parseDateStr
+} from "../utils/fechasHabiles.js";
 
-// Verifica que una fecha sea real (no 31 de febrero, 31 de noviembre, etc.)
-const esFechaReal = (dateStr) => {
-  if (!dateStr) return false;
-  const [yyyy, mm, dd] = dateStr.split("-").map(Number);
-  if (!yyyy || !mm || !dd) return false;
-  const fecha = new Date(yyyy, mm - 1, dd);
-  return fecha.getFullYear() === yyyy && fecha.getMonth() === mm - 1 && fecha.getDate() === dd;
-};
-
-// Verifica si una fecha cae en sábado (6) o domingo (0)
-const esFinDeSemana = (dateStr) => {
-  if (!dateStr) return false;
-  const [yyyy, mm, dd] = dateStr.split("-").map(Number);
-  const dia = new Date(yyyy, mm - 1, dd).getDay();
-  return dia === 0 || dia === 6;
-};
-
-// Suma N días hábiles (lunes a viernes) a una fecha y retorna string YYYY-MM-DD
-const sumarDias = (dateStr, dias) => {
-  const [yyyy, mm, dd] = dateStr.split("-").map(Number);
-  const fecha = new Date(yyyy, mm - 1, dd);
-  let diasAgregados = 0;
-  while (diasAgregados < dias) {
-    fecha.setDate(fecha.getDate() + 1);
-    if (fecha.getDay() !== 0 && fecha.getDay() !== 6) {
-      diasAgregados++;
-    }
-  }
-  const y = fecha.getFullYear();
-  const m = String(fecha.getMonth() + 1).padStart(2, '0');
-  const d = String(fecha.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-};
-
-// Calcula la diferencia en días hábiles (lunes a viernes) entre dos fechas
-const diffDias = (fechaA, fechaB) => {
-  const [yA, mA, dA] = fechaA.split("-").map(Number);
-  const [yB, mB, dB] = fechaB.split("-").map(Number);
-  let a = new Date(yA, mA - 1, dA);
-  const b = new Date(yB, mB - 1, dB);
-  
-  // Limpiar horas para evitar fallos por zona horaria
-  a.setHours(0,0,0,0);
-  b.setHours(0,0,0,0);
-
-  let diasHabiles = 0;
-  const inc = a < b ? 1 : -1;
-  const curr = new Date(a);
-  
-  while (curr.getTime() !== b.getTime()) {
-    curr.setDate(curr.getDate() + inc);
-    if (curr.getDay() !== 0 && curr.getDay() !== 6) {
-      diasHabiles += inc;
-    }
-  }
-  return diasHabiles;
-};
-
-// Obtiene la fecha de hoy en formato YYYY-MM-DD (local)
-const hoyStr = () => {
-  const hoy = new Date();
-  const y = hoy.getFullYear();
-  const m = String(hoy.getMonth() + 1).padStart(2, '0');
-  const d = String(hoy.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-};
-
-// Función que valida que la hora esté entre 7 AM y 4 PM
+// Función que valida que la hora esté entre 7:00 AM y 3:30 PM
 const isTimeValid = (time) => {
   if (!time) return false;
   const [hh, mm] = time.split(":").map(Number);
   const totalMinutes = hh * 60 + mm;
-  return totalMinutes >= 7 * 60 && totalMinutes <= 16 * 60;
-};
-
-// Convierte Date a string YYYY-MM-DD
-const formatDateStr = (dateObj) => {
-  if (!dateObj) return "";
-  const y = dateObj.getFullYear();
-  const m = String(dateObj.getMonth() + 1).padStart(2, '0');
-  const d = String(dateObj.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-};
-
-// Convierte string YYYY-MM-DD a Date local
-const parseDateStr = (dateStr) => {
-  if (!dateStr) return null;
-  const [y, m, d] = dateStr.split('-').map(Number);
-  return new Date(y, m - 1, d);
+  return totalMinutes >= 7 * 60 && totalMinutes <= 15 * 60 + 30;
 };
 
 // Componente del formulario de solicitud de préstamo
@@ -115,8 +42,8 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
   const [hora_inicio, setHora_inicio]   = useState("07:00");
   // Estado para la fecha de devolución del préstamo
   const [fecha_fin, setFecha_fin]       = useState("");
-  // Estado para la hora de devolución del préstamo
-  const [hora_fin, setHora_fin]         = useState("16:00");
+  // Estado para la hora de devolución del préstamo (por defecto 07:00 AM, máx 3:30 PM)
+  const [hora_fin, setHora_fin]         = useState("07:00");
   // Estado que indica si se está guardando la solicitud
   const [loading, setLoading]           = useState(false);
   // Estado que almacena los errores de validación del formulario
@@ -147,10 +74,6 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
   const userRol = (userData?.user?.rol || userData?.rol || "").toLowerCase();
   // Verifica si el usuario es administrador
   const esAdmin = userRol === "administrador" || userRol === "admin";
-  // Verifica si el usuario es gestor
-  const esGestor = userRol === "gestor";
-  // Verifica si el usuario es pasante
-  const esPasante = userRol === "pasante";
   // Solo el administrador puede seleccionar un solicitante distinto
   const puedeSeleccionarSolicitante = esAdmin;
   // Busca el usuario seleccionado en la lista de usuarios cargados
@@ -168,12 +91,19 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
     // Escucha en tiempo real cambios de equipos y solicitudes para actualizar disponibilidad
     socket.on('equipo_actualizado', cargarEquipos);
     socket.on('solicitud_actualizada', cargarEquipos);
-    // Si puede seleccionar solicitante (Admin), carga únicamente los Instructores
+    // Si puede seleccionar solicitante (Admin), carga únicamente los Instructores desde la tabla instructores
     if (puedeSeleccionarSolicitante) {
       apiAxios
-        .get("/api/auth/usuarios", { headers })
+        .get("/api/instructores", { headers })
         .then(res => {
-          const instructores = res.data.filter(u => u.rol === 'Instructor');
+          const instructores = (res.data || []).map(i => ({
+            id_usuario: i.id_instructor,
+            id_instructor: i.id_instructor,
+            nombres_apellidos: i.nombres_apellidos,
+            documento: i.documento,
+            email: i.email,
+            rol: 'Instructor'
+          }));
           setUsuarios(instructores);
         })
         .catch(() => {});
@@ -188,14 +118,12 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
   // Efecto que prellena el formulario cuando se edita una solicitud existente
   useEffect(() => {
     if (selectedSolicitud) {
-      // Función que extrae fecha y hora local de un string ISO
       const getLocalPart = (isoString) => {
         if (!isoString) return { date: "", time: "07:00" };
         const d = new Date(isoString);
         if (isNaN(d)) return { date: "", time: "07:00" };
         let date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         let time = d.toTimeString().slice(0, 5);
-        // Corrección: si el backend envió medianoche UTC, forzamos la fecha original y 7:00 AM
         if (time === "19:00" || isoString.includes("T00:00:00.000Z")) {
            date = isoString.substring(0, 10);
            time = "07:00";
@@ -213,11 +141,9 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
       setEquiposSeleccionados(idsActuales);
       setIdUsuarioSolicitante("");
     } else {
-      // Si es nueva solicitud, establece valores por defecto
-      // Fecha de recogida: 5 días después de hoy (primer día válido del rango permitido)
-      setFecha_inicio(sumarDias(hoyStr(), 5));
+      setFecha_inicio(sumarDiasHabiles(hoyStr(), 5));
       setHora_inicio("07:00");
-      setHora_fin("16:00");
+      setHora_fin("07:00");
       setFecha_fin("");
       setEstado(1);
       setEquiposSeleccionados([]);
@@ -233,15 +159,6 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
         : [...prev, id_equipo]
     );
   };
-
-  // Función que devuelve el color del badge según el estado del equipo
-  const getBadgeColor = (estado) => ({
-    disponible:      "#2D8A4E",
-    mantenimiento:   "#d97706",
-    solicitado:      "#6366f1",
-    prestado:        "#ca8a04",
-    inactivo:        "#dc3545",
-  }[estado] || "#6c757d");
 
   // Filtra los equipos por texto de búsqueda
   const equiposFiltrados = equipos.filter(e => {
@@ -259,55 +176,89 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
 
   // ===================== VALIDACIÓN CROSS-BROWSER DE FECHAS =====================
 
-  // Valida la fecha de recogida y retorna error o null
   const validarFechaRecogida = (valor) => {
     if (!valor) return "La fecha de recogida es requerida";
     if (!esFechaReal(valor)) return "Fecha inválida (no existe en el calendario)";
-    if (esFinDeSemana(valor)) return "No se pueden seleccionar sábados ni domingos";
-    const diasDesdeHoy = diffDias(hoyStr(), valor);
-    if (diasDesdeHoy < 5) return "Debe ser con mínimo 5 días de anticipación";
+    if (esFestivoOFinDeSemana(valor)) return "No se pueden seleccionar fines de semana ni festivos";
+    const diasDesdeHoy = diffDiasHabiles(hoyStr(), valor);
+    if (diasDesdeHoy < 5) return "Debe ser con mínimo 5 días hábiles de anticipación";
     return null;
   };
 
-  // Valida la fecha de devolución y retorna error o null
   const validarFechaDevolucion = (valor) => {
     if (!valor) return "La fecha de devolución es requerida";
     if (!esFechaReal(valor)) return "Fecha inválida (no existe en el calendario)";
-    if (esFinDeSemana(valor)) return "No se pueden seleccionar sábados ni domingos";
+    if (esFestivoOFinDeSemana(valor)) return "No se pueden seleccionar fines de semana ni festivos";
     if (!fecha_inicio) return "Primero selecciona la fecha de recogida";
-    const diasDesdeInicio = diffDias(fecha_inicio, valor);
+    const diasDesdeInicio = diffDiasHabiles(fecha_inicio, valor);
     if (diasDesdeInicio < 1) return "Debe ser posterior a la fecha de recogida";
-    if (diasDesdeInicio > 15) return "Máximo 15 días después de la recogida";
+    if (diasDesdeInicio > 15) return "Máximo 15 días hábiles después de la recogida";
     return null;
   };
 
-  // Handler para cambio de fecha de recogida con validación JS
   const handleFechaRecogidaChange = (valor) => {
     setFecha_inicio(valor);
     const error = validarFechaRecogida(valor);
     setErrors(prev => ({ ...prev, fecha_inicio: error }));
-    // Si la fecha de devolución ya está puesta, revalidarla
     if (fecha_fin) {
-      // Necesitamos revalidar con el nuevo valor de fecha_inicio
       const validarFinConNuevoInicio = () => {
         if (!fecha_fin) return "La fecha de devolución es requerida";
         if (!esFechaReal(fecha_fin)) return "Fecha inválida (no existe en el calendario)";
-        if (esFinDeSemana(fecha_fin)) return "No se pueden seleccionar sábados ni domingos";
+        if (esFestivoOFinDeSemana(fecha_fin)) return "No se pueden seleccionar fines de semana ni festivos";
         if (!valor) return "Primero selecciona la fecha de recogida";
-        const diasDesdeInicio = diffDias(valor, fecha_fin);
+        const diasDesdeInicio = diffDiasHabiles(valor, fecha_fin);
         if (diasDesdeInicio < 1) return "Debe ser posterior a la fecha de recogida";
-        if (diasDesdeInicio > 15) return "Máximo 15 días después de la recogida";
+        if (diasDesdeInicio > 15) return "Máximo 15 días hábiles después de la recogida";
         return null;
       };
       setErrors(prev => ({ ...prev, fecha_inicio: error, fecha_fin: validarFinConNuevoInicio() }));
     }
   };
 
-  // Handler para cambio de fecha de devolución con validación JS
   const handleFechaDevolucionChange = (valor) => {
     setFecha_fin(valor);
     const error = validarFechaDevolucion(valor);
     setErrors(prev => ({ ...prev, fecha_fin: error }));
+  };
+
+  // Función real para registrar en el servidor el aviso por correo y campanita cuando un equipo termine revisión
+  const handleAvisarmeRevision = async (eq, fechaDisp) => {
+    let destinoEmail = userData?.email || userData?.user?.email || "tu correo registrado";
+    try {
+      const res = await apiAxios.post(
+        "/api/estadoxequipo/suscribir-revision",
+        {
+          id_equipo: eq.id_equipo,
+          id_usuario_solicitante: (puedeSeleccionarSolicitante && idUsuarioSolicitante) ? parseInt(idUsuarioSolicitante) : undefined
+        },
+        { headers }
+      );
+      if (res.data?.email) {
+        destinoEmail = res.data.email;
+      }
+    } catch (err) {
+      console.warn("Advertencia registrando suscripción de revisión:", err?.message);
+    }
+
+    Swal.fire({
+      title: `🔔 Notificación Programada`,
+      html: `
+        <div style="text-align: left; font-size: 13px; color: #334155; line-height: 1.6;">
+          <p>Has solicitado que te avisemos sobre el equipo <strong>${eq.nom_equipo}</strong>.</p>
+          <p>En cuanto el equipo sea devuelto y supere los <strong>3 días hábiles de revisión técnica</strong> en el laboratorio (estimado: <strong>${fechaDisp || 'próximamente'}</strong>), te enviaremos automáticamente un aviso a <strong>${destinoEmail}</strong> y una alerta en la <strong>campanita</strong> de la plataforma para que puedas pedirlo de inmediato.</p>
+        </div>
+      `,
+      icon: "info",
+      showCancelButton: true,
+      confirmButtonColor: "#0077B6",
+      cancelButtonColor: "#64748b",
+      confirmButtonText: "Volver al formulario",
+      cancelButtonText: "Salir del formulario"
+    }).then((res) => {
+      if (res.dismiss === Swal.DismissReason.cancel) {
+        hideModal();
+      }
+    });
   };
 
   // Función que valida y envía el formulario al backend
@@ -315,36 +266,62 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
     e.preventDefault();
     const nuevosErrores = {};
 
-    // Validación completa de fecha de recogida (cross-browser)
     const errorRecogida = validarFechaRecogida(fecha_inicio);
     if (errorRecogida) nuevosErrores.fecha_inicio = errorRecogida;
 
-    // Validación de hora de recogida
-    if (!isTimeValid(hora_inicio)) nuevosErrores.hora_inicio = "Debe estar entre 7:00 AM y 4:00 PM";
+    if (!isTimeValid(hora_inicio)) nuevosErrores.hora_inicio = "Debe estar entre 7:00 AM y 3:30 PM";
 
-    // Validación completa de fecha de devolución (cross-browser)
     const errorDevolucion = validarFechaDevolucion(fecha_fin);
     if (errorDevolucion) nuevosErrores.fecha_fin = errorDevolucion;
 
-    // Validación de hora de devolución
-    if (!isTimeValid(hora_fin)) nuevosErrores.hora_fin = "Debe estar entre 7:00 AM y 4:00 PM";
+    if (!isTimeValid(hora_fin)) nuevosErrores.hora_fin = "Debe estar entre 7:00 AM y 3:30 PM";
 
-    // Validación cruzada: fecha_fin + hora_fin debe ser posterior a fecha_inicio + hora_inicio
     if (fecha_inicio && fecha_fin && hora_inicio && hora_fin) {
       if (new Date(`${fecha_fin}T${hora_fin}`) <= new Date(`${fecha_inicio}T${hora_inicio}`)) {
         nuevosErrores.hora_fin = "La devolución debe ser posterior a la recogida";
       }
     }
 
-    // Valida que se haya seleccionado al menos un equipo al crear
+    if (selectedSolicitud && equiposSeleccionados.length === 0) {
+      const confirmacion = await Swal.fire({
+        title: "¿Eliminar solicitud?",
+        text: "No seleccionaste ningún equipo. Al actualizar la solicitud sin equipos, esta será eliminada del sistema. ¿Deseas continuar y eliminarla?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#dc2626",
+        cancelButtonColor: "#64748b",
+        confirmButtonText: "Sí, eliminar solicitud",
+        cancelButtonText: "Cancelar"
+      });
+
+      if (confirmacion.isConfirmed) {
+        try {
+          setLoading(true);
+          await apiAxios.delete(`/api/solicitud/${selectedSolicitud.id_solicitud}`, { headers });
+          hideModal();
+          refreshData();
+          Swal.fire({
+            icon: "success",
+            title: "Solicitud eliminada",
+            text: "La solicitud fue eliminada correctamente.",
+            timer: 1800,
+            showConfirmButton: false
+          });
+        } catch (err) {
+          Swal.fire("Error", err.response?.data?.message || "No se pudo eliminar la solicitud", "error");
+        } finally {
+          setLoading(false);
+        }
+      }
+      return;
+    }
+
     if (!selectedSolicitud && equiposSeleccionados.length === 0) {
       nuevosErrores.equipos = "Selecciona al menos un equipo";
     }
-    // Valida que se seleccione un solicitante al crear si tiene permisos
     if (puedeSeleccionarSolicitante && !selectedSolicitud && !idUsuarioSolicitante) {
       nuevosErrores.solicitante = "Debes seleccionar un solicitante";
     }
-    // Si hay errores, los muestra y detiene el envío
     if (Object.keys(nuevosErrores).length > 0) {
       setErrors(nuevosErrores);
       return;
@@ -357,14 +334,12 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
       estado,
       equipos_ids:  equiposSeleccionados,
     };
-    // Si eligió un solicitante distinto, lo incluye en los datos
     if (puedeSeleccionarSolicitante && idUsuarioSolicitante) {
       data.id_usuario_solicitante = parseInt(idUsuarioSolicitante);
     }
     try {
       setLoading(true);
       if (selectedSolicitud) {
-        // Actualiza la solicitud existente vía PUT
         await apiAxios.put(
           `/api/solicitud/${selectedSolicitud.id_solicitud}`,
           data,
@@ -374,7 +349,6 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
         refreshData();
         Swal.fire({ icon: "success", title: "✅ Actualizado", text: "Solicitud modificada correctamente", timer: 1500, showConfirmButton: false });
       } else {
-        // Crea una nueva solicitud vía POST
         await apiAxios.post("/api/solicitud", data, { headers });
         hideModal();
         refreshData();
@@ -387,177 +361,237 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
     }
   };
 
-  // Calcula los rangos de fecha para hint visual en los inputs
-  const minRecogidaStr = sumarDias(hoyStr(), 5);
-  const maxRecogidaStr = sumarDias(hoyStr(), 8);
-  const minDevolucionStr = fecha_inicio ? sumarDias(fecha_inicio, 1) : sumarDias(hoyStr(), 6);
-  const maxDevolucionStr = fecha_inicio ? sumarDias(fecha_inicio, 15) : sumarDias(hoyStr(), 23);
+  const minRecogidaStr = sumarDiasHabiles(hoyStr(), 5);
+  const minDevolucionStr = fecha_inicio ? sumarDiasHabiles(fecha_inicio, 1) : sumarDiasHabiles(hoyStr(), 6);
+  const maxDevolucionStr = fecha_inicio ? sumarDiasHabiles(fecha_inicio, 15) : sumarDiasHabiles(hoyStr(), 23);
+
+  const labelStyle = {
+    fontSize: "11px",
+    fontWeight: "bold",
+    color: "#000",
+    marginBottom: "4px",
+    display: "block",
+    textTransform: "uppercase",
+    letterSpacing: "0.5px"
+  };
+
+  const fieldStyle = {
+    width: "100%",
+    padding: "8px 12px",
+    borderRadius: "8px",
+    border: "1.5px solid #dbeafe",
+    fontSize: "13px",
+    color: "#1e293b",
+    outline: "none"
+  };
 
   return (
-    <form onSubmit={handleSubmit} noValidate>
+    <form onSubmit={handleSubmit} noValidate style={{ padding: "18px 22px" }}>
       <div className="row g-3">
 
-        {/* ===================== 1. SELECTOR DE EQUIPOS (ARRIBA) ===================== */}
+        {/* ===================== 1. SELECTOR DE EQUIPOS ===================== */}
+        <div className="col-12" style={{ background: "#f0f7ff", border: "1px solid #dbeafe", borderRadius: "8px", padding: "8px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontSize: "11px", color: "#0077B6", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.3px" }}>
+            🔬 1. Equipos a Solicitar
+          </span>
+          {equiposSeleccionados.length > 0 && (
+            <span className="badge" style={{ background: "linear-gradient(135deg, #0077B6, #023E8A)", color: "#fff", fontSize: "11px" }}>
+              {equiposSeleccionados.length} seleccionado(s)
+            </span>
+          )}
+        </div>
+
         <div className="col-12">
-          <label className="form-label fw-bold mb-1" style={{ color: "#0A1628" }}>
-            🔬 Equipos a solicitar
-            {/* Badge con la cantidad de equipos seleccionados */}
-            {equiposSeleccionados.length > 0 && (
-              <span className="badge ms-2" style={{ background: "#0077B6", color: "#fff" }}>{equiposSeleccionados.length} seleccionado(s)</span>
-            )}
-          </label>
           {errors.equipos && <div className="text-danger mb-2" style={{ fontSize: "12px", fontWeight: "600" }}>{errors.equipos}</div>}
-          {/* Campo de búsqueda de equipos */}
           <input
             type="text"
-            className="form-control form-control-sm mb-2"
-            placeholder="Buscar equipo por nombre, marca o placa..."
+            style={{ ...fieldStyle, marginBottom: "8px" }}
+            placeholder="🔍 Buscar equipo por nombre, marca o placa..."
             value={busquedaEquipo}
             onChange={e => setBusquedaEquipo(e.target.value)}
           />
-          {/* Lista de equipos disponibles */}
           <div style={{
-            maxHeight: "260px", overflowY: "auto",
-            border: "1px solid #dee2e6", borderRadius: "8px", padding: "8px"
+            maxHeight: "230px", overflowY: "auto",
+            border: "1.5px solid #dbeafe", borderRadius: "10px", padding: "8px", background: "#f8fafc"
           }}>
             {equiposFiltrados.length === 0 ? (
-              <p className="text-muted text-center small mt-2">No se encontraron equipos</p>
+              <p className="text-muted text-center small my-3">No se encontraron equipos</p>
             ) : (
               equiposFiltrados.map(equipo => {
-                // Determina si el equipo está disponible considerando el rango seleccionado
                 const estaActivo = equipo.estado !== 0;
-                const estaEnMantenimiento = equipo.ultimoEstado === "mantenimiento";
+                const estadoBase = (equipo.ultimoEstado || "disponible").toLowerCase();
+                const estaEnMantenimiento = estadoBase === "mantenimiento";
+                const estaEnRevision = estadoBase === "revision";
+                const estaPrestado = estadoBase === "prestado";
+                const estaSolicitado = estadoBase === "solicitado" || (!estaPrestado && !estaEnRevision && !estaEnMantenimiento && equipo.estaOcupado);
+                const estaDisponible = estadoBase === "disponible" && !equipo.estaOcupado;
 
-                // Verificamos si hay conflicto con alguna reserva activa del equipo
-                let hayConflictoFecha = false;
-                let proximaReserva = null;
-                const reservas = equipo.reservas_activas || [];
+                const yaSeleccionadoEnEdicion = selectedSolicitud && (selectedSolicitud.equipos || []).some(e => e.id_equipo === equipo.id_equipo);
+                const puedeSeleccionarse = estaActivo && (estaDisponible || yaSeleccionadoEnEdicion);
 
-                if (fecha_inicio && reservas.length > 0) {
-                  // Si no hay fecha_fin seleccionada aún, tomamos una ventana tentativa o el mismo día inicio
-                  const inicioDeseado = new Date(fecha_inicio + "T00:00:00");
-                  const finDeseado = fecha_fin 
-                    ? new Date(fecha_fin + "T23:59:59")
-                    : new Date(fecha_inicio + "T23:59:59");
-
-                  hayConflictoFecha = reservas.some(r => {
-                    // Si estamos editando y la reserva pertenece a la solicitud actual, la ignoramos
-                    if (selectedSolicitud && r.id_solicitud === selectedSolicitud.id_solicitud) return false;
-                    const rInicio = new Date(r.fecha_inicio);
-                    const rFin = new Date(r.fecha_fin);
-                    return (rInicio <= finDeseado && rFin >= inicioDeseado);
-                  });
-
-                  // Obtenemos la próxima reserva futura si existe
-                  const futuras = reservas
-                    .filter(r => new Date(r.fecha_inicio) > new Date())
-                    .sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio));
-                  if (futuras.length > 0) {
-                    proximaReserva = futuras[0];
-                  }
-                }
-
-                // Un equipo está físicamente disponible si no está en mantenimiento y no está ocupado hoy
-                // Y para la fecha solicitada, no debe tener solapamiento
-                const disponibleParaFechas = !hayConflictoFecha;
-                const estaDisponibleFisicamente = !estaEnMantenimiento && (!equipo.estaOcupado || disponibleParaFechas);
-
-                // Determina si se puede seleccionar: activo, no mantenimiento y disponible en las fechas
-                const puedeSeleccionarse = estaActivo && !estaEnMantenimiento && disponibleParaFechas;
-                // Verifica si el equipo ya está seleccionado
                 const seleccionado = equiposSeleccionados.includes(equipo.id_equipo);
 
+                const formatearFechaLegible = (fStr) => {
+                  if (!fStr) return "";
+                  const [y, m, d] = String(fStr).substring(0, 10).split("-");
+                  if (!y || !m || !d) return fStr;
+                  return `${d}/${m}/${y}`;
+                };
+
+                const fechaDevolucionEstimada = equipo.fecha_devolucion ? formatearFechaLegible(equipo.fecha_devolucion) : null;
+                const fechaDisponibleConRevision = equipo.fecha_disponible_post_revision 
+                  ? formatearFechaLegible(equipo.fecha_disponible_post_revision) 
+                  : (equipo.fecha_devolucion ? formatearFechaLegible(sumarDiasHabiles(equipo.fecha_devolucion, 3)) : null);
+
                 return (
-                  // Tarjeta de cada equipo en la lista
                   <div
                     key={equipo.id_equipo}
                     onClick={() => puedeSeleccionarse && toggleEquipo(equipo.id_equipo)}
                     style={{
                       display: "flex", alignItems: "center", gap: "12px",
-                      padding: "10px 12px", marginBottom: "4px",
+                      padding: "10px 12px", marginBottom: "6px",
                       borderRadius: "8px", 
                       cursor: puedeSeleccionarse ? "pointer" : "not-allowed",
-                      border: `2px solid ${seleccionado ? "#0077B6" : "#e9ecef"}`,
-                      backgroundColor: seleccionado ? "#dbeafe" : !estaActivo ? "#f8d7da" : puedeSeleccionarse ? "#fff" : "#f1f5f9",
-                      opacity: puedeSeleccionarse || seleccionado ? 1 : 0.6,
+                      border: `1.5px solid ${seleccionado ? "#0077B6" : "#e2e8f0"}`,
+                      backgroundColor: seleccionado ? "#dbeafe" : !estaActivo ? "#fff1f2" : puedeSeleccionarse ? "#fff" : "#f1f5f9",
+                      opacity: puedeSeleccionarse || seleccionado ? 1 : 0.85,
                       transition: "all 0.15s",
                     }}
                   >
                     <div style={{
-                      width: 20, height: 20, borderRadius: 4, flexShrink: 0,
-                      border: `2px solid ${seleccionado ? "#0077B6" : "#adb5bd"}`,
+                      width: 20, height: 20, borderRadius: 5, flexShrink: 0,
+                      border: `2px solid ${seleccionado ? "#0077B6" : "#94a3b8"}`,
                       backgroundColor: seleccionado ? "#0077B6" : "transparent",
                       display: "flex", alignItems: "center", justifyContent: "center"
                     }}>
                       {seleccionado && <i className="fas fa-check" style={{ color: "#fff", fontSize: 11 }}></i>}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div className="fw-semibold" style={{ fontSize: "0.85rem" }}>
+                      <div className="fw-semibold" style={{ fontSize: "0.85rem", color: "#0f172a" }}>
                         {equipo.nom_equipo}
                       </div>
                       <div className="text-muted" style={{ fontSize: "0.75rem" }}>
-                        {equipo.marca_equipo || "Sin marca"} · {equipo.no_placa || "Sin placa"}
+                        Placa: {equipo.no_placa || "Sin placa"}
                       </div>
-                      {/* Mensaje de equipo inactivo */}
+
                       {!estaActivo && (
-                        <div style={{ color: "#dc3545", fontSize: "0.7rem", fontWeight: "700", marginTop: "2px" }}>
+                        <div style={{ color: "#dc3545", fontSize: "0.72rem", fontWeight: "700", marginTop: "2px" }}>
                           🚫 Equipo inactivo — No disponible para solicitudes
                         </div>
                       )}
-                      {/* Mensaje de equipo en mantenimiento */}
+
                       {estaActivo && estaEnMantenimiento && (
-                        <div style={{ color: "#d97706", fontSize: "0.7rem", fontWeight: "700", marginTop: "2px" }}>
+                        <div style={{ color: "#d97706", fontSize: "0.72rem", fontWeight: "700", marginTop: "2px" }}>
                           🔧 En mantenimiento — No disponible
                         </div>
                       )}
-                      {/* Mensaje de conflicto con reserva en las fechas seleccionadas */}
-                      {estaActivo && !estaEnMantenimiento && hayConflictoFecha && (
-                        <div style={{ color: "#dc3545", fontSize: "0.7rem", fontWeight: "700", marginTop: "2px" }}>
-                          📅 Ocupado en las fechas seleccionadas
+
+                      {estaActivo && !estaEnMantenimiento && (estaSolicitado || estaPrestado) && (
+                        <div style={{ marginTop: "3px" }}>
+                          <div style={{ color: estaPrestado ? "#ca8a04" : "#6366f1", fontSize: "0.72rem", fontWeight: "700" }}>
+                            {estaPrestado ? "📦 Equipo actualmente en préstamo" : "📝 Equipo solicitado por otro usuario"}
+                            {fechaDevolucionEstimada && ` (Devolución: ${fechaDevolucionEstimada})`}
+                          </div>
+                          {fechaDisponibleConRevision && (
+                            <div style={{ color: "#0284c7", fontSize: "0.72rem", fontWeight: "600", marginTop: "1px" }}>
+                              ✨ Disponible después de 3 días de revisión: <strong>{fechaDisponibleConRevision}</strong>
+                            </div>
+                          )}
+                          <button
+                            type="button"
+                            className="btn btn-sm mt-1"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAvisarmeRevision(equipo, fechaDisponibleConRevision);
+                            }}
+                            style={{
+                              background: "#eff6ff", border: "1px solid #bfdbfe", color: "#0077B6",
+                              borderRadius: "6px", padding: "2px 8px", fontSize: "11px", fontWeight: "700"
+                            }}
+                          >
+                            🔔 Avisarme cuando termine la revisión
+                          </button>
                         </div>
                       )}
-                      {/* Mensaje de disponibilidad para las fechas seleccionadas con aviso de reserva futura */}
-                      {estaActivo && !estaEnMantenimiento && !hayConflictoFecha && proximaReserva && (
-                        <div style={{ color: "#16a34a", fontSize: "0.7rem", fontWeight: "700", marginTop: "2px" }}>
-                          ✅ Disponible (Próxima reserva: {new Date(proximaReserva.fecha_inicio).toLocaleDateString('es-CO')})
+
+                      {estaActivo && estaEnRevision && (
+                        <div style={{ marginTop: "3px" }}>
+                          <div style={{ color: "#7c3aed", fontSize: "0.72rem", fontWeight: "700" }}>
+                            🔬 En revisión técnica en laboratorio (3 días hábiles)
+                          </div>
+                          {fechaDisponibleConRevision && (
+                            <div style={{ color: "#0284c7", fontSize: "0.72rem", fontWeight: "600", marginTop: "1px" }}>
+                              ✨ Disponible estimado al terminar revisión: <strong>{fechaDisponibleConRevision}</strong>
+                            </div>
+                          )}
+                          <button
+                            type="button"
+                            className="btn btn-sm mt-1"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAvisarmeRevision(equipo, fechaDisponibleConRevision);
+                            }}
+                            style={{
+                              background: "#eff6ff", border: "1px solid #bfdbfe", color: "#0077B6",
+                              borderRadius: "6px", padding: "2px 8px", fontSize: "11px", fontWeight: "700"
+                            }}
+                          >
+                            🔔 Avisarme cuando termine la revisión
+                          </button>
                         </div>
                       )}
-                      {/* Mensaje de disponible libre sin reservas próximas */}
-                      {estaActivo && !estaEnMantenimiento && !hayConflictoFecha && !proximaReserva && (
-                        <div style={{ color: "#16a34a", fontSize: "0.7rem", fontWeight: "700", marginTop: "2px" }}>
-                          ✅ Disponible para préstamo
+
+                      {estaActivo && estaDisponible && (
+                        <div style={{ color: "#16a34a", fontSize: "0.72rem", fontWeight: "700", marginTop: "2px" }}>
+                          ✅ Disponible para solicitud inmediata
                         </div>
                       )}
                     </div>
-                    {/* Badge de estado del equipo — muestra inactivo si estado === 0 */}
+
                     {!estaActivo ? (
                       <span style={{
-                        padding: "2px 10px", borderRadius: 20, fontSize: "0.7rem",
-                        fontWeight: 600, color: "#fff", flexShrink: 0,
+                        padding: "3px 10px", borderRadius: 20, fontSize: "0.72rem",
+                        fontWeight: 700, color: "#fff", flexShrink: 0,
                         backgroundColor: "#dc3545"
                       }}>
                         Inactivo
                       </span>
                     ) : estaEnMantenimiento ? (
                       <span style={{
-                        padding: "2px 10px", borderRadius: 20, fontSize: "0.7rem",
-                        fontWeight: 600, color: "#fff", flexShrink: 0,
+                        padding: "3px 10px", borderRadius: 20, fontSize: "0.72rem",
+                        fontWeight: 700, color: "#fff", flexShrink: 0,
                         backgroundColor: "#d97706"
                       }}>
                         Mantenimiento
                       </span>
-                    ) : hayConflictoFecha ? (
+                    ) : estaEnRevision ? (
                       <span style={{
-                        padding: "2px 10px", borderRadius: 20, fontSize: "0.7rem",
-                        fontWeight: 600, color: "#fff", flexShrink: 0,
-                        backgroundColor: "#dc3545"
+                        padding: "3px 10px", borderRadius: 20, fontSize: "0.72rem",
+                        fontWeight: 700, color: "#fff", flexShrink: 0,
+                        backgroundColor: "#7c3aed"
                       }}>
-                        Ocupado
+                        En Revisión
+                      </span>
+                    ) : estaPrestado ? (
+                      <span style={{
+                        padding: "3px 10px", borderRadius: 20, fontSize: "0.72rem",
+                        fontWeight: 700, color: "#fff", flexShrink: 0,
+                        backgroundColor: "#ca8a04"
+                      }}>
+                        Prestado
+                      </span>
+                    ) : estaSolicitado ? (
+                      <span style={{
+                        padding: "3px 10px", borderRadius: 20, fontSize: "0.72rem",
+                        fontWeight: 700, color: "#fff", flexShrink: 0,
+                        backgroundColor: "#6366f1"
+                      }}>
+                        Solicitado
                       </span>
                     ) : (
                       <span style={{
-                        padding: "2px 10px", borderRadius: 20, fontSize: "0.7rem",
-                        fontWeight: 600, color: "#fff", flexShrink: 0,
+                        padding: "3px 10px", borderRadius: 20, fontSize: "0.72rem",
+                        fontWeight: 700, color: "#fff", flexShrink: 0,
                         backgroundColor: "#2D8A4E"
                       }}>
                         Disponible
@@ -570,131 +604,128 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
           </div>
         </div>
 
-        {/* ===================== 2. SELECTOR DE SOLICITANTE (MEDIO) ===================== */}
+        {/* ===================== 2. SELECTOR DE SOLICITANTE (ADMIN) ===================== */}
         {puedeSeleccionarSolicitante && !selectedSolicitud && (
-          <div className="col-12">
-            <label className="form-label fw-bold" style={{ color: "#0A1628" }}>
-              👤 Solicitante <span style={{ color: "#dc3545" }}>*</span>
-            </label>
-            <p style={{ fontSize: "12px", color: "#64748b", margin: "0 0 8px" }}>
-              Busca y selecciona el instructor que está realizando la solicitud de préstamo.
-            </p>
-            {/* Campo de búsqueda de usuarios */}
-            <input
-              type="text"
-              className={`form-control form-control-sm mb-1 ${errors.solicitante ? 'is-invalid' : ''}`}
-              placeholder="Escribe el nombre, documento o email del instructor..."
-              value={busquedaUsuario}
-              onChange={e => { setBusquedaUsuario(e.target.value); setErrors({...errors, solicitante: null}); }}
-              style={{ borderColor: "#dbeafe" }}
-            />
-            {errors.solicitante && <div className="invalid-feedback mb-2" style={{ display: 'block' }}>{errors.solicitante}</div>}
-            
-            {/* Tarjeta del usuario seleccionado */}
-            {selectedUser && (
-              <div style={{
-                display: "flex", alignItems: "center", gap: "12px",
-                padding: "10px 14px", borderRadius: "10px", margin: "8px 0",
-                background: "#dbeafe", border: "2px solid #0077B6"
-              }}>
+          <>
+            <div className="col-12 mt-2" style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", padding: "8px 12px" }}>
+              <p style={{ margin: 0, fontSize: "11px", color: "#065f46", fontWeight: "700", textTransform: "uppercase" }}>
+                👨‍🏫 2. Instructor Solicitante
+              </p>
+            </div>
+            <div className="col-12">
+              <label style={labelStyle}>
+                Buscar Instructor <span style={{ color: "#dc3545" }}>*</span>
+              </label>
+              <input
+                type="text"
+                style={{ ...fieldStyle, borderColor: errors.solicitante ? "#dc3545" : "#dbeafe" }}
+                placeholder="Escribe el nombre, documento o email del instructor..."
+                value={busquedaUsuario}
+                onChange={e => { setBusquedaUsuario(e.target.value); setErrors({...errors, solicitante: null}); }}
+              />
+              {errors.solicitante && <div className="invalid-feedback mb-2" style={{ display: 'block', fontSize: "11px" }}>{errors.solicitante}</div>}
+              
+              {selectedUser && (
                 <div style={{
-                  width: "36px", height: "36px", borderRadius: "50%",
-                  background: "linear-gradient(135deg, #0077B6, #023E8A)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  color: "#fff", fontWeight: "800", fontSize: "14px", flexShrink: 0
+                  display: "flex", alignItems: "center", gap: "12px",
+                  padding: "10px 14px", borderRadius: "10px", marginTop: "8px",
+                  background: "#dbeafe", border: "1.5px solid #0077B6"
                 }}>
-                  {selectedUser.nombres_apellidos?.charAt(0).toUpperCase()}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: "600", fontSize: "13px", color: "#023E8A" }}>
-                    {selectedUser.nombres_apellidos}
+                  <div style={{
+                    width: "34px", height: "34px", borderRadius: "50%",
+                    background: "linear-gradient(135deg, #0077B6, #023E8A)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    color: "#fff", fontWeight: "800", fontSize: "13px", flexShrink: 0
+                  }}>
+                    {selectedUser.nombres_apellidos?.charAt(0).toUpperCase()}
                   </div>
-                  <div style={{ fontSize: "11px", color: "#64748b" }}>
-                    {selectedUser.email} · <strong>{selectedUser.rol}</strong>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: "700", fontSize: "13px", color: "#023E8A" }}>
+                      {selectedUser.nombres_apellidos}
+                    </div>
+                    <div style={{ fontSize: "11px", color: "#475569" }}>
+                      {selectedUser.email} · Doc: {selectedUser.documento}
+                    </div>
                   </div>
+                  <button type="button" onClick={() => setIdUsuarioSolicitante("")} style={{
+                    background: "#fee2e2", border: "none", color: "#dc2626",
+                    cursor: "pointer", width: "26px", height: "26px", borderRadius: "50%",
+                    display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: "700"
+                  }}>✕</button>
                 </div>
-                <button type="button" onClick={() => setIdUsuarioSolicitante("")} style={{
-                  background: "none", border: "none", color: "#dc3545",
-                  cursor: "pointer", fontSize: "16px", fontWeight: "700"
-                }}>✕</button>
-              </div>
-            )}
+              )}
 
-            {/* Lista de usuarios sugeridos únicamente cuando se escribe en la búsqueda */}
-            {!selectedUser && busquedaUsuario.trim().length > 0 && (
-              <div style={{
-                maxHeight: "180px", overflowY: "auto",
-                border: "1px solid #bfdbfe", borderRadius: "8px", padding: "6px",
-                background: "#ffffff", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                marginTop: "4px", marginBottom: "8px"
-              }}>
-                {usuariosFiltrados.length === 0 ? (
-                  <p style={{ color: "#dc3545", fontWeight: "bold", textAlign: "center", fontSize: "13px", margin: "10px 0" }}>
-                    ⚠️ No se encontraron instructores con esa búsqueda
-                  </p>
-                ) : usuariosFiltrados.map(u => (
-                  // Tarjeta de cada usuario en la lista de selección
-                  <div key={u.id_usuario}
-                    onClick={() => { setIdUsuarioSolicitante(String(u.id_usuario)); setBusquedaUsuario(""); }}
-                    style={{
-                      display: "flex", alignItems: "center", gap: "10px",
-                      padding: "8px 12px", borderRadius: "8px", cursor: "pointer",
-                      marginBottom: "2px", transition: "background 0.15s",
-                      border: "1px solid transparent"
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "#f0f7ff"; e.currentTarget.style.borderColor = "#dbeafe"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "transparent"; }}
-                  >
-                    <div style={{
-                      width: "32px", height: "32px", borderRadius: "50%",
-                      background: "#dbeafe", display: "flex", alignItems: "center",
-                      justifyContent: "center", fontSize: "12px", fontWeight: "700",
-                      color: "#0077B6", flexShrink: 0
-                    }}>
-                      {u.nombres_apellidos?.charAt(0).toUpperCase()}
+              {!selectedUser && busquedaUsuario.trim().length > 0 && (
+                <div style={{
+                  maxHeight: "170px", overflowY: "auto",
+                  border: "1.5px solid #dbeafe", borderRadius: "8px", padding: "6px",
+                  background: "#ffffff", boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+                  marginTop: "4px"
+                }}>
+                  {usuariosFiltrados.length === 0 ? (
+                    <p style={{ color: "#dc3545", fontWeight: "bold", textAlign: "center", fontSize: "12px", margin: "8px 0" }}>
+                      ⚠️ No se encontraron instructores con esa búsqueda
+                    </p>
+                  ) : usuariosFiltrados.map(u => (
+                    <div key={u.id_usuario}
+                      onClick={() => { setIdUsuarioSolicitante(String(u.id_usuario)); setBusquedaUsuario(""); }}
+                      style={{
+                        display: "flex", alignItems: "center", gap: "10px",
+                        padding: "8px 12px", borderRadius: "8px", cursor: "pointer",
+                        marginBottom: "2px", transition: "background 0.15s",
+                        border: "1px solid transparent"
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = "#f0f7ff"; e.currentTarget.style.borderColor = "#dbeafe"; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "transparent"; }}
+                    >
+                      <div style={{
+                        width: "30px", height: "30px", borderRadius: "50%",
+                        background: "linear-gradient(135deg, #0077B6, #023E8A)", display: "flex", alignItems: "center",
+                        justifyContent: "center", fontSize: "12px", fontWeight: "700",
+                        color: "#fff", flexShrink: 0
+                      }}>
+                        {u.nombres_apellidos?.charAt(0).toUpperCase()}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: "600", fontSize: "12.5px", color: "#0f172a" }}>{u.nombres_apellidos}</div>
+                        <div style={{ fontSize: "11px", color: "#64748b" }}>{u.email} · {u.documento}</div>
+                      </div>
+                      <span style={{
+                        fontSize: "10px", fontWeight: "700", color: "#0077B6",
+                        background: "#dbeafe", padding: "2px 8px", borderRadius: "99px"
+                      }}>{u.rol}</span>
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: "600", fontSize: "12.5px", color: "#0f172a" }}>{u.nombres_apellidos}</div>
-                      <div style={{ fontSize: "11px", color: "#94a3b8" }}>{u.email} · {u.documento}</div>
-                    </div>
-                    <span style={{
-                      fontSize: "10px", fontWeight: "600", color: "#0077B6",
-                      background: "#dbeafe", padding: "2px 8px", borderRadius: "99px"
-                    }}>{u.rol}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
         )}
 
-        {/* ===================== 3. FECHAS Y HORARIOS (ABAJO) ===================== */}
+        {/* ===================== 3. FECHAS Y HORARIOS ===================== */}
+        <div className="col-12 mt-2" style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", padding: "8px 12px" }}>
+          <p style={{ margin: 0, fontSize: "11px", color: "#065f46", fontWeight: "700", textTransform: "uppercase" }}>
+            📅 3. Fechas y Horarios del Préstamo
+          </p>
+        </div>
 
-        {/* Info del tipo de solicitud */}
         <div className="col-12">
           <div style={{
-            padding: "10px 16px", borderRadius: "10px", fontSize: "12px",
-            background: "#e3f2fd",
-            border: "1px solid #90caf9",
-            color: "#0d47a1"
+            padding: "8px 12px", borderRadius: "8px", fontSize: "11.5px",
+            background: "#f0f7ff", border: "1px solid #bae6fd", color: "#0369a1"
           }}>
-            📅 <strong>Importante:</strong> Puedes solicitar con mínimo <strong>5 días</strong> de anticipación y tienes hasta <strong>15 días</strong> para devolver los equipos. No se permiten sábados ni domingos.
+            ℹ️ Puedes solicitar con mínimo <strong>5 días hábiles</strong> de anticipación y tienes hasta <strong>15 días hábiles</strong> para devolver los equipos (sin contar fines de semana ni festivos).
           </div>
         </div>
 
         {/* Fecha de Recogida */}
         <div className="col-md-6">
-          <label className="form-label fw-bold" style={{ color: "#0A1628", fontSize: "13px" }}>
-            📅 Fecha de Recogida
-          </label>
+          <label style={labelStyle}>Fecha de Recogida <span className="text-danger">*</span></label>
           <DatePicker
             selected={parseDateStr(fecha_inicio)}
             onChange={(date) => handleFechaRecogidaChange(formatDateStr(date))}
             minDate={parseDateStr(minRecogidaStr)}
-            filterDate={(date) => {
-              const day = date.getDay();
-              return day !== 0 && day !== 6;
-            }}
+            filterDate={(date) => esDiaHabil(date)}
             locale="es"
             dateFormat="dd/MM/yyyy"
             className={`form-control form-control-sm ${errors.fecha_inicio ? 'is-invalid' : ''}`}
@@ -703,24 +734,19 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
           {errors.fecha_inicio ? (
             <div className="invalid-feedback" style={{ fontSize: "11px", display: "block" }}>{errors.fecha_inicio}</div>
           ) : (
-            <small style={{ color: "#94a3b8", fontSize: "10px" }}>A partir de 5 días de anticipación (lunes a viernes)</small>
+            <small style={{ color: "#64748b", fontSize: "10px" }}>Mínimo 5 días hábiles de anticipación</small>
           )}
         </div>
 
         {/* Fecha de Devolución */}
         <div className="col-md-6">
-          <label className="form-label fw-bold" style={{ color: "#0A1628", fontSize: "13px" }}>
-            📅 Fecha de Devolución
-          </label>
+          <label style={labelStyle}>Fecha de Devolución <span className="text-danger">*</span></label>
           <DatePicker
             selected={parseDateStr(fecha_fin)}
             onChange={(date) => handleFechaDevolucionChange(formatDateStr(date))}
             minDate={parseDateStr(minDevolucionStr)}
             maxDate={parseDateStr(maxDevolucionStr)}
-            filterDate={(date) => {
-              const day = date.getDay();
-              return day !== 0 && day !== 6;
-            }}
+            filterDate={(date) => esDiaHabil(date)}
             locale="es"
             dateFormat="dd/MM/yyyy"
             className={`form-control form-control-sm ${errors.fecha_fin ? 'is-invalid' : ''}`}
@@ -730,59 +756,73 @@ const SolicitudPrestamoForm = ({ selectedSolicitud, refreshData, hideModal }) =>
           {errors.fecha_fin ? (
             <div className="invalid-feedback" style={{ fontSize: "11px", display: "block" }}>{errors.fecha_fin}</div>
           ) : (
-            <small style={{ color: "#94a3b8", fontSize: "10px" }}>Máximo 15 días después de la recogida (lunes a viernes)</small>
+            <small style={{ color: "#64748b", fontSize: "10px" }}>Máximo 15 días hábiles después de la recogida</small>
           )}
         </div>
 
         {/* Hora de Recogida */}
         <div className="col-md-6">
-          <label className="form-label fw-bold" style={{ color: "#0A1628", fontSize: "13px" }}>
-            ⏰ Hora de Recogida
-          </label>
-          <input type="time" className={`form-control form-control-sm ${errors.hora_inicio ? 'is-invalid' : ''}`}
-            value={hora_inicio} onChange={e => { setHora_inicio(e.target.value); setErrors({...errors, hora_inicio: null}); }}
-            min="07:00" max="16:00" required />
+          <label style={labelStyle}>Hora de Recogida <span className="text-danger">*</span></label>
+          <input
+            type="time"
+            style={{ ...fieldStyle, borderColor: errors.hora_inicio ? "#dc3545" : "#dbeafe" }}
+            value={hora_inicio}
+            onChange={e => { setHora_inicio(e.target.value); setErrors({...errors, hora_inicio: null}); }}
+            min="07:00" max="15:30" required
+          />
           {errors.hora_inicio ? (
             <div className="invalid-feedback" style={{ fontSize: "11px", display: "block" }}>{errors.hora_inicio}</div>
           ) : (
             <small style={{ color: "#0077B6", fontSize: "10px", fontWeight: "600" }}>
-              Laboratorio: 7:00 AM - 4:00 PM
+              Horario Laboratorio: 7:00 AM - 3:30 PM
             </small>
           )}
         </div>
 
         {/* Hora de Devolución */}
         <div className="col-md-6">
-          <label className="form-label fw-bold" style={{ color: "#0A1628", fontSize: "13px" }}>
-            ⏰ Hora de Devolución
-          </label>
-          <input type="time" className={`form-control form-control-sm ${errors.hora_fin ? 'is-invalid' : ''}`}
-            value={hora_fin} onChange={e => { setHora_fin(e.target.value); setErrors({...errors, hora_fin: null}); }}
-            min="07:00" max="16:00" required />
+          <label style={labelStyle}>Hora de Devolución <span className="text-danger">*</span></label>
+          <input
+            type="time"
+            style={{ ...fieldStyle, borderColor: errors.hora_fin ? "#dc3545" : "#dbeafe" }}
+            value={hora_fin}
+            onChange={e => { setHora_fin(e.target.value); setErrors({...errors, hora_fin: null}); }}
+            min="07:00" max="15:30" required
+          />
           {errors.hora_fin ? (
             <div className="invalid-feedback" style={{ fontSize: "11px", display: "block" }}>{errors.hora_fin}</div>
           ) : (
             <small style={{ color: "#0077B6", fontSize: "10px", fontWeight: "600" }}>
-              Laboratorio: 7:00 AM - 4:00 PM
+              Horario Laboratorio: 7:00 AM - 3:30 PM
             </small>
           )}
         </div>
 
-        {/* Botón de envío del formulario */}
-        <div className="col-12 mt-2">
-          <button type="submit" className="btn w-100" disabled={loading} style={{
-            background: "linear-gradient(135deg, #0077B6, #023E8A)",
-            color: "#fff", fontWeight: "700", border: "none",
-            padding: "10px", borderRadius: "10px", fontSize: "14px",
-            opacity: loading ? 0.7 : 1
-          }}>
-            {loading ? (
-              <><span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Guardando...</>
-            ) : selectedSolicitud ? (
-              "Actualizar Solicitud"
-            ) : (
-              "Registrar Solicitud"
-            )}
+        {/* Botones de acción unificados */}
+        <div className="col-12 mt-3 d-flex gap-2" style={{ paddingTop: "10px", borderTop: "1px solid #f1f5f9" }}>
+          <button
+            type="button"
+            onClick={hideModal}
+            style={{
+              flex: 1, padding: "9px 14px", borderRadius: "8px",
+              border: "1.5px solid #e2e8f0", background: "#f8fafc",
+              color: "#64748b", fontWeight: "600", cursor: "pointer", fontSize: "13px"
+            }}
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              flex: 2, padding: "9px 14px", borderRadius: "8px", border: "none",
+              background: "linear-gradient(135deg, #0077B6, #023E8A)",
+              color: "#fff", fontWeight: "700", cursor: loading ? "not-allowed" : "pointer",
+              fontSize: "13px", opacity: loading ? 0.75 : 1,
+              boxShadow: "0 4px 12px rgba(0, 119, 182, 0.25)"
+            }}
+          >
+            {loading ? "Guardando..." : selectedSolicitud ? "✅ Actualizar Solicitud" : "✅ Registrar Solicitud"}
           </button>
         </div>
       </div>

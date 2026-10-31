@@ -8,8 +8,6 @@ import { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
 // Importa SweetAlert2 para mostrar alertas interactivas al usuario
 import Swal from "sweetalert2";
-// Importa Bootstrap para manejar modales de forma programatica
-import * as bootstrap from "bootstrap";
 // Importa configuraciones personalizadas de paginacion y estilos de tabla
 import { paginationComponentOptions, tableCustomStyles } from "../config/dataTableConfig";
 // Importa el formulario de salida de reactivos
@@ -29,31 +27,36 @@ const CrudSalidasReactivos = () => {
   const [filterText, setFilterText] = useState("");
   // Estado que almacena la salida seleccionada para editar
   const [selectedSalida, setSelectedSalida] = useState(null);
+  // Estado para controlar la visibilidad del modal de salida
+  const [showModal, setShowModal] = useState(false);
 
   // ===== Definicion de columnas =====
 
   // Define las columnas de la tabla con sus propiedades
   const columns = [
-    { name: "ID", selector: (row) => row.id_salida, sortable: true, width: "80px" },
+    { name: "ID", selector: (row) => row.id_salida, sortable: true, width: "75px", center: true },
     {
       name: "Reactivo",
       selector: (row) => row.movimiento?.reactivo?.nom_reactivo || "-",
-      sortable: true, minWidth: "200px"
+      sortable: true,
+      wrap: true,
+      minWidth: "180px"
     },
     {
       name: "Lote",
       selector: (row) => row.movimiento?.lote || "-",
-      sortable: true, minWidth: "150px"
+      sortable: true,
+      minWidth: "120px"
     },
     {
       name: "Cantidad Salida",
       sortable: true,
-      minWidth: "200px",
+      minWidth: "150px",
       // Renderizador personalizado para mostrar cantidad con unidad
       cell: (row) => (
         <span>
           {parseFloat(parseFloat(row.cantidad_salida || 0).toFixed(3)).toString()}{" "}
-          <span style={{ fontSize: "11px", color: "#0077B6", fontWeight: "600" }}>
+          <span style={{ fontSize: "11px", color: "#DC2626", fontWeight: "600" }}>
             {row.movimiento?.reactivo?.presentacion_reactivo || ""}
           </span>
         </span>
@@ -63,29 +66,33 @@ const CrudSalidasReactivos = () => {
       id: 5,
       name: "Fecha Salida",
       selector: (row) => row.fecha_salida ? new Date(row.fecha_salida).toLocaleString('es-CO') : "-",
-      sortable: true, minWidth: "250px"
+      sortable: true,
+      minWidth: "180px"
     },
     {
       name: "Observaciones",
       selector: (row) => row.observaciones || "-",
-      sortable: true, minWidth: "200px",
+      sortable: true,
+      minWidth: "180px",
       wrap: true
     },
     {
       name: "Estado",
       selector: (row) => row.estado,
       sortable: true,
-      width: "120px",
+      minWidth: "110px",
       center: true,
       // Renderizador personalizado para mostrar badge de estado
       cell: (row) => (
-        <span className={`px-2 py-1 rounded-pill text-white fw-semibold ${row.estado === 1 ? "bg-success" : "bg-danger"}`} style={{ fontSize: "0.7rem" }}>
+        <span className={`px-2 py-1 rounded-pill text-white fw-semibold ${row.estado === 1 ? "bg-success" : "bg-danger"}`} style={{ fontSize: "0.75rem", letterSpacing: "0.5px" }}>
           {row.estado === 1 ? "ACTIVO" : "INACTIVO"}
         </span>
       )
     },
     {
-      name: "Acciones", center: true, width: "120px",
+      name: "Acciones",
+      center: true,
+      minWidth: "120px",
       // Renderizador de botones de accion por fila
       cell: (row) => (
         <div className="d-flex gap-2 justify-content-center">
@@ -96,15 +103,20 @@ const CrudSalidasReactivos = () => {
               background: row.estado === 1 ? "#dbeafe" : "#f1f5f9", 
               color: row.estado === 1 ? "#0077B6" : "#94a3b8", 
               border: "none",
+              padding: "5px 9px",
+              borderRadius: "6px",
               cursor: row.estado === 0 ? "not-allowed" : "pointer"
             }}
-            data-bs-toggle={row.estado === 1 ? "modal" : ""}
-            data-bs-target={row.estado === 1 ? "#modalSalida" : ""}
-            onClick={() => row.estado === 1 && setSelectedSalida(row)}
+            onClick={() => {
+              if (row.estado === 1) {
+                setSelectedSalida(row);
+                setShowModal(true);
+              }
+            }}
             title={row.estado === 1 ? "Editar" : "No se puede editar una salida inactiva"}
             disabled={row.estado === 0}
           >
-            <i className="fas fa-edit"></i>
+            <i className="fa-solid fa-pencil"></i>
           </button>
           {/* Boton para inactivar o activar segun el estado actual */}
           <button
@@ -112,7 +124,9 @@ const CrudSalidasReactivos = () => {
             style={{
               background: row.estado === 1 ? "#fee2e2" : "#dcfce7",
               color: row.estado === 1 ? "#dc2626" : "#16a34a",
-              border: "none"
+              border: "none",
+              padding: "5px 9px",
+              borderRadius: "6px"
             }}
             onClick={() => row.estado === 1 ? inactivarSalida(row.id_salida) : activarSalida(row.id_salida)}
             title={row.estado === 1 ? "Inactivar" : "Activar"}
@@ -124,7 +138,7 @@ const CrudSalidasReactivos = () => {
     },
   ];
 
-  // Efecto que carga las salidas al montar y configura eventos de socket y modal
+  // Efecto que carga las salidas al montar y configura eventos de socket
   useEffect(() => { 
     // Carga inicial de salidas desde la API
     cargarSalidas(); 
@@ -133,44 +147,10 @@ const CrudSalidasReactivos = () => {
     socket.on("salida_actualizada", cargarSalidas);
     socket.on("movimiento_actualizado", cargarSalidas);
 
-    // Obtiene la referencia al elemento del modal de salida
-    const modalSalida = document.getElementById("modalSalida");
-
-    // Funcion que limpia las clases y estilos residuales de los modales
-    const cleanupBackdrop = () => {
-      document.body.classList.remove("modal-open");
-      document.body.style.removeProperty("overflow");
-      document.body.style.removeProperty("padding-right");
-      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
-    };
-
-    // Manejador para desenfocar botones antes de ocultar y evitar advertencia de aria-hidden
-    const handleHide = () => {
-      if (document.activeElement && typeof document.activeElement.blur === "function") {
-        document.activeElement.blur();
-      }
-    };
-
-    // Manejador que limpia seleccion y backdrop al cerrar modal
-    const handleSalidaHidden = () => {
-      setSelectedSalida(null);
-      cleanupBackdrop();
-    };
-
-    // Agrega listener para los eventos hide y hidden en el modal
-    if (modalSalida) {
-      modalSalida.addEventListener("hide.bs.modal", handleHide);
-      modalSalida.addEventListener("hidden.bs.modal", handleSalidaHidden);
-    }
-
     // Funcion de limpieza al desmontar el componente
     return () => {
       socket.off("salida_actualizada", cargarSalidas);
       socket.off("movimiento_actualizado", cargarSalidas);
-      if (modalSalida) {
-        modalSalida.removeEventListener("hide.bs.modal", handleHide);
-        modalSalida.removeEventListener("hidden.bs.modal", handleSalidaHidden);
-      }
     };
   }, []);
 
@@ -181,8 +161,12 @@ const CrudSalidasReactivos = () => {
     try {
       // Realiza la peticion GET al endpoint de salidas
       const res = await apiAxios.get("/api/salidas");
+      // Ordena del ultimo registrado al primero (DESC por ID)
+      const lista = Array.isArray(res.data)
+        ? [...res.data].sort((a, b) => (b.id_salida || 0) - (a.id_salida || 0))
+        : [];
       // Actualiza el estado con los datos obtenidos
-      setSalidas(res.data);
+      setSalidas(lista);
     } catch (error) {
       // Muestra error en consola si falla la carga
       console.error("Error al cargar salidas:", error);
@@ -261,32 +245,12 @@ const CrudSalidasReactivos = () => {
     }
   };
 
-  // ===== Cerrar modal con limpieza de backdrop =====
+  // ===== Cerrar modal =====
 
-  // Funcion para cerrar el modal de salida y limpiar backdrops residuales
+  // Funcion para cerrar el modal de salida
   const hideModal = () => {
-    if (document.activeElement && typeof document.activeElement.blur === "function") {
-      document.activeElement.blur();
-    }
-    // Obtiene la referencia al elemento del modal
-    const modal = document.getElementById("modalSalida");
-    if (modal) {
-      // Intenta cerrar con el boton de cerrar del modal
-      const closeBtn = modal.querySelector(".btn-close");
-      if (closeBtn) {
-        closeBtn.click();
-      } else {
-        // Usa Bootstrap API si no encuentra el boton de cerrar
-        const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
-        bsModal.hide();
-      }
-      
-      // Limpieza de clases y estilos residuales de Bootstrap
-      document.body.classList.remove("modal-open");
-      document.body.style.removeProperty("overflow");
-      document.body.style.removeProperty("padding-right");
-      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
-    }
+    setShowModal(false);
+    setSelectedSalida(null);
   };
 
   // ===== Filtro local por ID, reactivo o lote =====
@@ -316,16 +280,14 @@ const CrudSalidasReactivos = () => {
             style={{ borderColor: "#dbeafe", borderRadius: "10px" }}
           />
         </div>
-        <div className="col-md-7 text-end">
+        <div className="col-md-7 text-end d-flex gap-2 justify-content-end mt-2 mt-md-0">
           {/* Boton para abrir el modal de nueva salida */}
           <button
             className="btn"
-            style={{ background: "#ef4444", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none" }}
-            data-bs-toggle="modal"
-            data-bs-target="#modalSalida"
-            onClick={() => setSelectedSalida(null)}
+            style={{ background: "linear-gradient(135deg, #DC2626, #991B1B)", color: "#fff", fontWeight: "600", borderRadius: "10px", border: "none", padding: "8px 18px" }}
+            onClick={() => { setSelectedSalida(null); setShowModal(true); }}
           >
-            📤 Nueva Salida
+            + Nueva Salida
           </button>
         </div>
       </div>
@@ -342,7 +304,7 @@ const CrudSalidasReactivos = () => {
           highlightOnHover
           striped
           responsive
-          defaultSortFieldId={5}
+          defaultSortFieldId={1}
           defaultSortAsc={false}
           // Componente que se muestra cuando no hay datos
           noDataComponent={
@@ -354,24 +316,47 @@ const CrudSalidasReactivos = () => {
         />
       </div>
 
-      {/* Modal de salida */}
-      <div className="modal fade" id="modalSalida" tabIndex="-1">
-        <div className="modal-dialog modal-lg">
-          <div className="modal-content" style={{ borderRadius: "16px", overflow: "hidden" }}>
-            {/* Encabezado del modal con gradiente segun sea editar o nueva */}
-            <div className="modal-header" style={{ 
-              background: selectedSalida 
-                ? "linear-gradient(135deg, #0077B6, #023E8A)" 
-                : "linear-gradient(135deg, #DC3545, #A4161A)", 
-              color: "#fff",
-              border: "none"
+      {/* Modal de salida con estilo metalizado rojo unificado */}
+      {showModal && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 9999,
+          background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)",
+          display: "flex", alignItems: "center", justifyContent: "center", padding: "16px"
+        }}>
+          <div style={{
+            background: "#fff", borderRadius: "16px", width: "100%", maxWidth: "600px",
+            boxShadow: "0 24px 60px rgba(0,0,0,0.2)", overflow: "hidden", maxHeight: "90vh", display: "flex", flexDirection: "column"
+          }}>
+            {/* Encabezado del modal con gradiente rojo metalizado */}
+            <div style={{ 
+              background: "linear-gradient(135deg, #DC2626, #991B1B)", 
+              padding: "16px 20px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexShrink: 0
             }}>
-              <h5 className="modal-title">
-                {selectedSalida ? "Editar" : "Nueva"} Salida de Reactivo
-              </h5>
-              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" onClick={hideModal}></button>
+              <div>
+                <h5 style={{ color: "#fff", fontWeight: "800", margin: 0, fontSize: "16px" }}>
+                  {selectedSalida ? "✏️ Editar Salida de Reactivo" : "📤 Nueva Salida de Reactivo"}
+                </h5>
+                <p style={{ color: "rgba(255,255,255,0.8)", margin: 0, fontSize: "12px" }}>
+                  Registra el consumo de reactivos con rotación inteligente de lotes (FEFO)
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={hideModal}
+                style={{
+                  background: "rgba(255,255,255,0.2)", border: "none", borderRadius: "50%",
+                  width: "28px", height: "28px", color: "#fff", fontSize: "14px", cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}
+              >
+                ✕
+              </button>
             </div>
-            <div className="modal-body">
+            <div style={{ overflowY: "auto", padding: "0" }}>
               {/* Renderiza el formulario de salida */}
               <SalidaReactivoForm
                 selectedSalida={selectedSalida}
@@ -381,7 +366,7 @@ const CrudSalidasReactivos = () => {
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -50,21 +50,12 @@ export default function GestionUsuarios() {
   // Resetear pagina cuando cambia el filtro de busqueda
   useEffect(() => { setPage(1); }, [filterText]);
 
-  // ===== Ordenar usuarios por estado =====
+  // ===== Ordenar usuarios del último registrado al primero =====
 
-  // Funcion que ordena los usuarios segun la prioridad de su estado
+  // Función que ordena los registros de modo que el primer registro sea el último que se registró
+  // y el último registro sea el primero que se registró (id_usuario DESC)
   const ordenarUsuarios = (lista) => {
-    // Define pesos para cada estado (menor = mas prioritario)
-    const pesos = {
-      activo: 1,
-      inactivo: 2
-    };
-    // Retorna una copia ordenada de la lista
-    return [...lista].sort((a, b) => {
-      const pesoA = pesos[a.estado] || 99;
-      const pesoB = pesos[b.estado] || 99;
-      return pesoA - pesoB;
-    });
+    return [...lista].sort((a, b) => (b.id_usuario || 0) - (a.id_usuario || 0));
   };
 
   // Funcion asincrona para cargar los usuarios segun la pestana activa
@@ -338,108 +329,6 @@ export default function GestionUsuarios() {
     return "#0077B6";
   };
 
-  // ===== Definicion de secciones por rol =====
-
-  // Define las secciones de roles con sus propiedades visuales
-  const rolSections = [
-    { key: "Gestor",     icon: "🔑", label: "Gestores",     color: "#059669" },
-    { key: "Pasante",    icon: "🔬", label: "Pasantes",     color: "#F97316" },
-    { key: "Instructor", icon: "👨‍🏫", label: "Instructores", color: "#0077B6" },
-  ];
-
-  // ===== Renderizar tarjeta de usuario =====
-
-  // Funcion que renderiza una tarjeta visual para un usuario
-  const cardUsuario = (u) => (
-    <div key={u.id_usuario} style={{
-      background: "#fff", borderRadius: "16px", padding: "24px",
-      marginBottom: "14px", border: "1px solid #e2e8f0",
-      boxShadow: "0 1px 3px rgba(0,0,0,0.04)"
-    }}>
-      {/* Encabezado de la tarjeta con avatar, nombre y badge de estado */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-          {/* Avatar circular con inicial del usuario */}
-          <div style={{
-            width: "48px", height: "48px", borderRadius: "50%",
-            background: gradientFor(u.rol),
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "#fff", fontWeight: "800", fontSize: "18px"
-          }}>
-            {u.nombres_apellidos?.charAt(0).toUpperCase()}
-          </div>
-          <div>
-            <h5 style={{ margin: "0 0 2px", fontWeight: "700", color: "#0f172a" }}>{u.nombres_apellidos}</h5>
-            <p style={{ margin: "0 0 4px", fontSize: "13px", color: "#64748b" }}>{u.email} · {u.documento}</p>
-            <span style={{
-              background: "#eef2ff", color: "#0077B6",
-              fontSize: "11px", fontWeight: "700", padding: "2px 10px", borderRadius: "99px"
-            }}>⚙️ {u.rol}</span>
-          </div>
-        </div>
-        {estadoBadge(u.estado)}
-      </div>
-
-      {/* Informacion adicional si es Gestor (Sena Empresa) */}
-      {u.rol === 'Gestor' && (
-        <div style={{
-          marginTop: "10px", background: "#f0fdf4", borderRadius: "10px",
-          padding: "10px 14px", border: "1px solid #dcfce7", display: "flex", gap: "16px", flexWrap: "wrap"
-        }}>
-          <span style={{ fontSize: "12px", color: "#166534", fontWeight: "600" }}>
-             🏢 Integrante de SENA Empresa
-          </span>
-        </div>
-      )}
-
-      {/* Botones de accion segun el estado del usuario */}
-      <div style={{ display: "flex", gap: "10px", marginTop: "14px", flexWrap: "wrap" }}>
-
-        {/* Boton de activar/inactivar */}
-        <button onClick={() => toggleActivo(u.id_usuario, (u.estado === 'inactivo') ? 'inactivo' : 'activo')} style={{
-          background: u.estado === 'inactivo' ? "#dcfce7" : "#fee2e2",
-          border: u.estado === 'inactivo' ? "1px solid #bbf7d0" : "1px solid #fecaca",
-          borderRadius: "10px", padding: "10px 20px",
-          color: u.estado === 'inactivo' ? "#16a34a" : "#dc2626",
-          fontWeight: "700", cursor: "pointer", fontSize: "13px"
-        }}>
-          <i className={`fas ${u.estado === 'inactivo' ? "fa-check" : "fa-ban"} me-2`}></i>
-          {u.estado === 'inactivo' ? "Activar" : "Inactivar"}
-        </button>
-        {/* Boton de editar */}
-        <button onClick={() => {
-          setSelectedUsuario(u);
-          setRegisterTab(u.rol);
-          setRegisterForm({
-            tipo_documento: u.tipo_documento || "CC",
-            documento: u.documento || "",
-            nombres_apellidos: u.nombres_apellidos || "",
-            email: u.email || "",
-            password: ""
-          });
-          setShowRegisterModal(true);
-        }} style={{
-          background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "10px", padding: "10px 24px",
-          color: "#0284c7", fontWeight: "700", cursor: "pointer", fontSize: "13px"
-        }}>
-          ✏️ Editar
-        </button>
-
-        {/* Boton para cambiar contraseña (solo en gestión o si está activo/inactivo) */}
-        {/* Boton para cambiar contraseña */}
-        <button onClick={() => cambiarPasswordAdmin(u.id_usuario)} style={{
-          background: "#f1f5f9",
-          border: "1px solid #cbd5e1",
-          borderRadius: "10px", padding: "10px 24px",
-          color: "#475569",
-          fontWeight: "700", cursor: "pointer", fontSize: "13px"
-        }}>
-          🔑 Cambiar Clave
-        </button>
-      </div>
-    </div>
-  );
-
   // Renderiza la interfaz del componente
   return (
     <div className="container mt-4">
@@ -452,8 +341,8 @@ export default function GestionUsuarios() {
 
       {/* Barra de búsqueda — visible en gestores y pasantes */}
       {["gestores", "pasantes"].includes(tab) && (
-        <div className="row mb-4 align-items-center">
-          <div className="col-md-7">
+        <div className="row mb-4 align-items-center g-2">
+          <div className="col-12 col-md-7">
             <div style={{ position: "relative" }}>
               <input
                 type="search"
@@ -493,7 +382,7 @@ export default function GestionUsuarios() {
               )}
             </div>
           </div>
-          <div className="col-md-5 text-end" style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+          <div className="col-12 col-md-5 text-end" style={{ display: "flex", gap: "10px", justifyContent: "flex-end", flexWrap: "wrap" }}>
 
             {/* Botón "Registrar Gestor" — solo en pestaña Gestores */}
             {tab === "gestores" && (
@@ -531,15 +420,13 @@ export default function GestionUsuarios() {
               </button>
             )}
 
-            {/* Botón Importar Excel — eliminado de Pasantes, solo va en Instructores */}
-
           </div>
         </div>
       )}
 
 
       {/* Pestañas de navegacion con diseño mejorado */}
-      <div style={{ display: "flex", gap: "0", marginBottom: "28px", background: "#f1f5f9", borderRadius: "14px", padding: "6px" }}>
+      <div style={{ display: "flex", gap: "0", marginBottom: "28px", background: "#f1f5f9", borderRadius: "14px", padding: "6px", overflowX: "auto" }}>
         {[
           ["instructores", "👨‍🏫", "Instructores"],
           ["gestores",     "🔑",        "Gestores"],
@@ -555,7 +442,8 @@ export default function GestionUsuarios() {
               color: tab === key ? "#0077B6" : "#64748b",
               boxShadow: tab === key ? "0 2px 8px rgba(0,0,0,0.08)" : "none",
               transition: "all 0.25s ease",
-              display: "flex", alignItems: "center", justifyContent: "center", gap: "8px"
+              display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+              whiteSpace: "nowrap"
             }}>
               <span style={{ fontSize: "15px" }}>{icon}</span>
               <span>{label}</span>
@@ -582,15 +470,17 @@ export default function GestionUsuarios() {
           pasantes: { key: "Pasante", icon: "🔬", label: "Pasantes", color: "#F97316" },
         };
         const section = rolMap[tab];
-        const usuarios = todosUsuarios.filter(u => {
-          const search = filterText.toLowerCase().trim();
-          return u.rol === section.key && (
-            String(u.id_usuario || "").includes(search) ||
-            String(u.nombres_apellidos || "").toLowerCase().includes(search) ||
-            String(u.documento || "").includes(search) ||
-            String(u.email || "").toLowerCase().includes(search)
-          );
-        });
+        const usuarios = todosUsuarios
+          .filter(u => {
+            const search = filterText.toLowerCase().trim();
+            return u.rol === section.key && (
+              String(u.id_usuario || "").includes(search) ||
+              String(u.nombres_apellidos || "").toLowerCase().includes(search) ||
+              String(u.documento || "").includes(search) ||
+              String(u.email || "").toLowerCase().includes(search)
+            );
+          })
+          .sort((a, b) => (b.id_usuario || 0) - (a.id_usuario || 0));
 
         const totalPages = Math.ceil(usuarios.length / perPage);
         const paginados = usuarios.slice((page - 1) * perPage, page * perPage);
@@ -762,30 +652,30 @@ export default function GestionUsuarios() {
           </div>
         );
       })()}
-      {/* ===== MODAL: Registrar Pasante / Gestor ===== */}
+      {/* ===== MODAL: Registrar / Editar Pasante / Gestor ===== */}
       {showRegisterModal && (
         <div style={{
-          position: "fixed", inset: 0, zIndex: 1050,
+          position: "fixed", inset: 0, zIndex: 9999,
           background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)",
           display: "flex", alignItems: "center", justifyContent: "center", padding: "16px"
         }}>
           <div style={{
             background: "#fff", borderRadius: "16px", width: "100%", maxWidth: "420px",
-            boxShadow: "0 24px 60px rgba(0,0,0,0.2)", overflow: "hidden"
+            boxShadow: "0 24px 60px rgba(0,0,0,0.2)", overflow: "hidden", maxHeight: "90vh", display: "flex", flexDirection: "column"
           }}>
             {/* Cabecera del modal */}
             <div style={{
               background: registerTab === "Pasante" 
                 ? "linear-gradient(135deg, #F97316, #ea580c)" 
                 : "linear-gradient(135deg, #059669, #065f46)",
-              padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center"
+              padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0
             }}>
               <div>
                 <h5 style={{ color: "#fff", fontWeight: "800", margin: 0, fontSize: "16px" }}>
-                  ➕ Registrar {registerTab}
+                  {selectedUsuario ? `✏️ Editar ${registerTab}` : `➕ Registrar ${registerTab}`}
                 </h5>
                 <p style={{ color: "rgba(255,255,255,0.75)", margin: 0, fontSize: "12px" }}>
-                  El usuario quedará registrado y aprobado automáticamente
+                  {selectedUsuario ? `Actualiza la información del ${registerTab.toLowerCase()}` : "El usuario quedará registrado y aprobado automáticamente"}
                 </p>
               </div>
               <button onClick={() => { setShowRegisterModal(false); resetRegisterForm(); }}
@@ -795,7 +685,7 @@ export default function GestionUsuarios() {
             </div>
 
             {/* Formulario */}
-            <form onSubmit={handleRegistrarUsuario} style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: "10px" }}>
+            <form onSubmit={handleRegistrarUsuario} style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: "10px", overflowY: "auto" }}>
 
               {/* Tipo de documento */}
               <div>
@@ -855,24 +745,28 @@ export default function GestionUsuarios() {
               </div>
 
               {/* Contraseña Inicial (asignada automáticamente como el documento) */}
-              <div>
-                <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                  Contraseña Inicial
-                </label>
-                <div style={{
-                  padding: "8px 12px", borderRadius: "8px", background: "#f8fafc",
-                  border: "1.5px dashed #cbd5e1", fontSize: "13px", color: "#475569",
-                  display: "flex", alignItems: "center", gap: "8px"
-                }}>
-                  <span style={{ fontSize: "14px" }}>🔑</span>
-                  <span>{registerForm.documento ? `Igual al documento: ${registerForm.documento}` : "Se asignará el número de documento"}</span>
+              {!selectedUsuario && (
+                <div>
+                  <label style={{ fontSize: "11px", fontWeight: "bold", color: "#000", marginBottom: "4px", display: "block", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                    Contraseña Inicial
+                  </label>
+                  <div style={{
+                    padding: "8px 12px", borderRadius: "8px", background: "#f8fafc",
+                    border: "1.5px dashed #cbd5e1", fontSize: "13px", color: "#475569",
+                    display: "flex", alignItems: "center", gap: "8px"
+                  }}>
+                    <span style={{ fontSize: "14px" }}>🔑</span>
+                    <span>{registerForm.documento ? `Igual al documento: ${registerForm.documento}` : "Se asignará el número de documento"}</span>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Nota informativa */}
               <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", padding: "8px 12px" }}>
                 <p style={{ margin: 0, fontSize: "11px", color: "#065f46" }}>
-                  ℹ️ El {registerTab} quedará registrado y su contraseña inicial será su <strong>número de documento</strong>.
+                  ℹ️ {selectedUsuario
+                    ? `Actualizando los datos del ${registerTab}.`
+                    : `El ${registerTab} quedará registrado y su contraseña inicial será su número de documento.`}
                   {registerTab === 'Gestor' && <span><br/>🏢 <strong>SENA Empresa:</strong> Este usuario pertenece a SENA Empresa.</span>}
                 </p>
               </div>
@@ -891,7 +785,7 @@ export default function GestionUsuarios() {
                       : "linear-gradient(135deg, #059669, #065f46)", color: "#fff",
                     fontWeight: "700", cursor: registerLoading ? "not-allowed" : "pointer",
                     fontSize: "13px", opacity: registerLoading ? 0.75 : 1 }}>
-                  {registerLoading ? "Registrando..." : `✅ Registrar ${registerTab}`}
+                  {registerLoading ? "Guardando..." : selectedUsuario ? `✅ Actualizar ${registerTab}` : `✅ Registrar ${registerTab}`}
                 </button>
               </div>
             </form>

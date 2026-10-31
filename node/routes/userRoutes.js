@@ -1,21 +1,14 @@
-// Importa Express para crear las rutas del servidor
 import express from "express";
-// Importa el modelo de usuario para consultas en la base de datos
-import UserModel from "../models/userModel.js";
-// Importa express-validator para validar los campos de entrada
 import { check } from "express-validator";
-// Importa multer para la carga de archivos Excel
 import multer from "multer";
-// Importa los controladores de autenticación y gestión de usuarios
 import {
-  RegisterUser, LoginUser, 
+  RegisterUser, UpdateUserByAdmin, LoginUser, 
   GetTodos, ToggleActivoUsuario,
   GetProfile, UpdateProfile, ChangePasswordByAdmin, ImportarExcel,
   getResetPassword, setNewPassword
 } from "../controller/userController.js";
-// Importa los middlewares de autorización por roles
+import UserService from "../service/userService.js";
 import { soloAdmin, adminOGestor } from '../middleware/roleMiddleware.js';
-// Importa el middleware de autenticación JWT
 import authMiddleware from '../middleware/authMiddleware.js';
 
 import path from 'path';
@@ -25,10 +18,8 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Configura multer en memoria para recibir el archivo Excel de importación masiva
 const uploadExcel = multer({ storage: multer.memoryStorage() });
 
-// Configura multer para avatars
 const avatarUploadDir = path.join(__dirname, '..', 'public', 'uploads', 'perfiles');
 if (!fs.existsSync(avatarUploadDir)) {
   fs.mkdirSync(avatarUploadDir, { recursive: true });
@@ -44,57 +35,35 @@ const avatarStorage = multer.diskStorage({
   }
 });
 const uploadAvatar = multer({ storage: avatarStorage, limits: { fileSize: 2 * 1024 * 1024 } });
-// Crea una nueva instancia del Router
+
 const router = express.Router();
 
-// Define la ruta POST /api/auth para registrar un nuevo usuario con validaciones
 router.post("/", [
-  // Valida que el email tenga un formato correcto
   check("email", "Ingrese un email válido").isEmail()
 ], RegisterUser);
 
-// Define la ruta POST /api/auth/login para iniciar sesión y obtener el token JWT
 router.post("/login", LoginUser);
 
-// Define las rutas para recuperar la contraseña
 router.post('/request-reset-password', getResetPassword);
 router.post('/reset-password', setNewPassword);
 
-// Define la ruta GET /api/auth/usuarios para listar todos los usuarios
 router.get("/usuarios", adminOGestor, GetTodos);
-
-
-// Define la ruta PUT /api/auth/usuarios/:id/toggle-activo para activar/inactivar un usuario
+router.put("/usuarios/:id", soloAdmin, UpdateUserByAdmin);
 router.put("/usuarios/:id/toggle-activo", soloAdmin, ToggleActivoUsuario);
-
-// Define la ruta POST /api/auth/usuarios/importar-excel para importar usuarios desde Excel
 router.post("/usuarios/importar-excel", soloAdmin, uploadExcel.single("archivo"), ImportarExcel);
 
-// Define la ruta GET /api/auth/profile/me para obtener el perfil del usuario autenticado
 router.get("/profile/me", authMiddleware, GetProfile);
-
-// Define la ruta PUT /api/auth/profile/update para actualizar el perfil del usuario autenticado
 router.put("/profile/update", authMiddleware, uploadAvatar.single("avatar"), UpdateProfile);
-
-// Define la ruta PUT /api/auth/usuarios/:id/change-password para cambiar la contraseña de un usuario (solo admin)
 router.put("/usuarios/:id/change-password", soloAdmin, ChangePasswordByAdmin);
 
-// Define la ruta GET /api/auth/usuarios/:id para obtener un usuario por ID excluyendo datos sensibles
 router.get("/usuarios/:id", authMiddleware, async (req, res) => {
   try {
-    // Busca el usuario por su ID excluyendo password y token
-    const user = await UserModel.findByPk(req.params.id, {
-      attributes: { exclude: ['password', 'token'] }
-    });
-    // Si no existe el usuario responde con 404
-    if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
-    // Responde con los datos del usuario
+    const rolSolicitante = (String(req.user?.id) === String(req.params.id)) ? req.user?.rol : null;
+    const user = await UserService.getById(req.params.id, rolSolicitante);
     res.json(user);
   } catch (error) {
-    // Responde con error 500 si ocurre una excepción
-    res.status(500).json({ message: error.message });
+    res.status(404).json({ message: error.message });
   }
 });
 
-// Exporta el router para ser usado en la aplicación
-export default router;
+export default router;

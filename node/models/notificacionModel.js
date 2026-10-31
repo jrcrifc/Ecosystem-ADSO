@@ -20,9 +20,9 @@ const NotificacionModel = sequelize.define('notificaciones', {
   // Campo mensaje - contenido detallado de la notificación
   mensaje: { type: DataTypes.TEXT, allowNull: false },
   
-  // Campo tipo - clasificación de la notificación para renderizado condicional
+  // Campo tipo - clasificación de la notificación para renderizado condicional y redirección
   tipo: {
-    type: DataTypes.ENUM('solicitud_acceso', 'aprobado', 'rechazado', 'general'),
+    type: DataTypes.STRING(50),
     defaultValue: 'general'
   },
   

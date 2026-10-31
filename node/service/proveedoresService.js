@@ -10,9 +10,11 @@ import proveedoreModel from '../models/proveedoresModel.js';
 
 // Define la clase de servicio para proveedores con métodos CRUD y cambio de estado
 class proveedoresService {
-  // Obtiene todos los proveedores registrados en la base de datos
+  // Obtiene todos los proveedores registrados en la base de datos (último registrado primero)
   async getAll() {
-    return await proveedoreModel.findAll()
+    return await proveedoreModel.findAll({
+      order: [['id_proveedor', 'DESC']]
+    })
   }
 
   // Obtiene un proveedor por su ID

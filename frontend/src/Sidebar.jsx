@@ -75,35 +75,21 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado, isCollapsed, setIsCol
       ]
     },
     {
-      key: "solicitudes", icon: "📋", text: esAdmin ? "Gestión" : "Solicitudes", show: esAdmin || esInstructor,
+      key: "gestion", icon: "📋", text: esAdmin ? "Gestión" : "Solicitudes", show: esAdmin || esInstructor || esGestorPasante,
       items: [
         { icon: "📝", text: esAdmin ? "Gestión de Solicitudes" : "Mis Solicitudes", path: "/solicitud", show: esAdmin || esInstructor },
+        { icon: "💻", text: "Gestión de Equipos", path: "/equipos", show: esAdmin || esGestorPasante },
       ]
     },
     {
       key: "laboratorio", icon: "🧪", text: "Laboratorio",
       show: esAdmin || esGestorPasante,
       items: [
-        { icon: "⚗️", text: "Reactivos", path: "/reactivos", show: esAdmin || esGestorPasante },
-        { icon: "🔄", text: "Movimiento Reactivos", path: "/movimientoreactivo", show: esAdmin || esPasante },
+        { icon: "⚗️", text: "Gestión de Reactivos", path: "/reactivos", show: esAdmin || esGestorPasante },
+        { icon: "🔄", text: "Movimientos de Reactivos", path: "/movimientoreactivo", show: esAdmin || esPasante },
+        { icon: "🏢", text: "Proveedores", path: "/proveedor", show: esAdmin || esGestorPasante },
       ]
     },
-    {
-      key: "equipos", icon: "🔬", text: "Gestión de Equipos",
-      show: esAdmin || esGestorPasante,
-      items: [
-        { icon: "💻", text: "Gestión de Equipos", path: "/equipos", show: true },
-      ]
-    },
-    {
-      key: "registros", icon: "📦", text: "Registros",
-      show: esAdmin,
-      items: [
-        { icon: "🏢", text: "Proveedores", path: "/proveedor", show: true },
-        // El ítem de Cuentadantes ha sido eliminado ya que ahora los responsables son los Instructores
-      ]
-    },
-
     {
       key: "admin", icon: "👑", text: "Administración", show: esAdmin,
       items: [
@@ -134,11 +120,16 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado, isCollapsed, setIsCol
         </button>
       )}
 
-      {/* Botón hamburguesa para abrir o cerrar el sidebar en móviles */}
-      <button className="sidebar-mobile-toggle" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Toggle sidebar">
-        {/* Muestra el ícono de cerrar o de menú según el estado */}
-        {mobileOpen ? "✕" : "☰"}
-      </button>
+      {/* Botón hamburguesa para abrir el sidebar en móviles */}
+      {!mobileOpen && (
+        <button 
+          className="sidebar-mobile-toggle" 
+          onClick={() => setMobileOpen(true)} 
+          aria-label="Abrir menú"
+        >
+          ☰
+        </button>
+      )}
 
       {/* Overlay oscuro para cerrar el sidebar al hacer clic fuera en móviles */}
       <div className={`sidebar-overlay ${mobileOpen ? "show" : ""}`} onClick={() => setMobileOpen(false)} />
@@ -156,9 +147,13 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado, isCollapsed, setIsCol
             <h5>ECOSYSTEM</h5>
             <small>Laboratorio Ambiental</small>
           </div>
-          {/* Botón para colapsar/expandir el sidebar */}
-          <button className="sidebar-collapse-btn-desktop" onClick={() => setIsCollapsed(!isCollapsed)}>
+          {/* Botón para colapsar/expandir el sidebar en escritorio */}
+          <button className="sidebar-collapse-btn-desktop" onClick={() => setIsCollapsed(!isCollapsed)} title={isCollapsed ? "Expandir" : "Colapsar"}>
             {isCollapsed ? "→" : "←"}
+          </button>
+          {/* Botón para cerrar en móvil */}
+          <button className="sidebar-close-btn-mobile" onClick={() => setMobileOpen(false)} aria-label="Cerrar menú">
+            ✕
           </button>
         </div>
 
