@@ -14,6 +14,8 @@ import './models/associations.js';
 
 // Importa express para crear la aplicación web
 import express from 'express';
+// Importa compression para comprimir respuestas HTTP con gzip/deflate
+import compression from 'compression';
 // Importa http para crear el servidor HTTP subyacente
 import http from 'http';
 // Importa cors para permitir solicitudes de origen cruzado
@@ -109,6 +111,8 @@ console.log("📌 Puerto configurado:", process.env.PORT || 8000);
 
 // Crea la aplicación de Express
 const app = express();
+// Habilita la compresión Gzip para todas las respuestas HTTP (mejora radical de velocidad)
+app.use(compression());
 // Crea el servidor HTTP a partir de la aplicación Express
 const server = http.createServer(app);
 // Inicializa Socket.io con el servidor HTTP para WebSockets
@@ -122,8 +126,11 @@ app.use(express.json());
 // Monta el middleware de auditoría global para registrar acciones de usuarios autenticados
 app.use(auditoriaMiddleware);
 
-// Expone la carpeta de uploads como contenido estático para acceder a las fotos
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+// Expone la carpeta de uploads como contenido estático para acceder a las fotos con caché del navegador (1 día)
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads'), {
+    maxAge: '1d',
+    etag: true
+}));
 
 // Monta las rutas de estados de solicitud en /api/estadosolicitud
 app.use("/api/estadosolicitud", estadosolicitudRoutes);

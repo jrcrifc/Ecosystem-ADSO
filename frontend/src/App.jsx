@@ -1,5 +1,5 @@
-// Importa React y los hooks useState y useEffect para manejo de estado y efectos
-import React, { useState, useEffect } from "react";
+// Importa React y los hooks useState, useEffect, lazy y Suspense para optimización de carga
+import React, { useState, useEffect, lazy, Suspense } from "react";
 // Importa Routes, Route y Navigate de React Router para definir rutas y redirecciones
 import { Routes, Route, Navigate } from "react-router-dom";
 // Importa el componente Sidebar de navegación lateral
@@ -11,34 +11,53 @@ import socket from "./socket.js";
 // Importa SweetAlert2 para mostrar alertas estilizadas al usuario
 import Swal from "sweetalert2";
 
-// Importa los componentes de cada módulo del sistema
-import CrudReactivos from "./reactivos/crudreactivos.jsx";
-import CrudmovimientoReactivo from "./movimientosReactivos/crudmovimientoreactivo.jsx";
-import Crudproveedor from "./proveedores/Crudproveedor.jsx";
-import CrudEquipo from "./equipos/crudequipos.jsx";
-import Crudestadoequipo from "./estadoequipo/crudestadoequipo.jsx";
-import Crudestadosolicitud from "./estadosolicitud/crudestadosolicitud.jsx";
-import Crudsalidas from "./salidasReactivos/crudsalidareactivo.jsx";
-import Crudsolicitud from "./Solicitud/crudsolicitud.jsx";
-import CrudEstadoxSolicitud from "./estadoxsolicitud/cruestadoxsolicitud.jsx";
-import Home from "./Home/home.jsx";
-import UserLogin from "./Home/userLogin.jsx";
-import Register from "./Home/Register.jsx";
-import ForgotPassword from "./Home/forgotPassword.jsx";
-import ResetPassword from "./Home/resetPassword.jsx";
-import HistorialEstadoEquipo from "./estadoequipo/HistorialEstadoEquipo.jsx";
-import GestionEstadoEquipo from "./estadoequipo/GestionEstadoEquipo.jsx";
-import ControlReactivos from "./movimientosReactivos/ControlReactivos.jsx";
-
-import GestionUsuarios from "./usuarios/GestionUsuarios.jsx";
-import LogActividades from "./usuarios/LogActividades.jsx";
-import SalidasReactivos from "./salidasReactivos/crudsalidareactivo.jsx";
+// Layouts y componentes fijos
 import TopBar from "./TopBar.jsx";
-import PerfilUsuario from "./Home/PerfilUsuario.jsx";
-import AcercaDe from "./Home/AcercaDe.jsx";
-import PoliticaDatos from "./Home/PoliticaDatos.jsx";
 import ModalAvisoPolitica from "./Home/ModalAvisoPolitica.jsx";
-import Instructores from "./usuarios/Instructores.jsx";
+
+// Carga perezosa (Lazy loading con code-splitting) para que la página web cargue ultra rápido
+const Home = lazy(() => import("./Home/home.jsx"));
+const UserLogin = lazy(() => import("./Home/userLogin.jsx"));
+const Register = lazy(() => import("./Home/Register.jsx"));
+const ForgotPassword = lazy(() => import("./Home/forgotPassword.jsx"));
+const ResetPassword = lazy(() => import("./Home/resetPassword.jsx"));
+const PerfilUsuario = lazy(() => import("./Home/PerfilUsuario.jsx"));
+const AcercaDe = lazy(() => import("./Home/AcercaDe.jsx"));
+const PoliticaDatos = lazy(() => import("./Home/PoliticaDatos.jsx"));
+
+const CrudReactivos = lazy(() => import("./reactivos/crudreactivos.jsx"));
+const CrudmovimientoReactivo = lazy(() => import("./movimientosReactivos/crudmovimientoreactivo.jsx"));
+const Crudproveedor = lazy(() => import("./proveedores/Crudproveedor.jsx"));
+const CrudEquipo = lazy(() => import("./equipos/crudequipos.jsx"));
+const Crudestadoequipo = lazy(() => import("./estadoequipo/crudestadoequipo.jsx"));
+const Crudestadosolicitud = lazy(() => import("./estadosolicitud/crudestadosolicitud.jsx"));
+const Crudsalidas = lazy(() => import("./salidasReactivos/crudsalidareactivo.jsx"));
+const Crudsolicitud = lazy(() => import("./Solicitud/crudsolicitud.jsx"));
+const CrudEstadoxSolicitud = lazy(() => import("./estadoxsolicitud/cruestadoxsolicitud.jsx"));
+const HistorialEstadoEquipo = lazy(() => import("./estadoequipo/HistorialEstadoEquipo.jsx"));
+const GestionEstadoEquipo = lazy(() => import("./estadoequipo/GestionEstadoEquipo.jsx"));
+const ControlReactivos = lazy(() => import("./movimientosReactivos/ControlReactivos.jsx"));
+
+const GestionUsuarios = lazy(() => import("./usuarios/GestionUsuarios.jsx"));
+const LogActividades = lazy(() => import("./usuarios/LogActividades.jsx"));
+const Instructores = lazy(() => import("./usuarios/Instructores.jsx"));
+
+// Componente visual ligero de carga mientras se descarga el módulo solicitado
+const LoadingFallback = () => (
+  <div style={{
+    minHeight: "50vh",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "12px"
+  }}>
+    <div className="spinner-border text-primary" style={{ width: "2.5rem", height: "2.5rem" }} role="status">
+      <span className="visually-hidden">Cargando módulo...</span>
+    </div>
+    <span style={{ color: "#0077B6", fontSize: "0.9rem", fontWeight: "500" }}>Cargando contenido...</span>
+  </div>
+);
 
 // Define el componente FormularioRoute que protege rutas autenticadas
 const FormularioRoute = ({ isAuth, children }) => {
@@ -265,7 +284,7 @@ function App() {
       </div>
       {/* Texto informativo debajo del spinner */}
       <p style={{ marginTop: "16px", color: "#0077B6", fontWeight: "600", fontSize: "14px" }}>
-        Iniciando Ecosystem...
+        Iniciando Ecosystem Sena...
       </p>
     </div>
   );
@@ -302,81 +321,83 @@ function App() {
         )}
         {/* Contenedor del contenido con ancho máximo centrado */}
         <div className="content-container">
-          {/* Define todas las rutas de la aplicación */}
-          <Routes>
+          {/* Suspense permite que las rutas cargadas perezosamente se muestren fluidas sin bloquear la web */}
+          <Suspense fallback={<LoadingFallback />}>
+            <Routes>
 
-            {/* Ruta pública de login con redirección si ya está autenticado */}
-            <Route path="/UserLogin" element={isAuth ? <Navigate to="/home" replace /> : <UserLogin setIsAuth={setIsAuth} setUserData={setUserData} />} />
+              {/* Ruta pública de login con redirección si ya está autenticado */}
+              <Route path="/UserLogin" element={isAuth ? <Navigate to="/home" replace /> : <UserLogin setIsAuth={setIsAuth} setUserData={setUserData} />} />
 
-            {/* Ruta pública de registro con redirección si ya está autenticado */}
-            <Route path="/register" element={isAuth ? <Navigate to="/home" replace /> : <Register />} />
+              {/* Ruta pública de registro con redirección si ya está autenticado */}
+              <Route path="/register" element={isAuth ? <Navigate to="/home" replace /> : <Register />} />
 
-            {/* Rutas para recuperación de contraseña */}
-            <Route path="/forgotPassword" element={isAuth ? <Navigate to="/home" replace /> : <ForgotPassword />} />
-            <Route path="/reset-password/:token" element={isAuth ? <Navigate to="/home" replace /> : <ResetPassword />} />
+              {/* Rutas para recuperación de contraseña */}
+              <Route path="/forgotPassword" element={isAuth ? <Navigate to="/home" replace /> : <ForgotPassword />} />
+              <Route path="/reset-password/:token" element={isAuth ? <Navigate to="/home" replace /> : <ResetPassword />} />
 
-            {/* Ruta de Acerca de, pública para usuarios no autenticados */}
-            <Route path="/acerca-de" element={isAuth ? <AcercaDe /> : <AcercaDe isPublic={true} />} />
+              {/* Ruta de Acerca de, pública para usuarios no autenticados */}
+              <Route path="/acerca-de" element={isAuth ? <AcercaDe /> : <AcercaDe isPublic={true} />} />
 
-            {/* Ruta de Política de Tratamiento de Datos Personales SENA */}
-            <Route path="/politica-datos" element={isAuth ? <PoliticaDatos /> : <PoliticaDatos isPublic={true} />} />
+              {/* Ruta de Política de Tratamiento de Datos Personales SENA */}
+              <Route path="/politica-datos" element={isAuth ? <PoliticaDatos /> : <PoliticaDatos isPublic={true} />} />
 
-            {/* Ruta protegida del dashboard principal con FormularioRoute */}
-            <Route path="/home" element={
-              <FormularioRoute isAuth={isAuth}>
-                <Home />
-              </FormularioRoute>
-            } />
-
-            {/* Ruta protegida del perfil del usuario */}
-            <Route path="/perfil" element={
-              <FormularioRoute isAuth={isAuth}>
-                <PerfilUsuario />
-              </FormularioRoute>
-            } />
-
-            {/* Ruta de solicitudes protegida por SolicitanteRoute y FormularioRoute */}
-            <Route path="/solicitud" element={
-              <SolicitanteRoute isAuth={isAuth} rol={userRol}>
+              {/* Ruta protegida del dashboard principal con FormularioRoute */}
+              <Route path="/home" element={
                 <FormularioRoute isAuth={isAuth}>
-                  <Crudsolicitud />
+                  <Home />
                 </FormularioRoute>
-              </SolicitanteRoute>
-            } />
+              } />
 
-            {/* Ruta protegida de estado por solicitud — solo Admin e Instructor */}
-            <Route path="/estadoxsolicitud" element={
-              <SolicitanteRoute isAuth={isAuth} rol={userRol}>
+              {/* Ruta protegida del perfil del usuario */}
+              <Route path="/perfil" element={
                 <FormularioRoute isAuth={isAuth}>
-                  <CrudEstadoxSolicitud />
+                  <PerfilUsuario />
                 </FormularioRoute>
-              </SolicitanteRoute>
-            } />
+              } />
 
-            {/* Rutas exclusivas del administrador */}
-            <Route path="/gestion-usuarios" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><GestionUsuarios /></SoloAdminRoute>} />
-            <Route path="/auditoria" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><LogActividades /></SoloAdminRoute>} />
-            {/* Ruta /gestion-solicitudes eliminada: ahora integrada como pestaña en /solicitud */}
-            <Route path="/estadoSolicitud" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Crudestadosolicitud /></SoloAdminRoute>} />
+              {/* Ruta de solicitudes protegida por SolicitanteRoute y FormularioRoute */}
+              <Route path="/solicitud" element={
+                <SolicitanteRoute isAuth={isAuth} rol={userRol}>
+                  <FormularioRoute isAuth={isAuth}>
+                    <Crudsolicitud />
+                  </FormularioRoute>
+                </SolicitanteRoute>
+              } />
 
-            {/* Rutas de gestión de formación — solo administrador */}
-            <Route path="/instructores" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Instructores /></SoloAdminRoute>} />
+              {/* Ruta protegida de estado por solicitud — solo Admin e Instructor */}
+              <Route path="/estadoxsolicitud" element={
+                <SolicitanteRoute isAuth={isAuth} rol={userRol}>
+                  <FormularioRoute isAuth={isAuth}>
+                    <CrudEstadoxSolicitud />
+                  </FormularioRoute>
+                </SolicitanteRoute>
+              } />
 
-            {/* Rutas para reactivos, equipos y proveedores */}
-            <Route path="/reactivos" element={<AdminRoute isAuth={isAuth} rol={userRol}><CrudReactivos /></AdminRoute>} />
-            <Route path="/equipos" element={<AdminRoute isAuth={isAuth} rol={userRol}><CrudEquipo /></AdminRoute>} />
-            <Route path="/movimientoreactivo" element={<AdminPasanteRoute isAuth={isAuth} rol={userRol}><CrudmovimientoReactivo /></AdminPasanteRoute>} />
-            <Route path="/proveedor" element={<AdminRoute isAuth={isAuth} rol={userRol}><Crudproveedor /></AdminRoute>} />
-            <Route path="/salidas" element={<AdminPasanteRoute isAuth={isAuth} rol={userRol}><Crudsalidas /></AdminPasanteRoute>} />
-            <Route path="/estadoequipo" element={<AdminRoute isAuth={isAuth} rol={userRol}><Crudestadoequipo /></AdminRoute>} />
-            <Route path="/historial-equipo" element={<AdminRoute isAuth={isAuth} rol={userRol}><HistorialEstadoEquipo /></AdminRoute>} />
-            <Route path="/gestion-equipo" element={<AdminRoute isAuth={isAuth} rol={userRol}><GestionEstadoEquipo /></AdminRoute>} />
-            <Route path="/control-reactivos" element={<AdminPasanteRoute isAuth={isAuth} rol={userRol}><ControlReactivos /></AdminPasanteRoute>} />
+              {/* Rutas exclusivas del administrador */}
+              <Route path="/gestion-usuarios" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><GestionUsuarios /></SoloAdminRoute>} />
+              <Route path="/auditoria" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><LogActividades /></SoloAdminRoute>} />
+              {/* Ruta /gestion-solicitudes eliminada: ahora integrada como pestaña en /solicitud */}
+              <Route path="/estadoSolicitud" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Crudestadosolicitud /></SoloAdminRoute>} />
 
-            {/* Ruta comodín que redirige al home o login según autenticación */}
-            <Route path="*" element={<Navigate to={isAuth ? "/home" : "/UserLogin"} replace />} />
+              {/* Rutas de gestión de formación — solo administrador */}
+              <Route path="/instructores" element={<SoloAdminRoute isAuth={isAuth} rol={userRol}><Instructores /></SoloAdminRoute>} />
 
-          </Routes>
+              {/* Rutas para reactivos, equipos y proveedores */}
+              <Route path="/reactivos" element={<AdminRoute isAuth={isAuth} rol={userRol}><CrudReactivos /></AdminRoute>} />
+              <Route path="/equipos" element={<AdminRoute isAuth={isAuth} rol={userRol}><CrudEquipo /></AdminRoute>} />
+              <Route path="/movimientoreactivo" element={<AdminPasanteRoute isAuth={isAuth} rol={userRol}><CrudmovimientoReactivo /></AdminPasanteRoute>} />
+              <Route path="/proveedor" element={<AdminRoute isAuth={isAuth} rol={userRol}><Crudproveedor /></AdminRoute>} />
+              <Route path="/salidas" element={<AdminPasanteRoute isAuth={isAuth} rol={userRol}><Crudsalidas /></AdminPasanteRoute>} />
+              <Route path="/estadoequipo" element={<AdminRoute isAuth={isAuth} rol={userRol}><Crudestadoequipo /></AdminRoute>} />
+              <Route path="/historial-equipo" element={<AdminRoute isAuth={isAuth} rol={userRol}><HistorialEstadoEquipo /></AdminRoute>} />
+              <Route path="/gestion-equipo" element={<AdminRoute isAuth={isAuth} rol={userRol}><GestionEstadoEquipo /></AdminRoute>} />
+              <Route path="/control-reactivos" element={<AdminPasanteRoute isAuth={isAuth} rol={userRol}><ControlReactivos /></AdminPasanteRoute>} />
+
+              {/* Ruta comodín que redirige al home o login según autenticación */}
+              <Route path="*" element={<Navigate to={isAuth ? "/home" : "/UserLogin"} replace />} />
+
+            </Routes>
+          </Suspense>
         </div>
       </main>
     </div>

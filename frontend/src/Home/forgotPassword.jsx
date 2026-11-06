@@ -220,7 +220,7 @@ const ForgotPassword = () => {
             <nav className="fp-navbar">
                 <div className="fp-brand" onClick={() => navigate("/UserLogin")}>
                     <img src={logo} alt="Ecosystem Logo" />
-                    <span className="fp-brand-name">Ecosystem</span>
+                    <span className="fp-brand-name">Ecosystem Sena</span>
                 </div>
             </nav>
 

@@ -144,7 +144,7 @@ const Sidebar = ({ isAuth, logOut, users, rol, onAprobado, isCollapsed, setIsCol
           </div>
           {/* Nombre y subtítulo de la marca */}
           <div className="sidebar-brand">
-            <h5>ECOSYSTEM</h5>
+            <h5>ECOSYSTEM SENA</h5>
             <small>Laboratorio Ambiental</small>
           </div>
           {/* Botón para colapsar/expandir el sidebar en escritorio */}

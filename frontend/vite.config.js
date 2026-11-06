@@ -18,7 +18,31 @@ export default defineConfig({
     react() // Activa el soporte para React con SWC (compilación rápida de JSX/TSX)
   ],
   build: {
-    chunkSizeWarningLimit: 2500,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            // Separa bibliotecas pesadas en sus propios chunks bajo demanda
+            if (id.includes('recharts')) {
+              return 'vendor-charts';
+            }
+            if (id.includes('xlsx') || id.includes('jspdf') || id.includes('html2canvas')) {
+              return 'vendor-export';
+            }
+            if (id.includes('react-data-table-component') || id.includes('styled-components')) {
+              return 'vendor-datatable';
+            }
+            if (id.includes('react-icons')) {
+              return 'vendor-icons';
+            }
+            if (id.includes('react-router-dom') || id.includes('react-dom') || id.includes('/react/')) {
+              return 'vendor-react';
+            }
+          }
+        }
+      }
+    },
+    chunkSizeWarningLimit: 800,
   },
   server: {
     proxy: {

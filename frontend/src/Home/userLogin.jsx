@@ -356,8 +356,8 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
       {/* Navbar */}
       <nav className="landing-nav">
         <div className="brand">
-          <img src={logo} alt="Ecosystem Logo" />
-          <span className="brand-name">Ecosystem</span>
+          <img src={logo} alt="Ecosystem Sena Logo" />
+          <span className="brand-name">Ecosystem Sena</span>
         </div>
         <div className="landing-nav-actions" style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
           <button
@@ -412,7 +412,7 @@ const UserLogin = ({ setIsAuth, setUserData }) => {
             Laboratorio Ambiental
           </div>
           <h1 className="hero-title">
-            Ecosystem
+            Ecosystem Sena
             <span>Gestión de Laboratorio Ambiental</span>
           </h1>
           <p className="hero-desc">
