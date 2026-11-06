@@ -5,6 +5,8 @@ node_modules/
 .env
 
 # Archivos de base de datos
+# *.sql (permitir subir ecosystem.sql para restaurar en servidor)
+!ecosystem.sql
 *.sql
 
 # Scripts temporales de debug/fix
