@@ -174,6 +174,22 @@ try {
     // Verifica que la conexión a la base de datos funcione correctamente
     await db.authenticate();
     console.log('✅ Conexión a la base de datos establecida');
+
+    // Asegura de forma segura que exista la columna acepta_politicas en la BD
+    try {
+        const [colsUser] = await db.query("SHOW COLUMNS FROM `usuarios` LIKE 'acepta_politicas'");
+        if (!colsUser || colsUser.length === 0) {
+            await db.query("ALTER TABLE `usuarios` ADD COLUMN `acepta_politicas` TINYINT(4) NOT NULL DEFAULT 0;");
+            console.log("ℹ️ Columna acepta_politicas agregada a la tabla usuarios.");
+        }
+        const [colsInst] = await db.query("SHOW COLUMNS FROM `instructores` LIKE 'acepta_politicas'");
+        if (!colsInst || colsInst.length === 0) {
+            await db.query("ALTER TABLE `instructores` ADD COLUMN `acepta_politicas` TINYINT(4) NOT NULL DEFAULT 0;");
+            console.log("ℹ️ Columna acepta_politicas agregada a la tabla instructores.");
+        }
+    } catch (e) {
+        // En caso de que no existan las tablas aún en pruebas
+    }
 } catch (error) {
     // Imprime el error de conexión en consola
     console.error('❌ Error al conectar a la base de datos:', error);

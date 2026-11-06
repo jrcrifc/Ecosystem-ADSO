@@ -65,6 +65,13 @@ const UserModel = sequelize.define('usuarios', {
     type: DataTypes.STRING,
     allowNull: true,
     defaultValue: null
+  },
+  
+  // Campo acepta_politicas - estado de aceptación de la política de tratamiento de datos (0 = no, 1 = sí)
+  acepta_politicas: {
+    type: DataTypes.TINYINT,
+    allowNull: false,
+    defaultValue: 0
   }
 }, {
   // Evita la pluralización automática del nombre de la tabla

@@ -197,6 +197,7 @@ class UserService {
       await user.save();
       await registrarLog(user.email, 'LOGIN', 'AUTH', `Inicio de sesión exitoso (${user.rol})`);
       const { password: _, ...userSinPassword } = user.toJSON();
+      userSinPassword.acepta_politicas = Number(user.acepta_politicas !== undefined ? user.acepta_politicas : 0);
       return { token, user: userSinPassword };
     }
 
@@ -249,7 +250,8 @@ class UserService {
       tipo_vinculacion: instructor.tipo_vinculacion,
       avatar: instructor.avatar || null,
       rol: 'Instructor',
-      estado: instructor.estado || 'activo'
+      estado: instructor.estado || 'activo',
+      acepta_politicas: Number(instructor.acepta_politicas !== undefined ? instructor.acepta_politicas : 0)
     };
 
     return { token, user: instructorUserObj };
@@ -307,7 +309,8 @@ class UserService {
         id_usuario: inst.id_instructor,
         id_instructor: inst.id_instructor,
         rol: 'Instructor',
-        estado: inst.estado || 'activo'
+        estado: inst.estado || 'activo',
+        acepta_politicas: Number(inst.acepta_politicas !== undefined ? inst.acepta_politicas : 0)
       };
     }
 
@@ -353,7 +356,8 @@ class UserService {
         id_usuario: inst.id_instructor,
         id_instructor: inst.id_instructor,
         rol: 'Instructor',
-        estado: inst.estado || 'activo'
+        estado: inst.estado || 'activo',
+        acepta_politicas: Number(inst.acepta_politicas !== undefined ? inst.acepta_politicas : 0)
       };
     }
 
@@ -578,6 +582,47 @@ class UserService {
     if (!user) throw new Error("Usuario no encontrado.");
     await user.update({ password: hashedPassword });
     return;
+  }
+
+  // Actualiza el campo acepta_politicas a 1 en la base de datos
+  async aceptarPolitica(id, rol = null) {
+    let actualizado = false;
+    let usuarioEmail = 'USUARIO';
+
+    if (rol === 'Instructor') {
+      const instructor = await InstructorModel.findByPk(id);
+      if (instructor) {
+        await instructor.update({ acepta_politicas: 1 });
+        usuarioEmail = instructor.email || instructor.documento;
+        actualizado = true;
+      }
+    }
+
+    const user = await UserModel.findByPk(id);
+    if (user) {
+      await user.update({ acepta_politicas: 1 });
+      usuarioEmail = user.email;
+      actualizado = true;
+    }
+
+    if (!actualizado) {
+      const fallbackUser = await UserModel.findOne({ where: { [Op.or]: [{ id_usuario: id }, { documento: String(id) }] } });
+      if (fallbackUser) {
+        await fallbackUser.update({ acepta_politicas: 1 });
+        usuarioEmail = fallbackUser.email;
+        actualizado = true;
+      } else {
+        const fallbackInst = await InstructorModel.findOne({ where: { [Op.or]: [{ id_instructor: id }, { documento: String(id) }] } });
+        if (fallbackInst) {
+          await fallbackInst.update({ acepta_politicas: 1 });
+          usuarioEmail = fallbackInst.email || fallbackInst.documento;
+          actualizado = true;
+        }
+      }
+    }
+
+    await registrarLog(usuarioEmail, 'ACEPTAR_POLITICA', 'AUTH', `Usuario ${id} aceptó la política de tratamiento de datos personales`);
+    return { success: true, acepta_politicas: 1 };
   }
 }
 

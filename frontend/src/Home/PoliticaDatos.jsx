@@ -1,14 +1,65 @@
 // Importa React y hooks necesarios
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "./nuevologoecosystem.png";
+import apiAxios from "../api/axiosConfig.js";
+import Swal from "sweetalert2";
 
 // Componente de Política de Tratamiento de Datos Personales conforme a normativas del SENA y Ley 1581 de 2012
 const PoliticaDatos = ({ isPublic = false }) => {
   const navigate = useNavigate();
+  const [aceptando, setAceptando] = useState(false);
+
+  // Leer estado del usuario desde sessionStorage
+  const stored = sessionStorage.getItem("user");
+  const currentUser = stored ? JSON.parse(stored) : null;
+  const token = sessionStorage.getItem("token") || currentUser?.token;
+  const isAuth = !!(currentUser && token);
+
+  const aceptaPoliticas = Number(
+    currentUser?.acepta_politicas ?? currentUser?.user?.acepta_politicas ?? 0
+  );
 
   const primaryColor = "#0077B6";
   const darkBlue = "#023E8A";
+
+  const handleAceptar = async () => {
+    try {
+      setAceptando(true);
+      await apiAxios.put("/api/auth/aceptar-politica", {
+        id_usuario: currentUser?.id_usuario || currentUser?.user?.id_usuario,
+        rol: currentUser?.rol || currentUser?.user?.rol
+      });
+
+      const userActualizado = {
+        ...currentUser,
+        acepta_politicas: 1,
+        ...(currentUser?.user ? { user: { ...currentUser.user, acepta_politicas: 1 } } : {})
+      };
+      sessionStorage.setItem("user", JSON.stringify(userActualizado));
+      window.dispatchEvent(new CustomEvent("politica_aceptada", { detail: { acepta_politicas: 1 } }));
+
+      Swal.fire({
+        icon: "success",
+        title: "¡Política Aceptada!",
+        text: "Has aceptado satisfactoriamente la Política de Tratamiento de Datos Personales del SENA.",
+        confirmButtonColor: "#0077B6",
+        timer: 2500,
+        showConfirmButton: true
+      }).then(() => {
+        navigate("/home");
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.response?.data?.message || "No se pudo registrar la aceptación. Inténtalo de nuevo.",
+        confirmButtonColor: "#d33"
+      });
+    } finally {
+      setAceptando(false);
+    }
+  };
 
   return (
     <div
@@ -60,9 +111,9 @@ const PoliticaDatos = ({ isPublic = false }) => {
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: "10px" }}>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate(isAuth ? "/home" : -1)}
             style={{
               background: "#f1f5f9",
               border: "1px solid #cbd5e1",
@@ -74,23 +125,60 @@ const PoliticaDatos = ({ isPublic = false }) => {
               cursor: "pointer",
             }}
           >
-            <i className="fas fa-arrow-left me-2"></i> Volver
+            <i className="fas fa-arrow-left me-2"></i> Devolverse
           </button>
-          <button
-            onClick={() => navigate("/UserLogin")}
-            style={{
-              background: primaryColor,
-              border: "none",
-              color: "#ffffff",
-              padding: "8px 18px",
-              borderRadius: "8px",
-              fontWeight: "600",
-              fontSize: "13px",
-              cursor: "pointer",
-            }}
-          >
-            Iniciar Sesión
-          </button>
+
+          {isAuth ? (
+            aceptaPoliticas === 1 ? (
+              <span
+                style={{
+                  background: "#ecfdf5",
+                  border: "1px solid #a7f3d0",
+                  color: "#065f46",
+                  padding: "6px 14px",
+                  borderRadius: "20px",
+                  fontSize: "12px",
+                  fontWeight: "700",
+                }}
+              >
+                <i className="fas fa-check-circle me-1"></i> Aceptada
+              </span>
+            ) : (
+              <button
+                onClick={handleAceptar}
+                disabled={aceptando}
+                style={{
+                  background: "#10b981",
+                  border: "none",
+                  color: "#ffffff",
+                  padding: "8px 18px",
+                  borderRadius: "8px",
+                  fontWeight: "700",
+                  fontSize: "13px",
+                  cursor: "pointer",
+                  boxShadow: "0 2px 8px rgba(16,185,129,0.3)",
+                }}
+              >
+                <i className="fas fa-check-circle me-1"></i> {aceptando ? "Aceptando..." : "Aceptar Política"}
+              </button>
+            )
+          ) : (
+            <button
+              onClick={() => navigate("/UserLogin")}
+              style={{
+                background: primaryColor,
+                border: "none",
+                color: "#ffffff",
+                padding: "8px 18px",
+                borderRadius: "8px",
+                fontWeight: "600",
+                fontSize: "13px",
+                cursor: "pointer",
+              }}
+            >
+              Iniciar Sesión
+            </button>
+          )}
         </div>
       </nav>
 
@@ -237,6 +325,61 @@ const PoliticaDatos = ({ isPublic = false }) => {
               finalidades para las cuales fueron recolectados los datos o durante el tiempo que exijan las normas de archivo y retención documental del SENA.
             </p>
           </section>
+
+          {/* Cuadro de acción y aceptación */}
+          <div className="mt-5 p-4" style={{ background: "#f8fafc", borderRadius: "14px", border: "1px solid #e2e8f0", textAlign: "center" }}>
+            <h4 style={{ fontSize: "17px", fontWeight: "700", color: "#0f172a", marginBottom: "8px" }}>
+              Conformidad y Aceptación
+            </h4>
+            <p style={{ fontSize: "13.5px", color: "#64748b", maxWidth: "600px", margin: "0 auto 20px" }}>
+              Al pulsar "Aceptar Política", confirmas haber leído y autorizas libre, previa y expresamente al SENA el tratamiento de tus datos personales conforme a los lineamientos legales establecidos.
+            </p>
+            <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap", alignItems: "center" }}>
+              <button
+                type="button"
+                onClick={() => navigate(isAuth ? "/home" : -1)}
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid #cbd5e1",
+                  color: "#334155",
+                  padding: "10px 24px",
+                  borderRadius: "10px",
+                  fontWeight: "600",
+                  fontSize: "14px",
+                  cursor: "pointer",
+                }}
+              >
+                <i className="fas fa-arrow-left me-2"></i> Devolverse
+              </button>
+
+              {isAuth && (
+                aceptaPoliticas === 1 ? (
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "#ecfdf5", border: "1px solid #a7f3d0", color: "#065f46", padding: "10px 24px", borderRadius: "10px", fontWeight: "700", fontSize: "14px" }}>
+                    <i className="fas fa-check-circle"></i> Ya has aceptado esta política
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleAceptar}
+                    disabled={aceptando}
+                    style={{
+                      background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                      border: "none",
+                      color: "#ffffff",
+                      padding: "10px 28px",
+                      borderRadius: "10px",
+                      fontWeight: "700",
+                      fontSize: "14px",
+                      cursor: "pointer",
+                      boxShadow: "0 4px 15px rgba(16,185,129,0.35)",
+                    }}
+                  >
+                    <i className="fas fa-check-circle me-2"></i> {aceptando ? "Aceptando..." : "Aceptar Política de Tratamiento de Datos"}
+                  </button>
+                )
+              )}
+            </div>
+          </div>
         </div>
       </main>
 

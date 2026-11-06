@@ -5,7 +5,7 @@ import {
   RegisterUser, UpdateUserByAdmin, LoginUser, 
   GetTodos, ToggleActivoUsuario,
   GetProfile, UpdateProfile, ChangePasswordByAdmin, ImportarExcel,
-  getResetPassword, setNewPassword
+  getResetPassword, setNewPassword, AceptarPolitica
 } from "../controller/userController.js";
 import UserService from "../service/userService.js";
 import { soloAdmin, adminOGestor } from '../middleware/roleMiddleware.js';
@@ -55,6 +55,10 @@ router.post("/usuarios/importar-excel", soloAdmin, uploadExcel.single("archivo")
 router.get("/profile/me", authMiddleware, GetProfile);
 router.put("/profile/update", authMiddleware, uploadAvatar.single("avatar"), UpdateProfile);
 router.put("/usuarios/:id/change-password", soloAdmin, ChangePasswordByAdmin);
+
+// Aceptar política de tratamiento de datos personales
+router.put("/aceptar-politica", authMiddleware, AceptarPolitica);
+router.post("/aceptar-politica", authMiddleware, AceptarPolitica);
 
 router.get("/usuarios/:id", authMiddleware, async (req, res) => {
   try {

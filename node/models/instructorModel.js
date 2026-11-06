@@ -41,6 +41,11 @@ const InstructorModel = sequelize.define('instructores', {
   id_usuario: { 
     type: DataTypes.INTEGER,
     allowNull: true
+  },
+  acepta_politicas: {
+    type: DataTypes.TINYINT,
+    allowNull: true,
+    defaultValue: 0
   }
 }, {
   freezeTableName: true,

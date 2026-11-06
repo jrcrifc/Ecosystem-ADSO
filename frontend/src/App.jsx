@@ -37,6 +37,7 @@ import TopBar from "./TopBar.jsx";
 import PerfilUsuario from "./Home/PerfilUsuario.jsx";
 import AcercaDe from "./Home/AcercaDe.jsx";
 import PoliticaDatos from "./Home/PoliticaDatos.jsx";
+import ModalAvisoPolitica from "./Home/ModalAvisoPolitica.jsx";
 import Instructores from "./usuarios/Instructores.jsx";
 
 // Define el componente FormularioRoute que protege rutas autenticadas
@@ -235,6 +236,20 @@ function App() {
     }
   }, []);
 
+  // Escucha el evento global de aceptación de políticas para sincronizar el estado reactivo
+  useEffect(() => {
+    const handlePoliticaAceptada = (e) => {
+      const stored = sessionStorage.getItem("user");
+      if (stored) {
+        setUserData(JSON.parse(stored));
+      } else if (e?.detail) {
+        setUserData((prev) => (prev ? { ...prev, ...e.detail } : null));
+      }
+    };
+    window.addEventListener("politica_aceptada", handlePoliticaAceptada);
+    return () => window.removeEventListener("politica_aceptada", handlePoliticaAceptada);
+  }, []);
+
   // Obtiene el rol del usuario desde los datos o desde el objeto anidado
   const userRol = userData?.rol || userData?.user?.rol;
 
@@ -272,14 +287,18 @@ function App() {
       )}
       {/* Área principal de contenido */}
       <main className="sidebar-main-content" style={!isAuth ? { marginLeft: 0 } : {}}>
-        {/* Renderiza la TopBar solo si el usuario está autenticado */}
+        {/* Renderiza la TopBar y la verificación de políticas solo si el usuario está autenticado */}
         {isAuth && (
-          <TopBar
-            userData={userData}
-            userRol={userRol}
-            logOut={logOut}
-            onAprobado={recargarUsuario}
-          />
+          <>
+            <TopBar
+              userData={userData}
+              userRol={userRol}
+              logOut={logOut}
+              onAprobado={recargarUsuario}
+            />
+            {/* Ventanita emergente de advertencia si el usuario tiene acepta_politicas en 0 */}
+            <ModalAvisoPolitica userData={userData} setUserData={setUserData} />
+          </>
         )}
         {/* Contenedor del contenido con ancho máximo centrado */}
         <div className="content-container">

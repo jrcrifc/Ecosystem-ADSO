@@ -144,3 +144,22 @@ export const setNewPassword = async (req, res) => {
     res.status(400).json({ message: "Información inválida o el tiempo ha expirado." });
   }
 };
+
+// Aceptar política de tratamiento de datos personales
+export const AceptarPolitica = async (req, res) => {
+  try {
+    const id = req.body?.id_usuario || req.user?.id;
+    const rol = req.body?.rol || req.user?.rol;
+    if (!id) {
+      return res.status(400).json({ success: false, message: "Identificador de usuario no proporcionado" });
+    }
+    const result = await UserService.aceptarPolitica(id, rol);
+    res.status(200).json({
+      success: true,
+      message: "Política de tratamiento de datos aceptada exitosamente.",
+      acepta_politicas: 1
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
