@@ -49,7 +49,7 @@ async function inicializarBD() {
         email: 'admin@laboratorio.com',
         password: await bcrypt.hash('Admin1234!', 10),
         rol: 'Administrador',
-        estado: 'aprobado'
+        estado: 'activo'
       });
       console.log('✅ Administrador creado: admin@laboratorio.com / Admin1234!');
     } else {

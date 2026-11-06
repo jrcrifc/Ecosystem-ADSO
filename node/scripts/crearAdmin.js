@@ -32,7 +32,7 @@ const crearAdmin = async () => {
     // Encriptar contraseña segura por defecto con bcrypt
     password: await bcrypt.hash("Admin1234!", 10),
     rol: "Administrador",
-    estado: "aprobado" // Aprobado automáticamente para poder iniciar sesión directamente
+    estado: "activo" // Activo para poder iniciar sesión directamente
   });
 
   console.log("✅ Admin creado exitosamente:");
