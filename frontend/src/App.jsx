@@ -36,6 +36,7 @@ import SalidasReactivos from "./salidasReactivos/crudsalidareactivo.jsx";
 import TopBar from "./TopBar.jsx";
 import PerfilUsuario from "./Home/PerfilUsuario.jsx";
 import AcercaDe from "./Home/AcercaDe.jsx";
+import PoliticaDatos from "./Home/PoliticaDatos.jsx";
 import Instructores from "./usuarios/Instructores.jsx";
 
 // Define el componente FormularioRoute que protege rutas autenticadas
@@ -297,6 +298,9 @@ function App() {
 
             {/* Ruta de Acerca de, pública para usuarios no autenticados */}
             <Route path="/acerca-de" element={isAuth ? <AcercaDe /> : <AcercaDe isPublic={true} />} />
+
+            {/* Ruta de Política de Tratamiento de Datos Personales SENA */}
+            <Route path="/politica-datos" element={isAuth ? <PoliticaDatos /> : <PoliticaDatos isPublic={true} />} />
 
             {/* Ruta protegida del dashboard principal con FormularioRoute */}
             <Route path="/home" element={

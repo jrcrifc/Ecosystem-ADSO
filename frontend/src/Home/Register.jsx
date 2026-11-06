@@ -36,6 +36,10 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   // Estado para errores de validación en tiempo real por campo
   const [fieldErrors, setFieldErrors] = useState({});
+  // Estado de aceptación de la política de datos personales del SENA
+  const [aceptaPoliticas, setAceptaPoliticas] = useState(false);
+  // Estado para abrir modal de lectura rápida de políticas
+  const [showModalPolitica, setShowModalPolitica] = useState(false);
 
   // Estilo compartido para los mensajes de error inline
   const errorStyle = { color: "#dc2626", fontSize: "11px", marginTop: "4px", fontWeight: "600" };
@@ -97,6 +101,9 @@ const Register = () => {
     // Validaciones finales antes de enviar al servidor
     if (docTrim.length < 5) return setError("El documento es demasiado corto.");
     if (nombreTrim.length < 3) return setError("Por favor, ingresa un nombre válido.");
+    if (!aceptaPoliticas) {
+      return setError("Debes aceptar la Política de Tratamiento de Datos Personales del SENA para continuar.");
+    }
 
 
     // Activa el indicador de carga
@@ -330,7 +337,37 @@ const Register = () => {
             {fieldErrors.email && <div style={errorStyle}>{fieldErrors.email}</div>}
           </div>
 
-
+          {/* Checkbox de aceptación de Política de Tratamiento de Datos SENA */}
+          <div className="mb-3 p-2" style={{ background: "#f8fafc", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+            <div className="form-check d-flex align-items-start gap-2">
+              <input
+                className="form-check-input mt-1"
+                type="checkbox"
+                id="aceptaPoliticas"
+                checked={aceptaPoliticas}
+                onChange={(e) => {
+                  setAceptaPoliticas(e.target.checked);
+                  if (e.target.checked && error.includes("Política de Tratamiento")) setError("");
+                }}
+                required
+                style={{ cursor: "pointer", width: "17px", height: "17px", flexShrink: 0 }}
+              />
+              <label className="form-check-label" htmlFor="aceptaPoliticas" style={{ fontSize: "12px", color: "#334155", lineHeight: "1.4", cursor: "pointer" }}>
+                Autorizo al SENA y a Ecosystem el tratamiento de mis datos personales según la{" "}
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowModalPolitica(true);
+                  }}
+                  style={{ color: "#0077B6", fontWeight: "700", textDecoration: "underline", cursor: "pointer" }}
+                >
+                  Política de Protección de Datos (Ley 1581 de 2012)
+                </span>.
+              </label>
+            </div>
+          </div>
 
           {/* Botón de envío del formulario */}
           <button type="submit" className="btn w-100 py-3" disabled={loading}
@@ -354,6 +391,136 @@ const Register = () => {
           </p>
         </form>
       </div>
+
+      {/* Modal de Lectura de la Política de Tratamiento de Datos SENA */}
+      {showModalPolitica && (
+        <div
+          onClick={() => setShowModalPolitica(false)}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(10, 22, 40, 0.65)",
+            backdropFilter: "blur(4px)",
+            zIndex: 99999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#ffffff",
+              borderRadius: "16px",
+              maxWidth: "600px",
+              width: "100%",
+              maxHeight: "85vh",
+              display: "flex",
+              flexDirection: "column",
+              boxShadow: "0 20px 40px rgba(0,0,0,0.25)",
+              overflow: "hidden",
+            }}
+          >
+            {/* Cabecera del modal */}
+            <div
+              style={{
+                background: "linear-gradient(135deg, #0077B6 0%, #023E8A 100%)",
+                color: "#ffffff",
+                padding: "16px 20px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <h5 style={{ margin: 0, fontSize: "16px", fontWeight: "700" }}>
+                <i className="fas fa-shield-alt me-2"></i> Tratamiento de Datos Personales SENA
+              </h5>
+              <button
+                type="button"
+                onClick={() => setShowModalPolitica(false)}
+                style={{ background: "none", border: "none", color: "#ffffff", fontSize: "20px", cursor: "pointer" }}
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Cuerpo del modal con scroll */}
+            <div
+              style={{
+                padding: "20px",
+                overflowY: "auto",
+                fontSize: "13.5px",
+                lineHeight: "1.6",
+                color: "#334155",
+              }}
+            >
+              <p>
+                En cumplimiento de la <strong>Ley 1581 de 2012</strong> (Habeas Data) y la <strong>Resolución SENA No. 01344 de 2017</strong>, 
+                le informamos que los datos personales que nos suministra serán tratados por el <strong>SENA - Centro Agropecuario "La Granja"</strong> y el sistema <strong>Ecosystem</strong>.
+              </p>
+              <h6 style={{ fontWeight: "700", color: "#0077B6", marginTop: "12px" }}>Finalidades:</h6>
+              <ul style={{ paddingLeft: "20px", marginBottom: "12px" }}>
+                <li>Registro, autenticación y asignación de roles en la plataforma del laboratorio.</li>
+                <li>Trazabilidad, control y auditoría de préstamos de reactivos y uso de equipos.</li>
+                <li>Notificaciones oficiales sobre el estado de solicitudes y seguridad en el laboratorio.</li>
+              </ul>
+              <h6 style={{ fontWeight: "700", color: "#0077B6" }}>Sus Derechos:</h6>
+              <p style={{ marginBottom: "12px" }}>
+                Como titular, tiene derecho a conocer, actualizar, rectificar y solicitar la supresión de sus datos personales ante el responsable del tratamiento en cualquier momento.
+              </p>
+              <div style={{ background: "#f0f9ff", border: "1px solid #bae6fd", padding: "10px", borderRadius: "8px", fontSize: "12px", color: "#0369a1" }}>
+                Puedes consultar el documento completo y detallado en la sección{" "}
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => {
+                    setShowModalPolitica(false);
+                    navigate("/politica-datos");
+                  }}
+                  style={{ textDecoration: "underline", fontWeight: "700", cursor: "pointer" }}
+                >
+                  Política de Datos SENA completa
+                </span>.
+              </div>
+            </div>
+
+            {/* Pie del modal */}
+            <div
+              style={{
+                padding: "14px 20px",
+                borderTop: "1px solid #e2e8f0",
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "10px",
+                background: "#f8fafc",
+              }}
+            >
+              <button
+                type="button"
+                className="btn btn-outline-secondary btn-sm"
+                onClick={() => setShowModalPolitica(false)}
+              >
+                Cerrar
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                style={{ background: "#0077B6", borderColor: "#0077B6" }}
+                onClick={() => {
+                  setAceptaPoliticas(true);
+                  setShowModalPolitica(false);
+                }}
+              >
+                Aceptar Políticas
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

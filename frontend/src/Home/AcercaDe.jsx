@@ -452,6 +452,22 @@ const AcercaDe = ({ isPublic = false }) => {
           <span style={{ opacity: "0.85", fontWeight: "500", fontSize: "13px", display: "block", marginTop: "5px" }}>
             Contacto: +57 317 401 0529 | +57 304 524 5798 | +57 313 223 5285
           </span>
+          <span style={{ display: "block", marginTop: "8px" }}>
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate("/politica-datos")}
+              style={{
+                color: "#e0f2fe",
+                textDecoration: "underline",
+                fontSize: "12.5px",
+                cursor: "pointer",
+                fontWeight: "500"
+              }}
+            >
+              <i className="fas fa-shield-alt me-1"></i> Política de Tratamiento y Protección de Datos Personales (Ley 1581 de 2012)
+            </span>
+          </span>
         </p>
       </footer>
     </div>
