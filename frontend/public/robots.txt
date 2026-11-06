@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Allow: /UserLogin
+Allow: /acerca-de
+Allow: /politica-datos
+Disallow: /api/
+Disallow: /gestion-usuarios
+Disallow: /auditoria
+
+Sitemap: https://ecosystemlabam.com/sitemap.xml
