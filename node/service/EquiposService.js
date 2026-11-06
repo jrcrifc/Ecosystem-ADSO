@@ -21,7 +21,7 @@ import EstadoxsolicitudModel from '../models/estadoxsolicitudModel.js';
 // Importa el modelo de catálogo de estados de solicitud
 import EstadoSolicitudModel from '../models/Estado_solicitudModel.js';
 // Importa el modelo de instructores para vincular cuentadantes
-import InstructorModel from '../models/InstructorModel.js';
+import InstructorModel from '../models/instructorModel.js';
 // Importa ExcelJS y módulos de archivos para procesamiento con fotos
 import ExcelJS from 'exceljs';
 import fs from 'fs';
