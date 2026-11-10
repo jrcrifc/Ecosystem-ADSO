@@ -16,7 +16,7 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
     grupo_equipo: "Equipo de Laboratorio",
     nom_equipo: "",
     no_placa: "",
-    id_usuario: "",
+    id_instructor: "",
     observaciones: "",
     foto_equipo: null,
     previewFoto: "",
@@ -59,7 +59,7 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
     setDocBusqueda(documento);
     if (!documento.trim()) {
       setInstructorEncontrado(null);
-      setForm(prev => ({ ...prev, id_usuario: "" }));
+      setForm(prev => ({ ...prev, id_instructor: "" }));
       return;
     }
     // Busca coincidencia exacta o parcial en la lista de instructores
@@ -68,10 +68,10 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
     );
     if (encontrado) {
       setInstructorEncontrado(encontrado);
-      setForm(prev => ({ ...prev, id_usuario: encontrado.id_usuario }));
+      setForm(prev => ({ ...prev, id_instructor: encontrado.id_instructor }));
     } else {
       setInstructorEncontrado(null);
-      setForm(prev => ({ ...prev, id_usuario: "" }));
+      setForm(prev => ({ ...prev, id_instructor: "" }));
     }
   };
 
@@ -82,7 +82,7 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
         grupo_equipo: selectedEquipo.grupo_equipo || "Equipo de Laboratorio",
         nom_equipo: selectedEquipo.nom_equipo || "",
         no_placa: (selectedEquipo.no_placa && selectedEquipo.no_placa !== 0 && selectedEquipo.no_placa !== '0') ? selectedEquipo.no_placa : "",
-        id_usuario: selectedEquipo.id_usuario || "",
+        id_instructor: selectedEquipo.id_instructor || "",
         observaciones: selectedEquipo.observaciones || "",
         foto_equipo: null,
         previewFoto: selectedEquipo.foto_equipo
@@ -98,11 +98,11 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
         setInstructorEncontrado({
           documento: selectedEquipo.instructor.documento,
           nombres_apellidos: selectedEquipo.instructor.nombres_apellidos,
-          id_usuario: selectedEquipo.id_usuario,
+          id_instructor: selectedEquipo.id_instructor,
         });
       } else {
         // Busca en la lista de instructores cargados
-        const inst = instructores.find(i => i.id_usuario === selectedEquipo.id_usuario);
+        const inst = instructores.find(i => i.id_instructor === selectedEquipo.id_instructor);
         if (inst) {
           setDocBusqueda(inst.documento || "");
           setInstructorEncontrado(inst);
@@ -116,7 +116,7 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
         grupo_equipo: "Equipo de Laboratorio",
         nom_equipo: "",
         no_placa: "",
-        id_usuario: "",
+        id_instructor: "",
         observaciones: "",
         foto_equipo: null,
         previewFoto: "",
@@ -189,7 +189,7 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
         grupo_equipo: "Equipo de Laboratorio", 
         nom_equipo: "", 
         no_placa: "",
-        id_usuario: "", 
+        id_instructor: "", 
         observaciones: "", 
         foto_equipo: null, 
         previewFoto: "", 
@@ -371,7 +371,7 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
                 onClick={() => {
                   setDocBusqueda(inst.documento);
                   setInstructorEncontrado(inst);
-                  setForm(prev => ({ ...prev, id_usuario: inst.id_usuario }));
+                  setForm(prev => ({ ...prev, id_instructor: inst.id_instructor }));
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -434,7 +434,7 @@ export default function EquipoForm({ selectedEquipo, refreshParent, hideModal })
               onClick={() => {
                 setDocBusqueda("");
                 setInstructorEncontrado(null);
-                setForm(prev => ({ ...prev, id_usuario: "" }));
+                setForm(prev => ({ ...prev, id_instructor: "" }));
               }}
             >
               ✕

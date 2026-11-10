@@ -117,7 +117,7 @@ class EstadoxequipoService {
         {
           model: EquiposModel,
           as: 'equipo',
-          attributes: ['id_equipo', 'nom_equipo', 'marca_equipo', 'no_placa']
+          attributes: ['id_equipo', 'nom_equipo', 'no_placa']
         },
         {
           model: estadoEquipoModel,

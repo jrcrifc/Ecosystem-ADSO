@@ -25,12 +25,6 @@ const EquiposModel = db.define('equipos', {
     allowNull: false
   },
   
-  // Campo marca_equipo - marca del fabricante del equipo
-  marca_equipo: { 
-    type: DataTypes.STRING,
-    allowNull: true
-  },
-  
   // Campo no_placa - número de placa de inventario oficial del SENA
   no_placa: { 
     type: DataTypes.STRING,
@@ -38,13 +32,13 @@ const EquiposModel = db.define('equipos', {
     unique: true
   },
   
-  // Campo id_usuario - clave foránea que referencia al instructor responsable
-  id_usuario: { 
+  // Campo id_instructor - clave foránea que referencia al instructor responsable (cuentadante)
+  id_instructor: { 
     type: DataTypes.INTEGER,
     allowNull: true,
     references: {
-      model: 'usuarios',
-      key: 'id_usuario'
+      model: 'instructores',
+      key: 'id_instructor'
     },
     onDelete: 'SET NULL',
     onUpdate: 'CASCADE'

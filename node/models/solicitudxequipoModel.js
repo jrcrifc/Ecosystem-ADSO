@@ -13,7 +13,7 @@ const solicitudxequipoModel = db.define('solicitudxequipo', {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'solicitud',
+        model: 'solicitud_prestamos',
         key: 'id_solicitud'
       },
       onDelete: 'CASCADE'
