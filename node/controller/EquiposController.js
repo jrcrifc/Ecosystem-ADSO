@@ -200,7 +200,7 @@ export const ImportarExcelEquipos = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: "No se proporcionó ningún archivo Excel" });
     }
-    const userEmailLog = req.user?.email || 'admin@laboratorio.com';
+    const userEmailLog = req.user?.email || 'ecosystemlaboratorioambiental@gmail.com';
     const result = await EquiposService.importarExcel(req.file.buffer, userEmailLog);
     res.json({
       message: "Proceso de importación de equipos finalizado",

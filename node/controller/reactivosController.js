@@ -99,7 +99,7 @@ export const ImportarExcelReactivos = async (req, res) => {
         if (!req.file) {
             return res.status(400).json({ message: "No se proporcionó ningún archivo Excel" });
         }
-        const userEmailLog = req.user?.email || 'admin@laboratorio.com';
+        const userEmailLog = req.user?.email || 'ecosystemlaboratorioambiental@gmail.com';
         const result = await reactivosService.importarExcel(req.file.buffer, userEmailLog);
         
         await registrarLog(userEmailLog, 'IMPORTAR_EXCEL', 'REACTIVOS', `Importados ${result.creados} reactivos vía Excel`);

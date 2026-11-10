@@ -38,13 +38,9 @@ const InstructorModel = sequelize.define('instructores', {
     allowNull: true,
     defaultValue: null
   },
-  id_usuario: { 
-    type: DataTypes.INTEGER,
-    allowNull: true
-  },
   acepta_politicas: {
     type: DataTypes.TINYINT,
-    allowNull: true,
+    allowNull: false,
     defaultValue: 0
   }
 }, {

@@ -112,7 +112,7 @@ export const ImportarExcel = async (req, res) => {
       return res.status(400).json({ message: "No se proporcionó ningún archivo Excel" });
     }
     const adminUser = await UserModel.findByPk(req.user.id);
-    const userEmailLog = adminUser ? adminUser.email : 'admin@laboratorio.com';
+    const userEmailLog = adminUser ? adminUser.email : 'ecosystemlaboratorioambiental@gmail.com';
     const { rolForzado } = req.body;
     const result = await UserService.importarExcel(req.file.buffer, userEmailLog, rolForzado);
     res.json({

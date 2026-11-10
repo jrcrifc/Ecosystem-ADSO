@@ -20,30 +20,6 @@ import InstructorModel from "../models/instructorModel.js";
 
 class UserService {
 
-  // Crea el administrador predeterminado del sistema si no existe en la base de datos
-  async crearAdminPredeterminado() {
-    try {
-      const adminExistente = await UserModel.findOne({ where: { email: 'admin@laboratorio.com' } });
-      if (!adminExistente) {
-        const passwordHash = await bcrypt.hash('Admin1234!', 10);
-        await UserModel.create({
-          documento: '000000000',
-          nombres_apellidos: 'Administrador Ecosystem',
-          email: 'admin@laboratorio.com',
-          password: passwordHash,
-          rol: 'Administrador',
-          estado: 'activo',
-          uuid: uuidv4()
-        });
-        console.log('✅ Admin creado → admin@laboratorio.com / Admin1234!');
-      } else {
-        console.log('ℹ️ Admin ya existe');
-      }
-    } catch (error) {
-      console.error('❌ Error al crear admin:', error);
-    }
-  }
-
   // Registra un nuevo usuario en el sistema (Pasante o Gestor en tabla usuarios)
   async registerUser(data) {
     let { tipo_documento, documento, nombres_apellidos, email, rol } = data;

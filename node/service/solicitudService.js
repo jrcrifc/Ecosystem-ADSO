@@ -45,7 +45,7 @@ class solicitudService {
                 {
                     model: equipoModel,
                     as: 'equipos',
-                    attributes: ['id_equipo', 'nom_equipo', 'marca_equipo', 'no_placa', 'foto_equipo', 'estado'],
+                    attributes: ['id_equipo', 'nom_equipo', 'no_placa', 'foto_equipo', 'estado'],
                     include: [{
                         model: Estadoxequipo,
                         as: 'estadosEquipo',

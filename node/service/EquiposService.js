@@ -40,9 +40,9 @@ class EquiposService {
             include: [
                 {
                     // Incluye los datos del cuentadante (instructor) asignado al equipo
-                    model: userModel,
+                    model: InstructorModel,
                     as: 'instructor',
-                    attributes: ['id_usuario', 'documento', 'nombres_apellidos', 'email']
+                    attributes: ['id_instructor', 'documento', 'nombres_apellidos', 'email']
                 },
                 {
                     // Incluye el historial de estados físicos del equipo
@@ -68,23 +68,9 @@ class EquiposService {
             order: [['id_equipo', 'DESC']]
         });
 
-        const instructores = await InstructorModel.findAll({
-            attributes: ['id_instructor', 'documento', 'nombres_apellidos', 'email']
-        });
-        const instMap = new Map(instructores.map(i => [i.id_instructor, {
-            id_usuario: i.id_instructor,
-            documento: i.documento,
-            nombres_apellidos: i.nombres_apellidos,
-            email: i.email
-        }]));
-
         // Procesa cada equipo para determinar su estado real compuesto
         return equipos.map(e => {
             const eq = e.toJSON();
-            // Si el instructor no vino por userModel, resolverlo desde la tabla instructores
-            if (!eq.instructor && eq.id_usuario && instMap.has(eq.id_usuario)) {
-                eq.instructor = instMap.get(eq.id_usuario);
-            }
             // Ordena los estados físicos del equipo del más reciente al más antiguo
             const ordenados = (eq.estadosEquipo || []).sort(
                 (a, b) => b.id_estadoxequipo - a.id_estadoxequipo
@@ -128,11 +114,19 @@ class EquiposService {
 
     // Crea un nuevo equipo en el inventario
     async create(Data) {
+        if (Data.id_usuario !== undefined && Data.id_instructor === undefined) {
+            Data.id_instructor = Data.id_usuario || null
+            delete Data.id_usuario
+        }
         return await EquiposModel.create(Data)
     }
 
     // Actualiza los datos de un equipo existente
     async update(id_equipo, Data) {
+        if (Data.id_usuario !== undefined && Data.id_instructor === undefined) {
+            Data.id_instructor = Data.id_usuario || null
+            delete Data.id_usuario
+        }
         // Ejecuta la actualización filtrando por ID de equipo
         const result = await EquiposModel.update(Data, { where: { id_equipo } })
         // Obtiene el número de filas afectadas
@@ -194,7 +188,7 @@ class EquiposService {
 
         // Obtener instructores para mapear cuentadante por documento o por nombre
         const instructores = await InstructorModel.findAll({
-            attributes: ['id_instructor', 'id_usuario', 'nombres_apellidos', 'documento']
+            attributes: ['id_instructor', 'nombres_apellidos', 'documento']
         });
 
         const normalizarTexto = (str) => {
@@ -208,7 +202,7 @@ class EquiposService {
         };
 
         const instList = instructores.map(i => ({
-            id_usuario: i.id_instructor,
+            id_instructor: i.id_instructor,
             documento: String(i.documento || '').replace(/\D/g, ''),
             nombreNorm: normalizarTexto(i.nombres_apellidos),
             tokens: normalizarTexto(i.nombres_apellidos).split(' ').filter(t => t.length >= 3)
@@ -223,14 +217,14 @@ class EquiposService {
             const digits = valStr.replace(/\D/g, '');
             if (digits.length >= 5) {
                 const byDoc = instList.find(i => i.documento === digits);
-                if (byDoc) return byDoc.id_usuario;
+                if (byDoc) return byDoc.id_instructor;
             }
 
             // 2. Coincidencia exacta de nombre normalizado
             const cNorm = normalizarTexto(valStr);
             if (!cNorm) return null;
             const exact = instList.find(i => i.nombreNorm === cNorm);
-            if (exact) return exact.id_usuario;
+            if (exact) return exact.id_instructor;
 
             // 3. Coincidencia difusa de palabras/tokens (mínimo 2 tokens y >= 50% de afinidad)
             const cTokens = cNorm.split(' ').filter(t => t.length >= 3);
@@ -252,7 +246,7 @@ class EquiposService {
             }
 
             if (bestMatch && bestScore >= 0.5) {
-                return bestMatch.id_usuario;
+                return bestMatch.id_instructor;
             }
             return null;
         };
@@ -312,7 +306,7 @@ class EquiposService {
 
             // Cuentadante
             const cuentadanteRaw = row.getCell(colMap.cuentadante).value;
-            const id_usuario = buscarIdInstructor(cuentadanteRaw);
+            const id_instructor = buscarIdInstructor(cuentadanteRaw);
 
             // Estado en el Excel (si dice "por verificar" o "sin verificar", dejar inactivo estado = 0)
             const estadoRaw = colMap.estado ? row.getCell(colMap.estado).value : null;
@@ -360,10 +354,9 @@ class EquiposService {
                 const nuevoEquipo = await EquiposModel.create({
                     grupo_equipo: 'Equipo de Laboratorio',
                     nom_equipo,
-                    marca_equipo: null,
                     no_placa: no_placa || null,
                     observaciones: observaciones || null,
-                    id_usuario: id_usuario || null,
+                    id_instructor: id_instructor || null,
                     foto_equipo: foto_equipo || null,
                     estado: estadoEquipo
                 });

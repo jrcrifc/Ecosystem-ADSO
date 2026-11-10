@@ -24,23 +24,15 @@ import estadoEquipoModel from "./Estado_equipoModel.js";
 import estadoSolicitudModel from "./Estado_solicitudModel.js";
 // Importa el modelo de notificaciones
 import NotificacionModel from "./notificacionModel.js";
-
 // Importa el modelo de logs de auditoría
 import LogModel from "./logModel.js";
-
-// Importa nuevos modelos
-
+// Importa el modelo de instructores
 import instructorModel from "./instructorModel.js";
 
-// Define la relación: un equipo pertenece a un usuario (instructor)
-equipoModel.belongsTo(userModel, { foreignKey: 'id_usuario', as: 'instructor' });
-// Define la relación: un usuario tiene muchos equipos (como instructor)
-userModel.hasMany(equipoModel,   { foreignKey: 'id_usuario', as: 'equipos_asignados' });
-
-
-// Relación Instructor - Usuario
-instructorModel.belongsTo(userModel, { foreignKey: 'id_usuario', as: 'usuario' });
-userModel.hasOne(instructorModel, { foreignKey: 'id_usuario', as: 'instructor_info' });
+// Define la relación: un equipo pertenece a un instructor (cuentadante)
+equipoModel.belongsTo(instructorModel, { foreignKey: 'id_instructor', as: 'instructor' });
+// Define la relación: un instructor tiene muchos equipos asignados
+instructorModel.hasMany(equipoModel,   { foreignKey: 'id_instructor', as: 'equipos_asignados' });
 
 // Define la relación: un movimiento pertenece a un reactivo
 movimientoreactivoModel.belongsTo(reactivoModel,  { foreignKey: 'id_reactivo',  as: 'reactivo' });
@@ -92,4 +84,3 @@ userModel.hasMany(solicitudModel,   { foreignKey: 'id_usuario', as: 'solicitudes
 NotificacionModel.belongsTo(userModel, { foreignKey: 'id_usuario_destino', as: 'usuarioDestino' });
 // Define la relación: un usuario tiene muchas notificaciones
 userModel.hasMany(NotificacionModel,   { foreignKey: 'id_usuario_destino', as: 'notificaciones' });
-
