@@ -409,7 +409,7 @@ class EstadoxequipoService {
         });
 
         const admins = await UserModel.findAll({
-          where: { rol: 'Administrador', estado: 1 },
+          where: { rol: 'Administrador', estado: 'activo' },
           attributes: ['email', 'nombres_apellidos']
         });
         const correosAdmin = new Set(admins.map(a => a.email).filter(Boolean));

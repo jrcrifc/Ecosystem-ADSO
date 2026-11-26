@@ -103,6 +103,33 @@ class EmailService {
     return await transporter.sendMail(mailOptions);
   }
 
+  // 2b. Correo de alerta al administrador por préstamo vencido de un instructor
+  async sendOverdueReturnAdminAlert(adminEmail, instructorNombre, solicitudId, equiposTexto = '') {
+    if (!this.tieneCredencialesConfiguradas()) return true;
+
+    const transporter = this.getTransportador();
+    const detalleEquiposHtml = equiposTexto
+      ? `<p><strong>Equipo(s) pendiente(s) por devolver:</strong> ${equiposTexto}</p>`
+      : '';
+
+    const mailOptions = {
+      from: `"Laboratorio Ambiental Ecosystem" <${process.env.EMAIL_USER}>`,
+      to: adminEmail,
+      subject: `⏰ Solicitud #${solicitudId} Vencida (Sin Devolver) - ${instructorNombre}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; color: #1e293b; max-width: 600px; padding: 20px; border: 1px solid #fecaca; border-radius: 12px; background: #fff5f5;">
+          <h2 style="color: #dc2626; margin-top: 0;">Alerta para Administrador: Préstamo Vencido</h2>
+          <p>El préstamo de la solicitud <strong>#${solicitudId}</strong> a cargo de <strong>${instructorNombre}</strong> ha vencido y aún no registra devolución en el sistema.</p>
+          ${detalleEquiposHtml}
+          <p>Por favor estar pendiente de la entrega del equipo en el Laboratorio Ambiental.</p>
+          <hr style="border: none; border-top: 1px solid #fecaca; margin: 20px 0;" />
+          <p style="font-size: 12px; color: #64748b;">Sistema Ecosystem ADSO - Laboratorio Ambiental SENA</p>
+        </div>
+      `
+    };
+    return await transporter.sendMail(mailOptions);
+  }
+
   // 3. Correo automático al instructor cuando devuelve el equipo y la solicitud pasa a Entregado (En Revisión)
   async sendDevolucionEnRevisionEmail(email, userName, equiposNombres, solicitudId) {
     try {
@@ -115,9 +142,11 @@ class EmailService {
 
       const transporter = this.getTransportador();
 
+      const adminUser = (process.env.EMAIL_USER || 'ecosystemlaboratorioambiental@gmail.com').trim();
       const mailOptions = {
-        from: `"Laboratorio Ambiental Ecosystem" <${process.env.EMAIL_USER || 'soporte@ecosystem.com'}>`,
+        from: `"Laboratorio Ambiental Ecosystem" <${adminUser}>`,
         to: email,
+        ...(email && email.toLowerCase() !== adminUser.toLowerCase() ? { cc: adminUser } : {}),
         subject: `🔬 Solicitud #${solicitudId} en Entregado (En Revisión): Equipo(s) en Revisión Técnica`,
         html: `
           <div style="font-family: Arial, sans-serif; color: #1e293b; max-width: 600px; padding: 20px; border: 1px solid #d8b4fe; border-radius: 12px; background: #faf5ff;">
@@ -230,9 +259,11 @@ class EmailService {
         `;
       }
 
+      const adminUser = (process.env.EMAIL_USER || 'ecosystemlaboratorioambiental@gmail.com').trim();
       const mailOptions = {
-        from: '"Laboratorio Ambiental Ecosystem" <' + (process.env.EMAIL_USER || 'soporte@ecosystem.com') + '>',
+        from: `"Laboratorio Ambiental Ecosystem" <${adminUser}>`,
         to: email,
+        ...(email && email.toLowerCase() !== adminUser.toLowerCase() ? { cc: adminUser } : {}),
         subject,
         html: htmlContent
       };

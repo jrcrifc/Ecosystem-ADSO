@@ -75,6 +75,7 @@ import auditoriaMiddleware from './middleware/auditoriaMiddleware.js';
 import instructorRoutes from './routes/instructorRoutes.js';
 // Importa fs para verificar la existencia de archivos
 import fs from 'fs';
+import bcrypt from 'bcrypt';
 
 // Obtiene la ruta del archivo actual (necesario en ESM)
 const __filename = fileURLToPath(import.meta.url);
@@ -182,20 +183,51 @@ try {
     await db.authenticate();
     console.log('✅ Conexión a la base de datos establecida');
 
-    // Asegura de forma segura que exista la columna acepta_politicas en la BD
+    // Asegura de forma segura que exista la columna acepta_politicas y el Administrador oficial en la BD
     try {
+        const [colsUserAcepto] = await db.query("SHOW COLUMNS FROM `usuarios` LIKE 'acepto_politicas'");
         const [colsUser] = await db.query("SHOW COLUMNS FROM `usuarios` LIKE 'acepta_politicas'");
-        if (!colsUser || colsUser.length === 0) {
-            await db.query("ALTER TABLE `usuarios` ADD COLUMN `acepta_politicas` TINYINT(4) NOT NULL DEFAULT 0;");
-            console.log("ℹ️ Columna acepta_politicas agregada a la tabla usuarios.");
+        if (colsUserAcepto?.length > 0 && (!colsUser || colsUser.length === 0)) {
+            await db.query("ALTER TABLE `usuarios` CHANGE COLUMN `acepto_politicas` `acepta_politicas` TINYINT(1) NOT NULL DEFAULT 0;");
+        } else if (!colsUser || colsUser.length === 0) {
+            await db.query("ALTER TABLE `usuarios` ADD COLUMN `acepta_politicas` TINYINT(1) NOT NULL DEFAULT 0;");
         }
+
+        const [colsInstAcepto] = await db.query("SHOW COLUMNS FROM `instructores` LIKE 'acepto_politicas'");
         const [colsInst] = await db.query("SHOW COLUMNS FROM `instructores` LIKE 'acepta_politicas'");
-        if (!colsInst || colsInst.length === 0) {
-            await db.query("ALTER TABLE `instructores` ADD COLUMN `acepta_politicas` TINYINT(4) NOT NULL DEFAULT 0;");
-            console.log("ℹ️ Columna acepta_politicas agregada a la tabla instructores.");
+        if (colsInstAcepto?.length > 0 && (!colsInst || colsInst.length === 0)) {
+            await db.query("ALTER TABLE `instructores` CHANGE COLUMN `acepto_politicas` `acepta_politicas` TINYINT(1) NOT NULL DEFAULT 0;");
+        } else if (!colsInst || colsInst.length === 0) {
+            await db.query("ALTER TABLE `instructores` ADD COLUMN `acepta_politicas` TINYINT(1) NOT NULL DEFAULT 0;");
+        }
+
+        // Sincronizar automáticamente las credenciales del Administrador oficial en cualquier entorno
+        const [admins] = await db.query("SELECT id_usuario, documento, email, password FROM `usuarios` WHERE rol = 'Administrador' LIMIT 1");
+        const officialEmail = 'ecosystemlaboratorioambiental@gmail.com';
+        const officialPass = 'Ecosystemlab.12';
+        if (admins && admins.length > 0) {
+            const adminRow = admins[0];
+            const passOk = adminRow.password ? await bcrypt.compare(officialPass, adminRow.password) : false;
+            if (adminRow.email !== officialEmail || adminRow.documento === '00000000' || !passOk) {
+                const hashed = await bcrypt.hash(officialPass, 10);
+                await db.query(
+                    `UPDATE \`usuarios\` 
+                     SET documento = '1000000000',
+                         nombres_apellidos = 'Ecosystem Laboratorio Ambiental',
+                         email = :email,
+                         password = :password,
+                         estado = 'activo',
+                         acepta_politicas = 1,
+                         token = NULL,
+                         updatedAt = NOW()
+                     WHERE id_usuario = :id`,
+                    { replacements: { email: officialEmail, password: hashed, id: adminRow.id_usuario } }
+                );
+                console.log("✅ Credenciales del Administrador oficial sincronizadas en la BD.");
+            }
         }
     } catch (e) {
-        // En caso de que no existan las tablas aún en pruebas
+        console.warn("Advertencia sincronizando esquema/admin:", e.message);
     }
 } catch (error) {
     // Imprime el error de conexión en consola

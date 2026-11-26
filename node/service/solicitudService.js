@@ -392,8 +392,17 @@ class solicitudService {
                                     nombreSolicitante,
                                     sol.id_solicitud,
                                     nombresEq
-                                ).catch(e => console.error("Error enviando correo de vencimiento:", e));
+                                ).catch(e => console.error("Error enviando correo de vencimiento al instructor:", e));
                             }
+
+                            // 4. Enviar correo electrónico al Administrador oficial (ecosystemlaboratorioambiental@gmail.com)
+                            const adminEmail = process.env.EMAIL_USER || 'ecosystemlaboratorioambiental@gmail.com';
+                            await emailService.sendOverdueReturnAdminAlert(
+                                adminEmail,
+                                nombreSolicitante,
+                                sol.id_solicitud,
+                                nombresEq
+                            ).catch(e => console.error("Error enviando correo de vencimiento al admin:", e));
 
                             vencidasCount++;
                         }

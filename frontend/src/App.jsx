@@ -233,6 +233,12 @@ function App() {
     try {
       // Parsea los datos JSON del usuario
       const user = JSON.parse(stored);
+      // Si la sesión guardada en el navegador corresponde al administrador antiguo eliminado, cerrarla de inmediato
+      if (user?.email === "admin@laboratorio.com" || user?.documento === "00000000" || user?.user?.email === "admin@laboratorio.com" || user?.user?.documento === "00000000") {
+        logOut();
+        setIsLoading(false);
+        return;
+      }
       // Si tiene token, restaura la sesión
       if (user?.token) {
         // Marca como autenticado y carga los datos del usuario
